@@ -1,0 +1,19 @@
+{
+  "name": "@remilia/hosts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Per-host chrome (header/footer + theme.css) and bake entries; core/ holds the shared blog component system.",
+  "scripts": {
+    "bake:org": "node --import tsx org/bake.ts",
+    "preview": "node --import tsx preview.ts"
+  },
+  "dependencies": {
+    "@remilia/renderer": "workspace:*",
+    "@remilia/seo": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.2"
+  }
+}

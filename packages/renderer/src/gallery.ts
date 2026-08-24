@@ -1,0 +1,49 @@
+import { esc } from "./html";
+
+/**
+ * Album → static <figure> grid with a native-<dialog> lightbox.
+ * Progressive enhancement: without JS, images are plain links to the
+ * full-size CDN asset.
+ */
+export interface GalleryImage {
+  url: string;
+  fullUrl: string;
+  alt: string;
+  caption?: string;
+  credit?: string;
+}
+
+export function galleryHtml(title: string, images: GalleryImage[]): string {
+  const figures = images
+    .map((img, i) => {
+      const capParts = [img.caption, img.credit].filter(Boolean).map((s) => esc(s ?? ""));
+      const caption = capParts.length ? `<figcaption>${capParts.join(" — ")}</figcaption>` : "";
+      return `<figure>
+<a href="${esc(img.fullUrl)}" data-lightbox="${i}"><img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy"></a>
+${caption}
+</figure>`;
+    })
+    .join("\n");
+  return `<section class="gallery" aria-label="${esc(title)}">
+${figures}
+</section>
+<dialog class="lightbox" aria-label="Image viewer"><img alt=""><button autofocus aria-label="Close">×</button></dialog>`;
+}
+
+/** ~30 lines of vanilla JS; ship as /​<section>/gallery.js only on album pages. */
+export const LIGHTBOX_JS = `(() => {
+  const dialog = document.querySelector("dialog.lightbox");
+  if (!dialog || !dialog.showModal) return;
+  const img = dialog.querySelector("img");
+  for (const a of document.querySelectorAll("[data-lightbox]")) {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      img.src = a.href;
+      img.alt = a.querySelector("img")?.alt ?? "";
+      dialog.showModal();
+    });
+  }
+  dialog.querySelector("button").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+})();
+`;

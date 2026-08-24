@@ -1,0 +1,253 @@
+/*
+ * Blog component system — shared by all three hosts (.org /press,
+ * .com /a/studio, .net /blog). CLASS CONTRACT for everything the renderer
+ * emits. Hosts NEVER edit this; they set the variables below in theme.css
+ * (+ minimal host overrides). The bake concatenates core + theme → blog.css.
+ *
+ * Rules of the system:
+ * 1. STRICT 4px GRID — every margin/padding/gap is a multiple of --grid.
+ * 2. SIZE HIERARCHY ONLY ON THE TITLE — --size-title is the one larger size;
+ *    body/headings/meta share --size-base. Separation is weight, underline,
+ *    caps, italics, borders — never size.
+ * 3. THREE-COLUMN LAYOUT — sticky left post-nav, bordered center article
+ *    (80ch measure) with a right sidenote gutter, sticky right ToC rail.
+ *    Rails collapse to closed <details> dropdowns at narrow widths (no
+ *    layout shift); sidenotes collapse to tap-toggle footnotes.
+ *
+ * Class contract (renderer → CSS):
+ *   .layout                            grid: [post-nav][article-wrap]
+ *   details.post-nav.rail              left rail: search + flat post list
+ *     .nav-search, .nav-all, .nav-meta, .nav-empty
+ *   main.article-wrap                  grid: [article-body][toc]
+ *     details.toc                      right rail / mobile dropdown
+ *     article.article-body             bordered; header + .prose + .post-meta
+ *   .prose                             Portable Text: p, h2-h4(+.anchor),
+ *                                      blockquote, ul/ol/li, strong/em, code,
+ *                                      pre, a, figure/img/figcaption.
+ *                                      Reserved cards: .prose-embed/-callout/
+ *                                      -cta/-bookmark (added with the audit).
+ *   a[rel~="external"]                 outlinks (CSS ↗ marker)
+ *   .fn + .sn-toggle + .sidenote       footnotes → margin sidenotes / toggle
+ *   .interlink > .link-card            internal-link hover card
+ *   .gallery > figure > a > img        album grids (+ figcaption)
+ *   dialog.lightbox                    native-dialog image viewer
+ */
+
+:root{
+  /* Grid — the only spacing primitive */
+  --grid:4px;
+  --space-xs:calc(var(--grid) * 2);   /*  8px */
+  --space-s:calc(var(--grid) * 3);    /* 12px */
+  --space:calc(var(--grid) * 5);      /* 20px */
+  --space-l:calc(var(--grid) * 10);   /* 40px */
+
+  /* Surfaces & inks */
+  --paper:#fff;
+  --ink:#000;
+  --ink-contrast:#fff;
+  --accent:var(--ink);
+  --muted:var(--ink);
+  --focus:#000;
+
+  /* Type — one hierarchy size (title); everything else is --size-base */
+  --font-body:system-ui,sans-serif;
+  --font-mono:monospace;
+  --size-base:14px;
+  --size-title:22px;
+  --weight-body:normal;
+  --weight-strong:700;
+  --leading:1.5;
+  --leading-prose:1.7;
+  --leading-tight:1.3;
+
+  /* Layout */
+  --measure:80ch;                     /* reading line-length cap */
+  --rail:15rem;                       /* left post-nav width */
+  --toc-rail:14rem;                   /* right ToC width */
+  --sidenote-w:12rem;                 /* margin sidenote width */
+
+  --border-w:1px;
+  --border:var(--border-w) solid var(--ink);
+  --radius:0;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:var(--font-body);font-size:var(--size-base);line-height:var(--leading);color:var(--ink);font-weight:var(--weight-body)}
+::selection{background:var(--ink);color:var(--ink-contrast)}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);padding:var(--space)}
+
+a{color:var(--accent);text-decoration:underline}
+a:hover{background:var(--ink);color:var(--ink-contrast)}
+a:focus-visible{outline:2px solid var(--focus);outline-offset:var(--grid)}
+strong{font-weight:var(--weight-strong)}
+em{font-style:italic}
+
+/* ---- Header chrome (full width) ---- */
+.site-head{max-width:76rem;margin:0 auto var(--space)}
+.site-head .site-title{display:block;text-decoration:none;font-weight:var(--weight-strong);margin:0 0 var(--space-xs)}
+.site-head .site-title:hover{background:var(--ink);color:var(--ink-contrast)}
+.site-head nav{display:flex;gap:calc(var(--grid) * 4);flex-wrap:wrap}
+
+/* ---- Layout grid ---- */
+.layout{max-width:76rem;margin:0 auto}
+@media(min-width:768px){
+  .layout{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);gap:var(--space-l);align-items:start}
+}
+
+/* ---- Disclosure (checkbox) — reliable across breakpoints ---- */
+.disclosure{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.disclosure-label{display:block;cursor:pointer;font-weight:var(--weight-strong);padding:var(--space-xs) 0}
+
+/* ---- Left post-nav rail (sticky; closed dropdown < 768px) ---- */
+.post-nav > .nav-search,.post-nav > .nav-all{display:none}
+.post-nav > .disclosure:checked ~ .nav-search,.post-nav > .disclosure:checked ~ .nav-all{display:block}
+.nav-search{margin:var(--space-xs) 0}
+.nav-search input[type=search]{width:100%;background:var(--paper);color:var(--ink);border:var(--border);border-radius:var(--radius);padding:var(--grid) var(--space-xs)}
+.nav-controls{display:flex;gap:var(--space-xs);margin-top:var(--space-xs);flex-wrap:wrap}
+.nav-controls label{display:flex;gap:var(--grid);align-items:center}
+.nav-controls select{background:var(--paper);color:var(--ink);border:var(--border);border-radius:var(--radius);padding:0 var(--grid)}
+.nav-all{list-style:none}
+.nav-all li{margin:0 0 var(--space-xs);line-height:var(--leading-tight)}
+.nav-all li a{text-decoration:none;font-weight:var(--weight-strong)}
+.nav-all li a:hover{text-decoration:underline}
+.nav-meta{display:block;color:var(--muted);font-style:italic}
+.nav-empty{color:var(--muted);font-style:italic}
+@media(min-width:768px){
+  .post-nav.rail{position:sticky;top:var(--space);max-height:calc(100vh - var(--space-l));overflow:auto}
+  .post-nav > .disclosure-label{display:none}
+  .post-nav > .nav-search,.post-nav > .nav-all{display:block}
+}
+
+/* ---- Article wrap: [body][toc] on wide screens ---- */
+@media(min-width:1200px){
+  .article-wrap{display:grid;grid-template-columns:minmax(0,1fr) var(--toc-rail);grid-template-areas:"body toc";gap:var(--space-l);align-items:start}
+  .article-wrap > .article-body{grid-area:body}
+  .article-wrap > .toc{grid-area:toc}
+  .article-wrap.simple{display:block}
+}
+
+/* ---- ToC (right rail ≥1200; closed dropdown below) ---- */
+.toc > nav{display:none}
+.toc > .disclosure:checked ~ nav{display:block}
+.toc ol{list-style:none;margin:0}
+.toc li{margin:0 0 var(--grid);line-height:var(--leading-tight)}
+.toc li a{text-decoration:none}
+.toc li a:hover{text-decoration:underline}
+.toc .toc-l3{padding-left:var(--space-s)}
+.toc .toc-l4{padding-left:var(--space)}
+@media(min-width:1200px){
+  .toc{position:sticky;top:var(--space);max-height:calc(100vh - var(--space-l));overflow:auto}
+  .toc > .disclosure-label{display:none}
+  .toc > nav{display:block}
+}
+
+/* ---- Bordered article body ---- */
+.article-body{border:var(--border);padding:var(--space)}
+.article-body > header{margin:0 0 var(--space)}
+.article-body > header h1{font-size:var(--size-title);line-height:var(--leading-tight);margin:0 0 var(--space-xs)}
+.article-body > header time{color:var(--muted)}
+.article-body > header address{display:inline;font-style:italic;color:var(--muted)}
+@media(min-width:1200px){
+  .article-body{padding-right:calc(var(--sidenote-w) + var(--space-l))}
+}
+
+/* ---- Index / event listing ---- */
+main > .article-body h1,.article-body > h1{font-size:var(--size-title);line-height:var(--leading-tight);margin:0 0 var(--space)}
+.post-list{list-style:none}
+.post-list li{margin:0 0 var(--space);max-width:var(--measure)}
+.post-list h2{display:inline;font-size:var(--size-base);font-weight:var(--weight-strong)}
+.post-list time{margin-left:var(--space-xs);color:var(--muted)}
+.post-list p{margin:var(--grid) 0 0;line-height:var(--leading-prose)}
+
+/* ---- Prose: text capped at 80ch, sidenotes float into the gutter ---- */
+.prose > *{max-width:var(--measure)}
+.prose p{margin:0 0 var(--space-s);line-height:var(--leading-prose)}
+.prose h2,.prose h3,.prose h4{margin:var(--space) 0 var(--space-s);line-height:var(--leading-tight)}
+.prose h2{font-weight:var(--weight-strong);text-decoration:underline;text-transform:uppercase;letter-spacing:0.03em}
+.prose h3{font-weight:var(--weight-strong);text-decoration:underline}
+.prose h4{font-weight:var(--weight-strong);font-style:italic}
+
+/* Bullets: square markers + nested tree connectors (dons.directory style) */
+.prose ul{list-style:none;margin:0 0 var(--space-s);padding-left:var(--space)}
+.prose ul > li{position:relative;padding-left:var(--space);margin:0 0 var(--grid);line-height:var(--leading-prose)}
+.prose ul > li::before{content:"\25AA";position:absolute;left:0;color:var(--muted)}
+.prose ul ul{margin:var(--grid) 0 0;border-left:var(--border-w) solid var(--muted)}
+.prose ol{margin:0 0 var(--space-s);padding-left:var(--space)}
+.prose ol > li{margin:0 0 var(--grid);line-height:var(--leading-prose)}
+
+.prose blockquote{border-left:var(--border);padding:0 0 0 var(--space-s);margin:0 0 var(--space-s)}
+.prose blockquote p{margin:0}
+.prose code{font-family:var(--font-mono);border:var(--border);border-radius:var(--radius);padding:0 var(--grid)}
+.prose pre{border:var(--border);border-radius:var(--radius);padding:var(--space-xs);overflow-x:auto;margin:0 0 var(--space-s)}
+.prose pre code{border:none;padding:0}
+.prose figure{margin:var(--space-xs) 0 var(--space)}
+.prose figure img{max-width:100%;height:auto;border:var(--border)}
+.prose figcaption{margin-top:var(--grid);color:var(--muted);font-style:italic}
+
+hr{border:none;border-top:var(--border);margin:0 0 var(--space)}
+
+/* Heading self-links */
+.prose :is(h2,h3,h4) .anchor{margin-left:var(--space-xs);text-decoration:none;opacity:0;color:var(--muted)}
+.prose :is(h2,h3,h4):hover .anchor,.prose .anchor:focus-visible{opacity:1}
+.prose :is(h2,h3,h4)[id]{scroll-margin-top:var(--space)}
+
+/* Outlinks */
+.prose a[rel~="external"]::after{content:"\2197";margin-left:2px;text-decoration:none;display:inline-block}
+
+/* ---- Footnotes → sidenotes ----
+   The number (.fn) is a label toggling a hidden checkbox. Base (narrow):
+   the note is hidden and shown inline on tap. ≥1200px: the note floats
+   into the article's right gutter at the citation line, always visible. */
+.fn{cursor:pointer;vertical-align:super;font-size:0.75em;font-weight:var(--weight-strong);text-decoration:underline;padding:0 1px}
+.fn::before{content:"["}
+.fn::after{content:"]"}
+.sn-toggle{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.sidenote{display:none}
+.sidenote sup{font-size:0.75em;vertical-align:super}
+.sn-toggle:checked ~ .sidenote{display:block;margin:var(--space-s) 0;padding:0 0 0 var(--space-s);border-left:var(--border);color:var(--muted)}
+@media(min-width:1200px){
+  .sidenote{display:block;float:right;clear:right;width:var(--sidenote-w);margin:0 calc(-1 * (var(--sidenote-w) + var(--space))) var(--space-s) 0;padding:0;border-left:none;color:var(--muted);line-height:var(--leading)}
+}
+
+/* ---- Post meta (tags / permalink) ---- */
+.post-meta{margin-top:var(--space);color:var(--muted);max-width:var(--measure)}
+
+/* ---- Gallery (albums) ---- */
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-xs);margin:0 0 var(--space)}
+.gallery figure{margin:0}
+.gallery img{width:100%;height:auto;display:block;border:var(--border)}
+.gallery a:hover{background:none}
+.gallery a:hover img{filter:saturate(0)}
+.gallery figcaption{margin-top:var(--grid);color:var(--muted);font-style:italic}
+dialog.lightbox{border:var(--border);background:var(--paper);padding:var(--space-xs);max-width:90vw}
+dialog.lightbox img{max-width:100%;max-height:85vh;display:block}
+dialog.lightbox button{border:var(--border);background:var(--paper);color:var(--ink);padding:var(--grid) var(--space-xs);margin-top:var(--space-xs);cursor:pointer}
+dialog.lightbox button:hover{background:var(--ink);color:var(--ink-contrast)}
+dialog.lightbox::backdrop{background:color-mix(in srgb, var(--paper) 85%, transparent)}
+
+/* ---- Interlink hover cards ---- */
+.interlink{position:relative}
+.link-card{display:none;position:absolute;top:calc(100% + var(--grid));left:0;right:0;z-index:10;background:var(--paper);color:var(--ink);border:var(--border);padding:var(--space-xs);line-height:var(--leading);font-weight:var(--weight-body);text-align:left;text-decoration:none}
+.link-card img{display:block;width:100%;height:auto;border:var(--border);margin:0 0 var(--space-xs)}
+.link-card strong{display:block;margin:0 0 var(--grid)}
+.link-card span{display:block;color:var(--muted)}
+.interlink:hover .link-card,.interlink:focus .link-card,.interlink:focus-visible .link-card{display:block}
+.interlink:hover{background:var(--ink);color:var(--ink-contrast)}
+
+/* ---- Footer chrome ---- */
+footer{max-width:76rem;margin:var(--space-l) auto 0}
+footer p{text-align:center}
+
+/* ---- a11y / print ---- */
+@media(max-width:499px){
+  .gallery{grid-template-columns:repeat(2,1fr)}
+}
+@media (forced-colors: active){
+  *{border-color:CanvasText}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .post-nav,.toc{display:none}
+  .sidenote{display:block;float:none;width:auto;margin:var(--space-xs) 0;border-left:var(--border);padding-left:var(--space-s)}
+  a[href^="http"]::after{content:" (" attr(href) ")";font-weight:normal}
+}

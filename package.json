@@ -1,0 +1,25 @@
+{
+  "name": "remilia-content",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Sanity studio for the Remilia content graph (press / studio / devblog)",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "validate": "sanity schema validate",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/icons": "^3.7.4",
+    "@sanity/vision": "^4.10.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sanity": "^4.10.0",
+    "styled-components": "^6.1.18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.2"
+  }
+}

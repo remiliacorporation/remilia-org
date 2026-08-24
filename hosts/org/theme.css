@@ -1,0 +1,46 @@
+/*
+ * remilia.org/press theme — tokens from remilia-site assets/css/site.css:
+ * paper #fff8f7 / brand ink #f00, Alte Haas Grotesk, 1px ink borders,
+ * ink/white hover inversion. Layout/structure come from blog-core.css.
+ * Body text is NOT bold; weight/underline/caps carry hierarchy. Only the
+ * title has a larger size. All spacing stays on the 4px grid.
+ */
+
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/assets/fonts/AlteHaasGroteskRegular.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/assets/fonts/AlteHaasGroteskBold.woff') format('woff');
+  font-weight: bold;
+  font-display: swap;
+}
+
+:root{
+  --paper:#fff8f7;
+  /* Brand ink #f00 (~3.8:1 on paper); AA via prefers-contrast below. */
+  --ink:#f00;
+  --ink-contrast:#fff;
+  --accent:#f00;
+  --muted:#f00;
+  --focus:#000;
+
+  --font-body:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;
+  --font-mono:monospace;
+  --size-base:13px;
+  --size-title:20px;
+  --weight-body:normal;   /* body not bold */
+  --weight-strong:bold;   /* headings, nav, links-of-note */
+}
+
+html{color-scheme:light}
+
+/* Site-title as the remilia-site bordered box (chrome only, not content) */
+.site-head .site-title{border:var(--border);padding:var(--grid) var(--space-xs);text-align:center}
+
+@media (prefers-contrast: more){
+  :root{--paper:#fff;--ink:#b00000;--accent:#b00000;--muted:#b00000}
+}

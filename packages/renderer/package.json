@@ -1,0 +1,19 @@
+{
+  "name": "@remilia/renderer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Static bake: Sanity content → plain HTML/CSS pages. Shared semantic template; each host supplies chrome (header/footer fragments + blog.css).",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "node --import tsx --test src/pt.test.ts src/page.test.ts"
+  },
+  "dependencies": {
+    "@remilia/seo": "workspace:*",
+    "@sanity/client": "^7.14.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.2"
+  }
+}

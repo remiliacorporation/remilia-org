@@ -1,0 +1,20 @@
+{
+  "name": "@remilia/seo-conformance",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Audits a deployed host against the SEO/LLM contract. Run in CI / post-deploy smoke for every render app.",
+  "exports": { ".": "./src/audit.ts" },
+  "bin": { "seo-conformance": "./src/cli.ts" },
+  "scripts": {
+    "test": "node --import tsx --test src/audit.test.ts",
+    "check": "node --import tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@remilia/seo": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.2"
+  }
+}
