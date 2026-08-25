@@ -8,11 +8,9 @@ export const chrome: Chrome = {
   stylesheet: "/press/blog.css",
   header: `<header class="site-head">
 <a class="site-title" href="/press">REMILIA CORPORATION — PRESS</a>
+<hr class="nav-rule">
 <nav aria-label="Site">
-<a href="https://remilia.org/">remilia.org</a>
-<a href="/press">Index</a>
-<a href="/press/rss.xml">RSS</a>
-<a href="/press/atom.xml">Atom</a>
+<a href="https://remilia.org/">remilia.org</a> — <a href="/press">Index</a> — <a href="/press/rss.xml">RSS</a> — <a href="/press/atom.xml">Atom</a>
 </nav>
 </header>`,
   footer: `<footer>

@@ -19,7 +19,7 @@ export function galleryHtml(title: string, images: GalleryImage[]): string {
       const capParts = [img.caption, img.credit].filter(Boolean).map((s) => esc(s ?? ""));
       const caption = capParts.length ? `<figcaption>${capParts.join(" — ")}</figcaption>` : "";
       return `<figure>
-<a href="${esc(img.fullUrl)}" data-lightbox="${i}"><img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy"></a>
+<a href="${esc(img.fullUrl)}" data-lightbox="${i}"><span class="ht"><span class="ht-map"><img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>
 ${caption}
 </figure>`;
     })

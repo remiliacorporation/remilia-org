@@ -29,7 +29,7 @@ test("page shell emits the fixed semantic structure", () => {
   assert.ok(PAGE.includes('<html lang="en">'));
   assert.ok(PAGE.includes('<main class="article-wrap">'));
   assert.ok(PAGE.includes('<article class="article-body">'));
-  assert.ok(PAGE.includes('<time datetime="2026-08-01T00:00:00.000Z">2026-08-01</time>'));
+  assert.ok(PAGE.includes('<time datetime="2026-08-01T00:00:00.000Z">08.01.26</time>'));
   assert.ok(PAGE.includes("<h1>Vaults</h1>"));
   assert.ok(PAGE.includes('<link rel="stylesheet" href="/blog/blog.css">'));
 });

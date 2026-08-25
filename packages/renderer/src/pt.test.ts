@@ -18,7 +18,7 @@ test("styles, marks, and links serialize with escaping", () => {
     { _type: "block", style: "blockquote", children: [span("quoted")] },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<h2 id="head-2">Head &lt;2&gt;<a class="anchor" href="#head-2"'));
+  assert.ok(html.includes('<h2 id="head-2"><a class="hlink" href="#head-2">Head &lt;2&gt;</a></h2>'));
   assert.ok(html.includes("<strong>bold</strong>"));
   assert.ok(html.includes(" &amp; "));
   assert.ok(html.includes('<a href="https://example.com/a" rel="external noopener">site</a>'));
@@ -45,6 +45,8 @@ test("images render as figures with alt; unknown types are skipped", () => {
   ];
   const html = portableTextToHtml(blocks, OPTS);
   assert.ok(html.includes('alt="A photo"'));
+  assert.ok(html.includes('<a href="https://cdn.sanity.io/x.jpg?w=1600">'));
+  assert.ok(html.includes('<span class="ht">'));
   assert.ok(html.includes("<figcaption>cap</figcaption>"));
   assert.ok(!html.includes("mysteryCard"));
 });
@@ -57,17 +59,29 @@ test("cdnUrl parses asset refs and rejects garbage", () => {
   assert.equal(cdnUrl("p", "d", "file-abc-pdf", "w=1"), undefined);
 });
 
-test("headings get slug ids with anchor self-links; duplicates dedupe", () => {
+test("headings: whole text is the link; slug ids dedupe", () => {
   const blocks: PTBlock[] = [
     { _type: "block", style: "h2", children: [span("Fixes & Improvements")] },
     { _type: "block", style: "h2", children: [span("Fixes & Improvements")] },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<h2 id="fixes-improvements">'));
-  assert.ok(html.includes('<h2 id="fixes-improvements-1">'));
-  assert.ok(html.includes('<a class="anchor" href="#fixes-improvements"'));
+  assert.ok(html.includes('<h2 id="fixes-improvements"><a class="hlink" href="#fixes-improvements">'));
+  assert.ok(html.includes('<h2 id="fixes-improvements-1"><a class="hlink" href="#fixes-improvements-1">'));
   const heads = extractHeadings(blocks);
   assert.deepEqual(heads.map((h) => h.id), ["fixes-improvements", "fixes-improvements-1"]);
+});
+
+test("tocItems excludes h4; includes h2/h3", () => {
+  const blocks: PTBlock[] = [
+    { _type: "block", style: "h2", children: [span("One")] },
+    { _type: "block", style: "h3", children: [span("Two")] },
+    { _type: "block", style: "h4", children: [span("Hidden")] },
+    { _type: "block", style: "h2", children: [span("Three")] },
+  ];
+  const items = tocItems(extractHeadings(blocks));
+  assert.ok(items.includes('<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>'));
+  assert.ok(items.includes('<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>'));
+  assert.ok(!items.includes("hidden"));
 });
 
 test("tocItems renders levels and respects the minimum", () => {
@@ -77,8 +91,8 @@ test("tocItems renders levels and respects the minimum", () => {
     { _type: "block", style: "h2", children: [span("Three")] },
   ];
   const items = tocItems(extractHeadings(blocks));
-  assert.ok(items.includes('<li class="toc-l3"><a href="#two">Two</a></li>'));
-  assert.ok(items.includes('<li class="toc-l2"><a href="#one">One</a></li>'));
+  assert.ok(items.includes('<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>'));
+  assert.ok(items.includes('<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>'));
   assert.equal(tocItems(extractHeadings(blocks.slice(0, 2))), "");
 });
 
@@ -105,8 +119,7 @@ test("external links marked rel=external; internal links get hover cards", () =>
   assert.ok(html.includes('<span class="link-card" role="tooltip"><img src="https://cdn/x.jpg"'));
   assert.ok(html.includes("<strong>Launch</strong><span>We launched.</span>"));
 });
-
-test("footnotes render as toggle-able sidenotes (label + checkbox + note)", () => {
+test("footnotes render as paired anchors (citation ↔ note)", () => {
   const blocks: PTBlock[] = [
     {
       _type: "block",
@@ -118,8 +131,8 @@ test("footnotes render as toggle-able sidenotes (label + checkbox + note)", () =
     },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<label class="fn" for="sn-1" role="doc-noteref">1</label>'));
-  assert.ok(html.includes('<input type="checkbox" id="sn-1" class="sn-toggle">'));
-  assert.ok(html.includes('<span class="sidenote" role="note"><sup>1</sup> First source.</span>'));
-  assert.ok(html.includes('<sup>2</sup> Second &lt;source&gt;.</span>'));
+  assert.ok(html.includes('<a class="fn" id="fn-1" href="#sn-1" role="doc-noteref">[1]</a>'));
+  assert.ok(html.includes('<a class="sidenote" id="sn-1" href="#fn-1" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></a>'));
+  assert.ok(html.includes("Second &lt;source&gt;."));
+  assert.ok(!html.includes("sn-toggle"));
 });

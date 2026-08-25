@@ -24,11 +24,12 @@ const result = await bake({
   projectId: "8x9419lh",
   dataset: "production",
   stylesheets: [join(here, "../core/blog-core.css"), join(here, "theme.css")],
-  extraSitemapUrls: [
-    { loc: "https://remilia.org/" },
-    { loc: "https://remilia.org/jobs" },
-    { loc: "https://remilia.org/about" },
-    { loc: "https://remilia.org/contact" },
+  // The hand-authored remilia.org pages ship verbatim alongside the bake.
+  staticFrom: [
+    {
+      dir: "/Users/soleva/dev/remilia-site",
+      include: ["index.html", "jobs", "assets", "favicon.ico", "site.webmanifest", "robots.txt", ".well-known", "404.html"],
+    },
   ],
 });
 console.log(`baked ${result.pages} pages into ${outDir}/press`);

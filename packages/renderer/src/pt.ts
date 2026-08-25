@@ -1,21 +1,19 @@
 import { esc } from "./html";
 
 /**
- * Portable Text → semantic HTML. No framework; the only JS anywhere is the
- * optional left-rail fuzzy filter (progressive — the list works without it).
- * Covers `blockContent`: text styles, lists, strong/em/code, link +
- * footnote annotations, inline images. New Koenig cards get a case in the
- * main loop (`.prose-*` classes reserved in blog-core.css).
+ * Portable Text → semantic HTML. No framework. JS is optional: left-rail
+ * search + ToC spy (progressive — the page works without either).
  *
  * Emits:
- * - h2–h4 with slug ids + `.anchor` self-links (ToC targets)
- * - external links marked `rel="external noopener"` (CSS adds the ↗)
- * - internal links with bake-supplied card data → `.interlink` + a CSS
- *   `.link-card` hover preview (the target's own social-card data)
- * - footnotes → Tufte-style SIDENOTES: a numbered `.fn` label + hidden
- *   checkbox + inline `.sidenote` span. Wide screens float the note into
- *   the right margin at the citation line; narrow screens hide it and the
- *   number toggles it inline (pure CSS, no JS, no duplicated text).
+ * - h2/h3 with slug ids; the WHOLE heading text is the anchor link, and a
+ *   #/## marker is revealed in the left gutter on hover (pure CSS).
+ * - external links marked `rel="external noopener"` (CSS adds the ↗).
+ * - internal links with bake-supplied card data → `.interlink` + CSS hover
+ *   card (the target's own social-card data).
+ * - footnotes: "[N]" citation and the sidenote are paired anchors that
+ *   jump to each other; the note boxes into the right rail on desktop.
+ *
+ * Returns the html string; sidenotes are inline.
  */
 
 interface Span {
@@ -35,7 +33,6 @@ interface TextBlock {
   _type: "block";
   style?: string;
   listItem?: string;
-  level?: number;
   children: Span[];
   markDefs?: MarkDef[];
 }
@@ -112,12 +109,32 @@ export function extractHeadings(blocks: PTBlock[]): Heading[] {
   });
 }
 
-/** ToC list items (the <details class="toc"> wrapper is built by the caller). */
+/**
+ * ToC list items — h2/h3 only (h4+ excluded). Numbering (1. / 1.a.) is
+ * CSS counters in blog-core.css. Caller supplies the wrapper + heading.
+ */
 export function tocItems(headings: Heading[], minHeadings = 3): string {
-  if (headings.length < minHeadings) return "";
-  return headings
-    .map((h) => `<li class="toc-l${h.level}"><a href="#${h.id}">${esc(h.text)}</a></li>`)
+  const usable = headings.filter((h) => h.level <= 3);
+  if (usable.length < minHeadings) return "";
+  return usable
+    .map((h) => `<li class="toc-l${h.level}"><a href="#${h.id}"><span class="toc-label">${esc(h.text)}</span></a></li>`)
     .join("\n");
+}
+
+/** Same numbering as portableTextToHtml / fnHtml. */
+export function footnoteCount(blocks: PTBlock[]): number {
+  let n = 0;
+  for (const b of blocks) {
+    if (!isTextBlock(b)) continue;
+    const defs = b.markDefs ?? [];
+    for (const s of b.children) {
+      for (const mark of s.marks ?? []) {
+        const def = defs.find((d) => d._key === mark);
+        if (def?._type === "footnote") n += 1;
+      }
+    }
+  }
+  return n;
 }
 
 interface RenderState {
@@ -135,10 +152,12 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
   return `<a class="interlink" href="${esc(href)}">${inner}<span class="link-card" role="tooltip">${img}<strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span></a>`;
 }
 
-function sidenoteHtml(def: MarkDef, inner: string, state: RenderState): string {
+function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   state.count += 1;
   const n = state.count;
-  return `${inner}<label class="fn" for="sn-${n}" role="doc-noteref">${n}</label><input type="checkbox" id="sn-${n}" class="sn-toggle"><span class="sidenote" role="note"><sup>${n}</sup> ${esc(def.text ?? "")}</span>`;
+  // Citation and note are paired anchors: click [N] jumps to the note,
+  // click the note jumps back. Hover inverts both (CSS).
+  return `${inner}<a class="fn" id="fn-${n}" href="#sn-${n}" role="doc-noteref">[${n}]</a><a class="sidenote" id="sn-${n}" href="#fn-${n}" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></a>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
@@ -150,7 +169,7 @@ function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
     else {
       const def = markDefs.find((d) => d._key === mark);
       if (def?._type === "link" && def.href) html = linkHtml(def, html, state);
-      else if (def?._type === "footnote") html = sidenoteHtml(def, html, state);
+      else if (def?._type === "footnote") html = fnHtml(def, html, state);
     }
   }
   return html;
@@ -164,11 +183,24 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
 
   const out: string[] = [];
   let list: { tag: "ul" | "ol"; items: string[] } | null = null;
+  let openH2 = false;
+  let openH3 = false;
 
   const flushList = (): void => {
     if (!list) return;
     out.push(`<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join("")}</${list.tag}>`);
     list = null;
+  };
+  const closeH3 = (): void => {
+    if (!openH3) return;
+    out.push("</div>");
+    openH3 = false;
+  };
+  const closeH2 = (): void => {
+    closeH3();
+    if (!openH2) return;
+    out.push("</div>");
+    openH2 = false;
   };
 
   for (const block of blocks) {
@@ -187,11 +219,18 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
     if (isTextBlock(block)) {
       const inner = block.children.map((s) => spanHtml(s, block.markDefs ?? [], state)).join("");
       const id = headingIds.get(block);
-      if (id && block.style && block.style in HEADING_LEVEL) {
-        const tag = block.style;
-        out.push(
-          `<${tag} id="${id}">${inner}<a class="anchor" href="#${id}" aria-label="Link to this section">#</a></${tag}>`,
-        );
+      if (id && block.style === "h2") {
+        closeH2();
+        out.push(`<div class="h2-sec">`);
+        openH2 = true;
+        out.push(`<h2 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h2>`);
+      } else if (id && block.style === "h3") {
+        closeH3();
+        out.push(`<div class="h3-sec">`);
+        openH3 = true;
+        out.push(`<h3 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h3>`);
+      } else if (id && block.style === "h4") {
+        out.push(`<h4 id="${id}">${inner}</h4>`);
       } else if (block.style === "blockquote") {
         out.push(`<blockquote><p>${inner}</p></blockquote>`);
       } else {
@@ -202,12 +241,15 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       if (!src) continue;
       const caption = block.caption ? `<figcaption>${esc(block.caption)}</figcaption>` : "";
       out.push(
-        `<figure><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy">${caption}</figure>`,
+        `<figure><a href="${esc(src)}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
       );
     }
     // Unknown types are skipped deliberately: the Ghost card audit adds
     // explicit cases here; silent HTML injection is never a fallback.
   }
   flushList();
+  closeH2();
+
+
   return out.join("\n");
 }

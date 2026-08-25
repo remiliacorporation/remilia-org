@@ -4,7 +4,7 @@
  * + the org chrome, with left rail, ToC, sidenotes, and interlinks.
  *   node --import tsx hosts/preview.ts org /tmp/press-preview
  */
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
@@ -15,7 +15,9 @@ import {
   NAV_JS,
   portableTextToHtml,
   simpleMain,
+  tocBox,
   tocItems,
+  footnoteCount,
   type NavPost,
   type PTBlock,
 } from "@remilia/renderer";
@@ -27,6 +29,7 @@ const outDir = process.argv[3] ?? "/tmp/press-preview";
 
 const p = (text: string): PTBlock => ({ _type: "block", children: [{ _type: "span", text }] });
 const BODY: PTBlock[] = [
+  { _type: "image", alt: "HIKKI PUNKS EXIT SOCIETY lookbook", caption: "HIKKI PUNKS EXIT SOCIETY, photographed by Shoichi Aoki", asset: { _ref: "hikki-cover" } },
   {
     _type: "block",
     children: [
@@ -36,7 +39,6 @@ const BODY: PTBlock[] = [
     ],
     markDefs: [{ _key: "f1", _type: "footnote", text: "The developer platform was slated for the v0.8 line in the 2026 roadmap; this ships it a cycle early." }],
   },
-  { _type: "image", alt: "RemiliaNET developer portal", caption: "The new developer portal", asset: { _ref: "image-fixture" } },
   { _type: "block", style: "h2", children: [{ _type: "span", text: "Public API and Developer Portal" }] },
   p("RemiliaNET now provides a public API for developers building applications, backends, bots, scripts, and other integrations around the network."),
   {
@@ -70,11 +72,15 @@ const BODY: PTBlock[] = [
   },
   { _type: "block", style: "h3", children: [{ _type: "span", text: "Credentials" }] },
   p("Credentials are issued through the portal and can be rotated at any time."),
+  { _type: "image", alt: "Remilia Atelier pressbook spread", caption: "Remilia Atelier pressbook, Elena Velez", asset: { _ref: "atelier" } },
+  { _type: "image", alt: "Hikkikimori look", caption: "HIKKIKIMORI CONDITION, photographed by Shoichi Aoki", asset: { _ref: "hikkikimori" } },
   { _type: "block", style: "h2", children: [{ _type: "span", text: "Fixes and Improvements" }] },
   { _type: "block", listItem: "bullet", children: [{ _type: "span", text: 'Fixed users occasionally appearing as "unknown" in global chat.' }] },
   { _type: "block", listItem: "bullet", children: [{ _type: "span", text: "Announcement images now expand to full-screen on hover." }] },
   { _type: "block", listItem: "bullet", children: [{ _type: "span", text: "Profile trophy counts now include all trophies owned." }] },
   { _type: "block", style: "blockquote", children: [{ _type: "span", text: "We'll see you on RemiNET." }] },
+  { _type: "image", alt: "HIKKI PUNKS montage", caption: "HIKKI PUNKS EXIT SOCIETY lookbook montage", asset: { _ref: "montage" } },
+  { _type: "image", alt: "RemiliaNET developer portal", caption: "RemiliaNET developer portal (UI screen)", asset: { _ref: "portal" } },
 ];
 
 const post = {
@@ -98,9 +104,17 @@ const navPosts: NavPost[] = [
 
 const canonical = canonicalFor(post.channel, post.slug);
 const meta = { channel: post.channel, title: host.title, description: host.description };
-const rail = leftRail(navPosts, host.title);
+const rail = leftRail(navPosts, host.title, "/press");
 const bodyHtml = portableTextToHtml(BODY, {
-  imageUrl: () => "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/08/image.png",
+  imageUrl: (img) =>
+    ({
+      "hikki-cover": "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
+      atelier: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Remilia-Atelier-Pressbook-Spread.jpg",
+      hikkikimori: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Hikkikimori.jpg",
+      montage: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Montage.jpg",
+      portal: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/08/image.png",
+    } as Record<string, string>)[img.asset?._ref ?? ""] ??
+    "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
   linkCard: (href) =>
     href.includes("/press/remilianet-alpha-v0-8-1")
       ? { title: post.title, description: post.excerpt }
@@ -113,6 +127,8 @@ const css = await Promise.all(
 );
 await writeFile(join(outDir, "press", "blog.css"), css.join("\n"));
 await writeFile(join(outDir, "press", "nav.js"), NAV_JS);
+await copyFile(join(here, "org/emblem.png"), join(outDir, "press", "emblem.png"));
+await copyFile(join(here, "org/emblem.svg"), join(outDir, "press", "emblem.svg"));
 
 await writeFile(
   join(outDir, "press", post.slug, "index.html"),
@@ -121,17 +137,20 @@ await writeFile(
     description: post.excerpt,
     canonical,
     jsonld: [blogPosting(post)],
+    ogImage: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
     headExtra: feedLinks(meta),
     chrome,
     leftRail: rail,
+    tocHtml: tocBox(tocItems(extractHeadings(BODY)), footnoteCount(BODY)),
     bodyEnd: `<script src="/press/nav.js" defer></script>`,
     mainHtml: articleHtml({
       title: post.title,
       publishedAt: post.publishedAt,
       byline: "Remilia Jackson",
+      category: "Feature",
+      categoryHref: "/press/?cat=Feature",
       bodyHtml,
-      tocItems: tocItems(extractHeadings(BODY)),
-      metaHtml: `Tags: Feature<br>Permalink: <i>${canonical}</i>`,
+      metaHtml: `Author: Remilia Jackson<br>Published: <time datetime="${post.publishedAt}">${post.publishedAt.slice(0, 10)}</time><br>Tags: Feature<br>Permalink: <i>${canonical}</i>`,
     }),
   }),
 );

@@ -23,10 +23,11 @@ import {
   extractHeadings,
   portableTextToHtml,
   tocItems,
+  footnoteCount,
   type LinkCard,
   type PTBlock,
 } from "./pt";
-import { articleHtml, htmlPage, notFoundHtml, simpleMain, type Chrome } from "./page";
+import { articleHtml, htmlPage, notFoundHtml, simpleMain, tocBox, type Chrome } from "./page";
 import { leftRail, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
@@ -177,7 +178,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     date: p.publishedAt,
     category: p.tags?.[0] ?? "Uncategorized",
   }));
-  const rail = leftRail(navPosts, host.title);
+  const rail = leftRail(navPosts, host.title, basePath);
   const navScript = `<script src="${basePath}/nav.js" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined => cards.get(href.replace(/\/$/, ""));
 
@@ -196,13 +197,15 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       headExtra: feedLinks(meta),
       chrome,
       leftRail: rail,
+      tocHtml: tocBox(tocItems(extractHeadings(p.body)), footnoteCount(p.body)),
       bodyEnd: navScript,
       mainHtml: articleHtml({
         title: p.title,
         publishedAt: p.publishedAt,
         byline: p.authors?.map((a) => a.name).join(", "),
+        category: p.tags?.[0],
+        categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
         bodyHtml,
-        tocItems: tocItems(extractHeadings(p.body)),
         metaHtml: `${p.tags?.length ? `Tags: ${p.tags.map((t) => esc(t)).join(", ")}<br>` : ""}Permalink: <i>${esc(canonical)}</i>`,
       }),
     });
@@ -295,6 +298,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           title: `Events — ${host.title}`,
           description: `Events from ${host.title}.`,
           canonical: `${indexUrl(channel)}/events`,
+
           jsonld: orgLd ? [orgLd] : [],
           headExtra: feedLinks(meta),
           chrome,
