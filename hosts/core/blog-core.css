@@ -10,9 +10,9 @@
  *    layout: sizes are fixed so line length never drifts with fonts.
  * 2. SIZE HIERARCHY ONLY ON THE TITLE (12px body / 20px title). Body copy
  *    separates through weight, underline, caps, italics — never size.
- * 3. THREE COLUMNS: left cite+ToC | center article | right theme+posts.
- *    Site-head is center-top on the measure. Notes sit in the right leftover
- *    (xl+); below that they are CSS tooltips on .fn.
+ * 3. THREE COLUMNS: left site-head+ToC | center article | right theme+cite+posts.
+ *    Title stays in the center mast. Notes sit in the right leftover (xl+);
+ *    below that they are CSS tooltips on .fn.
  *
  * Class contract (renderer → CSS):
  *   .layout                            [toc][article-wrap]
@@ -118,7 +118,7 @@ strong{font-weight:var(--weight-strong)}
 em{font-style:italic}
 h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
 
-/* ---- Top navbar — center of the layout, above the article ---- */
+/* ---- Top navbar — left rail, above ToC ---- */
 .site-head{max-width:var(--measure);margin:0 auto;padding:var(--space) 0 var(--space-s)}
 .site-head .site-title{display:block;text-decoration:none;font-weight:var(--weight-strong);text-align:center;margin:0 0 var(--space-xs)}
 .site-head .site-title:hover{background:var(--ink);color:var(--ink-contrast)}
@@ -153,10 +153,10 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   line-height:var(--mast-title);
   height:var(--mast-title);
 }
-.layout > .site-head{
-  max-width:var(--measure);
+.left-rail .site-head{
+  max-width:var(--rail);
   width:100%;
-  margin:0 auto;
+  margin:0;
   padding:var(--space-xs);
   text-align:center;
   border:var(--border);
@@ -165,7 +165,7 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   grid-template-rows:auto var(--border-w) auto;
   row-gap:var(--space-xs);
 }
-.layout > .site-head .site-title{
+.left-rail .site-head .site-title{
   text-align:inherit;
   margin:0;
   line-height:var(--mast-line);
@@ -173,8 +173,8 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   min-height:var(--mast-line);
   overflow:visible;
 }
-.layout > .site-head .nav-rule{margin:0;height:0;align-self:center}
-.layout > .site-head nav{
+.left-rail .site-head .nav-rule{margin:0;height:0;align-self:center}
+.left-rail .site-head nav{
   display:block;
   flex-wrap:wrap;
   white-space:normal;
@@ -420,7 +420,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .post-nav > .disclosure:checked ~ .nav-box{display:block}
 .nav-box{
   border:var(--border);
-  background:transparent;
+  background:var(--paper);
   padding:var(--space-xs);
   text-align:left;
   width:100%;
@@ -622,10 +622,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .left-rail,
 .right-rail{display:contents}
-.layout > .site-head,
+.left-rail .site-head,
 .left-rail .toc,
-.left-rail .cite-box,
 .right-rail .theme-sel,
+.right-rail .cite-box,
 .right-rail .post-nav,
 .article-wrap{
   width:100%;
@@ -633,7 +633,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   margin-left:0;
   margin-right:0;
 }
-.layout > .site-head{order:1}
+.left-rail .site-head{order:1}
 .right-rail .theme-sel{order:2}
 .left-rail .toc{order:3}
 .article-wrap{order:4}
@@ -659,7 +659,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   .head-dials{display:inline}
   .layout:not(:has(#nav-toggle)) .head-posts,
   .layout:not(:has(#theme-pop)) .head-theme{display:none}
-  .layout > .site-head{
+  .left-rail .site-head{
     order:1;
     position:relative;
     z-index:9;
@@ -742,15 +742,9 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     z-index:5;
     pointer-events:none;
   }
-  .layout > .site-head{
-    width:var(--measure);
-    max-width:100%;
-    margin:var(--rail-gap) auto 0;
-    pointer-events:auto;
-  }
   .left-rail > *,
-  .left-rail .toc,
-  .left-rail .cite-box{
+  .left-rail .site-head,
+  .left-rail .toc{
     pointer-events:auto;
     width:100%;
     max-width:var(--rail);
@@ -784,6 +778,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .right-rail > *,
   .right-rail .theme-sel,
+  .right-rail .cite-box,
   .right-rail .post-nav{
     pointer-events:auto;
     width:100%;
@@ -797,9 +792,26 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .right-rail .post-nav{display:flex;padding:0;align-items:stretch}
   .cite-box{display:block;text-align:center}
-  .cite-box .nav-box{max-width:none;margin:0;text-align:center;background:var(--surface)}
-  .cite-box .cite-url{margin:0;overflow-wrap:anywhere}
-  .cite-box .cite-copy{margin:0;text-align:center}
+  .cite-box .nav-box{
+    display:grid;
+    grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
+    row-gap:var(--space-xs);
+    padding:var(--space-xs);
+    max-width:none;
+    margin:0;
+    text-align:center;
+    background:var(--paper);
+  }
+  .cite-box .nav-rule{margin:0;height:0;align-self:center}
+  .cite-box .cite-url{
+    margin:0;
+    height:var(--mast-line);
+    line-height:var(--mast-line);
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .cite-box .cite-copy{margin:0;height:var(--mast-title);line-height:var(--mast-title)}
   .cite-box button{
     appearance:none;border:0;background:none;font:inherit;font-weight:var(--weight-strong);color:inherit;cursor:pointer;padding:0;
   }
@@ -839,14 +851,14 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     border:0;
     gap:var(--grid);
   }
-  .layout > .site-head{
+  .left-rail .site-head{
     grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
   }
-  .layout > .site-head .site-title{
+  .left-rail .site-head .site-title{
     height:var(--mast-line);
     overflow:hidden;
   }
-  .layout > .site-head nav{
+  .left-rail .site-head nav{
     height:var(--mast-title);
     white-space:nowrap;
     flex-wrap:nowrap;

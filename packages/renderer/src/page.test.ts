@@ -49,7 +49,7 @@ test("404 page is noindex and points at sitemap and llms.txt", () => {
   assert.ok(nf.includes("/llms.txt"));
 });
 
-test("article rails put cite then ToC on the left and post-nav on the right", () => {
+test("article rails put ToC on the left and cite then post-nav on the right", () => {
   const html = htmlPage({
     title: "Vaults — Devblog",
     description: "How vaults work.",
@@ -77,8 +77,9 @@ test("article rails put cite then ToC on the left and post-nav on the right", ()
   const cite = html.indexOf('class="cite-box"');
   const right = html.indexOf('class="right-rail"');
   const nav = html.indexOf('class="post-nav"');
-  assert.ok(left >= 0 && cite > left && toc > cite && toc < right && nav > right);
+  assert.ok(left >= 0 && toc > left && toc < right && cite > right && nav > cite);
   assert.ok(html.includes("Permalink:"));
+  assert.ok(html.includes('class="nav-rule"'));
   assert.ok(html.includes(">Permalink</a>"));
   assert.ok(html.includes("Copy:"));
   assert.ok(html.includes(">[MD]</button>"));

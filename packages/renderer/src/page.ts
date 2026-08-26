@@ -5,8 +5,8 @@ import { esc } from "./html";
  * fixed here (lang, single title/description/canonical, landmarks); hosts
  * differ only through `chrome` (header/footer fragments + stylesheet href).
  *
- * Layout: site-head is center-top in `.layout`; left rail is cite + ToC;
- * right rail is theme + post-nav; `<main>` is the article.
+ * Layout: left rail is site-head + ToC; right rail is theme + cite + post-nav;
+ * `<main>` is the article (title stays in the center column).
  */
 export interface Chrome {
   stylesheet: string;
@@ -26,7 +26,7 @@ export interface PageInput {
   leftRail?: string;
   /** Optional ToC box. Left rail on desktop; stacked under the article on mobile. */
   tocHtml?: string;
-  /** Optional cite box (permalink / copy). Left rail, above ToC. */
+  /** Optional cite box (permalink / copy). Right rail, under theme. */
   citeHtml?: string;
   /** Optional scripts before </body> (e.g. the nav fuzzy filter). */
   bodyEnd?: string;
@@ -168,17 +168,17 @@ ${ld}
 </filter>
 </svg>
 <div class="layout">
-${p.chrome.header}
 ${p.leftRail
     ? `<div class="left-rail">
-${p.citeHtml ?? ""}
+${p.chrome.header}
 ${p.tocHtml ?? ""}
 </div>
 <div class="right-rail">
 ${themeSelHtml()}
+${p.citeHtml ?? ""}
 ${p.leftRail}
 </div>`
-    : ""}
+    : p.chrome.header}
 ${p.mainHtml}
 </div>
 ${p.chrome.footer}
@@ -190,8 +190,8 @@ ${p.bodyEnd ?? ""}
 
 /**
  * Post: `<main class="article-wrap">` is the bordered `.article-body`.
- * Site-head is center-top. Cite + ToC sit in the left rail; theme +
- * post-nav in the right. Notes sit in the right leftover (xl+).
+ * Site-head + ToC sit in the left rail; theme + cite + post-nav in the
+ * right. Title stays in the center mast. Notes sit in the right leftover (xl+).
  */
 function bylineDate(iso: string): string {
   const d = new Date(iso);
@@ -232,6 +232,7 @@ export function citeBox(input: {
   return `<aside class="cite-box">
 <div class="nav-box">
 <p class="cite-url">Permalink: <a href="${esc(input.canonical)}">${esc(input.canonical)}</a></p>
+<hr class="nav-rule">
 <p class="cite-copy">Copy: <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
 </div>
 </aside>`;
