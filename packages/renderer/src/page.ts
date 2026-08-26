@@ -5,8 +5,8 @@ import { esc } from "./html";
  * fixed here (lang, single title/description/canonical, landmarks); hosts
  * differ only through `chrome` (header/footer fragments + stylesheet href).
  *
- * Layout: full-width header, then a `.layout` grid of an optional left rail
- * (post nav) + `<main>` (the article-wrap the caller supplies), then footer.
+ * Layout: site-head is center-top in `.layout`; left rail is cite + ToC;
+ * right rail is theme + post-nav; `<main>` is the article.
  */
 export interface Chrome {
   stylesheet: string;
@@ -22,10 +22,12 @@ export interface PageInput {
   headExtra?: string;
   /** The <main> element (from articleHtml / simpleMain). */
   mainHtml: string;
-  /** Optional left rail markup (post nav). Sticky column on desktop. */
+  /** Optional post-nav markup. Right rail on desktop. */
   leftRail?: string;
-  /** Optional ToC box. Lives in the left rail until xl, then the right rail. */
+  /** Optional ToC box. Left rail on desktop; stacked under the article on mobile. */
   tocHtml?: string;
+  /** Optional cite box (permalink / copy). Left rail, above ToC. */
+  citeHtml?: string;
   /** Optional scripts before </body> (e.g. the nav fuzzy filter). */
   bodyEnd?: string;
   /** Absolute (or site-root) image URL for Open Graph / Twitter cards. */
@@ -60,7 +62,8 @@ function themeSelHtml(): string {
     })
     .join("");
   return `<aside class="theme-sel">
-<p class="theme-label">Theme</p>
+<input type="checkbox" id="theme-pop" class="disclosure">
+<label for="theme-pop" class="theme-label">Theme</label>
 <hr class="nav-rule">
 <div class="theme-controls">
 <div class="theme-hues" role="radiogroup" aria-label="Theme color">
@@ -134,9 +137,9 @@ ${ld}
 <filter id="dither-3" color-interpolation-filters="sRGB">
 <feColorMatrix type="saturate" values="0"/>
 <feComponentTransfer>
-<feFuncR type="discrete" tableValues="0.098 1 1"/>
-<feFuncG type="discrete" tableValues="0 0.784 0.992"/>
-<feFuncB type="discrete" tableValues="0 0.784 0.992"/>
+<feFuncR type="discrete" tableValues="0.1 0.55 1"/>
+<feFuncG type="discrete" tableValues="0.1 0.55 1"/>
+<feFuncB type="discrete" tableValues="0.1 0.55 1"/>
 </feComponentTransfer>
 </filter>
 <filter id="dither-hover" color-interpolation-filters="sRGB">
@@ -165,16 +168,17 @@ ${ld}
 </filter>
 </svg>
 <div class="layout">
+${p.chrome.header}
 ${p.leftRail
     ? `<div class="left-rail">
-${p.chrome.header}
-${p.leftRail}
+${p.citeHtml ?? ""}
+${p.tocHtml ?? ""}
 </div>
 <div class="right-rail">
 ${themeSelHtml()}
-${p.tocHtml ?? ""}
+${p.leftRail}
 </div>`
-    : p.chrome.header}
+    : ""}
 ${p.mainHtml}
 </div>
 ${p.chrome.footer}
@@ -186,8 +190,8 @@ ${p.bodyEnd ?? ""}
 
 /**
  * Post: `<main class="article-wrap">` is the bordered `.article-body`.
- * ToC is passed separately as tocHtml and placed in the rails.
- * Sidenotes float into the right leftover at the citation line (xl+).
+ * Site-head is center-top. Cite + ToC sit in the left rail; theme +
+ * post-nav in the right. Notes sit in the right leftover (xl+).
  */
 function bylineDate(iso: string): string {
   const d = new Date(iso);
@@ -201,11 +205,11 @@ export function tocBox(items?: string, noteCount = 0): string {
   if (!items) return "";
   const notes =
     noteCount > 0
-      ? `\n<hr class="nav-rule">\n<p class="toc-notes">${Array.from(
+      ? `\n<hr class="nav-rule">\n<p class="toc-notes">Notes: ${Array.from(
           { length: noteCount },
           (_, i) =>
             `<a class="toc-note" href="#fn-${i + 1}">[${i + 1}]</a>`,
-        ).join("")}</p>`
+        ).join(" ")}</p>`
       : "";
   return `<div class="toc">
 <input type="checkbox" id="toc-toggle" class="disclosure">
@@ -220,33 +224,79 @@ ${items}
 </div>`;
 }
 
+export function citeBox(input: {
+  canonical: string;
+  mdHref: string;
+  txtHref: string;
+}): string {
+  return `<aside class="cite-box">
+<div class="nav-box">
+<p class="cite-url">Permalink: <a href="${esc(input.canonical)}">${esc(input.canonical)}</a></p>
+<p class="cite-copy">Copy: <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
+</div>
+</aside>`;
+}
+
+export function adjacentHtml(
+  posts: { title: string; url: string; date: string }[],
+  currentUrl: string,
+): string {
+  const here = currentUrl.replace(/\/$/, "");
+  const slash = here.lastIndexOf("/");
+  const index = slash > 0 ? here.slice(0, slash) : "/";
+  const sorted = [...posts].sort((a, b) => b.date.localeCompare(a.date));
+  const i = sorted.findIndex((p) => p.url.replace(/\/$/, "") === here);
+  if (i < 0) return "";
+  const newer = sorted[i - 1];
+  const older = sorted[i + 1];
+  if (!newer && !older) return "";
+  const prev = older
+    ? `<a class="post-prev" href="${esc(older.url)}"><span class="post-adj-k">&lt;&lt; Previous Post</span><span class="post-adj-t">${esc(older.title)}</span></a>`
+    : `<span class="post-prev"></span>`;
+  const next = newer
+    ? `<a class="post-next" href="${esc(newer.url)}"><span class="post-adj-k">Next Post &gt;&gt;</span><span class="post-adj-t">${esc(newer.title)}</span></a>`
+    : `<a class="post-next" href="${esc(index)}"><span class="post-adj-k">All Posts &gt;&gt;</span></a>`;
+  return `<nav class="post-adj" aria-label="Adjacent posts">${prev}${next}</nav>`;
+}
+
 export function articleHtml(input: {
   title: string;
   publishedAt: string;
   byline?: string;
   category?: string;
   categoryHref?: string;
+  canonical?: string;
   bodyHtml: string;
   metaHtml?: string;
+  mdHref?: string;
+  txtHref?: string;
 }): string {
   const date = new Date(input.publishedAt);
+  const permalink = input.canonical
+    ? `<a class="permalink" href="${esc(input.canonical)}">Permalink</a>`
+    : `<span class="permalink"></span>`;
   const author = input.byline ? `<span class="author">${esc(input.byline)}</span>` : `<span class="author"></span>`;
-  const cat = input.category
-    ? input.categoryHref
-      ? `<a class="byline-cat" href="${esc(input.categoryHref)}">${esc(input.category)}</a>`
-      : `<span class="byline-cat">${esc(input.category)}</span>`
-    : `<span class="byline-cat"></span>`;
   const meta = input.metaHtml ? `\n<div class="sec post-meta">${input.metaHtml}</div>` : "";
+  const md = input.mdHref
+    ? `<button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button>`
+    : "";
+  const txt = input.txtHref
+    ? `<button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button>`
+    : "";
+  const copy = md && txt
+    ? `<span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} <span class="nav-sep" aria-hidden="true">|</span> ${txt}`
+    : "";
   return `<main class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
 <header>
-<p class="byline"><time datetime="${date.toISOString()}">${bylineDate(input.publishedAt)}</time>${cat}${author}</p>
+<p class="byline">${permalink}<time datetime="${date.toISOString()}">${bylineDate(input.publishedAt)}</time>${author}</p>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
+<hr class="nav-rule mast-tools-rule">
+<p class="mast-tools"><label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
 </header>
-</div>
-<div class="sec">
+<hr class="nav-rule">
 <div class="prose">
 ${input.bodyHtml}
 </div>

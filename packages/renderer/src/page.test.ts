@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { htmlPage, articleHtml, notFoundHtml, type Chrome } from "./page";
+import { htmlPage, articleHtml, adjacentHtml, citeBox, notFoundHtml, tocBox, type Chrome } from "./page";
+import { leftRail } from "./nav";
 // Cross-package source import: lockstep proof that baked output passes the auditor.
 import { auditPage, auditArticleSemantics, auditIndexability } from "../../conformance/src/audit";
 import { galleryHtml } from "./gallery";
@@ -21,6 +22,7 @@ const PAGE = htmlPage({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
     byline: "Remilia",
+    canonical: "https://www.remilia.net/blog/vaults",
     bodyHtml: `<p>${"Vault mechanics explained at length. ".repeat(20)}</p>`,
   }),
 });
@@ -45,6 +47,104 @@ test("404 page is noindex and points at sitemap and llms.txt", () => {
   assert.ok(nf.includes('content="noindex"'));
   assert.ok(nf.includes("/blog/sitemap.xml"));
   assert.ok(nf.includes("/llms.txt"));
+});
+
+test("article rails put cite then ToC on the left and post-nav on the right", () => {
+  const html = htmlPage({
+    title: "Vaults — Devblog",
+    description: "How vaults work.",
+    canonical: "https://www.remilia.net/blog/vaults",
+    jsonld: [],
+    chrome: CHROME,
+    leftRail: `<div class="post-nav">nav</div>`,
+    tocHtml: `<div class="toc">toc</div>`,
+    citeHtml: citeBox({
+      canonical: "https://www.remilia.net/blog/vaults",
+      mdHref: "/blog/vaults.md",
+      txtHref: "/blog/vaults.txt",
+    }),
+    mainHtml: articleHtml({
+      title: "Vaults",
+      publishedAt: "2026-08-01T00:00:00Z",
+      canonical: "https://www.remilia.net/blog/vaults",
+      bodyHtml: "<p>x</p>",
+      mdHref: "/blog/vaults.md",
+      txtHref: "/blog/vaults.txt",
+    }),
+  });
+  const left = html.indexOf('class="left-rail"');
+  const toc = html.indexOf('class="toc"');
+  const cite = html.indexOf('class="cite-box"');
+  const right = html.indexOf('class="right-rail"');
+  const nav = html.indexOf('class="post-nav"');
+  assert.ok(left >= 0 && cite > left && toc > cite && toc < right && nav > right);
+  assert.ok(html.includes("Permalink:"));
+  assert.ok(html.includes(">Permalink</a>"));
+  assert.ok(html.includes("Copy:"));
+  assert.ok(html.includes(">[MD]</button>"));
+  assert.ok(html.includes(">[TXT]</button>"));
+});
+
+test("adjacent posts are older left and newer right", () => {
+  const newest = adjacentHtml(
+    [
+      { title: "New", url: "/press/new", date: "2026-08-10T00:00:00Z" },
+      { title: "Old", url: "/press/old", date: "2026-06-01T00:00:00Z" },
+    ],
+    "/press/new",
+  );
+  assert.ok(newest.includes("&lt;&lt; Previous Post"));
+  assert.ok(newest.includes("All Posts &gt;&gt;"));
+  assert.ok(newest.includes('href="/press/old"'));
+  assert.ok(newest.includes('href="/press"'));
+  assert.ok(!newest.includes("Next Post"));
+  const oldest = adjacentHtml(
+    [
+      { title: "New", url: "/press/new", date: "2026-08-10T00:00:00Z" },
+      { title: "Old", url: "/press/old", date: "2026-06-01T00:00:00Z" },
+    ],
+    "/press/old",
+  );
+  assert.ok(oldest.includes("Next Post &gt;&gt;"));
+  assert.ok(oldest.includes('href="/press/new"'));
+});
+
+test("toc notes are a labeled row, not bold-only chips", () => {
+  const html = tocBox(`<li>One</li>`, 2);
+  assert.ok(html.includes("Notes: "));
+  assert.ok(html.includes('href="#fn-1">[1]</a>'));
+  assert.ok(html.includes('href="#fn-2">[2]</a>'));
+});
+
+test("post list meta is date emdash category", () => {
+  const html = leftRail(
+    [{ title: "A", url: "/press/a", date: "2026-08-10T00:00:00Z", category: "Feature" }],
+    "Press",
+    "/press",
+  );
+  assert.ok(html.includes(">08.10.26</time> — <span class=\"nav-cat\">Feature</span>"));
+  assert.ok(html.includes(">All posts</option>"));
+  assert.ok(html.includes('placeholder="Search"'));
+  assert.ok(html.includes("Showing all"));
+  assert.ok(html.includes('aria-label="Previous page">[</button>'));
+});
+
+test("theme picker includes a mobile disclosure", () => {
+  const html = htmlPage({
+    title: "Vaults — Devblog",
+    description: "How vaults work.",
+    canonical: "https://www.remilia.net/blog/vaults",
+    jsonld: [],
+    chrome: CHROME,
+    leftRail: `<div class="post-nav">nav</div>`,
+    mainHtml: articleHtml({
+      title: "Vaults",
+      publishedAt: "2026-08-01T00:00:00Z",
+      bodyHtml: "<p>x</p>",
+    }),
+  });
+  assert.ok(html.includes('id="theme-pop"'));
+  assert.ok(html.includes('for="theme-pop"'));
 });
 
 test("gallery renders figures with alt and a dialog lightbox", () => {

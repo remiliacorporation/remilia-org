@@ -27,7 +27,7 @@ import {
   type LinkCard,
   type PTBlock,
 } from "./pt";
-import { articleHtml, htmlPage, notFoundHtml, simpleMain, tocBox, type Chrome } from "./page";
+import { articleHtml, citeBox, htmlPage, notFoundHtml, simpleMain, tocBox, adjacentHtml, type Chrome } from "./page";
 import { leftRail, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
@@ -118,13 +118,20 @@ const EVENTS_QUERY = `*[_type == "event" && !(_id in path("drafts.**"))] | order
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
   "logoRef": logo.asset._ref }`;
 
-/** Naive markdown sibling for text/markdown negotiation. */
-function postMarkdown(p: FetchedPost, canonical: string): string {
-  const text = p.body
+function postPlain(p: FetchedPost): string {
+  return p.body
     .flatMap((b) => ("children" in b && Array.isArray(b.children) ? b.children : []))
     .map((s) => (s && typeof s === "object" && "text" in s ? String(s.text) : ""))
     .join("");
-  return `# ${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n> ${p.excerpt}\n\n${text}\n`;
+}
+
+/** Naive markdown sibling for text/markdown negotiation. */
+function postMarkdown(p: FetchedPost, canonical: string): string {
+  return `# ${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n> ${p.excerpt}\n\n${postPlain(p)}\n`;
+}
+
+function postText(p: FetchedPost, canonical: string): string {
+  return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(p)}\n`;
 }
 
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
@@ -198,20 +205,29 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       chrome,
       leftRail: rail,
       tocHtml: tocBox(tocItems(extractHeadings(p.body)), footnoteCount(p.body)),
+      citeHtml: citeBox({
+        canonical,
+        mdHref: `${basePath}/${p.slug}.md`,
+        txtHref: `${basePath}/${p.slug}.txt`,
+      }),
       bodyEnd: navScript,
       mainHtml: articleHtml({
         title: p.title,
         publishedAt: p.publishedAt,
         byline: p.authors?.map((a) => a.name).join(", "),
+        canonical,
         category: p.tags?.[0],
         categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
         bodyHtml,
-        metaHtml: `${p.tags?.length ? `Tags: ${p.tags.map((t) => esc(t)).join(", ")}<br>` : ""}Permalink: <i>${esc(canonical)}</i>`,
+        metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
+        mdHref: `${basePath}/${p.slug}.md`,
+        txtHref: `${basePath}/${p.slug}.txt`,
       }),
     });
     await mkdir(join(dir, p.slug), { recursive: true });
     await writeFile(join(dir, p.slug, "index.html"), page);
     await writeFile(join(dir, `${p.slug}.md`), postMarkdown(p, canonical));
+    await writeFile(join(dir, `${p.slug}.txt`), postText(p, canonical));
   }
 
   // Index

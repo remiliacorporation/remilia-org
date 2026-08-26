@@ -116,10 +116,11 @@ test("external links marked rel=external; internal links get hover cards", () =>
   });
   assert.ok(html.includes('rel="external noopener">ext</a>'));
   assert.ok(html.includes('<a class="interlink" href="https://remilia.org/press/launch">'));
-  assert.ok(html.includes('<span class="link-card" role="tooltip"><img src="https://cdn/x.jpg"'));
+  assert.ok(html.includes('<span class="link-card" role="tooltip"><span class="ht">'));
+  assert.ok(html.includes('src="https://cdn/x.jpg"'));
   assert.ok(html.includes("<strong>Launch</strong><span>We launched.</span>"));
 });
-test("footnotes render as paired anchors (citation ↔ note)", () => {
+test("footnotes render as one .fn with nested note", () => {
   const blocks: PTBlock[] = [
     {
       _type: "block",
@@ -131,8 +132,10 @@ test("footnotes render as paired anchors (citation ↔ note)", () => {
     },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<a class="fn" id="fn-1" href="#sn-1" role="doc-noteref">[1]</a>'));
-  assert.ok(html.includes('<a class="sidenote" id="sn-1" href="#fn-1" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></a>'));
+  assert.ok(html.includes('<span class="fn" id="fn-1">'));
+  assert.ok(html.includes('<label class="fn-ref" for="fn-1-on">[1]</label>'));
+  assert.ok(html.includes('<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></span>'));
+  assert.ok(!html.includes('class="sidenote"'));
   assert.ok(html.includes("Second &lt;source&gt;."));
   assert.ok(!html.includes("sn-toggle"));
 });

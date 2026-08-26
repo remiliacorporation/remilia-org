@@ -10,26 +10,23 @@
  *    layout: sizes are fixed so line length never drifts with fonts.
  * 2. SIZE HIERARCHY ONLY ON THE TITLE (12px body / 20px title). Body copy
  *    separates through weight, underline, caps, italics — never size.
- * 3. THREE COLUMNS: left post-nav | center article | right ToC. The two
- *    vertical rules are border-left/right on the article (and footer), so
- *    they trace the column. Rails are position:fixed leftover width; they
- *    do not draw rules. Nav box and ToC are capped (--rail / --toc-rail);
- *    leftover width is empty rail, not a stretched box. Site chrome lives
- *    in the left rail.
+ * 3. THREE COLUMNS: left cite+ToC | center article | right theme+posts.
+ *    Site-head is center-top on the measure. Notes sit in the right leftover
+ *    (xl+); below that they are CSS tooltips on .fn.
  *
  * Class contract (renderer → CSS):
- *   .layout                            [post-nav][article-wrap]
- *   .post-nav.rail                     left rail: site-head + boxed search/sort/list
+ *   .layout                            [toc][article-wrap]
+ *   .post-nav.rail                     right rail: boxed search/sort/list
  *   .nav-box                           1px frame around search + post list
- *   main.article-wrap                  [rail-col (ToC)][article-body]
+ *   main.article-wrap                  article-body (ToC is in the left rail)
  *     .toc                             h2 + ol (counters 1. / 1.a.)
  *     article.article-body             header + byline + .prose
  *     .prose                           PT output; h2/h3 wrapped in .hlink
  *                                      (gutter #/## marker on hover)
  *     figure > a > .ht > .ht-map > img  3-tone Bayer (black / red / paper); hover = full color
  *     figcaption                       boxed label, bottom-left under image
- *     p (position:relative) > .sidenote  margin note at the citation
- *   a.fn + a.sidenote                  [N] citation ↔ note (hover inverts both)
+ *     p (position:relative) > .fn > .fn-note  gutter / tooltip note
+ *   .fn                            [N] + nested note (hover inverts both)
  *   a[rel~="external"]                 outlink ↗
  *   .interlink > .link-card            internal-link hover card
  *   .gallery, dialog.lightbox          albums (lightbox is unfiltered original)
@@ -65,8 +62,9 @@
 
   /* Layout — fixed px. --measure is the traced column (border-box).
      Breakpoints (Tailwind, mobile-first): sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536.
-     The article column stays centered; rails occupy leftover width. */
+     The article is centered at xl; at lg it sits to the right of the left rail. */
   --measure:560px;                    /* ~80ch at 12px, 4px grid */
+  --card:280px;                       /* ~40ch; hover/tap floaters (notes, link cards) */
   --gutter:24px;                      /* inner inset from the column rules */
   --rail:240px;                       /* left nav-box cap */
   --toc-rail:224px;                   /* ToC / sidenote cap */
@@ -74,6 +72,7 @@
   --sidenote-gap:calc(var(--gutter) + var(--border-w) + var(--rail-gap)); /* p right → ToC left; note matches ToC box */
   --mast-line:16px;                   /* 12px type on the 4px grid */
   --mast-title:24px;                  /* 20px title × 1.2 leading */
+  --toc-spy:24vh;                     /* ToC current line; heading hash uses the same */
 
   --border-w:1px;
   --border:var(--border-w) solid var(--ink);
@@ -119,11 +118,12 @@ strong{font-weight:var(--weight-strong)}
 em{font-style:italic}
 h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
 
-/* ---- Top navbar — in the left rail, above Filter posts ---- */
+/* ---- Top navbar — center of the layout, above the article ---- */
 .site-head{max-width:var(--measure);margin:0 auto;padding:var(--space) 0 var(--space-s)}
 .site-head .site-title{display:block;text-decoration:none;font-weight:var(--weight-strong);text-align:center;margin:0 0 var(--space-xs)}
 .site-head .site-title:hover{background:var(--ink);color:var(--ink-contrast)}
-.site-head nav{display:flex;gap:calc(var(--grid) * 4);flex-wrap:wrap;justify-content:center}
+.head-dials{display:none}
+.head-dials label{cursor:pointer}
 .post-nav .site-head{
   max-width:var(--rail);
   width:100%;
@@ -153,10 +153,10 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   line-height:var(--mast-title);
   height:var(--mast-title);
 }
-.left-rail .site-head{
-  max-width:var(--rail);
+.layout > .site-head{
+  max-width:var(--measure);
   width:100%;
-  margin:0;
+  margin:0 auto;
   padding:var(--space-xs);
   text-align:center;
   border:var(--border);
@@ -165,7 +165,7 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   grid-template-rows:auto var(--border-w) auto;
   row-gap:var(--space-xs);
 }
-.left-rail .site-head .site-title{
+.layout > .site-head .site-title{
   text-align:inherit;
   margin:0;
   line-height:var(--mast-line);
@@ -173,8 +173,8 @@ h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
   min-height:var(--mast-line);
   overflow:visible;
 }
-.left-rail .site-head .nav-rule{margin:0;height:0;align-self:center}
-.left-rail .site-head nav{
+.layout > .site-head .nav-rule{margin:0;height:0;align-self:center}
+.layout > .site-head nav{
   display:block;
   flex-wrap:wrap;
   white-space:normal;
@@ -335,10 +335,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   border:var(--border);
 }
 /* Mast = title/byline. Same 3-row grid as .site-head (no margin stacking). */
-.sec.mast{padding:var(--space-xs)}
+.sec.mast{padding:var(--space-xs) var(--gutter) var(--space)}
 .sec.mast > header{
   display:grid;
-  grid-template-rows:var(--mast-line) var(--border-w) auto;
+  grid-template-rows:var(--mast-line) var(--border-w) auto var(--border-w) var(--mast-line);
   row-gap:var(--space-xs);
   margin:0;
   width:100%;
@@ -363,6 +363,40 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   text-wrap:balance;
   overflow-wrap:break-word;
 }
+.mast-tools{
+  display:flex;
+  flex-wrap:nowrap;
+  justify-content:center;
+  align-items:center;
+  gap:var(--grid);
+  margin:0;
+  height:var(--mast-line);
+  line-height:var(--mast-line);
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.mast-tools .mast-toc,
+.mast-tools button{
+  appearance:none;
+  border:0;
+  background:none;
+  font:inherit;
+  font-weight:var(--weight-strong);
+  color:inherit;
+  cursor:pointer;
+  padding:0;
+  text-decoration:none;
+}
+.mast-tools .mast-toc:hover,
+.mast-tools button:hover{
+  background:var(--ink);
+  color:var(--ink-contrast);
+}
+@media(min-width:1024px){
+  .mast-tools,
+  .mast-tools-rule{display:none}
+}
 .sec::before{
   content:"";
   position:absolute;
@@ -386,21 +420,14 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .post-nav > .disclosure:checked ~ .nav-box{display:block}
 .nav-box{
   border:var(--border);
-  background:var(--surface);
+  background:transparent;
   padding:var(--space-xs);
   text-align:left;
   width:100%;
   max-width:var(--rail);
   margin:0 auto 0 0;
 }
-.nav-search{
-  display:grid;
-  grid-template-columns:max-content 1fr;
-  column-gap:var(--space-xs);
-  row-gap:var(--space-xs);
-  margin:0 0 var(--space-xs);
-}
-.nav-field-row{display:contents}
+.nav-search{margin:0}
 .nav-label{flex:none;white-space:nowrap;text-align:left}
 .nav-field,.nav-search .nav-cat-sel{
   position:relative;
@@ -438,7 +465,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   text-align:left;
   outline:none;
 }
-.nav-field input::placeholder{color:transparent}
+.nav-field input::placeholder{color:var(--muted);opacity:1}
 .sel > summary{
   display:flex;
   align-items:center;
@@ -490,37 +517,62 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   background:var(--ink);color:var(--ink-contrast);
 }
 .nav-rule{border:0;border-top:var(--border);height:0;margin:var(--space-xs) 0}
-.nav-all{list-style:none}
-.nav-all li{margin:0 0 var(--space-xs);line-height:var(--leading-tight)}
+.nav-all{list-style:none;min-height:calc(4 * (2 * var(--leading-tight) + var(--grid)))}
+.nav-all li{margin:0 0 var(--grid);line-height:var(--leading-tight);min-height:calc(2 * var(--leading-tight))}
 .nav-all li:last-child{margin:0}
 .nav-all li a{display:block;min-width:0;text-decoration:none;font-weight:var(--weight-strong);overflow-wrap:break-word;text-wrap:wrap;-webkit-hyphens:auto;hyphens:auto}
 .nav-all li a:hover{text-decoration:none}
-.nav-meta{display:flex;justify-content:space-between;align-items:baseline;gap:var(--grid);font-style:normal;color:var(--muted);text-align:left;width:100%}
-.nav-meta time{flex:none;text-align:left}
-.nav-meta .nav-cat{flex:none;margin-left:auto;text-align:right}
+.nav-meta{display:block;font-style:normal;color:var(--muted);text-align:left;width:100%}
+.nav-meta time,.nav-meta .nav-cat{font-style:normal;color:var(--muted)}
 .nav-cat{
   border:0;background:none;padding:0;
   color:var(--muted);text-decoration:none;font-style:normal;
 }
-.nav-empty{color:var(--muted);font-style:italic;margin:0}
+.nav-all > li.off-page{display:none}
+.nav-foot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:var(--grid);
+  margin:var(--space-xs) 0 0;
+  background:var(--surface);
+}
+.nav-showing{margin:0;min-width:0}
+.nav-pager{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:var(--grid);
+  margin:0;
+  flex:none;
+}
+.nav-pager button{
+  appearance:none;border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0;
+}
+.nav-pager button:disabled{opacity:0.4;cursor:default}
+.nav-pager button:not(:disabled):hover{background:var(--ink);color:var(--ink-contrast)}
 .nav-page{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
   align-items:center;
   gap:var(--grid);
-  margin:0;
+  margin:calc(-1 * var(--space-xs)) calc(-1 * var(--space-xs)) 0;
+  padding:var(--space-xs);
   text-align:center;
+  background:var(--surface);
 }
 .nav-page .nav-sep{margin:0;flex:none}
 .nav-page > a{flex:none;white-space:nowrap}
 .nav-page .nav-label{flex:none;white-space:nowrap}
+.nav-page .nav-search{flex:1;min-width:0;margin:0}
+.nav-page .nav-field{width:100%}
 .nav-page .nav-cat-sel{
   appearance:none;-webkit-appearance:none;
   flex:none;
   display:inline-block;
   width:auto;
-  min-width:72px;
+  min-width:96px;
   max-width:none;
   border:var(--border);
   color:var(--ink);
@@ -570,22 +622,24 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .left-rail,
 .right-rail{display:contents}
-.left-rail .site-head,
-.left-rail .post-nav,
+.layout > .site-head,
+.left-rail .toc,
+.left-rail .cite-box,
 .right-rail .theme-sel,
-.right-rail .toc,
+.right-rail .post-nav,
 .article-wrap{
   width:100%;
   max-width:none;
   margin-left:0;
   margin-right:0;
 }
-.left-rail .site-head{order:1}
+.layout > .site-head{order:1}
 .right-rail .theme-sel{order:2}
-.right-rail .toc{order:3}
+.left-rail .toc{order:3}
 .article-wrap{order:4}
-.left-rail .post-nav{order:5}
-.left-rail .post-nav{padding:0;align-items:stretch}
+.right-rail .post-nav{order:5}
+.right-rail .post-nav{padding:0;align-items:stretch}
+.cite-box{display:none}
 .post-nav > .disclosure-label{
   border:var(--border);
   background:var(--surface);
@@ -598,7 +652,68 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   max-width:none;
 }
 
-/* lg: one sidebar. ToC above blog select on the left. Theme on the right. */
+/* Mobile: Theme is a corner button on the site-head; ToC hangs off the
+   post-nav box; notes + link cards are viewport floaters (~40ch). */
+@media (max-width:1023px){
+  .layout{position:relative}
+  .head-dials{display:inline}
+  .layout:not(:has(#nav-toggle)) .head-posts,
+  .layout:not(:has(#theme-pop)) .head-theme{display:none}
+  .layout > .site-head{
+    order:1;
+    position:relative;
+    z-index:9;
+  }
+  .article-wrap{order:3}
+  .left-rail .toc{order:4}
+  .right-rail .theme-sel{
+    display:contents;
+  }
+  .post-nav{display:contents}
+  .theme-label,
+  .post-nav > .disclosure-label{display:none}
+  .theme-sel .nav-rule{display:none}
+  .theme-controls{
+    display:none;
+    order:2;
+    position:static;
+    flex-direction:column;
+    align-items:flex-start;
+    height:auto;
+    width:100%;
+    padding:var(--space-xs);
+    border:var(--border);
+    background:var(--surface);
+    gap:var(--space-xs);
+  }
+  #theme-pop:checked ~ .theme-controls{display:flex}
+  .post-nav > .nav-box{
+    display:none;
+    order:2;
+    width:100%;
+    max-width:none;
+    border:var(--border);
+    margin:0;
+  }
+  .post-nav > .disclosure:checked ~ .nav-box{display:block}
+  .layout:has(#nav-toggle:not(:checked)) .toc{display:none}
+  .toc{
+    border-top:0;
+    margin-top:0;
+    padding:0 var(--space-xs) var(--space-xs);
+    background:var(--surface);
+    border-left:var(--border);
+    border-right:var(--border);
+    border-bottom:var(--border);
+  }
+  .toc > .disclosure-label{display:none}
+  .toc > nav{display:grid}
+  .toc h2{display:none}
+  .toc .nav-rule:first-of-type{display:none}
+  .toc ol{border-top:var(--border);padding-top:var(--space-xs)}
+}
+
+/* lg+: both rails, centered measure. Sidenotes use the right gutter. */
 @media(min-width:1024px){
   .layout{
     display:block;
@@ -606,6 +721,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     max-width:none;
     margin:0;
     padding:0;
+    position:relative;
   }
   .left-rail{
     display:flex;
@@ -626,9 +742,15 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     z-index:5;
     pointer-events:none;
   }
+  .layout > .site-head{
+    width:var(--measure);
+    max-width:100%;
+    margin:var(--rail-gap) auto 0;
+    pointer-events:auto;
+  }
   .left-rail > *,
-  .left-rail .site-head,
-  .left-rail .post-nav{
+  .left-rail .toc,
+  .left-rail .cite-box{
     pointer-events:auto;
     width:100%;
     max-width:var(--rail);
@@ -639,16 +761,16 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     -webkit-hyphens:auto;
     hyphens:auto;
   }
-  .article-wrap{width:auto;max-width:none;margin:0}
+  .left-rail .toc{max-width:var(--toc-rail)}
+  .article-wrap{width:auto;max-width:none;margin:0;order:0}
   .article-body{width:var(--measure);max-width:100%;margin:var(--rail-gap) auto 0}
   .right-rail{
     display:flex;
     flex-direction:column;
     gap:var(--rail-gap);
-    position:fixed;
+    position:absolute;
     right:0;
     top:0;
-    bottom:0;
     width:auto;
     max-width:none;
     margin:0;
@@ -662,7 +784,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .right-rail > *,
   .right-rail .theme-sel,
-  .right-rail .toc{
+  .right-rail .post-nav{
     pointer-events:auto;
     width:100%;
     max-width:var(--rail);
@@ -673,18 +795,58 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     -webkit-hyphens:auto;
     hyphens:auto;
   }
-  .right-rail .toc{max-width:var(--toc-rail)}
-  .article-wrap{order:0}
+  .right-rail .post-nav{display:flex;padding:0;align-items:stretch}
+  .cite-box{display:block;text-align:center}
+  .cite-box .nav-box{max-width:none;margin:0;text-align:center;background:var(--surface)}
+  .cite-box .cite-url{margin:0;overflow-wrap:anywhere}
+  .cite-box .cite-copy{margin:0;text-align:center}
+  .cite-box button{
+    appearance:none;border:0;background:none;font:inherit;font-weight:var(--weight-strong);color:inherit;cursor:pointer;padding:0;
+  }
+  .cite-box button:hover{background:var(--ink);color:var(--ink-contrast)}
   .post-nav > .disclosure-label{display:none}
   .post-nav > .nav-box{display:block;max-width:none;margin:0}
-  .left-rail .site-head{
+  .theme-sel{
+    position:relative;
+    top:auto;
+    right:auto;
+    width:100%;
+    max-width:var(--rail);
+    padding:var(--space-xs);
+    border:var(--border);
+    background:var(--surface);
+    display:grid;
+    grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
+    row-gap:var(--space-xs);
+  }
+  .theme-sel .nav-rule{display:block;margin:0;height:0;align-self:center}
+  .theme-label{
+    height:var(--mast-line);
+    min-height:0;
+    line-height:var(--mast-line);
+    padding:0;
+    border:0;
+    cursor:default;
+  }
+  .theme-controls{
+    display:flex;
+    position:static;
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+    height:var(--mast-title);
+    padding:0;
+    border:0;
+    gap:var(--grid);
+  }
+  .layout > .site-head{
     grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
   }
-  .left-rail .site-head .site-title{
+  .layout > .site-head .site-title{
     height:var(--mast-line);
     overflow:hidden;
   }
-  .left-rail .site-head nav{
+  .layout > .site-head nav{
     height:var(--mast-title);
     white-space:nowrap;
     flex-wrap:nowrap;
@@ -733,42 +895,42 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .toc .nav-rule{margin:0;height:0;align-self:center}
 .toc-notes{
-  display:flex;
-  flex-wrap:wrap;
-  gap:var(--space-xs);
+  display:block;
   margin:0;
+  padding:0;
+  font-weight:var(--weight-body);
+  text-align:center;
 }
 .toc-note{
   text-decoration:none;
   font-weight:var(--weight-strong);
 }
-/* ToC: 4px dotted leaders behind labels (clone so wrapped lines mask
-   the dots). Never text-wrap:pretty on the sticky rail — pretty is a
-   paragraph lookahead pass and will reflow a position:fixed box. */
+/* ToC: number, dotted leaders, label on the right. */
 .toc ol{list-style:none;counter-reset:toc-h2;margin:0;text-align:left}
 .toc li{margin:0 0 var(--grid);line-height:var(--leading-tight);min-width:0}
 .toc li a{
-  display:block;
+  display:flex;
+  align-items:baseline;
+  gap:0;
   min-width:0;
   text-decoration:none;
-  overflow-wrap:break-word;
-  -webkit-hyphens:auto;
-  hyphens:auto;
-  text-wrap:wrap;
-  background-image:radial-gradient(circle at 2px calc(1lh - 3px), currentColor 0.5px, transparent 0.55px);
-  background-size:var(--grid) 1lh;
-  background-repeat:repeat;
 }
-.toc li a::before{
-  background-color:var(--surface);
-  box-decoration-break:clone;
-  -webkit-box-decoration-break:clone;
+.toc li a::before{flex:none;order:1}
+.toc li a::after{
+  content:"";
+  order:2;
+  flex:1 1 auto;
+  min-width:var(--space-xs);
+  align-self:center;
+  height:0;
+  margin:0 var(--grid);
+  border-bottom:1px dotted currentColor;
 }
 .toc-label{
-  background-color:var(--surface);
-  box-decoration-break:clone;
-  -webkit-box-decoration-break:clone;
-  padding-right:var(--grid);
+  order:3;
+  flex:0 1 auto;
+  text-align:right;
+  min-width:0;
 }
 .toc li a:hover,
 .toc li a:hover::before,
@@ -801,21 +963,6 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   .toc > .disclosure-label{display:none}
   .toc > nav{display:grid}
 }
-@media(min-width:1280px){
-  .right-rail .toc{
-    border:0;
-    padding:0;
-    background:transparent;
-  }
-  .right-rail .toc > nav{
-    border:var(--border);
-    background:var(--surface);
-    padding:var(--space-xs);
-    max-width:var(--toc-rail);
-    width:100%;
-  }
-}
-
 /* ---- Article body (fixed line length ≥768) ---- */
 .sec > header{
   display:flex;
@@ -833,7 +980,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   font-style:normal;
   white-space:nowrap;
 }
-.byline time{justify-self:start;text-align:left;font-style:normal;color:var(--muted);text-transform:uppercase}
+.byline time{justify-self:center;text-align:center;font-style:normal;color:var(--muted);text-transform:uppercase}
+.byline .permalink{justify-self:start;text-align:left;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-decoration:none;text-transform:none}
 .byline .byline-cat{justify-self:center;text-align:center;font-weight:var(--weight-strong);color:var(--muted);text-transform:uppercase;text-decoration:none}
 .byline .byline-cat:hover,
 .byline .byline-cat:focus-visible,
@@ -934,7 +1082,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .prose pre{padding:var(--space-xs);overflow-x:auto;margin:0 0 var(--space-s)}
 .prose pre code{padding:0}
 .prose figure{
-  margin:var(--space-xs) 0;
+  margin:0 0 var(--space-s);
   width:auto;
   max-width:100%;
 }
@@ -950,6 +1098,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   border:var(--border);
   background:var(--surface);
   font-style:italic;
+  font-weight:var(--weight-strong);
   max-width:100%;
   position:relative;
 }
@@ -961,13 +1110,13 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .prose :is(h2,h3){position:relative;overflow:visible}
 .prose :is(h2,h3) > .hlink{
   position:relative;
-  display:inline;
+  display:block;
   color:inherit;
   text-decoration:inherit;
 }
-.prose :is(h2,h3) > .hlink:hover,
+.prose :is(h2,h3):hover > .hlink,
+.prose :is(h2,h3):hover > .hlink::before,
 .prose :is(h2,h3) > .hlink:focus-visible,
-.prose :is(h2,h3) > .hlink:hover::before,
 .prose :is(h2,h3) > .hlink:focus-visible::before{
   background:var(--ink);
   color:var(--ink-contrast);
@@ -988,76 +1137,101 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .prose h3:hover > .hlink::before,
 .prose h3 > .hlink:hover::before,
 .prose h3 > .hlink:focus-visible::before{content:"## "}
-.prose :is(h2,h3,h4)[id]{scroll-margin-top:calc(3 * var(--size-base) * var(--leading-prose))}
-.prose :is(h2,h3):hover,
-.prose :is(h2,h3):has(> .hlink:hover),
-.prose :is(h2,h3):has(> .hlink:focus-visible){text-decoration:none}
-.prose :is(h2,h3).toc-current,
-.prose :is(h2,h3).toc-current > .hlink,
-.prose :is(h2,h3).toc-current > .hlink::before{
-  background:var(--ink);
-  color:var(--ink-contrast);
+.prose :is(h2,h3,h4)[id]{scroll-margin-top:var(--toc-spy)}
+.prose h2:hover,
+.prose h2:hover > .hlink,
+.prose h2:has(> .hlink:focus-visible),
+.prose h2:has(> .hlink:focus-visible) > .hlink,
+.prose h4:hover{
   text-decoration:none;
-  font-weight:var(--weight-strong);
 }
 
 .prose a[rel~="external"]::after{content:"\2197";margin-left:var(--grid);text-decoration:none;display:inline-block}
 
-/* ---- Sidenotes: citation and note are paired anchors.
-   Narrow: hidden until :target (boxed). ≥xl (1280): same column as the ToC,
-   24px narrower and 24px right (ToC right edge). Idle: hollow box, no fill;
-   hover fills surface (no invert). Connector meets the first line and
-   stops at the column outer edge (p is the containing block, so the
-   line must omit the article gutter). N: gutter; body hangs + pretty. ---- */
-a.fn{font-weight:var(--weight-strong);text-decoration:none;padding:0;margin:0;scroll-margin-top:50%}
-.sidenote{
+/* ---- Notes: one .fn. Compact is a tooltip (hover or checkbox +
+   scrim). ≥1280 the note sits in the gutter. ---- */
+.fn{scroll-margin-top:50vh}
+.fn-on{
+  position:fixed;
+  width:1px;
+  height:1px;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  border:0;
+  opacity:0;
+  pointer-events:none;
+}
+.fn-ref{font-weight:var(--weight-strong);cursor:pointer}
+.fn-scrim{display:none}
+.fn-note{
   display:none;
-  position:relative;
   font-style:italic;
   line-height:var(--leading);
   border:var(--border);
-  padding:var(--space-xs);
-  background:var(--surface);
+  padding:var(--grid);
+  background:var(--wm-wash,var(--paper));
   text-decoration:none;
   color:inherit;
-  scroll-margin-top:50%;
   overflow-wrap:break-word;
   -webkit-hyphens:auto;
   hyphens:auto;
 }
-.sidenote strong{
+.fn-note strong{
   flex:none;
   margin:0;
   font-style:normal;
   font-weight:var(--weight-strong);
 }
-.sidenote .sn-text{
+.fn-note .sn-text{
   flex:1;
   min-width:0;
-  text-wrap:pretty;
   overflow-wrap:break-word;
   -webkit-hyphens:auto;
   hyphens:auto;
 }
-a.fn:hover + .sidenote,
-a.fn:hover + .sidenote *,
-.sidenote:hover,
-.sidenote:hover *{
+@media(max-width:1279px){
+  .fn-on:checked ~ .fn-scrim{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:25;
+  }
+  .fn:hover .fn-note,
+  .fn-on:checked ~ .fn-note{
+    display:flex;
+    gap:var(--grid);
+    align-items:flex-start;
+    position:absolute;
+    left:0;
+    width:min(var(--card), 100%);
+    max-width:var(--card);
+    margin:var(--grid) 0 0;
+    z-index:30;
+  }
+}
+.fn:hover .fn-ref,
+.fn:hover .fn-note,
+.fn:hover .fn-note *{
   background:var(--ink);
   color:var(--ink-contrast);
   text-decoration:none;
 }
-.sidenote:target{
-  display:flex;
-  gap:var(--grid);
-  align-items:flex-start;
-  margin:var(--space-xs) 0 var(--space-s);
-  max-width:var(--measure);
+@media(max-width:1279px){
+  .fn-on:checked ~ .fn-ref,
+  .fn-on:checked ~ .fn-note,
+  .fn-on:checked ~ .fn-note *{
+    background:var(--ink);
+    color:var(--ink-contrast);
+    text-decoration:none;
+  }
 }
 .article-body > .sec{z-index:1}
 @media(min-width:1280px){
-  .sidenote,
-  .sidenote:target{
+  .fn-on,.fn-scrim{display:none}
+  .fn-ref{cursor:inherit}
+  .fn-note{
     display:flex;
     gap:var(--grid);
     align-items:flex-start;
@@ -1065,50 +1239,44 @@ a.fn:hover + .sidenote *,
     left:100%;
     right:auto;
     top:0;
-    width:calc(var(--toc-rail) - 24px);
-    max-width:calc(var(--toc-rail) - 24px);
-    margin:0 0 0 calc(var(--sidenote-gap) + 24px);
-    background:transparent;
+    bottom:auto;
+    width:var(--toc-rail);
+    max-width:var(--toc-rail);
+    margin:0 0 0 var(--sidenote-gap);
+    background:var(--wm-wash,var(--paper));
     border-color:var(--ink);
     z-index:2;
   }
-  .sidenote::before{
+  .fn-note::before{
     content:"";
     display:block;
     position:absolute;
     right:calc(100% + var(--border-w));
     left:auto;
     top:calc(var(--space-xs) + var(--size-base) * var(--leading) / 2);
-    width:calc(var(--rail-gap) + 24px);
+    width:var(--rail-gap);
     height:var(--border-w);
     border:0;
     background:var(--ink);
     z-index:-1;
     pointer-events:none;
   }
-  a.fn:hover + .sidenote,
-  .sidenote:hover{
-    background:var(--surface);
-    color:inherit;
-    border-color:var(--ink);
-    text-decoration:none;
-  }
-  a.fn:hover + .sidenote *,
-  .sidenote:hover *{
-    background:transparent;
-    color:inherit;
-    text-decoration:none;
-  }
 }
 @supports (top:anchor(top)){
+#fn-1{anchor-name:--fn-1}#fn-1 .fn-note{position-anchor:--fn-1}#fn-2{anchor-name:--fn-2}#fn-2 .fn-note{position-anchor:--fn-2}#fn-3{anchor-name:--fn-3}#fn-3 .fn-note{position-anchor:--fn-3}#fn-4{anchor-name:--fn-4}#fn-4 .fn-note{position-anchor:--fn-4}#fn-5{anchor-name:--fn-5}#fn-5 .fn-note{position-anchor:--fn-5}#fn-6{anchor-name:--fn-6}#fn-6 .fn-note{position-anchor:--fn-6}#fn-7{anchor-name:--fn-7}#fn-7 .fn-note{position-anchor:--fn-7}#fn-8{anchor-name:--fn-8}#fn-8 .fn-note{position-anchor:--fn-8}#fn-9{anchor-name:--fn-9}#fn-9 .fn-note{position-anchor:--fn-9}#fn-10{anchor-name:--fn-10}#fn-10 .fn-note{position-anchor:--fn-10}#fn-11{anchor-name:--fn-11}#fn-11 .fn-note{position-anchor:--fn-11}#fn-12{anchor-name:--fn-12}#fn-12 .fn-note{position-anchor:--fn-12}#fn-13{anchor-name:--fn-13}#fn-13 .fn-note{position-anchor:--fn-13}#fn-14{anchor-name:--fn-14}#fn-14 .fn-note{position-anchor:--fn-14}#fn-15{anchor-name:--fn-15}#fn-15 .fn-note{position-anchor:--fn-15}#fn-16{anchor-name:--fn-16}#fn-16 .fn-note{position-anchor:--fn-16}#fn-17{anchor-name:--fn-17}#fn-17 .fn-note{position-anchor:--fn-17}#fn-18{anchor-name:--fn-18}#fn-18 .fn-note{position-anchor:--fn-18}#fn-19{anchor-name:--fn-19}#fn-19 .fn-note{position-anchor:--fn-19}#fn-20{anchor-name:--fn-20}#fn-20 .fn-note{position-anchor:--fn-20}#fn-21{anchor-name:--fn-21}#fn-21 .fn-note{position-anchor:--fn-21}#fn-22{anchor-name:--fn-22}#fn-22 .fn-note{position-anchor:--fn-22}#fn-23{anchor-name:--fn-23}#fn-23 .fn-note{position-anchor:--fn-23}#fn-24{anchor-name:--fn-24}#fn-24 .fn-note{position-anchor:--fn-24}
+@media(max-width:1279px){
+  .fn-note{top:anchor(bottom);left:anchor(left)}
+}
 @media(min-width:1280px){
+  .fn-note{top:anchor(top)}
   .theme-sel{anchor-name:--theme;position:relative;z-index:1}
-  .right-rail .toc{position:relative;z-index:1}
-  .right-rail .toc > nav{anchor-name:--toc;position:relative;z-index:1}
+  .left-rail .toc{position:relative;z-index:1}
+  .left-rail .toc > nav{anchor-name:--toc;position:relative;z-index:1}
+  .right-rail .nav-box{anchor-name:--posts;position:relative;z-index:1}
   .right-rail::before{
     content:"";
     position:fixed;
-    position-anchor:--toc;
+    position-anchor:--posts;
     left:calc(50% + var(--measure) / 2 + var(--rail-gap));
     width:var(--toc-rail);
     top:0;
@@ -1122,7 +1290,6 @@ a.fn:hover + .sidenote *,
     background-position:calc(50% - var(--measure) / 2 + var(--dot-ox,0px)) var(--dot-oy,0px);
     background-attachment:fixed;
   }
-#fn-1{anchor-name:--fn-1}#sn-1{position-anchor:--fn-1;top:anchor(top)}#fn-2{anchor-name:--fn-2}#sn-2{position-anchor:--fn-2;top:anchor(top)}#fn-3{anchor-name:--fn-3}#sn-3{position-anchor:--fn-3;top:anchor(top)}#fn-4{anchor-name:--fn-4}#sn-4{position-anchor:--fn-4;top:anchor(top)}#fn-5{anchor-name:--fn-5}#sn-5{position-anchor:--fn-5;top:anchor(top)}#fn-6{anchor-name:--fn-6}#sn-6{position-anchor:--fn-6;top:anchor(top)}#fn-7{anchor-name:--fn-7}#sn-7{position-anchor:--fn-7;top:anchor(top)}#fn-8{anchor-name:--fn-8}#sn-8{position-anchor:--fn-8;top:anchor(top)}#fn-9{anchor-name:--fn-9}#sn-9{position-anchor:--fn-9;top:anchor(top)}#fn-10{anchor-name:--fn-10}#sn-10{position-anchor:--fn-10;top:anchor(top)}#fn-11{anchor-name:--fn-11}#sn-11{position-anchor:--fn-11;top:anchor(top)}#fn-12{anchor-name:--fn-12}#sn-12{position-anchor:--fn-12;top:anchor(top)}#fn-13{anchor-name:--fn-13}#sn-13{position-anchor:--fn-13;top:anchor(top)}#fn-14{anchor-name:--fn-14}#sn-14{position-anchor:--fn-14;top:anchor(top)}#fn-15{anchor-name:--fn-15}#sn-15{position-anchor:--fn-15;top:anchor(top)}#fn-16{anchor-name:--fn-16}#sn-16{position-anchor:--fn-16;top:anchor(top)}#fn-17{anchor-name:--fn-17}#sn-17{position-anchor:--fn-17;top:anchor(top)}#fn-18{anchor-name:--fn-18}#sn-18{position-anchor:--fn-18;top:anchor(top)}#fn-19{anchor-name:--fn-19}#sn-19{position-anchor:--fn-19;top:anchor(top)}#fn-20{anchor-name:--fn-20}#sn-20{position-anchor:--fn-20;top:anchor(top)}#fn-21{anchor-name:--fn-21}#sn-21{position-anchor:--fn-21;top:anchor(top)}#fn-22{anchor-name:--fn-22}#sn-22{position-anchor:--fn-22;top:anchor(top)}#fn-23{anchor-name:--fn-23}#sn-23{position-anchor:--fn-23;top:anchor(top)}#fn-24{anchor-name:--fn-24}#sn-24{position-anchor:--fn-24;top:anchor(top)}
 }
 }
 
@@ -1133,8 +1300,17 @@ a.fn:hover + .sidenote *,
 .fn-back{text-decoration:none;margin-left:var(--grid)}
 
 /* ---- Post meta ---- */
-.post-meta{color:var(--muted);margin:0;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
+.post-meta{color:var(--muted);margin:0;padding:var(--space-xs);overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
 .post-meta i{overflow-wrap:anywhere;hyphens:none}
+a.permalink{color:inherit;text-decoration:none}
+a.permalink:hover{background:var(--ink);color:var(--ink-contrast)}
+.post-meta .permalink{color:inherit;text-decoration:none}
+.post-adj{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-xs)}
+.post-prev,.post-next{display:flex;flex-direction:column;min-width:0;max-width:48%;overflow-wrap:anywhere;text-decoration:none}
+.post-prev{text-align:left}
+.post-next{text-align:right;margin-left:auto}
+.post-adj-k{display:block;font-weight:var(--weight-strong)}
+.post-adj-t{display:block}
 
 /* 3-tone ordered dither: grayscale + Bayer overlay, then SVG map
    0 → --dither-dark, mid → --dither-mid, 1 → --dither-light.
@@ -1146,20 +1322,28 @@ a.fn:hover + .sidenote *,
   overflow:hidden;
   isolation:isolate;
   background:var(--dither-light);
-  aspect-ratio:3 / 2;
   width:100%;
+}
+.ht::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:var(--dither-mid);
+  mix-blend-mode:color;
+  pointer-events:none;
+  z-index:2;
 }
 .ht-map{
   display:block;
-  position:absolute;
-  inset:0;
+  position:relative;
   overflow:hidden;
-  filter:var(--dither-filter,url(#dither-3)) hue-rotate(calc(var(--hue) * 1deg));
+  filter:var(--dither-filter,url(#dither-3));
 }
-.ht img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;filter:grayscale(1)}
+.ht img{display:block;width:100%;height:auto;object-fit:contain;object-position:center;filter:grayscale(1)}
 .ht-ink{
   position:absolute;
   inset:0;
+  z-index:1;
   pointer-events:none;
   image-rendering:pixelated;
   image-rendering:crisp-edges;
@@ -1170,7 +1354,11 @@ a.fn:hover + .sidenote *,
 .prose figure > a:hover .ht-map,
 .prose figure > a:focus-visible .ht-map,
 .gallery figure > a:hover .ht-map,
-.gallery figure > a:focus-visible .ht-map{filter:var(--dither-hover-filter,url(#dither-hover)) hue-rotate(calc(var(--hue) * 1deg))}
+.gallery figure > a:focus-visible .ht-map{filter:var(--dither-hover-filter,url(#dither-hover))}
+.prose figure > a:hover .ht::after,
+.prose figure > a:focus-visible .ht::after,
+.gallery figure > a:hover .ht::after,
+.gallery figure > a:focus-visible .ht::after{opacity:0}
 .prose figure > a:hover .ht img,
 .prose figure > a:focus-visible .ht img,
 .gallery figure > a:hover .ht img,
@@ -1193,6 +1381,7 @@ a.fn:hover + .sidenote *,
   border:var(--border);
   background:var(--surface);
   font-style:italic;
+  font-weight:var(--weight-strong);
   max-width:100%;
 }
 dialog.lightbox{border:var(--border);background:var(--paper);padding:var(--space-xs);max-width:90%}
@@ -1201,18 +1390,38 @@ dialog.lightbox button{border:var(--border);background:var(--paper);color:var(--
 dialog.lightbox button:hover{background:var(--ink);color:var(--ink-contrast)}
 dialog.lightbox::backdrop{background:color-mix(in srgb,var(--paper) 85%,transparent)}
 
-/* ---- Interlink hover cards ---- */
+/* ---- Interlink hover cards: ~40ch (half the 80ch measure), not the link's inline width. ---- */
 .interlink{position:relative}
-.link-card{display:none;position:absolute;top:calc(100% + var(--grid));left:0;right:0;z-index:10;background:var(--paper);color:var(--ink);border:var(--border);padding:var(--space-xs);line-height:var(--leading);font-weight:var(--weight-body);text-align:left;text-decoration:none}
-.link-card img{display:block;width:100%;height:auto;border:var(--border);margin:0 0 var(--space-xs)}
+.link-card{
+  display:none;
+  position:absolute;
+  top:calc(100% + var(--grid));
+  left:0;
+  z-index:10;
+  width:var(--card);
+  max-width:min(var(--card), calc(100vw - 2 * var(--rail-gap)));
+  background:var(--paper);
+  color:var(--ink);
+  border:var(--border);
+  padding:var(--space-xs);
+  line-height:var(--leading);
+  font-weight:var(--weight-body);
+  text-align:left;
+  text-decoration:none;
+}
+.link-card .ht{margin:0 0 var(--space-xs)}
+.link-card .ht img{border:0;margin:0}
 .link-card strong{display:block;margin:0 0 var(--grid)}
 .link-card span{display:block;color:var(--muted)}
-.interlink:hover .link-card,.interlink:focus .link-card,.interlink:focus-visible .link-card{display:block}
 .interlink:hover .link-card,.interlink:hover .link-card *{color:var(--ink);background:var(--paper);text-decoration:none}
 .interlink:hover{background:var(--ink);color:var(--ink-contrast)}
+.interlink.card-open .link-card{display:block}
+@media (hover:hover) and (pointer:fine){
+  .interlink:hover .link-card,.interlink:focus .link-card,.interlink:focus-visible .link-card{display:block}
+}
 
 /* ---- Footer ---- */
-footer{max-width:var(--measure);width:min(var(--measure), calc(100% - 2 * var(--rail-gap) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));margin:var(--rail-gap) auto max(var(--space-l), env(safe-area-inset-bottom, 0px));padding:var(--space) var(--gutter);background:var(--surface);border:var(--border);position:relative;isolation:isolate;z-index:1}
+footer{max-width:var(--measure);width:min(var(--measure), calc(100% - 2 * var(--rail-gap) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));margin:var(--rail-gap) auto max(var(--space-l), env(safe-area-inset-bottom, 0px));padding:var(--space-xs);background:var(--surface);border:var(--border);position:relative;isolation:isolate;z-index:1}
 footer hr{display:none}
 footer p{text-align:center}
 
@@ -1227,7 +1436,8 @@ footer p{text-align:center}
   body{background:#fff;color:#000}
   .post-nav,.toc,.wm,.theme-sel,.left-rail,.right-rail{display:none}
   a[href^="http"]::after{content:" (" attr(href) ")";font-weight:normal}
-  .sidenote{display:block;position:static;width:auto;margin:var(--space-xs) 0}
+  .fn-note{display:block;position:static;width:auto;margin:var(--space-xs) 0}
+  .fn-on,.fn-scrim{display:none}
   .dither-fx,.ht-ink{display:none}
   .ht,.ht-map,.ht img{filter:none;mix-blend-mode:normal;background:transparent}
 }

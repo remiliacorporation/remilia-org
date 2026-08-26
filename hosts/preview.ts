@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   articleHtml,
+  adjacentHtml,
+  citeBox,
   extractHeadings,
   htmlPage,
   leftRail,
@@ -142,17 +144,36 @@ await writeFile(
     chrome,
     leftRail: rail,
     tocHtml: tocBox(tocItems(extractHeadings(BODY)), footnoteCount(BODY)),
+    citeHtml: citeBox({
+      canonical,
+      mdHref: `/press/${post.slug}.md`,
+      txtHref: `/press/${post.slug}.txt`,
+    }),
     bodyEnd: `<script src="/press/nav.js" defer></script>`,
     mainHtml: articleHtml({
       title: post.title,
       publishedAt: post.publishedAt,
       byline: "Remilia Jackson",
+      canonical,
       category: "Feature",
       categoryHref: "/press/?cat=Feature",
       bodyHtml,
-      metaHtml: `Author: Remilia Jackson<br>Published: <time datetime="${post.publishedAt}">${post.publishedAt.slice(0, 10)}</time><br>Tags: Feature<br>Permalink: <i>${canonical}</i>`,
+      metaHtml: adjacentHtml(navPosts, `/press/${post.slug}`),
+      mdHref: `/press/${post.slug}.md`,
+      txtHref: `/press/${post.slug}.txt`,
     }),
   }),
+);
+const fixturePlain = BODY.flatMap((b) => ("children" in b && Array.isArray(b.children) ? b.children : []))
+  .map((s) => (s && typeof s === "object" && "text" in s ? String(s.text) : ""))
+  .join("");
+await writeFile(
+  join(outDir, "press", `${post.slug}.md`),
+  `# ${post.title}\n\n${post.publishedAt.slice(0, 10)} — ${canonical}\n\n> ${post.excerpt}\n\n${fixturePlain}\n`,
+);
+await writeFile(
+  join(outDir, "press", `${post.slug}.txt`),
+  `${post.title}\n\n${post.publishedAt.slice(0, 10)} — ${canonical}\n\n${post.excerpt}\n\n${fixturePlain}\n`,
 );
 
 const listing = navPosts

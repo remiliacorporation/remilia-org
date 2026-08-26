@@ -51,7 +51,7 @@
   /* Layout — 8px box grid. --rail-gap is section↔section AND column↔nav/ToC. */
   --measure:560px; /* ≈80ch body at 12px, 70 × 8 */
   --gutter:24px;
-  --rail-gap:16px;
+  --rail-gap:12px;
   --rail:240px;
   --toc-rail:240px;
   --space-xs:8px;
@@ -112,11 +112,6 @@ html[data-scheme="dark"]{
   --surface:oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
   --ink-contrast:oklch(0.13 0.008 var(--hue));
   --focus:#fff;
-  --dither-dark:oklch(0.08 0.02 var(--hue));
-  --dither-mid:oklch(0.52 0.06 var(--hue));
-  --dither-light:oklch(0.22 0.010 var(--hue));
-  --dither-filter:url(#dither-3-dark);
-  --dither-hover-filter:url(#dither-hover-dark);
 }
 @media (prefers-color-scheme: dark){
   html:not([data-scheme="light"]){
@@ -128,11 +123,6 @@ html[data-scheme="dark"]{
   --surface:oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
   --ink-contrast:oklch(0.13 0.008 var(--hue));
   --focus:#fff;
-  --dither-dark:oklch(0.08 0.02 var(--hue));
-  --dither-mid:oklch(0.52 0.06 var(--hue));
-  --dither-light:oklch(0.22 0.010 var(--hue));
-  --dither-filter:url(#dither-3-dark);
-  --dither-hover-filter:url(#dither-hover-dark);
   }
 }
 

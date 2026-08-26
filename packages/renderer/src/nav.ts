@@ -25,10 +25,10 @@ function shortDate(iso: string): string {
   return `${mm}.${dd}.${yy}`;
 }
 
-export function leftRail(posts: NavPost[], _label: string, indexHref = "/press"): string {
+export function leftRail(posts: NavPost[], _label: string, _indexHref = "/press"): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const cats = [...new Set(posts.map((p) => p.category))].sort();
-  const catOpts = [`<option value="" selected>All</option>`, ...cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`)].join("");
+  const catOpts = [`<option value="" selected>All posts</option>`, ...cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`)].join("");
   const catCss = cats
     .map(
       (c) =>
@@ -38,7 +38,7 @@ export function leftRail(posts: NavPost[], _label: string, indexHref = "/press")
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}"><a href="${esc(p.url)}">${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time><span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}"><a href="${esc(p.url)}">${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">
@@ -46,23 +46,23 @@ export function leftRail(posts: NavPost[], _label: string, indexHref = "/press")
 <label for="nav-toggle" class="disclosure-label">Posts</label>
 <div class="nav-box">
 ${catCss ? `<style>${catCss}</style>` : ""}
+<div class="nav-page">
 <form class="nav-search" role="search">
-<div class="nav-field-row">
-<label class="nav-label" for="post-filter">Search Posts:</label>
-<span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Search Posts">${MAGNIFYING_GLASS}</span>
-</div>
+<span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>
+<select class="nav-cat-sel" id="post-cat" aria-label="Filter posts">${catOpts}</select>
+</div>
 <hr class="nav-rule">
 <ul class="nav-all">
 ${items}
 </ul>
-<p class="nav-empty" hidden>No matching posts.</p>
-<hr class="nav-rule">
-<div class="nav-page">
-<a href="${esc(indexHref)}" id="nav-index-link">View Index</a>
-<span class="nav-sep" aria-hidden="true">|</span>
-<label class="nav-label" for="post-cat">Category</label>
-<select class="nav-cat-sel" id="post-cat" aria-label="Category">${catOpts}</select>
+<div class="nav-foot">
+<p class="nav-showing">Showing all</p>
+<p class="nav-pager">
+<button type="button" class="nav-prev" aria-label="Previous page">[</button>
+<span class="nav-status">1 / 1</span>
+<button type="button" class="nav-next" aria-label="Next page">]</button>
+</p>
 </div>
 </div>
 </div>`;
@@ -72,9 +72,15 @@ ${items}
 export const NAV_JS = `(() => {
   const q = document.getElementById('post-filter');
   const list = document.querySelector('.post-nav .nav-all');
-  const empty = document.querySelector('.post-nav .nav-empty');
   const form = document.querySelector('.post-nav .nav-search');
+  const cat = document.getElementById('post-cat');
+  const showing = document.querySelector('.nav-showing');
+  const prev = document.querySelector('.nav-prev');
+  const next = document.querySelector('.nav-next');
+  const status = document.querySelector('.nav-status');
   if (!q || !list) return;
+  const PAGE = 4;
+  let page = 0;
   const items = [...list.querySelectorAll('li[data-title]')];
   const score = (query, text) => {
     query = query.toLowerCase(); text = text.toLowerCase();
@@ -86,20 +92,36 @@ export const NAV_JS = `(() => {
   };
   const apply = () => {
     const query = q.value.trim();
+    const catv = cat && cat.value ? cat.value : '';
     const ranked = items.map((li) => {
       const sc = query ? score(query, li.dataset.title) : 0;
-      return { li, sc, show: query ? sc >= 0 : true };
+      const catOk = !catv || li.dataset.cat === catv;
+      return { li, sc, show: (query ? sc >= 0 : true) && catOk };
     });
     if (query) ranked.sort((a, b) => b.sc - a.sc);
-    let n = 0;
+    const vis = ranked.filter((r) => r.show);
+    const pages = Math.max(1, Math.ceil(vis.length / PAGE));
+    if (page >= pages) page = pages - 1;
+    const from = page * PAGE;
+    const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.li));
     ranked.forEach((r) => {
-      r.li.hidden = r.show ? false : true;
-      if (r.show) { n++; list.appendChild(r.li); }
+      r.li.hidden = !r.show;
+      r.li.classList.toggle('off-page', r.show && !onPage.has(r.li));
+      if (r.show) list.appendChild(r.li);
     });
-    if (empty) empty.hidden = n > 0;
+    if (showing) {
+      showing.textContent = !query && !catv ? 'Showing all' : !query ? 'Showing ' + catv : !catv ? 'Showing ' + vis.length : 'Showing ' + vis.length + ' in ' + catv;
+    }
+    if (status) status.textContent = (page + 1) + ' / ' + pages;
+    if (prev) prev.disabled = page <= 0;
+    if (next) next.disabled = page >= pages - 1;
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
-  q.addEventListener('input', apply);
+  q.addEventListener('input', () => { page = 0; apply(); });
+  if (cat) cat.addEventListener('change', () => { page = 0; apply(); });
+  if (prev) prev.addEventListener('click', () => { page--; apply(); });
+  if (next) next.addEventListener('click', () => { page++; apply(); });
+  apply();
 })();
 (() => {
   try {
@@ -115,21 +137,20 @@ export const NAV_JS = `(() => {
       if (id && li) liFor.set(id, li);
     });
     let curH = null, curLi = null, passed = [];
+    const spyY = () => parseFloat(getComputedStyle(hs[0]).scrollMarginTop) || 0;
     const pick = () => {
-      const y = 96;
+      const y = spyY();
       let h = hs[0];
       for (let i = 0; i < n; i++) {
         if (hs[i].getBoundingClientRect().top <= y) h = hs[i];
         else break;
       }
       if (h === curH) return;
-      if (curH) curH.classList.remove('toc-current');
       if (curLi) curLi.classList.remove('toc-current');
       for (let i = 0; i < passed.length; i++) passed[i].classList.remove('toc-passed');
       passed = [];
       curH = h;
       curLi = liFor.get(h.id) || null;
-      h.classList.add('toc-current');
       if (curLi) curLi.classList.add('toc-current');
       for (let i = 0; i < n; i++) {
         if (hs[i] === h) break;
@@ -139,7 +160,7 @@ export const NAV_JS = `(() => {
     };
     pick();
     if (typeof IntersectionObserver === 'function') {
-      const io = new IntersectionObserver(pick, { rootMargin: '-96px 0px -60% 0px', threshold: 0 });
+      const io = new IntersectionObserver(pick, { rootMargin: '-24% 0px -60% 0px', threshold: 0 });
       for (let i = 0; i < n; i++) io.observe(hs[i]);
     } else {
       let raf = 0;
@@ -174,6 +195,7 @@ export const NAV_JS = `(() => {
       if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target.closest('a[href^="#"]');
       if (!a) return;
+      if (a.classList.contains('fn') || a.classList.contains('fn-note')) return;
       const href = a.getAttribute('href');
       if (!href || href === '#') return;
       let id;
@@ -181,9 +203,45 @@ export const NAV_JS = `(() => {
       const el = document.getElementById(id);
       if (!el) return;
       e.preventDefault();
+      a.blur();
       if (location.hash !== href) history.pushState(null, '', href);
       go(el);
     });
   } catch (e) {}
+})();
+(() => {
+  addEventListener('click', (e) => {
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a.interlink');
+    const open = document.querySelector('.interlink.card-open');
+    if (a && a.querySelector('.link-card') && !matchMedia('(hover:hover) and (pointer:fine)').matches) {
+      if (!a.classList.contains('card-open')) {
+        e.preventDefault();
+        open?.classList.remove('card-open');
+        a.classList.add('card-open');
+        return;
+      }
+    }
+    open?.classList.remove('card-open');
+  });
+})();
+(() => {
+  addEventListener('click', (e) => {
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a.permalink');
+    if (!a || !navigator.clipboard || !navigator.clipboard.writeText) return;
+    e.preventDefault();
+    navigator.clipboard.writeText(a.href);
+  });
+})();
+(() => {
+  addEventListener('click', (e) => {
+    const b = e.target.closest('.copy-md, .copy-txt');
+    if (!b || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const src = b.getAttribute('data-src');
+    if (!src || !navigator.clipboard || !navigator.clipboard.writeText) return;
+    e.preventDefault();
+    fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t));
+  });
 })();
 `;

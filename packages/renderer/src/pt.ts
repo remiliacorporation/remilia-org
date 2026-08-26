@@ -10,10 +10,10 @@ import { esc } from "./html";
  * - external links marked `rel="external noopener"` (CSS adds the ↗).
  * - internal links with bake-supplied card data → `.interlink` + CSS hover
  *   card (the target's own social-card data).
- * - footnotes: "[N]" citation and the sidenote are paired anchors that
- *   jump to each other; the note boxes into the right rail on desktop.
+ * - footnotes: one `.fn` wrapping [N] + the note. Compact is a CSS
+ *   tooltip (hover / checkbox sticky / scrim dismiss). Desktop: gutter.
  *
- * Returns the html string; sidenotes are inline.
+ * Returns the html string; notes are inline.
  */
 
 interface Span {
@@ -148,16 +148,16 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
   if (external) return `<a href="${esc(href)}" rel="external noopener">${inner}</a>`;
   const card = state.opts.linkCard?.(href);
   if (!card) return `<a href="${esc(href)}">${inner}</a>`;
-  const img = card.imageUrl ? `<img src="${esc(card.imageUrl)}" alt="" loading="lazy">` : "";
+  const img = card.imageUrl
+    ? `<span class="ht"><span class="ht-map"><img src="${esc(card.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span>`
+    : "";
   return `<a class="interlink" href="${esc(href)}">${inner}<span class="link-card" role="tooltip">${img}<strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span></a>`;
 }
 
 function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   state.count += 1;
   const n = state.count;
-  // Citation and note are paired anchors: click [N] jumps to the note,
-  // click the note jumps back. Hover inverts both (CSS).
-  return `${inner}<a class="fn" id="fn-${n}" href="#sn-${n}" role="doc-noteref">[${n}]</a><a class="sidenote" id="sn-${n}" href="#fn-${n}" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></a>`;
+  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on"><label class="fn-ref" for="fn-${n}-on">[${n}]</label><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
