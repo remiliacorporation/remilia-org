@@ -335,7 +335,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   border:var(--border);
 }
 /* Mast = title/byline. Same 3-row grid as .site-head (no margin stacking). */
-.sec.mast{padding:var(--space-xs) var(--gutter) var(--space)}
+.sec.mast{padding:var(--space-xs)}
 .sec.mast > header{
   display:grid;
   grid-template-rows:var(--mast-line) var(--border-w) auto var(--border-w) var(--mast-line);

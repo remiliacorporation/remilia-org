@@ -297,7 +297,8 @@ export function articleHtml(input: {
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools"><label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
 </header>
-<hr class="nav-rule">
+</div>
+<div class="sec">
 <div class="prose">
 ${input.bodyHtml}
 </div>
