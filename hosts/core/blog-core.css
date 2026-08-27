@@ -1202,8 +1202,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .article-body > .sec > .prose > figure:last-child{margin-bottom:0}
 .article-body > .sec > .prose > figure:first-child{margin-top:0}
-.prose figure > a{display:block;border:var(--border);overflow:hidden;cursor:pointer;background:var(--dither-light);text-decoration:none}
-.prose figure > a:hover,.prose figure > a:focus-visible{background:var(--paper);color:inherit;text-decoration:none}
+.prose figure > a:first-of-type{display:block;border:var(--border);overflow:hidden;cursor:pointer;background:var(--dither-light);text-decoration:none}
+.prose figure > a:first-of-type:hover,.prose figure > a:first-of-type:focus-visible{background:var(--paper);color:inherit;text-decoration:none}
 .prose figure img{display:block;max-width:100%;height:auto;width:100%}
 .prose figure figcaption{
   display:table;
@@ -1215,8 +1215,11 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   font-weight:var(--weight-strong);
   max-width:100%;
 }
-.prose figure > a:hover figcaption,
-.prose figure > a:focus-visible figcaption{
+.prose figure figcaption a{text-decoration:none;color:inherit;font:inherit}
+.prose figure:hover figcaption,
+.prose figure:hover figcaption a,
+.prose figure:has(a:focus-visible) figcaption,
+.prose figure:has(a:focus-visible) figcaption a{
   background:var(--ink);
   color:var(--ink-contrast);
 }
@@ -1272,7 +1275,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 
 /* ---- Notes: one .fn. Compact is a tooltip (hover or checkbox +
    scrim). 3-col the note sits in the gutter. ---- */
-.fn{scroll-margin-top:50vh;position:relative}
+.fn{scroll-margin-top:50vh}
 .fn-on{
   position:fixed;
   width:1px;
@@ -1314,6 +1317,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   hyphens:auto;
 }
 @media(max-width:1099px){
+  .fn{position:relative}
   .fn-on:checked ~ .fn-scrim{
     display:block;
     position:fixed;
@@ -1327,11 +1331,11 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     align-items:flex-start;
     position:absolute;
     top:100%;
-    left:100%;
-    width:min(var(--card), 100%);
-    max-width:var(--card);
+    left:0;
+    width:var(--card);
+    max-width:min(var(--card), calc(100vw - 2 * var(--rail-gap)));
     margin:0;
-    padding:calc(var(--space-xs) + var(--grid)) var(--grid) var(--grid);
+    padding:calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
     z-index:30;
     pointer-events:auto;
   }
@@ -1379,7 +1383,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     right:calc(100% + var(--border-w));
     left:auto;
     top:calc(var(--space-xs) + var(--size-base) * var(--leading) / 2);
-    width:var(--rail-gap);
+    width:var(--sidenote-gap);
     height:var(--border-w);
     border:0;
     background:var(--ink);
@@ -1393,7 +1397,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   .fn-note{top:anchor(bottom);left:anchor(right)}
 }
 @media(min-width:1100px){
-  .fn-note{top:anchor(top)}
+  .fn-note{position-anchor:none;top:0;left:100%}
   .theme-sel{anchor-name:--theme;position:relative;z-index:1}
   .left-rail .toc{position:relative;z-index:1}
   .left-rail .toc > nav{anchor-name:--toc;position:relative;z-index:1}
