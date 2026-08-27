@@ -47,7 +47,7 @@ test("images render as figures with alt; unknown types are skipped", () => {
   assert.ok(html.includes('alt="A photo"'));
   assert.ok(html.includes('<a href="https://cdn.sanity.io/x.jpg?w=1600">'));
   assert.ok(html.includes('<span class="ht">'));
-  assert.ok(html.includes("<figcaption>cap</figcaption>"));
+  assert.ok(html.includes("<figcaption><a href=\"https://cdn.sanity.io/x.jpg?w=1600\">cap</a></figcaption>"));
   assert.ok(!html.includes("mysteryCard"));
 });
 
