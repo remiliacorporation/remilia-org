@@ -622,6 +622,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .left-rail,
 .right-rail{display:contents}
+.left-stack{display:contents}
 .left-rail .site-head,
 .left-rail .toc,
 .left-rail .cite-box,
@@ -774,85 +775,74 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   .toc{border:var(--border);padding:var(--space-xs);background:var(--surface)}
   .toc > .disclosure-label{display:none}
   .toc > nav{display:grid}
+  .left-stack{display:flex;flex-direction:column;gap:var(--rail-gap)}
 }
 
-/* 3-col: both rails at fixed width, centered measure. Sidenotes use the right gutter. */
+/* 3-col: site-head / mast / theme share one row so they match height. */
 @media(min-width:1100px){
   .layout{
-    display:block;
-    width:auto;
+    display:grid;
+    grid-template-columns:var(--rail) var(--measure) var(--rail);
+    grid-template-rows:auto 1fr;
+    justify-content:center;
+    column-gap:var(--rail-gap);
+    row-gap:var(--rail-gap);
+    width:max-content;
     max-width:none;
-    margin:0;
-    padding:0;
+    margin:var(--rail-gap) auto 0;
     position:relative;
   }
-  .left-rail{
-    display:flex;
-    flex-direction:column;
+  .left-rail,
+  .right-rail{
+    display:grid;
+    grid-template-rows:subgrid;
+    grid-row:1 / -1;
     gap:var(--rail-gap);
-    position:fixed;
-    left:0;
-    top:0;
-    bottom:0;
-    width:auto;
-    max-width:none;
+    position:static;
+    width:var(--rail);
+    max-width:var(--rail);
     margin:0;
-    right:calc(50% + var(--measure) / 2);
-    overflow:auto;
-    padding:var(--rail-gap) var(--rail-gap) var(--space) 0;
-    align-items:flex-end;
+    padding:0;
+    pointer-events:auto;
+    align-items:stretch;
     text-align:center;
     z-index:5;
-    pointer-events:none;
   }
-  .left-rail > *,
+  .left-rail{grid-column:1}
+  .right-rail{grid-column:3}
   .left-rail .site-head,
   .left-rail .toc,
-  .left-rail .cite-box{
-    pointer-events:auto;
-    width:100%;
-    max-width:var(--rail);
-    min-width:0;
-    order:0;
-    overflow-wrap:break-word;
-    text-wrap:wrap;
-    -webkit-hyphens:auto;
-    hyphens:auto;
-  }
-  .left-rail .toc{max-width:var(--toc-rail)}
-  .article-wrap{width:auto;max-width:none;margin:0;order:0}
-  .article-body{width:var(--measure);max-width:100%;margin:var(--rail-gap) auto 0}
-  .right-rail{
-    display:flex;
-    flex-direction:column;
-    gap:var(--rail-gap);
-    position:absolute;
-    right:0;
-    top:0;
-    width:auto;
-    max-width:none;
-    margin:0;
-    left:calc(50% + var(--measure) / 2);
-    overflow:visible;
-    padding:var(--rail-gap) 0 var(--space) var(--rail-gap);
-    align-items:flex-start;
-    text-align:center;
-    z-index:5;
-    pointer-events:none;
-  }
-  .right-rail > *,
+  .left-rail .cite-box,
+  .left-rail .left-stack,
   .right-rail .theme-sel,
   .right-rail .post-nav{
     pointer-events:auto;
     width:100%;
     max-width:var(--rail);
     min-width:0;
-    order:0;
     overflow-wrap:break-word;
     text-wrap:wrap;
     -webkit-hyphens:auto;
     hyphens:auto;
   }
+  .left-rail .site-head,
+  .right-rail .theme-sel{grid-row:1;height:auto;align-self:stretch}
+  .left-stack,
+  .right-rail .post-nav{grid-row:2}
+  .left-stack{display:flex;flex-direction:column;gap:var(--rail-gap);min-width:0}
+  .left-rail .toc{max-width:var(--toc-rail);margin-left:auto}
+  .article-wrap{
+    display:grid;
+    grid-template-rows:subgrid;
+    grid-column:2;
+    grid-row:1 / -1;
+    width:var(--measure);
+    max-width:var(--measure);
+    margin:0;
+  }
+  .article-body{display:contents;width:auto;max-width:none;margin:0}
+  .sec.mast{grid-row:1;align-self:stretch;height:auto;display:grid}
+  .article-rest{grid-row:2;display:flex;flex-direction:column;gap:var(--rail-gap)}
   .right-rail .post-nav{display:flex;padding:0;align-items:stretch}
   .cite-box{display:block;text-align:center}
   .cite-box .nav-box{
@@ -916,7 +906,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .left-rail .site-head{
     grid-template-rows:auto var(--border-w) auto;
-    align-items:center;
+    align-content:center;
+    align-items:stretch;
   }
   .left-rail .site-head .site-title{
     height:auto;
@@ -931,11 +922,13 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .theme-sel{
     grid-template-rows:auto var(--border-w) auto;
-    align-items:center;
+    align-content:center;
+    align-items:stretch;
   }
   .sec.mast > header{
     grid-template-rows:auto var(--border-w) auto;
-    align-items:center;
+    align-content:center;
+    height:100%;
   }
   .sec.mast h1{
     height:auto;

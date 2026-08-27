@@ -6,8 +6,8 @@
   "description": "Per-host chrome (header/footer + theme.css) and bake entries; core/ holds the shared blog component system.",
   "scripts": {
     "bake:org": "node --import tsx org/bake.ts",
-    "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake",
-    "preview": "node --import tsx preview.ts org /tmp/org-bake"
+    "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
+    "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",

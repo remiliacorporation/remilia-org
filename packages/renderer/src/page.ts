@@ -173,8 +173,10 @@ ${ld}
 ${p.leftRail
     ? `<div class="left-rail">
 ${p.chrome.header}
+<div class="left-stack">
 ${p.tocHtml ?? ""}
 ${p.citeHtml ?? ""}
+</div>
 </div>
 <div class="right-rail">
 ${themeSelHtml()}
@@ -358,7 +360,9 @@ ${img}
 ${toolsHtml}
 </header>
 </div>
+<div class="article-rest">
 ${cards}
+</div>
 </article>
 </main>`;
 }

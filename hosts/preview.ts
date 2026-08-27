@@ -5,8 +5,10 @@
  *   node --import tsx hosts/preview.ts org /tmp/press-preview
  */
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { createServer } from "node:http";
+import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import {
   articleHtml,
   adjacentHtml,
@@ -207,3 +209,40 @@ await writeFile(
   }),
 );
 console.log(`preview at ${outDir}/press/${post.slug}/`);
+
+const TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".xml": "application/xml",
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".webmanifest": "application/manifest+json",
+};
+
+if (process.argv.includes("--serve")) {
+  const port = Number(process.env.PORT ?? 8477);
+  const root = resolve(outDir);
+  const server = createServer((req, res) => {
+    const url = new URL(req.url ?? "/", "http://127.0.0.1");
+    let rel = decodeURIComponent(url.pathname);
+    let file = resolve(root, `.${rel}`);
+    if (!file.startsWith(root + sep) && file !== root) {
+      res.writeHead(403).end();
+      return;
+    }
+    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
+    if (!existsSync(file) || statSync(file).isDirectory()) {
+      res.writeHead(404, { "content-type": "text/plain" }).end("not found");
+      return;
+    }
+    res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
+    createReadStream(file).pipe(res);
+  });
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`http://127.0.0.1:${port}/press/${post.slug}/`);
+  });
+}
