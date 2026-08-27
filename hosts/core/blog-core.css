@@ -116,7 +116,7 @@ a:hover,a:hover *,a:hover::before,a:hover::after{color:var(--ink-contrast);text-
 a:focus-visible{outline:2px solid var(--focus);outline-offset:var(--grid)}
 strong{font-weight:var(--weight-strong)}
 em{font-style:italic}
-h1,h2,h3,h4,.prose :is(h2,h3) > .hlink{font-weight:var(--weight-strong)}
+h1,h2,h4,.prose h2 > .hlink{font-weight:var(--weight-strong)}
 
 /* ---- Top navbar — left rail, above ToC ---- */
 .site-head{max-width:var(--measure);margin:0 auto;padding:var(--space) 0 var(--space-s)}
@@ -1046,9 +1046,17 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .sec > .prose > :first-child{margin-top:0}
 .article-body > .sec > .prose > :last-child{margin-bottom:0}
 .prose h2{font-weight:var(--weight-strong);text-align:left;text-decoration:underline;text-transform:uppercase;letter-spacing:0.03em}
-.prose h3{font-weight:var(--weight-strong);text-decoration:none;text-transform:uppercase}
+.prose h3{
+  font-weight:var(--weight-body);
+  text-decoration:underline;
+  text-transform:none;
+  letter-spacing:0;
+  line-height:1;
+  margin:var(--space-s) 0 var(--space-xs);
+}
 .prose h4{font-weight:var(--weight-body);text-decoration:underline;text-transform:none;font-style:normal}
-.prose h2 > .hlink,.prose h3 > .hlink{font-weight:var(--weight-strong)}
+.prose h2 > .hlink{font-weight:var(--weight-strong)}
+.prose h3 > .hlink{font-weight:var(--weight-body)}
 
 .prose .h2-sec,.prose .h3-sec{position:relative}
 
@@ -1154,6 +1162,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .prose h2:hover > .hlink,
 .prose h2:has(> .hlink:focus-visible),
 .prose h2:has(> .hlink:focus-visible) > .hlink,
+.prose h3:hover,
+.prose h3:hover > .hlink,
+.prose h3:has(> .hlink:focus-visible),
+.prose h3:has(> .hlink:focus-visible) > .hlink,
 .prose h4:hover{
   text-decoration:none;
 }
