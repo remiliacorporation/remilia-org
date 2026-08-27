@@ -420,7 +420,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .post-nav > .disclosure:checked ~ .nav-box{display:block}
 .nav-box{
   border:var(--border);
-  background:var(--paper);
+  background:var(--surface);
   padding:var(--space-xs);
   text-align:left;
   width:100%;
@@ -800,7 +800,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     max-width:none;
     margin:0;
     text-align:center;
-    background:var(--paper);
+    background:var(--surface);
   }
   .cite-box .nav-rule{margin:0;height:0;align-self:center}
   .cite-box .cite-url{
