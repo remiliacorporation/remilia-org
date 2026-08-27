@@ -13,10 +13,12 @@ import {
   citeBox,
   extractHeadings,
   htmlPage,
+  indexMain,
   leftRail,
+  emptyRail,
+  filterBar,
   NAV_JS,
   portableTextToHtml,
-  simpleMain,
   tocBox,
   tocItems,
   footnoteCount,
@@ -97,11 +99,11 @@ const post = {
 
 // A few sibling posts so the left rail + search have something to show.
 const navPosts: NavPost[] = [
-  { title: post.title, url: `/press/${post.slug}`, date: post.publishedAt, category: "Feature" },
-  { title: "Remilia Q3 Company Update", url: "/press/q3-update", date: "2026-07-02T00:00:00Z", category: "Company" },
-  { title: "Milady Maker Featured in Press", url: "/press/milady-press", date: "2026-06-18T00:00:00Z", category: "Press" },
-  { title: "RemiliaNET Public Beta Opens", url: "/press/net-beta", date: "2026-05-30T00:00:00Z", category: "Feature" },
-  { title: "New Studio Partnership", url: "/press/studio-partnership", date: "2026-04-11T00:00:00Z", category: "Company" },
+  { title: post.title, url: `/press/${post.slug}`, date: post.publishedAt, category: "Feature", excerpt: post.excerpt, imageUrl: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg", author: "Remilia Jackson" },
+  { title: "Remilia Q3 Company Update", url: "/press/q3-update", date: "2026-07-02T00:00:00Z", category: "Company", excerpt: "Quarterly notes from the studio.", author: "Remilia Jackson" },
+  { title: "Milady Maker Featured in Press", url: "/press/milady-press", date: "2026-06-18T00:00:00Z", category: "Press", excerpt: "Coverage roundup.", author: "Remilia Jackson" },
+  { title: "RemiliaNET Public Beta Opens", url: "/press/net-beta", date: "2026-05-30T00:00:00Z", category: "Feature", excerpt: "The network opens to the public.", author: "Remilia Jackson" },
+  { title: "New Studio Partnership", url: "/press/studio-partnership", date: "2026-04-11T00:00:00Z", category: "Company", excerpt: "A new collaboration.", author: "Remilia Jackson" },
 ];
 
 const canonical = canonicalFor(post.channel, post.slug);
@@ -119,7 +121,7 @@ const bodyHtml = portableTextToHtml(BODY, {
     "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
   linkCard: (href) =>
     href.includes("/press/remilianet-alpha-v0-8-1")
-      ? { title: post.title, description: post.excerpt }
+      ? { title: post.title, description: post.excerpt, imageUrl: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg" }
       : undefined,
 });
 
@@ -154,9 +156,11 @@ await writeFile(
       title: post.title,
       publishedAt: post.publishedAt,
       byline: "Remilia Jackson",
+      authorHref: "/press/?author=Remilia%20Jackson",
       canonical,
       category: "Feature",
       categoryHref: "/press/?cat=Feature",
+      monthHref: "/press/?month=2026-08",
       bodyHtml,
       metaHtml: adjacentHtml(navPosts, `/press/${post.slug}`),
       mdHref: `/press/${post.slug}.md`,
@@ -176,12 +180,6 @@ await writeFile(
   `${post.title}\n\n${post.publishedAt.slice(0, 10)} — ${canonical}\n\n${post.excerpt}\n\n${fixturePlain}\n`,
 );
 
-const listing = navPosts
-  .map(
-    (n) =>
-      `<li><a href="${n.url}"><h2>${n.title}</h2></a> <time datetime="${n.date}">${n.date.slice(0, 10)}</time><p>${n.category}</p></li>`,
-  )
-  .join("\n");
 await writeFile(
   join(outDir, "press", "index.html"),
   htmlPage({
@@ -191,9 +189,21 @@ await writeFile(
     jsonld: [],
     headExtra: feedLinks(meta),
     chrome,
-    leftRail: rail,
+    layoutClass: "is-index",
+    leftRail: emptyRail(),
     bodyEnd: `<script src="/press/nav.js" defer></script>`,
-    mainHtml: simpleMain(`<h1>Press</h1>\n<ul class="post-list">\n${listing}\n</ul>`),
+    mainHtml: indexMain(
+      navPosts.map((n) => ({
+        title: n.title,
+        url: n.url,
+        date: n.date,
+        category: n.category,
+        excerpt: n.excerpt ?? "",
+        imageUrl: n.imageUrl,
+        author: n.author,
+      })),
+      filterBar(navPosts),
+    ),
   }),
 );
 console.log(`preview at ${outDir}/press/${post.slug}/`);

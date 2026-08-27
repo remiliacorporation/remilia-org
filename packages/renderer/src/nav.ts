@@ -12,6 +12,9 @@ export interface NavPost {
   url: string;
   date: string;
   category: string;
+  excerpt?: string;
+  imageUrl?: string;
+  author?: string;
 }
 
 /** Radix MagnifyingGlass, 15×15, recolored via currentColor. */
@@ -25,43 +28,61 @@ function shortDate(iso: string): string {
   return `${mm}.${dd}.${yy}`;
 }
 
-export function leftRail(posts: NavPost[], _label: string, _indexHref = "/press"): string {
-  const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
+function catSel(posts: NavPost[]): { css: string; html: string } {
   const cats = [...new Set(posts.map((p) => p.category))].sort();
-  const catOpts = [`<option value="" selected>All posts</option>`, ...cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`)].join("");
-  const catCss = cats
+  const css = cats
     .map(
       (c) =>
-        `.nav-box:has(#post-cat option[value="${esc(c)}"]:checked) .nav-all>li:not([data-cat="${esc(c)}"]){display:none}`,
+        `.nav-box:has(#post-cat[data-value="${esc(c)}"]) .nav-all>li:not([data-cat="${esc(c)}"]){display:none}`,
     )
     .join("");
+  const items = [`<li><button type="button" data-value="">All posts</button></li>`, ...cats.map((c) => `<li><button type="button" data-value="${esc(c)}">${esc(c)}</button></li>`)].join("");
+  const html = `<details class="sel nav-cat-sel" id="post-cat" data-value="" aria-label="Filter posts">
+<summary><span class="sel-label">All posts</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
+  return { css, html };
+}
+
+export function filterBar(posts: NavPost[]): string {
+  const { html } = catSel(posts);
+  return `<div class="nav-page">
+<form class="nav-search" role="search">
+<span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
+</form>
+${html}
+</div>`;
+}
+
+export function leftRail(posts: NavPost[], _label: string, _indexHref = "/press"): string {
+  const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
+  const { css, html: cat } = catSel(posts);
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}"><a href="${esc(p.url)}">${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}">${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">
 <input type="checkbox" id="nav-toggle" class="disclosure">
 <label for="nav-toggle" class="disclosure-label">Posts</label>
 <div class="nav-box">
-${catCss ? `<style>${catCss}</style>` : ""}
+${css ? `<style>${css}</style>` : ""}
 <div class="nav-page">
 <form class="nav-search" role="search">
 <span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>
-<select class="nav-cat-sel" id="post-cat" aria-label="Filter posts">${catOpts}</select>
+${cat}
 </div>
 <hr class="nav-rule">
 <ul class="nav-all">
 ${items}
 </ul>
 <div class="nav-foot">
-<p class="nav-showing">Showing all</p>
 <p class="nav-pager">
-<button type="button" class="nav-prev" aria-label="Previous page">[</button>
+<button type="button" class="nav-prev" aria-label="Previous page">&lt;&lt;</button>
 <span class="nav-status">1 / 1</span>
-<button type="button" class="nav-next" aria-label="Next page">]</button>
+<button type="button" class="nav-next" aria-label="Next page">&gt;&gt;</button>
 </p>
 </div>
 </div>
@@ -69,58 +90,94 @@ ${items}
 }
 
 /** Search + ToC spy + 200ms in-page hash scroll. Each IIFE no-ops without its markup. */
+export function emptyRail(): string {
+  return `<div class="post-nav rail"></div>`;
+}
+
 export const NAV_JS = `(() => {
   const q = document.getElementById('post-filter');
   const list = document.querySelector('.post-nav .nav-all');
-  const form = document.querySelector('.post-nav .nav-search');
+  const form = document.querySelector('.nav-search');
   const cat = document.getElementById('post-cat');
-  const showing = document.querySelector('.nav-showing');
   const prev = document.querySelector('.nav-prev');
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
-  if (!q || !list) return;
+  const cards = [...document.querySelectorAll('.post-card')];
+  if (!q && !cards.length) return;
   const PAGE = 4;
   let page = 0;
-  const items = [...list.querySelectorAll('li[data-title]')];
+  const items = list ? [...list.querySelectorAll('li[data-title]')] : [];
+  const params = new URLSearchParams(location.search);
+  const setCat = (v) => {
+    if (!cat) return;
+    cat.dataset.value = v || '';
+    const lab = cat.querySelector('.sel-label');
+    const btn = v ? cat.querySelector('.sel-menu [data-value="'+v+'"]') : null;
+    if (lab) lab.textContent = btn && v ? btn.textContent : 'All posts';
+  };
   const score = (query, text) => {
-    query = query.toLowerCase(); text = text.toLowerCase();
+    query = query.toLowerCase(); text = (text || '').toLowerCase();
     let qi = 0, s = 0, streak = 0;
     for (let i = 0; i < text.length && qi < query.length; i++) {
       if (text[i] === query[qi]) { qi++; streak++; s += streak; } else streak = 0;
     }
     return qi === query.length ? s : -1;
   };
+  const match = (el) => {
+    const query = q ? q.value.trim() : '';
+    const catv = (cat && cat.dataset.value) || '';
+    const author = params.get('author') || '';
+    const month = params.get('month') || '';
+    const sc = query ? score(query, el.dataset.title) : 0;
+    const ok = (query ? sc >= 0 : true)
+      && (!catv || el.dataset.cat === catv)
+      && (!author || el.dataset.author === author)
+      && (!month || el.dataset.month === month);
+    return { el, sc, show: ok };
+  };
   const apply = () => {
-    const query = q.value.trim();
-    const catv = cat && cat.value ? cat.value : '';
-    const ranked = items.map((li) => {
-      const sc = query ? score(query, li.dataset.title) : 0;
-      const catOk = !catv || li.dataset.cat === catv;
-      return { li, sc, show: (query ? sc >= 0 : true) && catOk };
-    });
-    if (query) ranked.sort((a, b) => b.sc - a.sc);
-    const vis = ranked.filter((r) => r.show);
-    const pages = Math.max(1, Math.ceil(vis.length / PAGE));
-    if (page >= pages) page = pages - 1;
-    const from = page * PAGE;
-    const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.li));
-    ranked.forEach((r) => {
-      r.li.hidden = !r.show;
-      r.li.classList.toggle('off-page', r.show && !onPage.has(r.li));
-      if (r.show) list.appendChild(r.li);
-    });
-    if (showing) {
-      showing.textContent = !query && !catv ? 'Showing all' : !query ? 'Showing ' + catv : !catv ? 'Showing ' + vis.length : 'Showing ' + vis.length + ' in ' + catv;
+    const query = q ? q.value.trim() : '';
+    if (items.length && list) {
+      const ranked = items.map(match);
+      if (query) ranked.sort((a, b) => b.sc - a.sc);
+      const vis = ranked.filter((r) => r.show);
+      const pages = Math.max(1, Math.ceil(vis.length / PAGE));
+      if (page >= pages) page = pages - 1;
+      const from = page * PAGE;
+      const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.el));
+      ranked.forEach((r) => {
+        r.el.hidden = !r.show;
+        r.el.classList.toggle('off-page', r.show && !onPage.has(r.el));
+        if (r.show) list.appendChild(r.el);
+      });
+      if (status) status.textContent = (page + 1) + ' / ' + pages;
+      if (prev) prev.disabled = page <= 0;
+      if (next) next.disabled = page >= pages - 1;
     }
-    if (status) status.textContent = (page + 1) + ' / ' + pages;
-    if (prev) prev.disabled = page <= 0;
-    if (next) next.disabled = page >= pages - 1;
+    cards.forEach((c) => { c.hidden = !match(c).show; });
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
-  q.addEventListener('input', () => { page = 0; apply(); });
-  if (cat) cat.addEventListener('change', () => { page = 0; apply(); });
+  if (q) q.addEventListener('input', () => { page = 0; apply(); });
+  if (cat) cat.addEventListener('click', (e) => {
+    const mark = e.target.closest('.sel-mark');
+    if (mark && cat.dataset.value) {
+      e.preventDefault();
+      e.stopPropagation();
+      setCat('');
+      cat.open = false;
+      page = 0; apply();
+      return;
+    }
+    const btn = e.target.closest('.sel-menu button');
+    if (!btn) return;
+    e.preventDefault();
+    setCat(btn.getAttribute('data-value') || '');
+    cat.open = false;
+    page = 0; apply();
+  });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
+  if (params.get('cat')) setCat(params.get('cat'));
   apply();
 })();
 (() => {
@@ -206,7 +263,14 @@ export const NAV_JS = `(() => {
       a.blur();
       if (location.hash !== href) history.pushState(null, '', href);
       go(el);
+      const on = document.getElementById(id + '-on');
+      if (on && on.type === 'checkbox') on.checked = true;
     });
+    const boot = location.hash.slice(1);
+    if (boot) {
+      const on0 = document.getElementById(boot + '-on');
+      if (on0 && on0.type === 'checkbox') on0.checked = true;
+    }
   } catch (e) {}
 })();
 (() => {

@@ -27,8 +27,8 @@ import {
   type LinkCard,
   type PTBlock,
 } from "./pt";
-import { articleHtml, citeBox, htmlPage, notFoundHtml, simpleMain, tocBox, adjacentHtml, type Chrome } from "./page";
-import { leftRail, NAV_JS, type NavPost } from "./nav";
+import { articleHtml, citeBox, htmlPage, notFoundHtml, simpleMain, tocBox, adjacentHtml, indexMain, type Chrome } from "./page";
+import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 
@@ -184,6 +184,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     url: `${basePath}/${p.slug}`,
     date: p.publishedAt,
     category: p.tags?.[0] ?? "Uncategorized",
+    excerpt: p.excerpt,
+    imageUrl: img(p.coverRef, "w=1200&auto=format"),
+    author: p.authors?.map((a) => a.name).join(", "),
   }));
   const rail = leftRail(navPosts, host.title, basePath);
   const navScript = `<script src="${basePath}/nav.js" defer></script>`;
@@ -215,9 +218,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         title: p.title,
         publishedAt: p.publishedAt,
         byline: p.authors?.map((a) => a.name).join(", "),
+        authorHref: p.authors?.[0]?.name
+          ? `${basePath}/?author=${encodeURIComponent(p.authors.map((a) => a.name).join(", "))}`
+          : undefined,
         canonical,
         category: p.tags?.[0],
         categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
+        monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
         bodyHtml,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
         mdHref: `${basePath}/${p.slug}.md`,
@@ -231,12 +238,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   }
 
   // Index
-  const listing = posts
-    .map(
-      (p) =>
-        `<li><a href="${basePath}/${esc(p.slug)}"><h2>${esc(p.title)}</h2></a> <time datetime="${esc(p.publishedAt)}">${p.publishedAt.slice(0, 10)}</time><p>${esc(p.excerpt)}</p></li>`,
-    )
-    .join("\n");
   await writeFile(
     join(dir, "index.html"),
     htmlPage({
@@ -246,9 +247,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       jsonld: withOrg({ "@context": "https://schema.org", "@type": "Blog", "@id": `${indexUrl(channel)}#blog`, name: host.title, description: host.description }),
       headExtra: feedLinks(meta),
       chrome,
-      leftRail: rail,
+      layoutClass: "is-index",
+      leftRail: emptyRail(),
       bodyEnd: navScript,
-      mainHtml: simpleMain(`<h1>${esc(host.title)}</h1>\n<ul class="post-list">\n${listing}\n</ul>`),
+      mainHtml: indexMain(
+        navPosts.map((p) => ({
+          title: p.title,
+          url: p.url,
+          date: p.date,
+          category: p.category,
+          excerpt: p.excerpt ?? "",
+          imageUrl: p.imageUrl,
+          author: p.author,
+        })),
+        filterBar(navPosts),
+      ),
     }),
   );
 

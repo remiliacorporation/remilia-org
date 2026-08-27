@@ -5,7 +5,7 @@ import { esc } from "./html";
  * fixed here (lang, single title/description/canonical, landmarks); hosts
  * differ only through `chrome` (header/footer fragments + stylesheet href).
  *
- * Layout: left rail is site-head + ToC; right rail is theme + cite + post-nav;
+ * Layout: left rail is site-head + ToC + cite; right rail is theme + post-nav;
  * `<main>` is the article (title stays in the center column).
  */
 export interface Chrome {
@@ -26,8 +26,10 @@ export interface PageInput {
   leftRail?: string;
   /** Optional ToC box. Left rail on desktop; stacked under the article on mobile. */
   tocHtml?: string;
-  /** Optional cite box (permalink / copy). Right rail, under theme. */
+  /** Optional cite box (permalink / copy). Left rail, under ToC. */
   citeHtml?: string;
+  /** Extra class on `.layout` (e.g. `is-index`). */
+  layoutClass?: string;
   /** Optional scripts before </body> (e.g. the nav fuzzy filter). */
   bodyEnd?: string;
   /** Absolute (or site-root) image URL for Open Graph / Twitter cards. */
@@ -167,15 +169,15 @@ ${ld}
 <feComposite in="q" in2="SourceGraphic" operator="arithmetic" k1="0" k2="0.7" k3="0.3" k4="0"/>
 </filter>
 </svg>
-<div class="layout">
+<div class="layout${p.layoutClass ? ` ${esc(p.layoutClass)}` : ""}">
 ${p.leftRail
     ? `<div class="left-rail">
 ${p.chrome.header}
 ${p.tocHtml ?? ""}
+${p.citeHtml ?? ""}
 </div>
 <div class="right-rail">
 ${themeSelHtml()}
-${p.citeHtml ?? ""}
 ${p.leftRail}
 </div>`
     : p.chrome.header}
@@ -190,8 +192,8 @@ ${p.bodyEnd ?? ""}
 
 /**
  * Post: `<main class="article-wrap">` is the bordered `.article-body`.
- * Site-head + ToC sit in the left rail; theme + cite + post-nav in the
- * right. Title stays in the center mast. Notes sit in the right leftover (xl+).
+ * Site-head + ToC + cite sit in the left rail; theme + post-nav in the
+ * right. Title stays in the center mast. Notes sit in the right leftover (3-col).
  */
 function bylineDate(iso: string): string {
   const d = new Date(iso);
@@ -231,7 +233,7 @@ export function citeBox(input: {
 }): string {
   return `<aside class="cite-box">
 <div class="nav-box">
-<p class="cite-url">Permalink: <a href="${esc(input.canonical)}">${esc(input.canonical)}</a></p>
+<p class="cite-url">Permalink: <a class="permalink" href="${esc(input.canonical)}">${esc(input.canonical)}</a></p>
 <hr class="nav-rule">
 <p class="cite-copy">Copy: <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
 </div>
@@ -264,8 +266,10 @@ export function articleHtml(input: {
   title: string;
   publishedAt: string;
   byline?: string;
+  authorHref?: string;
   category?: string;
   categoryHref?: string;
+  monthHref?: string;
   canonical?: string;
   bodyHtml: string;
   metaHtml?: string;
@@ -273,10 +277,18 @@ export function articleHtml(input: {
   txtHref?: string;
 }): string {
   const date = new Date(input.publishedAt);
-  const permalink = input.canonical
-    ? `<a class="permalink" href="${esc(input.canonical)}">Permalink</a>`
-    : `<span class="permalink"></span>`;
-  const author = input.byline ? `<span class="author">${esc(input.byline)}</span>` : `<span class="author"></span>`;
+  const cat = input.category
+    ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
+    : `<span class="byline-cat"></span>`;
+  const author = input.byline
+    ? input.authorHref
+      ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
+      : `<span class="author">${esc(input.byline)}</span>`
+    : `<span class="author"></span>`;
+  const time = `<time datetime="${date.toISOString()}">${bylineDate(input.publishedAt)}</time>`;
+  const dated = input.monthHref
+    ? `<a class="byline-date" href="${esc(input.monthHref)}">${time}</a>`
+    : time;
   const meta = input.metaHtml ? `\n<div class="sec post-meta">${input.metaHtml}</div>` : "";
   const md = input.mdHref
     ? `<button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button>`
@@ -291,18 +303,62 @@ export function articleHtml(input: {
 <article class="article-body">
 <div class="sec mast">
 <header>
-<p class="byline">${permalink}<time datetime="${date.toISOString()}">${bylineDate(input.publishedAt)}</time>${author}</p>
+<p class="byline">${dated}${cat}${author}</p>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools"><label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
 </header>
 </div>
+<div class="article-rest">
 <div class="sec">
 <div class="prose">
 ${input.bodyHtml}
 </div>
 </div>${meta}
+</div>
+</article>
+</main>`;
+}
+
+export interface IndexCard {
+  title: string;
+  url: string;
+  date: string;
+  category: string;
+  excerpt: string;
+  imageUrl?: string;
+  author?: string;
+}
+
+export function indexMain(posts: IndexCard[], toolsHtml: string): string {
+  const cards = posts
+    .map((p) => {
+      const month = p.date.slice(0, 7);
+      const img = p.imageUrl
+        ? `<a href="${esc(p.url)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
+        : "";
+      const author = p.author ? `<span class="author">${esc(p.author)}</span>` : `<span class="author"></span>`;
+      return `<article class="sec post-card" data-title="${esc(p.title)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
+<header>
+<p class="byline"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time><span class="byline-cat">${esc(p.category)}</span>${author}</p>
+<hr class="nav-rule">
+<h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
+</header>
+${img}
+<p class="card-ex">${esc(p.excerpt)}</p>
+<p class="card-more"><a href="${esc(p.url)}">Read more</a></p>
+</article>`;
+    })
+    .join("\n");
+  return `<main class="article-wrap">
+<article class="article-body">
+<div class="sec mast index-mast">
+<header>
+${toolsHtml}
+</header>
+</div>
+${cards}
 </article>
 </main>`;
 }

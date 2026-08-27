@@ -241,7 +241,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       if (!src) continue;
       const caption = block.caption ? `<figcaption>${esc(block.caption)}</figcaption>` : "";
       out.push(
-        `<figure><a href="${esc(src)}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
+        `<figure><a href="${esc(src)}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span>${caption}</a></figure>`,
       );
     }
     // Unknown types are skipped deliberately: the Ghost card audit adds

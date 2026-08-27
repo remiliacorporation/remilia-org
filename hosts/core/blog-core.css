@@ -11,8 +11,11 @@
  * 2. SIZE HIERARCHY ONLY ON THE TITLE (12px body / 20px title). Body copy
  *    separates through weight, underline, caps, italics — never size.
  * 3. THREE COLUMNS: left site-head+ToC | center article | right theme+cite+posts.
- *    Title stays in the center mast. Notes sit in the right leftover (xl+);
+ *    Title stays in the center mast. Notes sit in the right leftover (3-col);
  *    below that they are CSS tooltips on .fn.
+ *
+ *    Breakpoints: 1-col <824; 2-col 824–1099 (right widgets park in the left
+ *    column, rails keep --rail width); 3-col ≥1100.
  *
  * Class contract (renderer → CSS):
  *   .layout                            [toc][article-wrap]
@@ -61,8 +64,7 @@
   --leading-tight:1.2;
 
   /* Layout — fixed px. --measure is the traced column (border-box).
-     Breakpoints (Tailwind, mobile-first): sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536.
-     The article is centered at xl; at lg it sits to the right of the left rail. */
+     1-col <824 / 2-col 824 / 3-col 1100. Rails keep --rail / --toc-rail. */
   --measure:560px;                    /* ~80ch at 12px, 4px grid */
   --card:280px;                       /* ~40ch; hover/tap floaters (notes, link cards) */
   --gutter:24px;                      /* inner inset from the column rules */
@@ -116,7 +118,7 @@ a:hover,a:hover *,a:hover::before,a:hover::after{color:var(--ink-contrast);text-
 a:focus-visible{outline:2px solid var(--focus);outline-offset:var(--grid)}
 strong{font-weight:var(--weight-strong)}
 em{font-style:italic}
-h1,h2,h4,.prose h2 > .hlink{font-weight:var(--weight-strong)}
+h1,h2,h3,.prose h2 > .hlink,.prose h3 > .hlink{font-weight:var(--weight-strong)}
 
 /* ---- Top navbar — left rail, above ToC ---- */
 .site-head{max-width:var(--measure);margin:0 auto;padding:var(--space) 0 var(--space-s)}
@@ -393,7 +395,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   background:var(--ink);
   color:var(--ink-contrast);
 }
-@media(min-width:1024px){
+@media(min-width:824px){
   .mast-tools,
   .mast-tools-rule{display:none}
 }
@@ -531,20 +533,18 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .nav-all > li.off-page{display:none}
 .nav-foot{
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
   gap:var(--grid);
   margin:var(--space-xs) 0 0;
   background:var(--surface);
 }
-.nav-showing{margin:0;min-width:0}
 .nav-pager{
   display:flex;
-  justify-content:flex-end;
+  justify-content:center;
   align-items:center;
   gap:var(--grid);
   margin:0;
-  flex:none;
 }
 .nav-pager button{
   appearance:none;border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0;
@@ -624,8 +624,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .right-rail{display:contents}
 .left-rail .site-head,
 .left-rail .toc,
+.left-rail .cite-box,
 .right-rail .theme-sel,
-.right-rail .cite-box,
 .right-rail .post-nav,
 .article-wrap{
   width:100%;
@@ -636,10 +636,11 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .left-rail .site-head{order:1}
 .right-rail .theme-sel{order:2}
 .left-rail .toc{order:3}
-.article-wrap{order:4}
-.right-rail .post-nav{order:5}
+.left-rail .cite-box{order:4}
+.article-wrap{order:5}
+.right-rail .post-nav{order:6}
 .right-rail .post-nav{padding:0;align-items:stretch}
-.cite-box{display:none}
+.cite-box{display:block}
 .post-nav > .disclosure-label{
   border:var(--border);
   background:var(--surface);
@@ -654,7 +655,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 
 /* Mobile: Theme is a corner button on the site-head; ToC hangs off the
    post-nav box; notes + link cards are viewport floaters (~40ch). */
-@media (max-width:1023px){
+@media (max-width:823px){
   .layout{position:relative}
   .head-dials{display:inline}
   .layout:not(:has(#nav-toggle)) .head-posts,
@@ -666,6 +667,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .article-wrap{order:3}
   .left-rail .toc{order:4}
+  .left-rail .cite-box{order:5}
   .right-rail .theme-sel{
     display:contents;
   }
@@ -713,8 +715,69 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   .toc ol{border-top:var(--border);padding-top:var(--space-xs)}
 }
 
-/* lg+: both rails, centered measure. Sidenotes use the right gutter. */
-@media(min-width:1024px){
+/* 2-col: park right-rail widgets in the left column; rails keep fixed width. */
+@media (min-width:824px) and (max-width:1099px){
+  .layout{
+    display:grid;
+    grid-template-columns:var(--rail) var(--measure);
+    justify-content:center;
+    column-gap:var(--rail-gap);
+    row-gap:var(--rail-gap);
+    width:max-content;
+    max-width:none;
+    margin:var(--rail-gap) auto 0;
+    position:relative;
+  }
+  .left-rail,.right-rail{
+    display:flex;
+    flex-direction:column;
+    gap:var(--rail-gap);
+    position:static;
+    grid-column:1;
+    width:var(--rail);
+    max-width:var(--rail);
+    margin:0;
+    padding:0;
+    pointer-events:auto;
+    align-items:stretch;
+    overflow:visible;
+    text-align:center;
+  }
+  .article-wrap{
+    grid-column:2;
+    grid-row:1 / span 12;
+    width:var(--measure);
+    max-width:var(--measure);
+    margin:0;
+  }
+  .article-body{width:100%;max-width:none;margin:0}
+  .cite-box{display:block;text-align:center}
+  .cite-box .nav-box{
+    display:grid;
+    grid-template-rows:auto var(--border-w) auto;
+    row-gap:var(--space-xs);
+    padding:var(--space-xs);
+    max-width:none;
+    margin:0;
+    text-align:center;
+    background:var(--surface);
+  }
+  .post-nav{display:flex;padding:0;align-items:stretch}
+  .post-nav > .disclosure-label{display:none}
+  .post-nav > .nav-box{display:block;max-width:none;margin:0}
+  .theme-sel .nav-rule{display:block;margin:0;height:0;align-self:center}
+  .theme-label{height:var(--mast-line);padding:0;border:0;cursor:default}
+  .theme-controls{
+    display:flex;position:static;flex-direction:row;align-items:center;justify-content:center;
+    height:var(--mast-title);padding:0;border:0;gap:var(--grid);
+  }
+  .toc{border:var(--border);padding:var(--space-xs);background:var(--surface)}
+  .toc > .disclosure-label{display:none}
+  .toc > nav{display:grid}
+}
+
+/* 3-col: both rails at fixed width, centered measure. Sidenotes use the right gutter. */
+@media(min-width:1100px){
   .layout{
     display:block;
     width:auto;
@@ -744,7 +807,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .left-rail > *,
   .left-rail .site-head,
-  .left-rail .toc{
+  .left-rail .toc,
+  .left-rail .cite-box{
     pointer-events:auto;
     width:100%;
     max-width:var(--rail);
@@ -778,7 +842,6 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   }
   .right-rail > *,
   .right-rail .theme-sel,
-  .right-rail .cite-box,
   .right-rail .post-nav{
     pointer-events:auto;
     width:100%;
@@ -852,24 +915,32 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     gap:var(--grid);
   }
   .left-rail .site-head{
-    grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
+    grid-template-rows:auto var(--border-w) auto;
+    align-items:center;
   }
   .left-rail .site-head .site-title{
-    height:var(--mast-line);
-    overflow:hidden;
+    height:auto;
+    min-height:var(--mast-line);
+    overflow:visible;
   }
   .left-rail .site-head nav{
-    height:var(--mast-title);
-    white-space:nowrap;
-    flex-wrap:nowrap;
+    height:auto;
+    min-height:var(--mast-title);
+    white-space:normal;
+    flex-wrap:wrap;
+  }
+  .theme-sel{
+    grid-template-rows:auto var(--border-w) auto;
+    align-items:center;
   }
   .sec.mast > header{
-    grid-template-rows:var(--mast-line) var(--border-w) var(--mast-title);
+    grid-template-rows:auto var(--border-w) auto;
+    align-items:center;
   }
   .sec.mast h1{
-    height:var(--mast-title);
-    overflow:hidden;
-    line-height:var(--mast-title);
+    height:auto;
+    overflow:visible;
+    line-height:var(--leading-tight);
   }
 }
 
@@ -911,7 +982,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   margin:0;
   padding:0;
   font-weight:var(--weight-body);
-  text-align:center;
+  text-align:right;
 }
 .toc-note{
   text-decoration:none;
@@ -963,10 +1034,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   color:var(--ink-contrast);
   font-weight:var(--weight-strong);
 }
-@media (max-width:1023px){
+@media (max-width:823px){
   .toc-label{text-wrap:pretty}
 }
-@media(min-width:1024px){
+@media(min-width:824px){
   .toc{
     border:var(--border);
     padding:var(--space-xs);
@@ -992,8 +1063,9 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   font-style:normal;
   white-space:nowrap;
 }
-.byline time{justify-self:center;text-align:center;font-style:normal;color:var(--muted);text-transform:uppercase}
-.byline .permalink{justify-self:start;text-align:left;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-decoration:none;text-transform:none}
+.byline time,.byline .byline-date{justify-self:start;text-align:left;font-style:normal;color:var(--muted);text-transform:uppercase;text-decoration:none}
+.byline .byline-date:hover,.byline .author:hover{background:var(--ink);color:var(--ink-contrast);text-decoration:none}
+.byline .permalink{display:none}
 .byline .byline-cat{justify-self:center;text-align:center;font-weight:var(--weight-strong);color:var(--muted);text-transform:uppercase;text-decoration:none}
 .byline .byline-cat:hover,
 .byline .byline-cat:focus-visible,
@@ -1011,6 +1083,36 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .sec.mast > header .nav-rule{margin:0}
 
 /* ---- Index / event listing ---- */
+.layout.is-index .post-nav{display:none}
+.index-mast > header{
+  display:block;
+  grid-template-rows:none;
+}
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:var(--grid);
+  width:100%;
+}
+.index-mast .nav-search,.index-mast .sel{flex:1;min-width:0}
+.post-card{margin:0 0 var(--rail-gap)}
+.post-card > header{
+  display:grid;
+  grid-template-rows:var(--mast-line) var(--border-w) auto;
+  row-gap:var(--space-xs);
+  margin:0 0 var(--space-xs);
+}
+.post-card h2{
+  margin:0;
+  font-size:var(--size-title);
+  line-height:var(--leading-tight);
+  font-weight:var(--weight-strong);
+  text-align:center;
+}
+.post-card h2 a{text-decoration:none}
+.post-card .card-ex{margin:var(--space-xs) 0;line-height:var(--leading-prose)}
+.post-card .card-more{margin:0;text-align:center}
+.post-card[hidden]{display:none}
 .post-list{list-style:none}
 .post-list li{margin:0 0 var(--space)}
 .post-list h2{display:inline;font-size:var(--size-base);font-weight:var(--weight-strong)}
@@ -1047,16 +1149,15 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .article-body > .sec > .prose > :last-child{margin-bottom:0}
 .prose h2{font-weight:var(--weight-strong);text-align:left;text-decoration:underline;text-transform:uppercase;letter-spacing:0.03em}
 .prose h3{
-  font-weight:var(--weight-body);
-  text-decoration:underline;
-  text-transform:none;
-  letter-spacing:0;
+  font-weight:var(--weight-strong);
+  text-decoration:none;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
   line-height:1;
   margin:var(--space-s) 0 var(--space-xs);
 }
 .prose h4{font-weight:var(--weight-body);text-decoration:underline;text-transform:none;font-style:normal}
-.prose h2 > .hlink{font-weight:var(--weight-strong)}
-.prose h3 > .hlink{font-weight:var(--weight-body)}
+.prose h2 > .hlink,.prose h3 > .hlink{font-weight:var(--weight-strong)}
 
 .prose .h2-sec,.prose .h3-sec{position:relative}
 
@@ -1108,10 +1209,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 .article-body > .sec > .prose > figure:last-child{margin-bottom:0}
 .article-body > .sec > .prose > figure:first-child{margin-top:0}
-.prose figure > a{display:block;border:var(--border);overflow:hidden;cursor:zoom-in;background:var(--dither-light);text-decoration:none}
+.prose figure > a{display:block;border:var(--border);overflow:hidden;cursor:pointer;background:var(--dither-light);text-decoration:none}
 .prose figure > a:hover,.prose figure > a:focus-visible{background:var(--paper);color:inherit;text-decoration:none}
 .prose figure img{display:block;max-width:100%;height:auto;width:100%}
-.prose figcaption{
+.prose figure figcaption{
   display:table;
   margin:-1px 0 0 auto;
   padding:var(--grid) var(--space-xs);
@@ -1120,7 +1221,11 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   font-style:italic;
   font-weight:var(--weight-strong);
   max-width:100%;
-  position:relative;
+}
+.prose figure > a:hover figcaption,
+.prose figure > a:focus-visible figcaption{
+  background:var(--ink);
+  color:var(--ink-contrast);
 }
 
 .prose > hr{margin:0 0 var(--space);border:0;border-top:var(--border)}
@@ -1173,8 +1278,8 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 .prose a[rel~="external"]::after{content:"\2197";margin-left:var(--grid);text-decoration:none;display:inline-block}
 
 /* ---- Notes: one .fn. Compact is a tooltip (hover or checkbox +
-   scrim). ≥1280 the note sits in the gutter. ---- */
-.fn{scroll-margin-top:50vh}
+   scrim). 3-col the note sits in the gutter. ---- */
+.fn{scroll-margin-top:50vh;position:relative}
 .fn-on{
   position:fixed;
   width:1px;
@@ -1215,7 +1320,7 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
   -webkit-hyphens:auto;
   hyphens:auto;
 }
-@media(max-width:1279px){
+@media(max-width:1099px){
   .fn-on:checked ~ .fn-scrim{
     display:block;
     position:fixed;
@@ -1228,31 +1333,34 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
     gap:var(--grid);
     align-items:flex-start;
     position:absolute;
-    left:0;
+    top:100%;
+    left:100%;
     width:min(var(--card), 100%);
     max-width:var(--card);
-    margin:var(--grid) 0 0;
+    margin:0;
+    padding:calc(var(--space-xs) + var(--grid)) var(--grid) var(--grid);
     z-index:30;
+    pointer-events:auto;
+  }
+  @supports (position-try-fallbacks: flip-inline){
+    .fn:hover .fn-note,
+    .fn-on:checked ~ .fn-note{position-try-fallbacks:flip-inline}
   }
 }
-.fn:hover .fn-ref,
-.fn:hover .fn-note,
-.fn:hover .fn-note *{
+.fn:hover .fn-ref{
   background:var(--ink);
   color:var(--ink-contrast);
   text-decoration:none;
 }
-@media(max-width:1279px){
-  .fn-on:checked ~ .fn-ref,
-  .fn-on:checked ~ .fn-note,
-  .fn-on:checked ~ .fn-note *{
+@media(max-width:1099px){
+  .fn-on:checked ~ .fn-ref{
     background:var(--ink);
     color:var(--ink-contrast);
     text-decoration:none;
   }
 }
 .article-body > .sec{z-index:1}
-@media(min-width:1280px){
+@media(min-width:1100px){
   .fn-on,.fn-scrim{display:none}
   .fn-ref{cursor:inherit}
   .fn-note{
@@ -1288,10 +1396,10 @@ html[data-scheme="dark"] .theme-mode::after{background:var(--ink-contrast)}
 }
 @supports (top:anchor(top)){
 #fn-1{anchor-name:--fn-1}#fn-1 .fn-note{position-anchor:--fn-1}#fn-2{anchor-name:--fn-2}#fn-2 .fn-note{position-anchor:--fn-2}#fn-3{anchor-name:--fn-3}#fn-3 .fn-note{position-anchor:--fn-3}#fn-4{anchor-name:--fn-4}#fn-4 .fn-note{position-anchor:--fn-4}#fn-5{anchor-name:--fn-5}#fn-5 .fn-note{position-anchor:--fn-5}#fn-6{anchor-name:--fn-6}#fn-6 .fn-note{position-anchor:--fn-6}#fn-7{anchor-name:--fn-7}#fn-7 .fn-note{position-anchor:--fn-7}#fn-8{anchor-name:--fn-8}#fn-8 .fn-note{position-anchor:--fn-8}#fn-9{anchor-name:--fn-9}#fn-9 .fn-note{position-anchor:--fn-9}#fn-10{anchor-name:--fn-10}#fn-10 .fn-note{position-anchor:--fn-10}#fn-11{anchor-name:--fn-11}#fn-11 .fn-note{position-anchor:--fn-11}#fn-12{anchor-name:--fn-12}#fn-12 .fn-note{position-anchor:--fn-12}#fn-13{anchor-name:--fn-13}#fn-13 .fn-note{position-anchor:--fn-13}#fn-14{anchor-name:--fn-14}#fn-14 .fn-note{position-anchor:--fn-14}#fn-15{anchor-name:--fn-15}#fn-15 .fn-note{position-anchor:--fn-15}#fn-16{anchor-name:--fn-16}#fn-16 .fn-note{position-anchor:--fn-16}#fn-17{anchor-name:--fn-17}#fn-17 .fn-note{position-anchor:--fn-17}#fn-18{anchor-name:--fn-18}#fn-18 .fn-note{position-anchor:--fn-18}#fn-19{anchor-name:--fn-19}#fn-19 .fn-note{position-anchor:--fn-19}#fn-20{anchor-name:--fn-20}#fn-20 .fn-note{position-anchor:--fn-20}#fn-21{anchor-name:--fn-21}#fn-21 .fn-note{position-anchor:--fn-21}#fn-22{anchor-name:--fn-22}#fn-22 .fn-note{position-anchor:--fn-22}#fn-23{anchor-name:--fn-23}#fn-23 .fn-note{position-anchor:--fn-23}#fn-24{anchor-name:--fn-24}#fn-24 .fn-note{position-anchor:--fn-24}
-@media(max-width:1279px){
-  .fn-note{top:anchor(bottom);left:anchor(left)}
+@media(max-width:1099px){
+  .fn-note{top:anchor(bottom);left:anchor(right)}
 }
-@media(min-width:1280px){
+@media(min-width:1100px){
   .fn-note{top:anchor(top)}
   .theme-sel{anchor-name:--theme;position:relative;z-index:1}
   .left-rail .toc{position:relative;z-index:1}
@@ -1424,10 +1532,11 @@ dialog.lightbox::backdrop{background:color-mix(in srgb,var(--paper) 85%,transpar
   z-index:10;
   width:var(--card);
   max-width:min(var(--card), calc(100vw - 2 * var(--rail-gap)));
-  background:var(--paper);
+  background:var(--wm-wash,var(--paper));
   color:var(--ink);
   border:var(--border);
-  padding:var(--space-xs);
+  padding:calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
+  margin-top:calc(-1 * var(--grid));
   line-height:var(--leading);
   font-weight:var(--weight-body);
   text-align:left;
@@ -1437,11 +1546,14 @@ dialog.lightbox::backdrop{background:color-mix(in srgb,var(--paper) 85%,transpar
 .link-card .ht img{border:0;margin:0}
 .link-card strong{display:block;margin:0 0 var(--grid)}
 .link-card span{display:block;color:var(--muted)}
-.interlink:hover .link-card,.interlink:hover .link-card *{color:var(--ink);background:var(--paper);text-decoration:none}
+.interlink:hover .link-card,.interlink:hover .link-card *{color:var(--ink);background:var(--wm-wash,var(--paper));text-decoration:none}
 .interlink:hover{background:var(--ink);color:var(--ink-contrast)}
 .interlink.card-open .link-card{display:block}
 @media (hover:hover) and (pointer:fine){
   .interlink:hover .link-card,.interlink:focus .link-card,.interlink:focus-visible .link-card{display:block}
+}
+@supports (position-try-fallbacks: flip-inline){
+  .link-card{position-try-fallbacks:flip-inline}
 }
 
 /* ---- Footer ---- */
