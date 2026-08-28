@@ -28,29 +28,46 @@ function shortDate(iso: string): string {
   return `${mm}.${dd}.${yy}`;
 }
 
-function catSel(posts: NavPost[]): { css: string; html: string } {
-  const cats = [...new Set(posts.map((p) => p.category))].sort();
-  const css = cats
+function filterSel(
+  id: string,
+  aria: string,
+  empty: string,
+  values: string[],
+  attr: string,
+): { css: string; html: string } {
+  const css = values
     .map(
-      (c) =>
-        `.nav-box:has(#post-cat[data-value="${esc(c)}"]) .nav-all>li:not([data-cat="${esc(c)}"]){display:none}`,
+      (v) =>
+        `.nav-box:has(#${id}[data-value="${esc(v)}"]) .nav-all>li:not([${attr}="${esc(v)}"]){display:none}`,
     )
     .join("");
-  const items = [`<li><button type="button" data-value="">All posts</button></li>`, ...cats.map((c) => `<li><button type="button" data-value="${esc(c)}">${esc(c)}</button></li>`)].join("");
-  const html = `<details class="sel nav-cat-sel" id="post-cat" data-value="" aria-label="Filter posts">
-<summary><span class="sel-label">All posts</span><span class="sel-mark"></span></summary>
+  const items = [`<li><button type="button" data-value="">${esc(empty)}</button></li>`, ...values.map((v) => `<li><button type="button" data-value="${esc(v)}">${esc(v)}</button></li>`)].join("");
+  const html = `<details class="sel nav-cat-sel" id="${esc(id)}" data-value="" aria-label="${esc(aria)}">
+<summary><span class="sel-label">${esc(empty)}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
   return { css, html };
 }
 
+function catSel(posts: NavPost[]): { css: string; html: string } {
+  return filterSel("post-cat", "Filter posts", "All posts", [...new Set(posts.map((p) => p.category))].sort(), "data-cat");
+}
+
+function authorSel(posts: NavPost[]): { css: string; html: string } {
+  const authors = [...new Set(posts.map((p) => p.author).filter((a): a is string => Boolean(a)))].sort();
+  if (!authors.length) return { css: "", html: "" };
+  return filterSel("post-author", "Filter authors", "All authors", authors, "data-author");
+}
+
 export function filterBar(posts: NavPost[]): string {
-  const { html } = catSel(posts);
+  const { html: cat } = catSel(posts);
+  const { html: authors } = authorSel(posts);
   return `<div class="nav-page">
 <form class="nav-search" role="search">
 <span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>
-${html}
+${cat}
+${authors}
 </div>`;
 }
 
@@ -99,6 +116,7 @@ export const NAV_JS = `(() => {
   const list = document.querySelector('.post-nav .nav-all');
   const form = document.querySelector('.nav-search');
   const cat = document.getElementById('post-cat');
+  const auth = document.getElementById('post-author');
   const prev = document.querySelector('.nav-prev');
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
@@ -108,12 +126,32 @@ export const NAV_JS = `(() => {
   let page = 0;
   const items = list ? [...list.querySelectorAll('li[data-title]')] : [];
   const params = new URLSearchParams(location.search);
-  const setCat = (v) => {
-    if (!cat) return;
-    cat.dataset.value = v || '';
-    const lab = cat.querySelector('.sel-label');
-    const btn = v ? cat.querySelector('.sel-menu [data-value="'+v+'"]') : null;
-    if (lab) lab.textContent = btn && v ? btn.textContent : 'All posts';
+  const setSel = (el, v, empty) => {
+    if (!el) return;
+    el.dataset.value = v || '';
+    const lab = el.querySelector('.sel-label');
+    const btn = v ? el.querySelector('.sel-menu [data-value="'+v+'"]') : null;
+    if (lab) lab.textContent = btn && v ? btn.textContent : empty;
+  };
+  const bindSel = (el, empty) => {
+    if (!el) return;
+    el.addEventListener('click', (e) => {
+      const mark = e.target.closest('.sel-mark');
+      if (mark && el.dataset.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSel(el, '', empty);
+        el.open = false;
+        page = 0; apply();
+        return;
+      }
+      const btn = e.target.closest('.sel-menu button');
+      if (!btn) return;
+      e.preventDefault();
+      setSel(el, btn.getAttribute('data-value') || '', empty);
+      el.open = false;
+      page = 0; apply();
+    });
   };
   const score = (query, text) => {
     query = query.toLowerCase(); text = (text || '').toLowerCase();
@@ -125,8 +163,8 @@ export const NAV_JS = `(() => {
   };
   const match = (el) => {
     const query = q ? q.value.trim() : '';
-    const catv = (cat && cat.dataset.value) || '';
-    const author = params.get('author') || '';
+    const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
+    const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
     const month = params.get('month') || '';
     const sc = query ? score(query, el.dataset.title) : 0;
     const ok = (query ? sc >= 0 : true)
@@ -158,26 +196,22 @@ export const NAV_JS = `(() => {
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
-  if (cat) cat.addEventListener('click', (e) => {
-    const mark = e.target.closest('.sel-mark');
-    if (mark && cat.dataset.value) {
+  bindSel(cat, 'All posts');
+  bindSel(auth, 'All authors');
+  addEventListener('click', (e) => {
+    const a = e.target.closest('.post-card a.author');
+    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const v = new URL(a.getAttribute('href'), location.href).searchParams.get('author') || '';
+    if (auth) {
       e.preventDefault();
-      e.stopPropagation();
-      setCat('');
-      cat.open = false;
+      setSel(auth, v, 'All authors');
       page = 0; apply();
-      return;
     }
-    const btn = e.target.closest('.sel-menu button');
-    if (!btn) return;
-    e.preventDefault();
-    setCat(btn.getAttribute('data-value') || '');
-    cat.open = false;
-    page = 0; apply();
   });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
-  if (params.get('cat')) setCat(params.get('cat'));
+  if (params.get('cat')) setSel(cat, params.get('cat'), 'All posts');
+  if (params.get('author')) setSel(auth, params.get('author'), 'All authors');
   apply();
 })();
 (() => {
@@ -225,6 +259,11 @@ export const NAV_JS = `(() => {
       addEventListener('scroll', on, { passive: true });
     }
     addEventListener('resize', pick, { passive: true });
+    addEventListener('click', (e) => {
+      const a = e.target.closest('.toc nav a[href^="#"]');
+      const t = document.getElementById('toc-toggle');
+      if (a && t) t.checked = false;
+    });
   } catch (e) {}
 })();
 (() => {

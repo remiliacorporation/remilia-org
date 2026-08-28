@@ -171,7 +171,8 @@ ${ld}
 </svg>
 <div class="layout${p.layoutClass ? ` ${esc(p.layoutClass)}` : ""}">
 ${p.leftRail
-    ? `<div class="left-rail">
+    ? `<div class="side-col">
+<div class="left-rail">
 ${p.chrome.header}
 <div class="left-stack">
 ${p.tocHtml ?? ""}
@@ -181,6 +182,7 @@ ${p.citeHtml ?? ""}
 <div class="right-rail">
 ${themeSelHtml()}
 ${p.leftRail}
+</div>
 </div>`
     : p.chrome.header}
 ${p.mainHtml}
@@ -218,6 +220,7 @@ export function tocBox(items?: string, noteCount = 0): string {
   return `<div class="toc">
 <input type="checkbox" id="toc-toggle" class="disclosure">
 <label for="toc-toggle" class="disclosure-label">Contents</label>
+<label class="toc-scrim" for="toc-toggle"></label>
 <nav aria-label="Table of Contents" role="doc-toc">
 <h2>Table of Contents</h2>
 <hr class="nav-rule">
@@ -338,18 +341,25 @@ export function indexMain(posts: IndexCard[], toolsHtml: string): string {
     .map((p) => {
       const month = p.date.slice(0, 7);
       const img = p.imageUrl
-        ? `<a href="${esc(p.url)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
+        ? `<a class="card-thumb" href="${esc(p.url)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
         : "";
-      const author = p.author ? `<span class="author">${esc(p.author)}</span>` : `<span class="author"></span>`;
+      const author = p.author
+        ? `<a class="author" href="?author=${esc(encodeURIComponent(p.author))}">${esc(p.author)}</a>`
+        : `<span class="author"></span>`;
+      const row = img || p.excerpt
+        ? `<div class="card-row">
+${img}
+${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
+</div>
+<hr class="nav-rule">`
+        : "";
       return `<article class="sec post-card" data-title="${esc(p.title)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
 <header>
-<p class="byline"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time><span class="byline-cat">${esc(p.category)}</span>${author}</p>
-<hr class="nav-rule">
+<p class="card-meta"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time>${author}</p>
 <h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
 </header>
-${img}
-<p class="card-ex">${esc(p.excerpt)}</p>
-<p class="card-more"><a href="${esc(p.url)}">Read more</a></p>
+${row}
+<p class="card-foot"><span class="byline-cat">${esc(p.category)}</span><a class="card-more" href="${esc(p.url)}">Read more</a></p>
 </article>`;
     })
     .join("\n");

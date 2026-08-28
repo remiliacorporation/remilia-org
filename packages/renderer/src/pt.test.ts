@@ -133,7 +133,7 @@ test("footnotes render as one .fn with nested note", () => {
   ];
   const html = portableTextToHtml(blocks, OPTS);
   assert.ok(html.includes('<span class="fn" id="fn-1">'));
-  assert.ok(html.includes('<label class="fn-ref" for="fn-1-on">[1]</label>'));
+  assert.ok(html.includes('<a class="fn-ref" href="#fn-1">[1]</a>'));
   assert.ok(html.includes('<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></span>'));
   assert.ok(!html.includes('class="sidenote"'));
   assert.ok(html.includes("Second &lt;source&gt;."));

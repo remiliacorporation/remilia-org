@@ -157,7 +157,7 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
 function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   state.count += 1;
   const n = state.count;
-  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on"><label class="fn-ref" for="fn-${n}-on">[${n}]</label><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
+  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on"><a class="fn-ref" href="#fn-${n}">[${n}]</a><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {

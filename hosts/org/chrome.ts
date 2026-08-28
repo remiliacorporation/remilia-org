@@ -10,7 +10,7 @@ export const chrome: Chrome = {
 <a class="site-title" href="/press">REMILIA CORPORATION — PRESS</a>
 <hr class="nav-rule">
 <nav aria-label="Site">
-<a href="https://remilia.org/">remilia.org</a> — <a href="/press">Index</a> — <a href="/press/rss.xml">RSS</a> — <a href="/press/atom.xml">Atom</a><span class="head-dials"> — <label class="head-posts" for="nav-toggle">Posts</label> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="https://remilia.org/">remilia.org</a> — <a href="/press">Index</a> — <a href="/press/rss.xml">RSS</a> — <a href="/press/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 </header>`,
   footer: `<footer>
