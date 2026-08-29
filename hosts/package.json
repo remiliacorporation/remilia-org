@@ -9,6 +9,7 @@
     "import:md": "node --import tsx md-import.ts",
     "import:ghost": "node --import tsx ghost-import.ts",
     "import:paragraph": "node --import tsx paragraph-import.ts",
+    "import:substack": "node --import tsx substack-import.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
   },
