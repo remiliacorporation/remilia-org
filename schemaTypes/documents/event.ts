@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { CalendarIcon } from "@sanity/icons";
+import { CalendarIcon } from "@sanity/icons/Calendar";
 
 /** Events (.com). Drives Event structured data — rich results a blog post never gets. */
 export const event = defineType({

@@ -12,7 +12,7 @@ Use this host for the Remilia org map: mission, properties, literature, hiring, 
 - About this host (`/about`)
 - Contact (`/contact`, corporate@remilia.org)
 - Careers at Remilia (`/careers`); applications on Ashby
-- Press (`/press`); post map at `/press/llms.txt`
+- Updates (`/updates`); Press (`/press`); Thought (`/thought`); Archive (`/archive`) — per-section maps at `/<section>/llms.txt`
 
 Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite https://wiki.remilia.org/Remilia_Corporation for facts. Shop: https://remilia.com/
 
@@ -22,7 +22,10 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [About](https://remilia.org/about): What this host is
 - [Contact](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org
 - [Careers](https://remilia.org/careers): Openings (apply at https://jobs.ashbyhq.com/remilia); studios in Irvine, CA and Hongdae, Seoul
-- [Press](https://remilia.org/press): Company posts (`/press/llms.txt`, `/press/rss.xml`)
+- [Updates](https://remilia.org/updates): Routine notes (`/updates/llms.txt`)
+- [Press](https://remilia.org/press): Formal releases (`/press/llms.txt`, `/press/rss.xml`)
+- [Thought](https://remilia.org/thought): Essays / longform (`/thought/llms.txt`)
+- [Archive](https://remilia.org/archive): Notable writing + coverage (`/archive/llms.txt`)
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article
 - [Remilia Wiki: Remigumi-guchi](https://wiki.remilia.org/Remigumi-guchi): Parent-entity article
 - [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host

@@ -5,13 +5,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { markdownToPost, slugFromPath, slugify } from "@remilia/renderer";
-import { type Channel } from "@remilia/seo";
-
-const CHANNELS: Channel[] = ["press", "studio", "devblog"];
-
-function isChannel(v: string): v is Channel {
-  return (CHANNELS as string[]).includes(v);
-}
+import { type Channel, isChannel } from "@remilia/seo";
 
 async function walk(dir: string): Promise<string[]> {
   const out: string[] = [];

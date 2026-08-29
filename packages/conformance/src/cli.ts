@@ -34,10 +34,20 @@ const baseFlag = args.indexOf("--base");
 const base = baseFlag >= 0 ? args[baseFlag + 1]?.replace(/\/$/, "") : undefined;
 
 function isChannel(v: string | undefined): v is Channel {
-  return v === "press" || v === "studio" || v === "devblog";
+  return (
+    v === "updates" ||
+    v === "press" ||
+    v === "thought" ||
+    v === "archive" ||
+    v === "news" ||
+    v === "net-updates" ||
+    v === "devblog"
+  );
 }
 if (!isChannel(channelArg)) {
-  console.error("usage: seo-conformance <press|studio|devblog> [--base <origin>]");
+  console.error(
+    "usage: seo-conformance <updates|press|thought|archive|news|net-updates|devblog> [--base <origin>]",
+  );
   process.exit(2);
 }
 const channel: Channel = channelArg;

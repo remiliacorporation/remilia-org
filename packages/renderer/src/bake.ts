@@ -4,11 +4,13 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
+  EVENTS_BASEPATH,
   atom,
   blogPosting,
   canonicalFor,
   event as eventJsonLd,
   eventUrl,
+  eventsIndexUrl,
   feedLinks,
   imageGallery,
   indexUrl,
@@ -53,6 +55,11 @@ export interface BakeOptions {
    * conventionally [hosts/core/blog-core.css, hosts/<host>/theme.css].
    */
   stylesheets: string[];
+  /**
+   * Also bake `event` docs into `/a/events` under outDir (Com host).
+   * Independent of the post section being baked.
+   */
+  bakeEvents?: boolean;
 }
 
 interface FetchedPost {
@@ -66,6 +73,10 @@ interface FetchedPost {
   coverRef?: string;
   authors?: { name: string; url?: string }[];
   tags?: string[];
+  origin?: "first-party" | "external";
+  externalUrl?: string;
+  outlet?: string;
+  commentary?: PTBlock[];
 }
 
 interface FetchedImage {
@@ -107,7 +118,8 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "authors": authors[]->{ name, url },
-  "tags": tags[]->name
+  "tags": tags[]->name,
+  origin, externalUrl, outlet, commentary
 }`;
 
 const EVENTS_QUERY = `*[_type == "event" && !(_id in path("drafts.**"))] | order(startsAt desc) {
@@ -128,9 +140,36 @@ function postPlain(blocks: PTBlock[]): string {
 }
 
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
+  if (channel === "archive" && p.origin === "external" && p.commentary?.length) {
+    return p.commentary;
+  }
   if (p.body?.length) return p.body;
   if (p.markdown?.trim()) return markdownToPost(p.markdown, channel).body;
+  if (channel === "archive" && p.origin === "external") {
+    const outlet = p.outlet ? ` (${p.outlet})` : "";
+    const href = p.externalUrl ?? "#";
+    return [
+      {
+        _type: "block",
+        style: "normal",
+        markDefs: [{ _type: "link", _key: "l", href }],
+        children: [
+          { _type: "span", text: "Originally published", marks: [] },
+          { _type: "span", text: outlet, marks: [] },
+          { _type: "span", text: ": ", marks: [] },
+          { _type: "span", text: href, marks: ["l"] },
+        ],
+      },
+    ];
+  }
   return [];
+}
+
+function postCanonical(p: FetchedPost, channel: Channel): string {
+  if (channel === "archive" && p.origin === "external" && p.externalUrl) {
+    return p.externalUrl;
+  }
+  return canonicalFor(channel, p.slug);
 }
 
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
@@ -200,7 +239,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   // Posts
   for (const p of posts) {
-    const canonical = canonicalFor(channel, p.slug);
+    const pageUrl = canonicalFor(channel, p.slug);
+    const canonical = postCanonical(p, channel);
     const body = postBody(p, channel);
     const bodyHtml = portableTextToHtml(body, {
       imageUrl: imgUrl,
@@ -216,7 +256,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       leftRail: rail,
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
-        canonical,
+        canonical: pageUrl,
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
       }),
@@ -228,8 +268,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         authorHref: p.authors?.[0]?.name
           ? `${basePath}/?author=${encodeURIComponent(p.authors.map((a) => a.name).join(", "))}`
           : undefined,
-        canonical,
-        category: p.tags?.[0],
+        canonical: pageUrl,
+        category: p.tags?.[0] ?? (p.outlet ? p.outlet : undefined),
         categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
         monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
         bodyHtml,
@@ -242,21 +282,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     await writeFile(join(dir, p.slug, "index.html"), page);
     await writeFile(
       join(dir, `${p.slug}.md`),
-      p.body?.length
+      p.body?.length || p.commentary?.length
         ? postToMarkdownFile({
             title: p.title,
             slug: p.slug,
             channel,
             publishedAt: p.publishedAt,
             excerpt: p.excerpt,
-            canonical,
+            canonical: pageUrl,
             author: p.authors?.map((a) => a.name).join(", "),
             tags: p.tags,
             body,
           })
         : (p.markdown ?? "").replace(/\s*$/, "\n"),
     );
-    await writeFile(join(dir, `${p.slug}.txt`), postText(p, canonical, body));
+    await writeFile(join(dir, `${p.slug}.txt`), postText(p, pageUrl, body));
   }
 
   // Index
@@ -287,9 +327,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  // Events + albums (studio only)
+  // Events + albums (Com host — /a/events, not nested under a post section)
   let eventPages = 0;
-  if (channel === "studio") {
+  if (opts.bakeEvents) {
+    const eventsDir = join(outDir, ...EVENTS_BASEPATH.split("/").filter(Boolean));
+    const eventsBase = EVENTS_BASEPATH;
     const events = await client.fetch<FetchedEvent[]>(EVENTS_QUERY);
     for (const ev of events) {
       const canonical = eventUrl(ev.slug);
@@ -324,14 +366,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         description: ev.summary,
         canonical,
         jsonld: [...withOrg(eventJsonLd({ ...ev, imageUrl: img(ev.imageRef, "w=1200&auto=format") })), ...galleryLd],
-        headExtra: `${feedLinks(meta)}\n<script src="${basePath}/gallery.js" defer></script>`,
+        headExtra: `${feedLinks(meta)}\n<script src="${eventsBase}/gallery.js" defer></script>`,
         chrome,
         leftRail: rail,
         bodyEnd: navScript,
         mainHtml: simpleMain(`<header><h1>${esc(ev.title)}</h1><p><time datetime="${esc(ev.startsAt)}">${ev.startsAt.slice(0, 10)}</time>${ev.locationName ? ` — ${esc(ev.locationName)}` : ""}</p></header>\n<div class="prose">\n${bodyHtml}\n</div>\n${galleries}`),
       });
-      await mkdir(join(dir, "events", ev.slug), { recursive: true });
-      await writeFile(join(dir, "events", ev.slug, "index.html"), page);
+      await mkdir(join(eventsDir, ev.slug), { recursive: true });
+      await writeFile(join(eventsDir, ev.slug, "index.html"), page);
       sitemapEntries.push({ loc: canonical, lastmod: ev.startsAt });
       eventPages++;
     }
@@ -339,17 +381,16 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       const evListing = events
         .map(
           (ev) =>
-            `<li><a href="${basePath}/events/${esc(ev.slug)}"><h2>${esc(ev.title)}</h2></a> <time datetime="${esc(ev.startsAt)}">${ev.startsAt.slice(0, 10)}</time><p>${esc(ev.summary)}</p></li>`,
+            `<li><a href="${eventsBase}/${esc(ev.slug)}"><h2>${esc(ev.title)}</h2></a> <time datetime="${esc(ev.startsAt)}">${ev.startsAt.slice(0, 10)}</time><p>${esc(ev.summary)}</p></li>`,
         )
         .join("\n");
-      await mkdir(join(dir, "events"), { recursive: true });
+      await mkdir(eventsDir, { recursive: true });
       await writeFile(
-        join(dir, "events", "index.html"),
+        join(eventsDir, "index.html"),
         htmlPage({
           title: `Events — ${host.title}`,
           description: `Events from ${host.title}.`,
-          canonical: `${indexUrl(channel)}/events`,
-
+          canonical: eventsIndexUrl(),
           jsonld: orgLd ? [orgLd] : [],
           headExtra: feedLinks(meta),
           chrome,
@@ -358,8 +399,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           mainHtml: simpleMain(`<h1>Events</h1>\n<ul class="post-list">\n${evListing}\n</ul>`),
         }),
       );
-      sitemapEntries.push({ loc: `${indexUrl(channel)}/events` });
-      await writeFile(join(dir, "gallery.js"), LIGHTBOX_JS);
+      sitemapEntries.push({ loc: eventsIndexUrl() });
+      await writeFile(join(eventsDir, "gallery.js"), LIGHTBOX_JS);
     }
   }
 

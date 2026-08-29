@@ -1,17 +1,16 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { DocumentTextIcon } from "@sanity/icons";
-import { CHANNELS, canEditChannel, type Channel } from "../../lib/access";
-
-const CHANNEL_PATH: Record<Channel, string> = {
-  press: "remilia.org/press",
-  studio: "remilia.com/a/studio",
-  devblog: "remilia.net/blog",
-};
+import { DocumentTextIcon } from "@sanity/icons/DocumentText";
+import {
+  CHANNELS,
+  CHANNEL_PATH_LABEL,
+  canEditChannel,
+  type Channel,
+} from "../../lib/access";
 
 /**
- * One post type for all three blogs. `channel` decides the host; the
- * canonical URL is always derived from channel + slug — editors never pick
- * a URL by hand.
+ * One post type for all host sections. `channel` is the section id; the
+ * canonical URL is always derived from section + slug — editors never pick
+ * a URL by hand. Use `net-updates` (not `updates`) for remilia.net/updates.
  */
 export const post = defineType({
   name: "post",
@@ -23,11 +22,11 @@ export const post = defineType({
   fields: [
     defineField({
       name: "channel",
-      title: "Channel",
+      title: "Section",
       type: "string",
       options: { list: CHANNELS, layout: "radio" },
       description:
-        "Which site publishes this post. Sets the canonical URL — cannot be a matter of taste per-post.",
+        "Which section publishes this post. Sets host + path — see the Section cheatsheet in the desk.",
       validation: (r) => r.required(),
     }),
     defineField({ name: "title", type: "string", validation: (r) => r.required() }),
@@ -48,7 +47,7 @@ export const post = defineType({
             `count(*[_type == "post" && slug.current == $slug && channel == $channel && !(_id in [$id, "drafts." + $id])])`,
             { slug: slug.current, channel: channel ?? null, id: id ?? "" },
           );
-          return clash === 0 || "Another post in this channel already uses this slug";
+          return clash === 0 || "Another post in this section already uses this slug";
         }),
     }),
     defineField({
@@ -68,13 +67,76 @@ export const post = defineType({
         r.required().max(300).warning("Over ~160 chars gets truncated in search results"),
     }),
     defineField({
+      name: "origin",
+      title: "Archive origin",
+      type: "string",
+      options: {
+        list: [
+          { title: "First-party (we published it)", value: "first-party" },
+          { title: "External (coverage / interview elsewhere)", value: "external" },
+        ],
+        layout: "radio",
+      },
+      hidden: ({ document }) => document?.channel !== "archive",
+      description:
+        "Archive only. External entries cite someone else's piece; our /archive/<slug> is the citing record.",
+      validation: (r) =>
+        r.custom((origin, ctx) => {
+          if (ctx.document?.channel !== "archive") return true;
+          return origin ? true : "Archive posts need an origin";
+        }),
+    }),
+    defineField({
+      name: "externalUrl",
+      title: "External URL",
+      type: "url",
+      hidden: ({ document }) =>
+        document?.channel !== "archive" || document?.origin !== "external",
+      description: "Original article URL. Becomes the HTML canonical when we are not the publisher.",
+      validation: (r) =>
+        r.uri({ scheme: ["http", "https"] }).custom((url, ctx) => {
+          if (ctx.document?.channel !== "archive" || ctx.document?.origin !== "external")
+            return true;
+          return url ? true : "External archive entries need the original URL";
+        }),
+    }),
+    defineField({
+      name: "outlet",
+      title: "Outlet",
+      type: "string",
+      hidden: ({ document }) =>
+        document?.channel !== "archive" || document?.origin !== "external",
+      description: "Publication name (e.g. The New York Times, Mirror).",
+      validation: (r) =>
+        r.custom((outlet, ctx) => {
+          if (ctx.document?.channel !== "archive" || ctx.document?.origin !== "external")
+            return true;
+          return outlet ? true : "Name the outlet";
+        }),
+    }),
+    defineField({
+      name: "commentary",
+      title: "Commentary",
+      type: "blockContent",
+      hidden: ({ document }) =>
+        document?.channel !== "archive" || document?.origin !== "external",
+      description: "Optional notes on the citing record (why it matters, corrections, context).",
+    }),
+    defineField({
       name: "body",
       title: "Body",
       type: "blockContent",
       description:
-        "Write here. Bake compiles this to HTML and writes `/press/{slug}.md` (and .txt) from the same blocks.",
+        "Write here. Bake compiles this to HTML plus `.md` / `.txt` siblings from the same blocks.",
+      hidden: ({ document }) =>
+        document?.channel === "archive" && document?.origin === "external",
       validation: (r) =>
         r.custom((body, ctx) => {
+          const channel = ctx.document?.channel;
+          const origin = ctx.document?.origin;
+          if (channel === "archive" && origin === "external") {
+            return true;
+          }
           if (Array.isArray(body) && body.length > 0) return true;
           const md = ctx.document?.markdown;
           if (typeof md === "string" && md.trim()) return true;
@@ -126,7 +188,7 @@ export const post = defineType({
       title: "Migration metadata",
       type: "object",
       options: { collapsible: true, collapsed: true },
-      description: "Provenance from the Ghost import; drives the 301 map. Safe to ignore when authoring.",
+      description: "Provenance from imports; drives the 301 map. Safe to ignore when authoring.",
       fields: [
         defineField({ name: "source", type: "string", readOnly: true }),
         defineField({ name: "ghostId", title: "Ghost ID", type: "string", readOnly: true }),
@@ -144,8 +206,8 @@ export const post = defineType({
   preview: {
     select: { title: "title", channel: "channel", slug: "slug.current", media: "coverImage" },
     prepare({ title, channel, slug, media }) {
-      const base = CHANNEL_PATH[channel as Channel];
-      return { title, subtitle: base && slug ? `${base}/${slug}` : "no channel set", media };
+      const base = CHANNEL_PATH_LABEL[channel as Channel];
+      return { title, subtitle: base && slug ? `${base}/${slug}` : "no section set", media };
     },
   },
 });

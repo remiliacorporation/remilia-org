@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { TagIcon } from "@sanity/icons";
+import { TagIcon } from "@sanity/icons/Tag";
 
 /** Topic tag. Migrated from Ghost tags. Devblog renders /blog/tag/<slug> pages. */
 export const tag = defineType({

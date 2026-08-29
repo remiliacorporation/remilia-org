@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",
-    "@remilia/seo": "workspace:*"
+    "@remilia/seo": "workspace:*",
+    "@sanity/client": "^7.14.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

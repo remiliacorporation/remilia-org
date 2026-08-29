@@ -6,6 +6,7 @@ import {
   rssUrl,
   sitemapUrl,
   eventUrl,
+  eventsIndexUrl,
   blogPosting,
   event,
   imageGallery,
@@ -13,21 +14,34 @@ import {
   rss,
   sitemap,
   llmsTxt,
+  CHANNEL_BASEPATH,
+  ORG_SECTIONS,
 } from "./index";
 
-test("canonical URLs are exact per channel (the ratified plan)", () => {
+test("canonical URLs follow the ratified section map", () => {
+  assert.equal(canonicalFor("updates", "note"), "https://remilia.org/updates/note");
   assert.equal(canonicalFor("press", "launch"), "https://remilia.org/press/launch");
-  assert.equal(canonicalFor("studio", "fw26"), "https://remilia.com/a/studio/fw26");
+  assert.equal(canonicalFor("thought", "essay"), "https://remilia.org/thought/essay");
+  assert.equal(canonicalFor("archive", "interview"), "https://remilia.org/archive/interview");
+  assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
+  assert.equal(canonicalFor("net-updates", "ship"), "https://www.remilia.net/updates/ship");
   assert.equal(canonicalFor("devblog", "vaults"), "https://www.remilia.net/blog/vaults");
-  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/studio/events/tokyo");
+  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
+  assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("devblog"), "https://www.remilia.net/blog/rss.xml");
-  assert.equal(sitemapUrl("studio"), "https://remilia.com/a/studio/sitemap.xml");
+  assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
+  assert.equal(CHANNEL_BASEPATH["net-updates"], "/updates");
+  assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
 });
 
 test("legacy Ghost redirect maps slug to the channel host", () => {
   assert.deepEqual(legacyRedirect("devblog", "vault-notes"), {
     from: "https://blog.remilia.org/vault-notes/",
     to: "https://www.remilia.net/blog/vault-notes",
+  });
+  assert.deepEqual(legacyRedirect("press", "vault-notes"), {
+    from: "https://blog.remilia.org/vault-notes/",
+    to: "https://remilia.org/press/vault-notes",
   });
 });
 
@@ -72,7 +86,7 @@ test("event JSON-LD distinguishes physical and online locations", () => {
 test("imageGallery emits one ImageObject per photo with alt as description", () => {
   const ld = imageGallery({
     title: "FW26",
-    pageUrl: "https://remilia.com/a/studio/events/fw26",
+    pageUrl: "https://remilia.com/a/events/fw26",
     images: [{ url: "https://cdn.sanity.io/x.jpg", alt: "Runway look 1", credit: "Photo: A" }],
   });
   assert.equal(ld.image.length, 1);

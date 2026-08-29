@@ -1,13 +1,27 @@
 # remilia-content
 
 Sanity studio + remilia.org static tree. One project (`8x9419lh`), one
-`production` dataset, one `post` type fanned out by `channel`:
+`production` dataset, one `post` type. Editors pick a **section**; host +
+URL are derived:
 
-| Channel | Publishes to |
+| Section (schema id) | Publishes to |
 |---|---|
+| `updates` | remilia.org/updates |
 | `press` | remilia.org/press |
-| `studio` | remilia.com/a/studio (+ events, albums) |
+| `thought` | remilia.org/thought |
+| `archive` | remilia.org/archive |
+| `news` | remilia.com/a/news |
+| `net-updates` | remilia.net/updates |
 | `devblog` | remilia.net/blog |
+
+Events (document type, not a post section) publish to remilia.com/a/events
+(retires `/a/studio/events`). `net-updates` is the schema id so GROQ never
+collides with org `updates`; public path is `/updates` on both hosts.
+
+**Archive:** `origin` is `first-party` or `external`. External entries set
+`externalUrl`, `outlet`, optional `commentary`; `/archive/<slug>` is the
+citing record and HTML canonical points at the original when we are not the
+publisher.
 
 **remilia.org** lives in this repo (`deploy/`). [remilia-site](https://github.com/remiliacorp/remilia-site)
 is archived. Later project archives go under `deploy/<name>/` (e.g. `/maker`).
@@ -17,7 +31,7 @@ deploy/                 Netlify publish root
   index.html            remilia.org/
   about/ careers.html contact/
   assets/
-  press/                generated — do not edit; gitignored
+  updates|press|thought|archive/   generated — do not edit; gitignored
   maker/                (later) static archive
 ```
 
@@ -26,7 +40,7 @@ deploy/                 Netlify publish root
 ```
 pnpm install
 pnpm dev          # Studio — http://localhost:3399
-pnpm bake:org     # writes deploy/press from Sanity
+pnpm bake:org     # writes deploy/{updates,press,thought,archive} from Sanity
 pnpm validate
 pnpm typecheck
 ```
@@ -40,21 +54,40 @@ To go live on Sanity publish, add a Sanity webhook → that Netlify hook (datase
 `production`, filter `_type == "post"`). Until then: `pnpm bake:org` locally or
 push, then deploy.
 
-Root `llms.txt` maps the host. `/press` has its own because posts change.
-A static archive under `/maker` only needs a line in the root `llms.txt` unless
-it is a large corpus.
+Root `llms.txt` maps the host. Each section has its own `llms.txt` because
+posts change. A static archive under `/maker` only needs a line in the root
+`llms.txt` unless it is a large corpus.
+
+### Section cheatsheet
+
+Also in Studio under **Section cheatsheet**:
+
+- **Updates** (.org) — routine notes, shipping logs, small announcements.
+- **Press** — formal releases / major launches meant to be cited as press.
+- **Thought** — essays, longform, positions.
+- **Archive** — notable writing by or about Remilia (incl. external coverage).
+- **News** (.com) — brand/journal posts (replaces `/a/studio`).
+- **Updates** (.net, id `net-updates`) — product/network routine notes.
+- **Devblog** — engineering depth and changelogs.
+
+### Retiring `/a/studio`
+
+Migrate existing journal posts:  
+`SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-studio-to-news.ts --write`  
+Com publish root should ship `hosts/com/_redirects` (`/a/studio` → `/a/news`,
+`/a/studio/events` → `/a/events`).
 
 ## Shape
 
 - `deploy/` — hand-authored remilia.org pages (former remilia-site)
-- `hosts/org/` — press chrome + `bake.ts` (default outDir = `deploy/`)
+- `hosts/org/` — org section chrome + `bake.ts` (default outDir = `deploy/`)
 - `schemaTypes/documents/` — `post`, `event`, `album`, `author`, `tag`, `org`
 - `schemaTypes/objects/` — `seo`, `blockContent`
-- `structure.ts` — Press / Studio / Devblog desks
-- `lib/access.ts` — `CHANNEL_EDITORS` soft-lock
+- `structure.ts` — Org / Com / Net desks with section filters
+- `lib/access.ts` — `CHANNEL_EDITORS` soft-lock by section
 
 Write posts in Studio’s **Portable Text** editor (`body`). Bake emits HTML plus
-`.md` / `.txt` siblings, RSS, JSON-LD, `/press/llms.txt`. Vault import:
+`.md` / `.txt` siblings, RSS, JSON-LD, per-section `llms.txt`. Vault import:
 `md-import` fills `body`.
 
 ## Ghost import (published posts, no admin)

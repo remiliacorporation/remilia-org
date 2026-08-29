@@ -186,11 +186,23 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
   if (!txt.includes("wiki.remilia.org")) errors.push("llms.txt has no wiki citation");
   if (!/^##\s+when to use/im.test(txt))
     errors.push('llms.txt has no "When to use" section — agents need explicit guidance');
-  const channels: Channel[] = ["press", "studio", "devblog"];
+  const channels: Channel[] = [
+    "updates",
+    "press",
+    "thought",
+    "archive",
+    "news",
+    "net-updates",
+    "devblog",
+  ];
   const foreign = channels
     .filter((c) => c !== channel)
     .map((c) => `${CHANNEL_ORIGIN[c]}${CHANNEL_BASEPATH[c]}/`);
+  // Same public path /updates on org and net — only flag when origin differs.
+  const seen = new Set<string>();
   for (const prefix of foreign) {
+    if (seen.has(prefix)) continue;
+    seen.add(prefix);
     if (txt.includes(prefix))
       errors.push(`llms.txt lists foreign-host content under ${prefix} (cite the index, not posts)`);
   }

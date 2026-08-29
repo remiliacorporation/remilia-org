@@ -1,65 +1,84 @@
 import type { StructureResolver } from "sanity/structure";
-import {
-  DocumentTextIcon,
-  CalendarIcon,
-  ImagesIcon,
-  UserIcon,
-  TagIcon,
-  CaseIcon,
-} from "@sanity/icons";
+import { DocumentTextIcon } from "@sanity/icons/DocumentText";
+import { CalendarIcon } from "@sanity/icons/Calendar";
+import { ImagesIcon } from "@sanity/icons/Images";
+import { UserIcon } from "@sanity/icons/User";
+import { TagIcon } from "@sanity/icons/Tag";
+import { CaseIcon } from "@sanity/icons/Case";
+import { BookIcon } from "@sanity/icons/Book";
+import { EarthGlobeIcon } from "@sanity/icons/EarthGlobe";
+import { BoltIcon } from "@sanity/icons/Bolt";
+import type { Channel } from "./lib/access";
+import { SectionCheatsheet } from "./structure/cheatsheet";
+
+function sectionList(
+  S: Parameters<StructureResolver>[0],
+  title: string,
+  channel: Channel,
+) {
+  return S.listItem()
+    .title(title)
+    .icon(DocumentTextIcon)
+    .child(
+      S.documentTypeList("post")
+        .title(title)
+        .filter("_type == $type && channel == $channel")
+        .params({ type: "post", channel })
+        .initialValueTemplates([
+          S.initialValueTemplateItem("post-by-channel", { channel }),
+        ]),
+    );
+}
 
 /**
- * Three desks, one per channel — editors see their channel, not a random
- * post pile. Events/Albums live under Studio (.com owns them).
+ * Desks by host (Org / Com / Net) with section filters — keeps soft-lock
+ * seats sane. Events/Albums live under Com (.com owns them).
  */
 export const structure: StructureResolver = (S) =>
   S.list()
     .title("Content")
     .items([
       S.listItem()
-        .title("Press — remilia.org")
-        .icon(DocumentTextIcon)
+        .title("Org — remilia.org")
+        .icon(EarthGlobeIcon)
         .child(
-          S.documentTypeList("post")
-            .title("Press posts")
-            .filter('_type == "post" && channel == "press"')
-            .initialValueTemplates([
-              S.initialValueTemplateItem("post-by-channel", { channel: "press" }),
+          S.list()
+            .title("Org — remilia.org")
+            .items([
+              sectionList(S, "Updates", "updates"),
+              sectionList(S, "Press", "press"),
+              sectionList(S, "Thought", "thought"),
+              sectionList(S, "Archive", "archive"),
             ]),
         ),
       S.listItem()
-        .title("Studio — remilia.com")
+        .title("Com — remilia.com")
         .icon(ImagesIcon)
         .child(
           S.list()
-            .title("Studio")
+            .title("Com — remilia.com")
             .items([
-              S.listItem()
-                .title("Journal posts")
-                .icon(DocumentTextIcon)
-                .child(
-                  S.documentTypeList("post")
-                    .title("Journal posts")
-                    .filter('_type == "post" && channel == "studio"')
-                    .initialValueTemplates([
-                      S.initialValueTemplateItem("post-by-channel", { channel: "studio" }),
-                    ]),
-                ),
+              sectionList(S, "News", "news"),
               S.documentTypeListItem("event").title("Events").icon(CalendarIcon),
               S.documentTypeListItem("album").title("Albums").icon(ImagesIcon),
             ]),
         ),
       S.listItem()
-        .title("Devblog — remilia.net")
-        .icon(DocumentTextIcon)
+        .title("Net — remilia.net")
+        .icon(BoltIcon)
         .child(
-          S.documentTypeList("post")
-            .title("Devblog posts")
-            .filter('_type == "post" && channel == "devblog"')
-            .initialValueTemplates([
-              S.initialValueTemplateItem("post-by-channel", { channel: "devblog" }),
+          S.list()
+            .title("Net — remilia.net")
+            .items([
+              sectionList(S, "Updates", "net-updates"),
+              sectionList(S, "Devblog", "devblog"),
             ]),
         ),
+      S.divider(),
+      S.listItem()
+        .title("Section cheatsheet")
+        .icon(BookIcon)
+        .child(S.component(SectionCheatsheet).title("Section cheatsheet")),
       S.divider(),
       S.documentTypeListItem("author").title("Authors").icon(UserIcon),
       S.documentTypeListItem("tag").title("Tags").icon(TagIcon),

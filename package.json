@@ -2,7 +2,7 @@
   "name": "remilia-content",
   "private": true,
   "version": "0.0.0",
-  "description": "Sanity studio for the Remilia content graph (press / studio / devblog)",
+  "description": "Sanity studio for the Remilia content graph (org / com / net sections)",
   "scripts": {
     "dev": "sanity dev",
     "build": "sanity build",

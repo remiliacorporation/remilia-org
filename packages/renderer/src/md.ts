@@ -20,7 +20,15 @@ export interface MdPost {
 type Span = { _type: "span"; text: string; marks?: string[] };
 type MarkDef = { _key: string; _type: string; href?: string; text?: string };
 
-const CHANNELS = new Set<string>(["press", "studio", "devblog"]);
+const CHANNELS = new Set<string>([
+  "updates",
+  "press",
+  "thought",
+  "archive",
+  "news",
+  "net-updates",
+  "devblog",
+]);
 
 function isChannel(v: string): v is Channel {
   return CHANNELS.has(v);
@@ -259,7 +267,7 @@ function spanToMd(span: { text: string; marks?: string[] }, defs: MarkDef[], fns
   if (m.strong) t = `**${t}**`;
   if (m.em) t = `*${t}*`;
   if (m.href) {
-    const path = m.href.match(/^\/(?:press|a\/studio|blog)\/([^/?#]+)/);
+    const path = m.href.match(/^\/(?:updates|press|thought|archive|a\/news|a\/studio|blog)\/([^/?#]+)/);
     t = path ? `[[${path[1]}|${span.text}]]` : `[${span.text}](${m.href})`;
   }
   if (m.fn !== undefined) {

@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { UserIcon } from "@sanity/icons";
+import { UserIcon } from "@sanity/icons/User";
 
 /** Byline. Migrated from Ghost users. Feeds Article JSON-LD author entities. */
 export const author = defineType({

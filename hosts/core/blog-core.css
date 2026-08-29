@@ -1,6 +1,6 @@
 /*
  * Blog component system — shared by all three hosts (.org /press,
- * .com /a/studio, .net /blog). CLASS CONTRACT for everything the renderer
+ * .com /a/news + /a/events, .net /updates + /blog). CLASS CONTRACT for everything the renderer
  * emits. Hosts NEVER edit this; they set the variables below in theme.css.
  * The bake concatenates core + theme → blog.css.
  *
