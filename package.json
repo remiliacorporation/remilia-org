@@ -7,6 +7,7 @@
     "dev": "sanity dev",
     "build": "sanity build",
     "deploy:studio": "sanity deploy",
+    "bake:org": "pnpm --filter @remilia/hosts bake:org",
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit"
   },

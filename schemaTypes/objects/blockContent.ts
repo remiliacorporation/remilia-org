@@ -6,7 +6,7 @@ import { defineArrayMember, defineType } from "sanity";
  *
  * Ghost "Koenig" card objects (embed, gallery, code, callout, …) get added
  * here only after the export audit shows which cards actually occur —
- * see BLOG-MIGRATION.md §4 in remilia-site.
+ * see the Ghost export audit before adding cards.
  */
 export const blockContent = defineType({
   name: "blockContent",

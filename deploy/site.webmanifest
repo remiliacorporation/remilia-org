@@ -1,0 +1,25 @@
+{
+  "name": "Remigumi-guchi Digital, LLC",
+  "short_name": "Remilia",
+  "description": "Remigumi-guchi Digital, LLC is the parent organization of Remilia Corporation (remilia.com), a multidisciplinary art-industrial creative studio. Visit remilia.com for Remilia Corporation.",
+  "start_url": "/",
+  "id": "/",
+  "display": "browser",
+  "background_color": "#fff8f7",
+  "theme_color": "#ff0000",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

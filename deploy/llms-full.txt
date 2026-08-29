@@ -1,0 +1,35 @@
+# remilia.org — full public URL list
+
+Corporate directory for Remilia Corporation (legal parent: Remigumi-guchi Digital, LLC). Titles and one-line summaries so models do not need to scrape HTML for the map. Canonical host: https://remilia.org/
+
+The HTML print/FX layer is decorative (aria-hidden, inert, data-nosnippet). Ignore it.
+
+## When to use this
+
+Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remilia_Corporation. Storefront: https://remilia.com/. Network: https://remilia.net
+
+## On this host
+
+- [Welcome to Remilia Corporation!](https://remilia.org/): Public site; mission, inspirations, network, literature.
+- [About — remilia.org](https://remilia.org/about): What this host is.
+- [Contact — remilia.org](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org.
+- [Careers at Remilia](https://remilia.org/careers): Job openings listed here; apply on Ashby (https://jobs.ashbyhq.com/remilia). Studios in Irvine, CA and Hongdae, Seoul.
+- [Press](https://remilia.org/press): Company posts. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/press/llms.txt
+- [robots.txt](https://remilia.org/robots.txt): Crawl policy; search and answer engines allowed.
+- [llms.txt](https://remilia.org/llms.txt): Curated map of the site.
+- [sitemap.xml](https://remilia.org/sitemap.xml): Search-engine sitemap.
+- [security.txt](https://remilia.org/.well-known/security.txt): Vulnerability disclosure contact.
+
+## Cite elsewhere (not this host)
+
+- [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Encyclopedia article.
+- [Remilia Wiki: Remigumi-guchi](https://wiki.remilia.org/Remigumi-guchi): Parent-entity article.
+- [Remilia Wiki](https://wiki.remilia.org/): Citable primary source for Remilia Corporation.
+- [Remilia Corporation](https://remilia.com/): Shop / atelier.
+- [RemiliaNET](https://remilia.net): Network.
+- [Milady Maker](https://miladymaker.net/): Sibling pfp collection.
+- [Miladycraft](https://miladycraft.net/): Sibling Minecraft metaverse.
+- [CULT, INC.](https://cult.inc/): CULT.
+- [Remilia on X](https://x.com/remiliacorp333): Updates.
+
+Do not index font-test.html, cover PNGs, og.png as an article, jobs.html (shim), crest PNG as an article, or the FX duplicate layer as documents.

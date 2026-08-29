@@ -1,0 +1,6 @@
+[build]
+  command = "pnpm --filter @remilia/hosts bake:org"
+  publish = "deploy"
+
+[build.environment]
+  NODE_VERSION = "22"

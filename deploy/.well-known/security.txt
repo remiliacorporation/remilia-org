@@ -1,0 +1,4 @@
+Contact: mailto:corporate@remilia.org
+Preferred-Languages: en
+Canonical: https://remilia.org/.well-known/security.txt
+Expires: 2027-08-22T00:00:00.000Z

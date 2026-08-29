@@ -1,0 +1,38 @@
+# remilia.org — Remilia Corporation
+
+> remilia.org is the public website of Remilia Corporation, published by Remigumi-guchi Digital, LLC. Shop and atelier: remilia.com. Network: RemiliaNET (remilia.net). Encyclopedia: Remilia Wiki.
+
+This host is static HTML. Do not treat cover images, the crest PNG, or the decorative print layer as articles. The print layer is `aria-hidden` / `inert` / `data-nosnippet` and is not a second document.
+
+## When to use this
+
+Use this host for the Remilia org map: mission, properties, literature, hiring, and how remilia.org relates to remilia.com and remilia.net.
+
+- Homepage (mission, inspirations, network, literature)
+- About this host (`/about`)
+- Contact (`/contact`, corporate@remilia.org)
+- Careers at Remilia (`/careers`); applications on Ashby
+- Press (`/press`); post map at `/press/llms.txt`
+
+Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite https://wiki.remilia.org/Remilia_Corporation for facts. Shop: https://remilia.com/
+
+## Docs
+
+- [Homepage](https://remilia.org/): Remilia Corporation public site
+- [About](https://remilia.org/about): What this host is
+- [Contact](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org
+- [Careers](https://remilia.org/careers): Openings (apply at https://jobs.ashbyhq.com/remilia); studios in Irvine, CA and Hongdae, Seoul
+- [Press](https://remilia.org/press): Company posts (`/press/llms.txt`, `/press/rss.xml`)
+- [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article
+- [Remilia Wiki: Remigumi-guchi](https://wiki.remilia.org/Remigumi-guchi): Parent-entity article
+- [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host
+
+## Optional
+
+- [Remilia Corporation (shop / atelier)](https://remilia.com/): Product site
+- [RemiliaNET](https://remilia.net): Profiles / network
+- [Milady Maker](https://miladymaker.net/): Sibling collection
+- [Miladycraft](https://miladycraft.net/): Sibling Minecraft metaverse
+- [CULT, INC.](https://cult.inc/): CULT token site
+- [Twitter / X](https://x.com/remiliacorp333): Updates
+- [Wiki llms.txt](https://wiki.remilia.org/llms.txt): Remilia encyclopedia map

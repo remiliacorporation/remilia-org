@@ -1,0 +1,300 @@
+/*
+ * Ashby Job Board Custom CSS
+ *
+ * Injected into the Ashby iframe (application form + job board).
+ * Upload in Ashby admin → Theme / Job Board → Custom CSS,
+ * and allowlist this file's public URL:
+ *   https://remilia.org/assets/css/ashby-custom.css
+ *
+ * Matches remilia.org: bold grotesk, red on warm paper, square 1px rules.
+ */
+
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('../fonts/AlteHaasGroteskRegular.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('../fonts/AlteHaasGroteskBold.woff') format('woff');
+  font-weight: bold;
+  font-display: swap;
+}
+
+:root {
+  --paper: #fff8f7;
+  --ink: #f00;
+  --fontFamily: 'Alte Haas Grotesk', Helvetica, Arial, sans-serif;
+  --borderRadiusContainer: 0px;
+  --borderRadiusControl: 0px;
+  --borderRadiusButton: 0px;
+  --borderWidthBold: 1px;
+  --widthMaxJobBoard: 720px;
+  --colorAppBackground: #fff8f7;
+  --colorPrimary900: #cc0000;
+  --colorPrimary600: #ff0000;
+  --colorNegative200: #ffe8e8;
+  --colorPositive200: #fff0f0;
+  --colorWarning800: #cc0000;
+  --colorWarning600: #ff0000;
+  --colorNegative600: #cc0000;
+  --colorPositive600: #cc0000;
+  --colorWarning900: #990000;
+}
+
+html, body {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  font-family: var(--fontFamily) !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  line-height: 1.5 !important;
+}
+
+*, *::before, *::after {
+  font-family: var(--fontFamily) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+p, li, span, div, label, td, th, a, button, input, textarea, select {
+  font-family: var(--fontFamily) !important;
+  color: var(--ink) !important;
+  font-weight: bold !important;
+}
+
+a {
+  color: var(--ink) !important;
+  text-decoration: underline !important;
+}
+a:hover {
+  background: var(--ink) !important;
+  color: #fff !important;
+}
+
+::selection {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* ── Listing ── */
+
+.ashby-job-board-heading,
+.ashby-job-board-heading-count {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0;
+  color: var(--ink) !important;
+  text-align: center;
+}
+
+.ashby-job-board-filter,
+.ashby-job-board-filters-label,
+.ashby-job-board-reset-filters-label {
+  font-size: 12px !important;
+  color: var(--ink) !important;
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+}
+
+.ashby-job-board-filter {
+  padding: 8px !important;
+}
+
+.ashby-job-board-back-to-all-jobs-button {
+  font-size: 12px !important;
+  color: var(--ink) !important;
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+  padding: 8px !important;
+  text-decoration: underline !important;
+}
+.ashby-job-board-back-to-all-jobs-button:hover {
+  background: var(--ink) !important;
+  color: #fff !important;
+}
+
+.ashby-department-heading,
+.ashby-department-heading-level,
+.ashby-job-posting-brief-department-heading,
+.ashby-job-posting-brief-department-heading-level {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  text-align: center;
+  border: 1px solid var(--ink) !important;
+  padding: 6px 8px !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+.ashby-job-posting-brief-list {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ashby-job-posting-brief {
+  margin: 0 0 -1px !important;
+  padding: 0 !important;
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+}
+
+.ashby-job-posting-brief:hover {
+  background: var(--ink) !important;
+}
+.ashby-job-posting-brief:hover,
+.ashby-job-posting-brief:hover * {
+  color: #fff !important;
+}
+
+.ashby-job-posting-brief-title {
+  font-size: 12px !important;
+  text-decoration: underline !important;
+  padding: 8px !important;
+  display: block;
+}
+
+.ashby-job-posting-brief-details {
+  font-size: 12px !important;
+  opacity: 1 !important;
+  padding: 0 8px 8px !important;
+}
+
+/* ── Job posting ── */
+
+.ashby-job-posting-header,
+.ashby-job-posting-heading {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  text-align: center;
+  border: 1px solid var(--ink) !important;
+  padding: 6px 8px !important;
+}
+
+.ashby-job-posting-left-pane,
+.ashby-job-posting-right-pane {
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+  color: var(--ink) !important;
+}
+
+.ashby-job-posting-right-pane-tab-slider {
+  background: var(--ink) !important;
+}
+
+.ashby-job-posting-right-pane-overview-tab,
+.ashby-job-posting-right-pane-application-tab {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  border: 1px solid var(--ink) !important;
+  padding: 6px 8px !important;
+}
+
+/* ── Application form ── */
+
+.ashby-application-form-container,
+.ashby-survey-form-container {
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+  padding: 12px 8px !important;
+}
+
+.ashby-application-form-section-container {
+  margin-bottom: 20px !important;
+}
+
+.ashby-application-form-section-header-title {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  text-align: center;
+  border: 1px solid var(--ink) !important;
+  padding: 6px 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.ashby-application-form-section-header-description,
+.ashby-application-form-question-description,
+.ashby-application-form-texting-consent-description {
+  font-size: 12px !important;
+  opacity: 1 !important;
+  line-height: 1.7 !important;
+}
+
+.ashby-application-form-field-entry {
+  margin-bottom: 12px !important;
+}
+
+.ashby-application-form-question-title {
+  font-size: 12px !important;
+}
+
+.ashby-application-form-question-title::after {
+  color: var(--ink) !important;
+}
+
+input,
+textarea,
+select,
+.ashby-application-form-autofill-pane,
+.ashby-application-form-autofill-uploader,
+.ashby-application-form-autofill-input-root {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--ink) !important;
+  font-size: 12px !important;
+  padding: 8px !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 1px solid var(--ink) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink) !important;
+  opacity: 0.4 !important;
+}
+
+.ashby-application-form-autofill-input-title {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+}
+
+.ashby-application-form-submit-button,
+button,
+input[type="submit"],
+[role="button"] {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--ink) !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 8px 16px !important;
+  cursor: pointer !important;
+}
+.ashby-application-form-submit-button:hover,
+button:hover,
+input[type="submit"]:hover,
+[role="button"]:hover {
+  background: var(--ink) !important;
+  color: #fff !important;
+}
+
+.ashby-application-form-success-container,
+.ashby-application-form-failure-container,
+.ashby-application-form-blocked-application-container {
+  background: var(--paper) !important;
+  border: 1px solid var(--ink) !important;
+  padding: 12px 8px !important;
+  font-size: 12px !important;
+}
+
+hr {
+  border: none !important;
+  border-top: 1px solid var(--ink) !important;
+}

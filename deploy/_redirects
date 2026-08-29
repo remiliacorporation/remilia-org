@@ -1,0 +1,10 @@
+/jobs.html    /careers    301
+/jobs         /careers    301
+/jobs/        /careers    301
+/careers      /careers.html   200
+/careers/     /careers.html   200
+/about   /about/index.html   200
+/about/  /about/index.html   200
+/contact /contact/index.html   200
+/contact/ /contact/index.html   200
+/*    /404.html    404
