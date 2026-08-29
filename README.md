@@ -1,7 +1,7 @@
 # remilia-content
 
-Sanity studio for the Remilia content graph. One project (`8x9419lh`), one
-`production` dataset, one `post` type fanned out to three sites by `channel`:
+Sanity studio + remilia.org static tree. One project (`8x9419lh`), one
+`production` dataset, one `post` type fanned out by `channel`:
 
 | Channel | Publishes to |
 |---|---|
@@ -9,41 +9,88 @@ Sanity studio for the Remilia content graph. One project (`8x9419lh`), one
 | `studio` | remilia.com/a/studio (+ events, albums) |
 | `devblog` | remilia.net/blog |
 
-Full plan: `remilia-site/BLOG-MIGRATION.md` (ratified 2026-08-23).
+**remilia.org** lives in this repo (`deploy/`). [remilia-site](https://github.com/remiliacorp/remilia-site)
+is archived. Later project archives go under `deploy/<name>/` (e.g. `/maker`).
+
+```
+deploy/                 Netlify publish root
+  index.html            remilia.org/
+  about/ careers.html contact/
+  assets/
+  press/                generated — do not edit; gitignored
+  maker/                (later) static archive
+```
 
 ## Run
 
 ```
 pnpm install
-pnpm dev          # http://localhost:3399 (CORS origin already registered)
-pnpm validate     # sanity schema validate
+pnpm dev          # Studio — http://localhost:3399
+pnpm bake:org     # writes deploy/press from Sanity
+pnpm validate
 pnpm typecheck
 ```
 
+Netlify: `publish = deploy`, build = `pnpm bake:org`. Studio stays on Sanity
+(`pnpm run deploy:studio` → remilia.sanity.studio), not on remilia.org.
+
+Publishing in Studio does **not** update remilia.org by itself. Netlify rebuilds
+on git push, or when you hit a [build hook](https://docs.netlify.com/manage/webhooks/build-hooks/).
+To go live on Sanity publish, add a Sanity webhook → that Netlify hook (dataset
+`production`, filter `_type == "post"`). Until then: `pnpm bake:org` locally or
+push, then deploy.
+
+Root `llms.txt` maps the host. `/press` has its own because posts change.
+A static archive under `/maker` only needs a line in the root `llms.txt` unless
+it is a large corpus.
+
 ## Shape
 
-- `schemaTypes/documents/` — `post` (channel-required), `event`, `album`,
-  `author`, `tag`, `org` (singleton, Organization JSON-LD source of truth)
-- `schemaTypes/objects/` — `seo` (per-doc overrides), `blockContent`
-  (presentation-neutral; Ghost Koenig card objects land after the export
-  audit)
-- `structure.ts` — three desks (Press / Studio / Devblog); Events + Albums
-  under Studio; `org` singleton pinned
-- `lib/access.ts` — `CHANNEL_EDITORS` soft-lock (UI-level; content-scoped
-  roles are Enterprise-only). Fill emails per channel to lock desks.
+- `deploy/` — hand-authored remilia.org pages (former remilia-site)
+- `hosts/org/` — press chrome + `bake.ts` (default outDir = `deploy/`)
+- `schemaTypes/documents/` — `post`, `event`, `album`, `author`, `tag`, `org`
+- `schemaTypes/objects/` — `seo`, `blockContent`
+- `structure.ts` — Press / Studio / Devblog desks
+- `lib/access.ts` — `CHANNEL_EDITORS` soft-lock
 
-## SEO/LLM invariants enforced by the schema
+Write posts in Studio’s **Portable Text** editor (`body`). Bake emits HTML plus
+`.md` / `.txt` siblings, RSS, JSON-LD, `/press/llms.txt`. Vault import:
+`md-import` fills `body`.
 
-- `channel` required → canonical URL is always derived, never hand-picked
-- `slug` lowercase-hyphen regex + per-channel uniqueness (async check)
-- `excerpt` required (meta description / RSS / llms.txt line)
-- `publishedAt` required (RSS, sitemap lastmod, JSON-LD dates)
-- alt text required on cover, body, event, and album images
-- `event.startsAt` required (Event JSON-LD), end-after-start check
-- `seo` object is overrides-only; `noIndex` per doc; `canonical` only for
-  syndication
-- content is structured blocks, never raw HTML
+## Ghost import (published posts, no admin)
 
-## Studio deploy (later)
+Public sitemap + each post page → Portable Text. Drafts/scheduled are not on
+the public site.
 
-`pnpm deploy` → `studio.remilia.org`, `noindex`, never on a public sitemap.
+```
+pnpm --filter @remilia/hosts import:ghost -- --out ghost-posts.ndjson
+npx sanity dataset import ghost-posts.ndjson --dataset production --replace
+```
+
+Everything lands as `channel: press`. Retag events/dev posts in Studio.
+`blog.remilia.org/{slug}/` stays the `migration.legacyUrl` for the 301 map.
+
+## Markdown import (optional)
+
+```
+pnpm --filter @remilia/hosts exec node --import tsx md-import.ts ./vault --channel press --out posts.ndjson
+npx sanity dataset import posts.ndjson production --replace
+pnpm bake:org
+```
+
+Supported in imported Markdown: `##`/`###`/`####`, `**bold**` `*em*` `` `code` ``,
+`[links](url)`, `[[wikilinks]]`, `[^n]` footnotes, images, lists, quotes.
+
+## remilia.org notes (from remilia-site)
+
+- Canonical is https://remilia.org/ (not www). Shop/atelier is https://remilia.com/.
+- `/jobs` lists Ashby’s public board in page JS; apply URLs stay on Ashby.
+- `assets/css/ashby-custom.css` is for Ashby admin, not this deploy.
+- Do not deploy `font-test.html`. `_redirects` / `_headers` ship in `deploy/`.
+- Default ink `#f00` is below WCAG AA by brand; `prefers-contrast: more` uses `#b00000`.
+
+## Studio deploy
+
+`pnpm deploy` is a pnpm builtin. Use `pnpm run deploy:studio` (`sanity deploy`).
+`npx sanity login` first. After a Studio version bump, deploy once even if
+auto-updates are on.
