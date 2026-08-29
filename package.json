@@ -6,20 +6,20 @@
   "scripts": {
     "dev": "sanity dev",
     "build": "sanity build",
-    "deploy": "sanity deploy",
+    "deploy:studio": "sanity deploy",
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sanity/icons": "^3.7.4",
-    "@sanity/vision": "^4.10.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "sanity": "^4.10.0",
+    "@sanity/icons": "^5.2.1",
+    "@sanity/vision": "^6.11.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sanity": "^6.11.0",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
-    "@types/react": "^19.1.0",
+    "@types/react": "^19.2.18",
     "typescript": "^5.8.2"
   }
 }
