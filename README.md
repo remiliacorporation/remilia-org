@@ -1,22 +1,18 @@
 # remilia-content
 
 Sanity studio + remilia.org static tree. One project (`8x9419lh`), one
-`production` dataset, one `post` type. Editors pick a **section**; host +
-URL are derived:
+`production` dataset. Editors pick a **section**; host + URL are derived:
 
-| Section (schema id) | Publishes to |
-|---|---|
-| `updates` | remilia.org/updates |
-| `press` | remilia.org/press |
-| `thought` | remilia.org/thought |
-| `archive` | remilia.org/archive |
-| `news` | remilia.com/a/news |
-| `net-updates` | remilia.net/updates |
-| `devblog` | remilia.net/blog |
+| Host | Sections | Paths |
+|---|---|---|
+| .org | updates, press, thought, archive | `/updates`, `/press`, `/thought`, `/archive` |
+| .com | news, events | `/a/news`, `/a/events` (retires `/a/studio`) |
+| .net | net-updates, devblog | `/updates`, `/blog` |
 
-Events (document type, not a post section) publish to remilia.com/a/events
-(retires `/a/studio/events`). `net-updates` is the schema id so GROQ never
-collides with org `updates`; public path is `/updates` on both hosts.
+Posts use schema field `channel` = section id (`net-updates` so GROQ never
+collides with org `updates`). **Events** are document type `event` (not a
+post channel) under the Com desk — same host surface as news, path `/a/events`.
+Albums attach to events.
 
 **Archive:** `origin` is `first-party` or `external`. External entries set
 `externalUrl`, `outlet`, optional `commentary`; `/archive/<slug>` is the

@@ -9,8 +9,8 @@ ORG (remilia.org)
 • Archive — notable posts/interviews/articles (ours or coverage of us). External entries need outlet + original URL; /archive/<slug> is our citing record.
 
 COM (remilia.com)
-• News — brand/journal posts (replaces /a/studio).
-• Events — calendar shows + albums (document types under this desk).
+• News — brand/journal posts (replaces /a/studio) → /a/news
+• Events — calendar shows (+ albums) → /a/events (event documents, not posts)
 
 NET (remilia.net)
 • Updates — product/network routine notes (schema id net-updates; path /updates).

@@ -61,8 +61,21 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   devblog: "net",
 };
 
-/** Org sections baked into remilia.org `deploy/`. */
+/** Org post sections baked into remilia.org `deploy/`. */
 export const ORG_SECTIONS: Channel[] = ["updates", "press", "thought", "archive"];
+
+/** Com post section(s). Events are a separate document type on the same host. */
+export const COM_POST_SECTIONS: Channel[] = ["news"];
+
+/**
+ * Full .com surface: news posts + events (and albums under events).
+ * Events are `_type == "event"`, not a post `channel`.
+ */
+export const COM_SECTIONS = ["news", "events"] as const;
+export type ComSection = (typeof COM_SECTIONS)[number];
+
+/** Net post sections. */
+export const NET_SECTIONS: Channel[] = ["net-updates", "devblog"];
 
 /** Public host label for previews / Studio lists (no scheme). */
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
@@ -74,6 +87,9 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   "net-updates": "remilia.net/updates",
   devblog: "remilia.net/blog",
 };
+
+/** .com events section label (document type `event`, path /a/events). */
+export const EVENTS_PATH_LABEL = "remilia.com/a/events";
 
 export const EVENTS_ORIGIN = "https://remilia.com";
 export const EVENTS_BASEPATH = "/a/events";

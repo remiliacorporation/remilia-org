@@ -16,6 +16,8 @@ import {
   llmsTxt,
   CHANNEL_BASEPATH,
   ORG_SECTIONS,
+  COM_SECTIONS,
+  EVENTS_PATH_LABEL,
 } from "./index";
 
 test("canonical URLs follow the ratified section map", () => {
@@ -32,6 +34,8 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
   assert.equal(CHANNEL_BASEPATH["net-updates"], "/updates");
   assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
+  assert.deepEqual(COM_SECTIONS, ["news", "events"]);
+  assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/events");
 });
 
 test("legacy Ghost redirect maps slug to the channel host", () => {
