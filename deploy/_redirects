@@ -8,4 +8,5 @@
 /contact/ /contact/index.html   200
 /careers /careers/index.html   200
 /careers/ /careers/index.html   200
+# bake:org inserts Ghost→/press 301s here (see # BEGIN bake:legacy-redirects)
 /*    /404.html    404
