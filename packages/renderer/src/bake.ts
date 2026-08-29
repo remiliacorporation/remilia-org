@@ -11,6 +11,7 @@ import {
   feedLinks,
   imageGallery,
   indexUrl,
+  legacyRedirect,
   llmsTxt,
   organization,
   rss,
@@ -39,6 +40,8 @@ import {
 } from "./page";
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
+import { esc } from "./html";
+import { mergeLegacyRedirects, type RedirectRule } from "./redirects";
 
 export interface BakeOptions {
   channel: Channel;
@@ -83,6 +86,8 @@ interface FetchedPost {
   endsAt?: string;
   locationName?: string;
   albums?: FetchedAlbum[];
+  legacyUrl?: string;
+  migrationSource?: string;
 }
 
 interface FetchedImage {
@@ -122,6 +127,8 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
   "tags": tags[]->name,
   origin, externalUrl, outlet, commentary,
   startsAt, endsAt, locationName,
+  "legacyUrl": migration.legacyUrl,
+  "migrationSource": migration.source,
   "albums": albums[]->{ title, "slug": slug.current, date, description,
     "images": images[]{ "ref": asset._ref, alt, caption, credit } }
 }`;
@@ -463,5 +470,46 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
+  if (channel === "press") {
+    await writePressLegacyRedirects(outDir, posts);
+  }
+
   return { pages: posts.length + 1 };
+}
+
+/** Normalize Ghost-style URLs so Netlify host redirects match. */
+function ghostFromUrl(url: string): string {
+  const u = new URL(url);
+  u.hash = "";
+  u.search = "";
+  let path = u.pathname;
+  if (!path.endsWith("/")) path += "/";
+  return `${u.origin}${path}`;
+}
+
+async function writePressLegacyRedirects(outDir: string, posts: FetchedPost[]): Promise<void> {
+  const rules: RedirectRule[] = [
+    { from: "https://blog.remilia.org/", to: `${indexUrl("press")}/` },
+    { from: "https://blog.remilia.org", to: `${indexUrl("press")}/` },
+  ];
+  for (const p of posts) {
+    const fallback = legacyRedirect("press", p.slug);
+    const from =
+      p.legacyUrl && /^https?:\/\/blog\.remilia\.org\//i.test(p.legacyUrl)
+        ? ghostFromUrl(p.legacyUrl)
+        : p.migrationSource === "ghost"
+          ? fallback.from
+          : null;
+    if (!from) continue;
+    rules.push({ from, to: fallback.to });
+  }
+
+  const redirectsPath = join(outDir, "_redirects");
+  let existing = "";
+  try {
+    existing = await readFile(redirectsPath, "utf8");
+  } catch {
+    existing = "/*    /404.html    404\n";
+  }
+  await writeFile(redirectsPath, mergeLegacyRedirects(existing, rules));
 }
