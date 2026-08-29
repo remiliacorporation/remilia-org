@@ -27,6 +27,7 @@ import {
   type LinkCard,
   type PTBlock,
 } from "./pt";
+import { markdownToPost, postToMarkdownFile } from "./md";
 import { articleHtml, citeBox, htmlPage, notFoundHtml, simpleMain, tocBox, adjacentHtml, indexMain, type Chrome } from "./page";
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
@@ -61,6 +62,7 @@ interface FetchedPost {
   publishedAt: string;
   updatedAt?: string;
   body: PTBlock[];
+  markdown?: string;
   coverRef?: string;
   authors?: { name: string; url?: string }[];
   tags?: string[];
@@ -102,7 +104,7 @@ export function cdnUrl(projectId: string, dataset: string, ref: string, params: 
 }
 
 const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && !(_id in path("drafts.**"))] | order(publishedAt desc) {
-  title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body,
+  title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "authors": authors[]->{ name, url },
   "tags": tags[]->name
@@ -118,20 +120,21 @@ const EVENTS_QUERY = `*[_type == "event" && !(_id in path("drafts.**"))] | order
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
   "logoRef": logo.asset._ref }`;
 
-function postPlain(p: FetchedPost): string {
-  return p.body
+function postPlain(blocks: PTBlock[]): string {
+  return blocks
     .flatMap((b) => ("children" in b && Array.isArray(b.children) ? b.children : []))
     .map((s) => (s && typeof s === "object" && "text" in s ? String(s.text) : ""))
     .join("");
 }
 
-/** Naive markdown sibling for text/markdown negotiation. */
-function postMarkdown(p: FetchedPost, canonical: string): string {
-  return `# ${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n> ${p.excerpt}\n\n${postPlain(p)}\n`;
+function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
+  if (p.body?.length) return p.body;
+  if (p.markdown?.trim()) return markdownToPost(p.markdown, channel).body;
+  return [];
 }
 
-function postText(p: FetchedPost, canonical: string): string {
-  return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(p)}\n`;
+function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
+  return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
 }
 
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
@@ -192,11 +195,15 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const navScript = `<script src="${basePath}/nav.js" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined => cards.get(href.replace(/\/$/, ""));
 
+  const imgUrl = (b: { asset?: { _ref?: string; url?: string } }): string | undefined =>
+    (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ?? b.asset?.url;
+
   // Posts
   for (const p of posts) {
     const canonical = canonicalFor(channel, p.slug);
-    const bodyHtml = portableTextToHtml(p.body, {
-      imageUrl: (b) => img(b.asset?._ref, "w=1600&auto=format"),
+    const body = postBody(p, channel);
+    const bodyHtml = portableTextToHtml(body, {
+      imageUrl: imgUrl,
       linkCard,
     });
     const page = htmlPage({
@@ -207,7 +214,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       headExtra: feedLinks(meta),
       chrome,
       leftRail: rail,
-      tocHtml: tocBox(tocItems(extractHeadings(p.body)), footnoteCount(p.body)),
+      tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
         canonical,
         mdHref: `${basePath}/${p.slug}.md`,
@@ -233,8 +240,23 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     });
     await mkdir(join(dir, p.slug), { recursive: true });
     await writeFile(join(dir, p.slug, "index.html"), page);
-    await writeFile(join(dir, `${p.slug}.md`), postMarkdown(p, canonical));
-    await writeFile(join(dir, `${p.slug}.txt`), postText(p, canonical));
+    await writeFile(
+      join(dir, `${p.slug}.md`),
+      p.body?.length
+        ? postToMarkdownFile({
+            title: p.title,
+            slug: p.slug,
+            channel,
+            publishedAt: p.publishedAt,
+            excerpt: p.excerpt,
+            canonical,
+            author: p.authors?.map((a) => a.name).join(", "),
+            tags: p.tags,
+            body,
+          })
+        : (p.markdown ?? "").replace(/\s*$/, "\n"),
+    );
+    await writeFile(join(dir, `${p.slug}.txt`), postText(p, canonical, body));
   }
 
   // Index
@@ -351,7 +373,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   await writeFile(join(dir, "sitemap.xml"), sitemap(sitemapEntries));
   await writeFile(join(dir, "404.html"), notFoundHtml(chrome, basePath));
   await writeFile(
-    join(outDir, "llms.txt"),
+    join(dir, "llms.txt"),
     llmsTxt({
       hostTitle: host.title,
       lead: host.lead,

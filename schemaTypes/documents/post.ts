@@ -68,6 +68,20 @@ export const post = defineType({
         r.required().max(300).warning("Over ~160 chars gets truncated in search results"),
     }),
     defineField({
+      name: "body",
+      title: "Body",
+      type: "blockContent",
+      description:
+        "Write here. Bake compiles this to HTML and writes `/press/{slug}.md` (and .txt) from the same blocks.",
+      validation: (r) =>
+        r.custom((body, ctx) => {
+          if (Array.isArray(body) && body.length > 0) return true;
+          const md = ctx.document?.markdown;
+          if (typeof md === "string" && md.trim()) return true;
+          return "Body is required";
+        }),
+    }),
+    defineField({
       name: "authors",
       title: "Authors",
       type: "array",
@@ -99,7 +113,13 @@ export const post = defineType({
           img?.asset && !img.alt ? "Alt text is required on the cover image" : true,
         ),
     }),
-    defineField({ name: "body", type: "blockContent", validation: (r) => r.required() }),
+    defineField({
+      name: "markdown",
+      title: "Imported Markdown",
+      type: "text",
+      hidden: true,
+      description: "Vault import only. Ignored when Body is set.",
+    }),
     defineField({ name: "seo", type: "seo" }),
     defineField({
       name: "migration",
