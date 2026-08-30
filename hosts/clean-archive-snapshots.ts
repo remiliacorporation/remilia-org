@@ -11,38 +11,122 @@ import { cleanExternalUrl } from "./archive-firecrawl";
 
 const write = process.argv.includes("--write");
 const rescrape = process.argv.includes("--rescrape");
+const all = process.argv.includes("--all");
 
-/** Drop leading Firecrawl/nav junk common on Dazed and similar. */
+/** True if a line is outlet chrome (nav, skip links, embeds), not article body. */
+function isChromeLine(t: string): boolean {
+  if (!t) return false;
+  if (/â¬|ï¸|Ã©|â€|â­|âœ|âƒ|Left Arrow|Option Sliders|MailExit|Asterisk/i.test(t)) return true;
+  if (/^\[Skip to (main )?content\]/i.test(t)) return true;
+  if (/^Skip to (main )?content$/i.test(t)) return true;
+  if (/^Save Story/i.test(t) || /^Save this story/i.test(t)) return true;
+  if (/^(US|UK) EDITION$/i.test(t)) return true;
+  if (/^(UK|US) EDITION(US|UK) EDITION$/i.test(t)) return true;
+  if (/^content frame$/i.test(t)) return true;
+  if (/^\*\*An error has occurred\*\*$/i.test(t)) return true;
+  if (/^\[SUBSCRIBE\]/i.test(t)) return true;
+  if (/^\[Digital Assets\]/i.test(t)) return true;
+  if (/^\[Forbes Digital Assets\]/i.test(t)) return true;
+  if (/^-\s+\[(News|Crypto Prices|NFT Prices|Learn)\]/i.test(t)) return true;
+  if (/^-?\s*More$/i.test(t)) return true;
+  if (/^-?\s*Text settings$/i.test(t) || /^-?\s*Text size$/i.test(t)) return true;
+  if (/^issue\s+\[/i.test(t) && /spectator\.com\/magazine/i.test(t)) return true;
+  if (/^\*\s*\*\s*\*$/.test(t)) return true;
+  if (/^-?\s*(Small|Medium|Large|Compact|Normal|Spacious|Slow|Fast)$/i.test(t)) return true;
+  if (/^-?\s*Line Spacing$/i.test(t) || /^-?\s*Audio settings$/i.test(t)) return true;
+  if (/^-?\s*Playback speed$/i.test(t)) return true;
+  if (/^-?\s*\[Comments\]/i.test(t)) return true;
+  if (/^-?\s*Share$/i.test(t) || /^## Share$/i.test(t)) return true;
+  if (/^Copy link/i.test(t)) return true;
+  if (/waveform-placeholder/i.test(t)) return true;
+  if (/^\d{2}:\d{2}\d{2}:\d{2}$/.test(t)) return true;
+  if (/has narrated this article for you to listen/i.test(t)) return true;
+  if (/^Manage preferences/i.test(t) || /^Essential cookies only/i.test(t)) return true;
+  if (/^Accept all$/i.test(t) || /^StripeM-Inner$/i.test(t)) return true;
+  if (/process personal data on the basis of legitimate interest/i.test(t)) return true;
+  if (/Manage Cookies link at the bottom/i.test(t)) return true;
+  if (/^You can (object to such processing|change your preferences)/i.test(t)) return true;
+  if (/^Instagram$/i.test(t)) return true;
+  if (/^\[_?Instagram_?\]/i.test(t)) return true;
+  if (/^\[Visit Instagram\]/i.test(t)) return true;
+  if (/link to this photo or video may be broken/i.test(t)) return true;
+  if (/^Create an account/i.test(t)) return true;
+  if (/^\[Add on Google\]/i.test(t)) return true;
+  if (/preferred source to see more of our stories/i.test(t)) return true;
+  if (/This story was featured in The Must Read/i.test(t)) return true;
+  if (/^\[Sign up here to get it in your inbox/i.test(t)) return true;
+  if (/^Follow this author/i.test(t)) return true;
+  if (/^Read Next$/i.test(t)) return true;
+  if (/^Sign up for|^Subscribe to /i.test(t)) return true;
+  if (/^Accept (all )?cookies/i.test(t)) return true;
+  if (/^\[Read the latest issue of Dazed/i.test(t)) return true;
+  return false;
+}
+
+/** Drop leading Firecrawl/nav junk and mid-doc outlet chrome. */
 export function cleanSnapshotMarkdown(md: string): string {
   let lines = md.replace(/^\uFEFF/, "").split(/\r?\n/);
+
+  // Leading junk / skip links / mojibake
   while (lines.length) {
     const t = lines[0].trim();
-    if (!t) {
-      lines.shift();
-      continue;
-    }
-    if (/â¬|ï¸|Ã©|â€|â­|âœ|âƒ|Left Arrow|Option Sliders|MailExit|Asterisk/i.test(t)) {
-      lines.shift();
-      continue;
-    }
-    if (/^\[Skip to content\]/i.test(t) && lines.length > 2) {
+    if (!t || isChromeLine(t)) {
       lines.shift();
       continue;
     }
     break;
   }
+
+  // Forbes / similar: drop nav until first real H1
+  const h1 = lines.findIndex((l) => /^#\s+\S/.test(l.trim()));
+  if (h1 > 0) {
+    const before = lines.slice(0, h1);
+    if (before.every((l) => !l.trim() || isChromeLine(l.trim()) || /^-\s+\[/.test(l.trim()))) {
+      lines = lines.slice(h1);
+    }
+  }
+
+  // Spectator / Condé-style: jump to first H2/H3 headline when leading is chrome/UI
+  const hx = lines.findIndex((l) => /^#{2,3}\s+\S/.test(l.trim()));
+  if (hx > 0) {
+    const before = lines.slice(0, hx);
+    const chromeHeavy =
+      before.filter((l) => l.trim()).length > 0 &&
+      before.every(
+        (l) =>
+          !l.trim() ||
+          isChromeLine(l.trim()) ||
+          /^!\[/.test(l.trim()) ||
+          /^Alexander Raubo$/i.test(l.trim()) ||
+          l.trim().length < 40,
+      );
+    if (chromeHeavy) lines = lines.slice(hx);
+  }
+
   const out: string[] = [];
   let blanks = 0;
   for (const line of lines) {
-    if (!line.trim()) {
+    const t = line.trim();
+    if (!t) {
       blanks++;
       if (blanks <= 2) out.push(line);
+      continue;
+    }
+    if (isChromeLine(t)) {
+      blanks = 0;
       continue;
     }
     blanks = 0;
     out.push(line);
   }
-  return out.join("\n").trim();
+
+  // Drop trailing cookie / preference chrome once it starts
+  let joined = out.join("\n").trim();
+  const cookieAt = joined.search(
+    /\n(?:Manage preferences|Essential cookies only|You can object to such processing|process personal data on the basis of legitimate interest)/i,
+  );
+  if (cookieAt > 200) joined = joined.slice(0, cookieAt).trim();
+  return joined;
 }
 
 /** Strip Decrypt (and similar) market-widget preamble; keep from first real H1. */
@@ -81,6 +165,9 @@ export function stripMarketChrome(md: string): string {
 
 function needsClean(md: string | undefined): boolean {
   if (!md?.trim()) return true;
+  if (/\[Skip to |Save Story|US EDITION|Digital Assets\]|Visit Instagram|Create an account/i.test(md)) {
+    return true;
+  }
   const head = md.slice(0, 800);
   return /â¬|ï¸|Left Arrow|Option Sliders|MailExit/i.test(head);
 }
@@ -107,6 +194,13 @@ async function scrape(url: string, firecrawlKey: string): Promise<string> {
   return md.trim();
 }
 
+function finalizeSnapshot(md: string, url?: string): string {
+  let cleaned = md;
+  if (url && /decrypt\.co/i.test(url)) cleaned = stripMarketChrome(cleaned);
+  else cleaned = cleanSnapshotMarkdown(cleaned);
+  return cleaned;
+}
+
 async function main() {
   const token = process.env.SANITY_TOKEN || process.env.SANITY_AUTH_TOKEN;
   const firecrawlKey = process.env.FIRECRAWL_API_KEY;
@@ -130,8 +224,8 @@ async function main() {
     `*[_type=="post" && channel=="archive" && origin=="external"]{_id, title, externalUrl, archiveSnapshot} | order(title)`,
   );
 
-  const targets = rows.filter((r) => needsClean(r.archiveSnapshot));
-  console.log(`${rows.length} external; ${targets.length} need clean${write ? "" : " (dry-run)"}`);
+  const targets = all ? rows : rows.filter((r) => needsClean(r.archiveSnapshot));
+  console.log(`${rows.length} external; ${targets.length} to clean${write ? "" : " (dry-run)"}`);
 
   for (const r of targets) {
     let md = r.archiveSnapshot ?? "";
@@ -148,7 +242,7 @@ async function main() {
     } else {
       console.log(`• clean ${r.title.slice(0, 55)}`);
     }
-    const cleaned = cleanSnapshotMarkdown(md);
+    const cleaned = finalizeSnapshot(md, r.externalUrl);
     const delta = (md?.length ?? 0) - cleaned.length;
     console.log(
       `  → ${cleaned.length} chars (stripped ~${delta}), head: ${cleaned.slice(0, 80).replace(/\n/g, " | ")}`,

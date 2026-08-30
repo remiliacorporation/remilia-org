@@ -6,6 +6,7 @@
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
+import { enrichSubstackBody, substackExcerpt } from "./substack-import";
 
 const write = process.argv.includes("--write");
 const token = process.env.SANITY_TOKEN || process.env.SANITY_AUTH_TOKEN;
@@ -143,9 +144,13 @@ async function main() {
           caption: b.caption,
         });
       }
-      if (blocks.length) patch.body = blocks;
-      const excerpt = (p.description || p.subtitle || md.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() || p.title).slice(0, 300);
-      patch.excerpt = excerpt;
+      const enriched = enrichSubstackBody(blocks, {
+        title: p.title,
+        subtitle: p.subtitle,
+        description: p.description,
+      });
+      if (enriched.length) patch.body = enriched;
+      patch.excerpt = substackExcerpt(p, enriched, md);
     }
 
     console.log(`patch keys=${Object.keys(patch).join(",") || "none"}`);

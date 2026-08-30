@@ -8,7 +8,7 @@
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
-import { unwrapSubstackImg } from "./substack-import";
+import { enrichSubstackBody, substackExcerpt, unwrapSubstackImg } from "./substack-import";
 
 const write = process.argv.includes("--write");
 const token = process.env.SANITY_TOKEN || process.env.SANITY_AUTH_TOKEN;
@@ -136,19 +136,25 @@ async function main() {
         caption: b.caption,
       };
     });
-    const body = await resolveImages(hoisted, p.title);
-    const textLen = md.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim().length;
+    const resolved = await resolveImages(hoisted, p.title);
+    const body = enrichSubstackBody(resolved, {
+      title: p.title,
+      subtitle: p.subtitle,
+      description: p.description,
+    }) as PTBlock[];
+    const textLen = body
+      .filter((b) => b._type === "block")
+      .map((b) =>
+        ((b.children as Array<{ text?: string }> | undefined) ?? []).map((c) => c.text ?? "").join(""),
+      )
+      .join(" ")
+      .trim().length;
     const imgs = body.filter((b) => b._type === "image").length;
-    console.log(`text≈${textLen} imgs=${imgs}`);
+    console.log(`text≈${textLen} imgs=${imgs} sub=${(p.subtitle || p.description || "").slice(0, 40)}`);
 
     if (!write) continue;
 
-    const excerpt = (
-      p.description ||
-      p.subtitle ||
-      md.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() ||
-      p.title
-    ).slice(0, 300);
+    const excerpt = substackExcerpt(p, body, md);
 
     const patch: Record<string, unknown> = {
       title: p.title,
