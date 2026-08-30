@@ -74,6 +74,19 @@ Migrate existing journal posts:
 Com publish root should ship `hosts/com/_redirects` (`/a/studio` → `/a/news`,
 `/a/studio/events` → `/a/events`).
 
+### Route imported posts onto sections
+
+All Ghost / Paragraph / Substack imports landed on `channel: press`. Reclassify
+against the ratified map (tags + source + title):
+
+```
+SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts
+SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --write
+```
+
+Dry-run prints the plan. `--write` patches `channel` (and archive
+`origin` / `outlet` / `externalUrl` for external coverage).
+
 ## Shape
 
 - `deploy/` — hand-authored remilia.org pages (former remilia-site)

@@ -13,7 +13,7 @@ import { type Channel } from "@remilia/seo";
 const API = "https://public.api.paragraph.com/api/v1";
 const PUB = "qLVmgBiICnwomlcyxnaf";
 const HANDLE = "charlemagnefang";
-const CHANNEL: Channel = "press";
+const CHANNEL: Channel = "thought";
 
 function normTitle(s: string): string {
   return s.toLowerCase().replace(/\[gp\]/g, "").replace(/[^a-z0-9]+/g, "");
