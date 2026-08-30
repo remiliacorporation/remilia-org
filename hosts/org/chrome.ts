@@ -16,45 +16,45 @@ const SECTION_META: Record<
     lead: "Shipping logs and short updates from Remilia Corporation.",
     whenToUse: [
       "Cite routine Remilia Corporation notes and shipping updates.",
-      "For formal releases use Press; for essays use Thought; for coverage use Archive.",
+      "For formal releases or coverage use Press; for theory/NFTs use Thought.",
     ],
   },
   press: {
     short: "PRESS",
     title: "Remilia Corporation — Press",
-    description: "Press, company news, and major launches from Remilia Corporation.",
-    lead: "Corporate directory host for Remilia Corporation (Remigumi-guchi Digital, LLC). Press releases and major product launches.",
+    description: "Press releases and external coverage of Remilia Corporation.",
+    lead: "Formal releases and press coverage (Decrypt, Forbes, interviews, etc.).",
     whenToUse: [
-      "Cite Remilia Corporation press releases, company announcements, and launch dates.",
-      "For engineering/product detail use remilia.net/blog; for brand news see remilia.com/a/news.",
+      "Cite Remilia press releases and external coverage.",
+      "For theory/NFTs use Thought; for fashion/lifestyle use remilia.com/a/news.",
     ],
   },
   thought: {
     short: "THOUGHT",
     title: "Remilia Corporation — Thought",
-    description: "Essays and longform from Remilia Corporation.",
-    lead: "Positions, essays, and longform — not a press release, not a changelog.",
+    description: "Theory and NFT essays from Remilia Corporation.",
+    lead: "Theory, positions, and NFT design notes — remilia.org’s essay surface.",
     whenToUse: [
-      "Cite Remilia essays and longform positions.",
-      "For formal releases use Press; for short notes use Updates.",
+      "Cite Remilia theory and NFT essays.",
+      "For press coverage use Press; for software product notes use remilia.net.",
     ],
   },
   archive: {
     short: "ARCHIVE",
     title: "Remilia Corporation — Archive",
-    description: "Notable posts, interviews, and coverage — first-party and external.",
-    lead: "Citing record for notable writing by and about Remilia. External entries point at the original.",
+    description: "Rare first-party archival cites.",
+    lead: "First-party archival citing records. External coverage belongs in Press.",
     whenToUse: [
-      "Find interviews and coverage of Remilia, or notable first-party pieces kept in the archive.",
-      "External entries: canonical is the original URL; /archive/<slug> is our citing record.",
+      "Rare archival first-party cites only.",
+      "Decrypt / Forbes / interviews → Press, not Archive.",
     ],
   },
   news: {
     short: "NEWS",
     title: "Remilia — News",
-    description: "Brand and journal posts from Remilia.",
-    lead: "News on remilia.com (replaces /a/studio).",
-    whenToUse: ["Cite Remilia brand/journal posts on remilia.com."],
+    description: "Fashion, lifestyle brand, and publishing from Remilia.",
+    lead: "Fashion, lifestyle, and publishing news on remilia.com.",
+    whenToUse: ["Cite Remilia fashion / lifestyle / publishing posts on remilia.com/a/news."],
   },
   events: {
     short: "EVENTS",
@@ -66,9 +66,12 @@ const SECTION_META: Record<
   "dev-updates": {
     short: "UPDATES",
     title: "RemiliaNET — Updates",
-    description: "Product and network updates from RemiliaNET.",
-    lead: "Routine RemiliaNET notes. Schema id `dev-updates`; public path /updates.",
-    whenToUse: ["Cite RemiliaNET routine updates.", "For engineering depth use the Dev blog."],
+    description: "Software product notes — RemiliaNET, wiki, miladychan.",
+    lead: "RemiliaNET / wiki / miladychan updates. Schema id `dev-updates`; path /updates.",
+    whenToUse: [
+      "Cite RemiliaNET, wiki, or miladychan product notes.",
+      "NFT theory stays on remilia.org/thought.",
+    ],
   },
   "dev-blog": {
     short: "DEVBLOG",
@@ -78,7 +81,6 @@ const SECTION_META: Record<
     whenToUse: ["Cite RemiliaNET engineering decisions and changelogs."],
   },
 };
-
 /**
  * remilia.org section chrome. No <h1> in the header — the page content owns
  * the single h1 (conformance contract).

@@ -15,10 +15,12 @@ collides with org `updates`). **Events** are posts (`channel: events` →
 same idea as Ghost posts on blog.remilia.org. Optional venue/start fields
 feed Event JSON-LD. Albums stay first-class docs under Com.
 
-**Archive:** `origin` is `first-party` or `external`. External entries set
-`externalUrl`, `outlet`, optional `commentary`; `/archive/<slug>` is the
-citing record and HTML canonical points at the original when we are not the
-publisher.
+**Archive:** reserved for rare first-party archival cites. External coverage
+(Decrypt, Forbes, interviews, etc.) lives in **Press**, not Archive.
+
+**Host missions:** remilia.org = theory + NFTs; remilia.com = fashion /
+lifestyle brand / publishing (+ events); remilia.net = software outside NFTs
+(RemiliaNET, wiki, miladychan).
 
 **remilia.org** lives in this repo (`deploy/`). [remilia-site](https://github.com/remiliacorp/remilia-site)
 is archived. Later project archives go under `deploy/<name>/` (e.g. `/maker`).
@@ -59,13 +61,16 @@ posts change. A static archive under `/maker` only needs a line in the root
 
 Also in Studio under **Section cheatsheet**:
 
-- **Updates** (.org) — routine notes, shipping logs, small announcements.
-- **Press** — formal releases / major launches meant to be cited as press.
-- **Thought** — essays, longform, positions.
-- **Archive** — notable writing by or about Remilia (incl. external coverage).
-- **News** (.com) — brand/journal posts (replaces `/a/studio`).
-- **Dev updates** (.net, id `dev-updates`) — product/network routine notes.
-- **Dev blog** (.net, id `dev-blog`) — engineering depth and changelogs.
+**Host missions:** .org = theory + NFTs · .com = fashion / lifestyle / publishing (+ events) · .net = software outside NFTs (RemiliaNET, wiki, miladychan).
+
+- **Updates** (.org) — small company notes / memos.
+- **Press** — formal releases **and** external coverage (Decrypt, Forbes, interviews…).
+- **Thought** — theory, positions, NFT essays.
+- **Archive** — rare first-party archival cites (not Decrypt-style coverage).
+- **News** (.com) — fashion, lifestyle brand, publishing.
+- **Events** (.com) — event writeups + galleries.
+- **Dev updates** (.net, id `dev-updates`) — RemiliaNET / wiki / miladychan notes.
+- **Dev blog** (.net, id `dev-blog`) — engineering depth.
 
 ### Retiring `/a/studio`
 
@@ -76,16 +81,12 @@ Com publish root should ship `hosts/com/_redirects` (`/a/studio` → `/a/news`,
 
 ### Route imported posts onto sections
 
-All Ghost / Paragraph / Substack imports landed on `channel: press`. Reclassify
-against the ratified map (tags + source + title):
-
 ```
-SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts
-SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --write
+SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all
+SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all --write
 ```
 
-Dry-run prints the plan. `--write` patches `channel` (and archive
-`origin` / `outlet` / `externalUrl` for external coverage).
+Dry-run prints the plan. `--write` patches `channel` (and clears archive-only fields when leaving archive).
 
 ## Shape
 

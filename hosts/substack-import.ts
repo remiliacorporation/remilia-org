@@ -12,7 +12,7 @@ import { markdownToPost, slugify } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
 
 const ORIGIN = "https://goldenlight.substack.com";
-const CHANNEL = "thought" as const;
+const CHANNEL = "news" as const;
 const AUTHOR = "Charlotte Fang";
 
 function normTitle(s: string): string {

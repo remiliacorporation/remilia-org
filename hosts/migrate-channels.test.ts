@@ -26,9 +26,8 @@ assert.equal(
     ...base,
     title: "Feature: Decrypt - Something (2025)",
     tags: ["Press", "Feature"],
-    hrefs: ["https://decrypt.co/1/article?ref=blog.remilia.org"],
   }).to,
-  "archive",
+  "press",
 );
 assert.equal(
   classify({
@@ -49,11 +48,11 @@ assert.equal(
 assert.equal(
   classify({
     ...base,
-    title: "Remilia Presents: NIU LAI - Live on RemiliaNET",
-    tags: ["Announcements"],
-    slug: "remilia-presents-niu-lai-live-in-miladycraft-and-on-remilianet",
+    title: "Remilia Wiki Launch",
+    tags: ["Announcements", "Feature"],
+    slug: "remilia-wiki-launch",
   }).to,
-  "updates",
+  "dev-updates",
 );
 assert.equal(
   classify({
@@ -63,6 +62,24 @@ assert.equal(
     source: "paragraph",
   }).to,
   "thought",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "Neogyaru",
+    tags: [],
+    source: "substack",
+  }).to,
+  "news",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "Pre-Release Announcement: The Exegesis of Miya…",
+    tags: ["Announcements"],
+    slug: "pre-release-announcement-the-exegesis-of-miya-black-hearted-cyber-angel-baby",
+  }).to,
+  "news",
 );
 
 console.log("migrate-channels.test.ts: ok");
