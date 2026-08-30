@@ -205,9 +205,9 @@ const THOUGHT_GHOST_SLUGS = new Set([
   "milady-maker",
   "bonkler-critical-notes",
   "redacted-remilio-babies-notes-on-the-design-process",
-  "on-jadeposting",
+  "jadeposting",
   "a-peoples-history-of-hot-pot",
-  "notes-on-the-vpl",
+  "viral-public-license",
   "fumo-404",
 ]);
 
