@@ -16,7 +16,15 @@ assert.equal(
 assert.equal(
   classify({
     ...base,
-    title: "Press Release: Remilia launches CULT",
+    title: "Press Release: Remilia Corporation Debuts Luxury Streetwear Collection, HIKKI PUNKS EXIT SOCIETY",
+    tags: ["Press", "Press Release"],
+  }).to,
+  "news",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "Press Release: Remilia Corporation condemns Caroline Ellison as Unrepresentative Of Milady Values",
     tags: ["Press", "Press Release"],
   }).to,
   "press",

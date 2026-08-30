@@ -64,10 +64,10 @@ posts change. A static archive under `/maker` only needs a line in the root
 Also in Studio under **Section cheatsheet**:
 
 - **Updates** — company essays/memos (Christmas, Level-2, Admin Reveal, …).
-- **Press** — first-party press releases only.
+- **Press** — org corporate statements only.
 - **Thought** — org/product-relevant thought leadership (theory + NFTs).
 - **Archive** — external coverage/interviews (Firecrawl snapshot) + secondary Substack/Paragraph.
-- **News** (.com) — fashion, lifestyle brand, publishing.
+- **News** (.com) — fashion, lifestyle brand, publishing, **and brand press releases** (HIKKI Punks, Atelier, FRUiTS, launches).
 - **Events** (.com) — event writeups + galleries.
 - **Dev updates** / **Dev blog** (.net) — RemiliaNET / wiki / miladychan.
 

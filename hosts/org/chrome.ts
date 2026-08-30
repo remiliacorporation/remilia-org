@@ -22,11 +22,11 @@ const SECTION_META: Record<
   press: {
     short: "PRESS",
     title: "Remilia Corporation — Press",
-    description: "First-party press releases from Remilia Corporation.",
-    lead: "Formal press releases only. External coverage lives in Archive.",
+    description: "Org corporate statements from Remilia Corporation.",
+    lead: "Corporate statements only. Brand releases (fashion, product launches) live on remilia.com/a/news.",
     whenToUse: [
-      "Cite Remilia press releases.",
-      "Decrypt / Forbes / interviews → Archive (Firecrawl snapshot).",
+      "Cite Remilia corporate statements.",
+      "HIKKI Punks / Atelier / FRUiTS / product launches → News.",
     ],
   },
   thought: {
@@ -52,9 +52,11 @@ const SECTION_META: Record<
   news: {
     short: "NEWS",
     title: "Remilia — News",
-    description: "Fashion, lifestyle brand, and publishing from Remilia.",
-    lead: "Fashion, lifestyle, and publishing news on remilia.com.",
-    whenToUse: ["Cite Remilia fashion / lifestyle / publishing posts on remilia.com/a/news."],
+    description: "Fashion, lifestyle brand, publishing, and brand press releases.",
+    lead: "Fashion, lifestyle, publishing, and brand launches (incl. HIKKI Punks, Atelier) on remilia.com.",
+    whenToUse: [
+      "Cite Remilia fashion / lifestyle / publishing / brand press releases on remilia.com/a/news.",
+    ],
   },
   events: {
     short: "EVENTS",

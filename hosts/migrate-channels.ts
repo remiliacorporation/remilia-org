@@ -1,12 +1,13 @@
 /**
  * Route posts onto host missions.
  *
- *   .org press     — first-party press releases only
+ *   .org press     — org corporate statements only (not brand product releases)
  *   .org thought   — org/product-relevant thought leadership (theory + NFTs)
  *   .org updates   — company essays/memos (Christmas, Level-2, Admin Reveal, …)
  *   .org archive   — external coverage/interviews (Firecrawl snapshot) +
  *                    secondary Substack/Paragraph that aren’t core TL
- *   .com news      — fashion / lifestyle brand / publishing
+ *   .com news      — fashion / lifestyle / publishing + brand press releases
+ *                    (HIKKI Punks, Atelier, FRUiTS, product launches, …)
  *   .com events    — event writeups
  *   .net           — RemiliaNET / wiki / miladychan software
  *
@@ -153,6 +154,20 @@ function isPressRelease(title: string, tags: Set<string>): boolean {
   return false;
 }
 
+/**
+ * Org-only corporate statements stay on .org/press.
+ * Brand / fashion / lifestyle / product launches → .com/news.
+ */
+function isOrgCorporatePress(title: string): boolean {
+  return /\bcondemns?\b|\bstatement\b|\bunrepresentative\b/i.test(title);
+}
+
+function isBrandPressRelease(title: string, tags: Set<string>): boolean {
+  if (!isPressRelease(title, tags)) return false;
+  if (isOrgCorporatePress(title)) return false;
+  return true;
+}
+
 function isNetSoftware(title: string, slug: string): boolean {
   if (/^RemiliaNET\b/i.test(title) || /RemiliaNET Alpha/i.test(title)) return true;
   if (/vault architecture/i.test(title)) return true;
@@ -238,9 +253,12 @@ export function classify(p: PostRow): Plan {
     return { ...base, to: "dev-updates", reason: "net software (RemiliaNET / wiki / miladychan)" };
   }
 
-  // 3. Press releases only (coverage → archive)
+  // 3. First-party press releases → .com news (brand) unless corporate statement
+  if (isBrandPressRelease(title, tags) || isComNews(title, slug)) {
+    return { ...base, to: "news", reason: "brand / fashion / lifestyle / publishing" };
+  }
   if (isPressRelease(title, tags)) {
-    return { ...base, to: "press", reason: "press release" };
+    return { ...base, to: "press", reason: "org corporate press statement" };
   }
 
   // 4. External coverage / interviews → archive (+ Firecrawl later)
@@ -260,11 +278,6 @@ export function classify(p: PostRow): Plan {
   // 5. Org updates — Christmas, Level-2, Admin Reveal, memos
   if (UPDATES_SLUGS.has(slug) || (/corporate memo/i.test(title) && /christmas|missive/i.test(title))) {
     return { ...base, to: "updates", reason: "company essay / memo" };
-  }
-
-  // 6. .com news — publishing / fashion brand launches
-  if (isComNews(title, slug)) {
-    return { ...base, to: "news", reason: "fashion / lifestyle / publishing" };
   }
 
   // 7. Core thought leadership (theory + NFTs)
