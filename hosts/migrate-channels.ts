@@ -417,7 +417,11 @@ async function main() {
         if (p.origin === "external") {
           if (p.externalUrl) set.externalUrl = p.externalUrl;
           if (p.outlet) set.outlet = p.outlet;
-          tx.patch(p.id, { set });
+          // Ghost/press body is our citing note → commentary; Firecrawl fills archiveSnapshot.
+          tx.patch(p.id, {
+            set,
+            // If body exists, callers should run fix-archive-fields.ts after migrate.
+          });
         } else {
           tx.patch(p.id, {
             set,

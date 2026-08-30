@@ -12,7 +12,7 @@ const TEXT = [
   "• Updates — company essays/memos (Christmas missive, Level-2, Admin Reveal, …).",
   "• Press — org corporate statements only (not brand product releases).",
   "• Thought — org/product-relevant thought leadership (theory + NFTs).",
-  "• Archive — (1) external coverage & interviews (Firecrawl snapshot of the linked page);",
+  "• Archive — (1) external coverage: Commentary = our citing post; Archived page = Firecrawl of the outlet URL;",
   "          (2) secondary Substack/Paragraph that aren’t core org/product TL.",
   "",
   "COM (remilia.com)",

@@ -33,8 +33,9 @@ export function unwrapSubstackImg(url: string): string {
 function hoistImages(body: { _type?: string; asset?: { url?: string }; alt?: string; caption?: string }[], title: string) {
   return body.map((b, i) => {
     if (b._type !== "image") return { ...b, _key: `b${i}` };
-    const url = b.asset?.url ? unwrapSubstackImg(b.asset.url) : undefined;
+    const url = b.asset?.url;
     if (!url) return { ...b, _key: `b${i}` };
+    // Keep CDN fetch URLs — raw S3 bucketeer returns 403.
     return {
       _type: "image",
       _key: `b${i}`,
@@ -115,10 +116,8 @@ async function main() {
       continue;
     }
     const p = (await res.json()) as FullPost;
-    const html = (p.body_html ?? "").replace(
-      /https:\/\/substackcdn\.com\/image\/fetch\/[^"'\s]+/g,
-      unwrapSubstackImg,
-    );
+    const html = p.body_html ?? "";
+    // Keep substackcdn.com/image/fetch/… URLs — unwrapping to S3 bucketeer 403s.
     const md = ghostHtmlToMarkdown(html);
     const { body } = markdownToPost(md, CHANNEL);
     const excerpt = (p.description || p.subtitle || md.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() || p.title).slice(

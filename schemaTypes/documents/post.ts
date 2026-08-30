@@ -120,7 +120,8 @@ export const post = defineType({
       type: "blockContent",
       hidden: ({ document }) =>
         document?.channel !== "archive" || document?.origin !== "external",
-      description: "Optional notes on the citing record (why it matters, corrections, context).",
+      description:
+        "Our citing writeup (the original press/blog post). The external article itself lives in Archived page below.",
     }),
     defineField({
       name: "archiveSnapshot",
@@ -130,7 +131,7 @@ export const post = defineType({
       hidden: ({ document }) =>
         document?.channel !== "archive" || document?.origin !== "external",
       description:
-        "Markdown snapshot of externalUrl via Firecrawl. Filled by archive-firecrawl.ts — do not paste by hand unless re-scraping failed.",
+        "Firecrawl markdown of externalUrl — the third-party article we archived. Not our commentary.",
       readOnly: true,
     }),
     defineField({
