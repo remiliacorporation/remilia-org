@@ -63,11 +63,11 @@ const SECTION_META: Record<
     lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
     whenToUse: ["Cite Remilia event writeups and photo galleries on remilia.com/a/events."],
   },
-  "dev-updates": {
+  "devupdates": {
     short: "UPDATES",
     title: "RemiliaNET — Updates",
     description: "Product and network updates from RemiliaNET.",
-    lead: "Routine RemiliaNET notes. Schema id `dev-updates`; public path /updates.",
+    lead: "Routine RemiliaNET notes. Schema id `devupdates`; public path /updates.",
     whenToUse: ["Cite RemiliaNET routine updates.", "For engineering depth use the Devblog."],
   },
   devblog: {

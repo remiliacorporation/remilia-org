@@ -4,7 +4,7 @@
  * scheme change is one edit, not three app audits.
  *
  * Editors pick a section id; host + public path are derived. Schema id
- * `dev-updates` avoids colliding with org `updates` in GROQ; both publish
+ * `devupdates` avoids colliding with org `updates` in GROQ; both publish
  * at `/updates` on their own host.
  *
  * .com events are blog-style posts (describe + gallery), same shape as
@@ -17,7 +17,7 @@ export type Channel =
   | "archive"
   | "news"
   | "events"
-  | "dev-updates"
+  | "devupdates"
   | "devblog";
 
 export type HostId = "org" | "com" | "net";
@@ -29,7 +29,7 @@ export const CHANNELS: Channel[] = [
   "archive",
   "news",
   "events",
-  "dev-updates",
+  "devupdates",
   "devblog",
 ];
 
@@ -43,7 +43,7 @@ export const CHANNEL_ORIGIN: Record<Channel, string> = {
   archive: "https://remilia.org",
   news: "https://remilia.com",
   events: "https://remilia.com",
-  "dev-updates": "https://www.remilia.net",
+  "devupdates": "https://www.remilia.net",
   devblog: "https://www.remilia.net",
 };
 
@@ -54,7 +54,7 @@ export const CHANNEL_BASEPATH: Record<Channel, string> = {
   archive: "/archive",
   news: "/a/news",
   events: "/a/events",
-  "dev-updates": "/updates",
+  "devupdates": "/updates",
   devblog: "/blog",
 };
 
@@ -65,7 +65,7 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   archive: "org",
   news: "com",
   events: "com",
-  "dev-updates": "net",
+  "devupdates": "net",
   devblog: "net",
 };
 
@@ -79,7 +79,7 @@ export const COM_SECTIONS = ["news", "events"] as const;
 export type ComSection = (typeof COM_SECTIONS)[number];
 
 /** Net post sections. */
-export const NET_SECTIONS: Channel[] = ["dev-updates", "devblog"];
+export const NET_SECTIONS: Channel[] = ["devupdates", "devblog"];
 
 /** Public host label for previews / Studio lists (no scheme). */
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
@@ -89,7 +89,7 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   archive: "remilia.org/archive",
   news: "remilia.com/a/news",
   events: "remilia.com/a/events",
-  "dev-updates": "remilia.net/updates",
+  "devupdates": "remilia.net/updates",
   devblog: "remilia.net/blog",
 };
 

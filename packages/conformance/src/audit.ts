@@ -193,7 +193,7 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     "archive",
     "news",
     "events",
-    "dev-updates",
+    "devupdates",
     "devblog",
   ];
   const foreign = channels

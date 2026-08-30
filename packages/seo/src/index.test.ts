@@ -28,13 +28,13 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(canonicalFor("archive", "interview"), "https://remilia.org/archive/interview");
   assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
   assert.equal(canonicalFor("events", "party"), "https://remilia.com/a/events/party");
-  assert.equal(canonicalFor("dev-updates", "ship"), "https://www.remilia.net/updates/ship");
+  assert.equal(canonicalFor("devupdates", "ship"), "https://www.remilia.net/updates/ship");
   assert.equal(canonicalFor("devblog", "vaults"), "https://www.remilia.net/blog/vaults");
   assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
   assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("devblog"), "https://www.remilia.net/blog/rss.xml");
   assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
-  assert.equal(CHANNEL_BASEPATH["dev-updates"], "/updates");
+  assert.equal(CHANNEL_BASEPATH["devupdates"], "/updates");
   assert.equal(CHANNEL_BASEPATH.events, "/a/events");
   assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
   assert.deepEqual(COM_SECTIONS, ["news", "events"]);
