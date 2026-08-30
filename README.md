@@ -158,3 +158,13 @@ Where content actually is (production counts):
 | Com → Events | `events` | 27 |
 | Net → Dev blog | `dev-blog` | 16 |
 | Net → Dev updates | `dev-updates` | 2 |
+
+### Unpublished until section map is confirmed
+
+All posts are **draft-only** (Studio: unpublished) until routing is signed off.
+`publishedAt` keeps the original backdates (Ghost/Paragraph/Substack/miladychan).
+Bake already skips drafts (`!(_id in path("drafts.**"))`).
+
+```bash
+SANITY_TOKEN=… pnpm --filter @remilia/hosts unpublish:posts -- --write
+```

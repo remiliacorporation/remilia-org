@@ -13,6 +13,7 @@
     "migrate:channels": "node --import tsx migrate-channels.ts",
     "archive:firecrawl": "node --import tsx archive-firecrawl.ts",
     "import:miladychan": "node --import tsx miladychan-import.ts",
+    "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
   },
