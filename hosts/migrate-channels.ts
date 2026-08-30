@@ -177,6 +177,15 @@ function isNetSoftware(title: string, slug: string): boolean {
   return false;
 }
 
+/** Engineering / product blog surface on .net (path /blog). */
+function isDevBlogSoftware(title: string, slug: string): boolean {
+  if (/^RemiliaNET\b/i.test(title) || /RemiliaNET Alpha/i.test(title)) return true;
+  if (/api|developer portal/i.test(title)) return true;
+  if (/miladychan/i.test(title) || /miladychan/i.test(slug)) return true;
+  if (/remilia wiki/i.test(title) || slug === "remilia-wiki-launch") return true;
+  return false;
+}
+
 /** Company essays / memos → org updates. */
 const UPDATES_SLUGS = new Set([
   "corporate-memo-remilia-2024-christmas-missive",
@@ -245,12 +254,13 @@ export function classify(p: PostRow): Plan {
     return { ...base, to: "events", reason: "tag:Events" };
   }
 
-  // 2. .net software
+  // 2. .net software — RemiliaNET Alpha / wiki / miladychan → dev-blog;
+  //    other product notes (vault, MiladyCraft promos) → dev-updates
+  if (isDevBlogSoftware(title, slug)) {
+    return { ...base, to: "dev-blog", reason: "RemiliaNET Alpha / wiki / miladychan → dev-blog" };
+  }
   if (isNetSoftware(title, slug)) {
-    if (/api|developer portal/i.test(title)) {
-      return { ...base, to: "dev-blog", reason: "RemiliaNET API / developer portal" };
-    }
-    return { ...base, to: "dev-updates", reason: "net software (RemiliaNET / wiki / miladychan)" };
+    return { ...base, to: "dev-updates", reason: "net software product note" };
   }
 
   // 3. First-party press releases → .com news (brand) unless corporate statement

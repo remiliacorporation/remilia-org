@@ -68,19 +68,19 @@ const SECTION_META: Record<
   "dev-updates": {
     short: "UPDATES",
     title: "RemiliaNET — Updates",
-    description: "Software product notes — RemiliaNET, wiki, miladychan.",
-    lead: "RemiliaNET / wiki / miladychan updates. Schema id `dev-updates`; path /updates.",
+    description: "Other RemiliaNET product notes (vault, promos).",
+    lead: "Product notes that aren’t full engineering posts. Schema id `dev-updates`; path /updates.",
     whenToUse: [
-      "Cite RemiliaNET, wiki, or miladychan product notes.",
-      "NFT theory stays on remilia.org/thought.",
+      "Cite short RemiliaNET product notes.",
+      "Alpha / wiki / miladychan engineering posts → Dev blog.",
     ],
   },
   "dev-blog": {
     short: "DEVBLOG",
     title: "RemiliaNET — Dev blog",
-    description: "Engineering notes and changelogs from RemiliaNET.",
-    lead: "Technical writeups for RemiliaNET. Schema id `dev-blog`; public path /blog.",
-    whenToUse: ["Cite RemiliaNET engineering decisions and changelogs."],
+    description: "RemiliaNET Alpha, wiki, and miladychan engineering posts.",
+    lead: "Engineering writeups: RemiliaNET Alpha, wiki, miladychan. Schema id `dev-blog`; path /blog.",
+    whenToUse: ["Cite RemiliaNET Alpha, wiki, or miladychan engineering posts."],
   },
 };
 /**

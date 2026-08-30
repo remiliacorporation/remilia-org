@@ -69,15 +69,17 @@ Also in Studio under **Section cheatsheet**:
 - **Archive** — external coverage/interviews (Firecrawl snapshot) + secondary Substack/Paragraph.
 - **News** (.com) — fashion, lifestyle brand, publishing, **and brand press releases** (HIKKI Punks, Atelier, FRUiTS, launches).
 - **Events** (.com) — event writeups + galleries.
-- **Dev updates** / **Dev blog** (.net) — RemiliaNET / wiki / miladychan.
+- **Dev blog** (.net) — RemiliaNET Alpha, wiki, miladychan. **Dev updates** — other net product notes (vault, etc.).
 
 ### Route / re-route posts
 
 ```
-SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all
 SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all --write
 FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx archive-firecrawl.ts --write
+FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx miladychan-import.ts --write
 ```
+
+Miladychan (`blog.miladychan.org`) imports into `dev-blog`, alongside RemiliaNET Alpha notes and the wiki launch.
 
 ## Shape
 

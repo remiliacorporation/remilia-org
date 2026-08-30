@@ -103,6 +103,22 @@ assert.equal(
     tags: ["Announcements"],
     slug: "remilia-wiki-launch",
   }).to,
+  "dev-blog",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "RemiliaNET Alpha v0.8: Global Chat",
+    tags: ["Project"],
+  }).to,
+  "dev-blog",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "Remilia New Vault Architecture",
+    tags: ["NFT"],
+  }).to,
   "dev-updates",
 );
 

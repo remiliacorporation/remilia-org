@@ -21,8 +21,8 @@ const TEXT = [
   "• Events — event writeups + gallery albums → /a/events",
   "",
   "NET (remilia.net)",
-  "• Dev updates — RemiliaNET / wiki / miladychan (id `dev-updates`; path /updates).",
-  "• Dev blog — engineering depth (id `dev-blog`; path /blog).",
+  "• Dev updates — other RemiliaNET product notes (vault, etc.; id `dev-updates`).",
+  "• Dev blog — RemiliaNET Alpha, wiki, miladychan engineering posts (id `dev-blog`; path /blog).",
   "",
   "One Sanity project / dataset. Pick the section; host + URL are derived.",
 ].join("\n");
