@@ -25,6 +25,10 @@ const TEXT = [
   "• Dev blog — RemiliaNET Alpha, wiki, miladychan engineering posts (id `dev-blog`; path /blog).",
   "",
   "One Sanity project / dataset. Pick the section; host + URL are derived.",
+  "",
+  "If a section pane looks empty on remilia.sanity.studio, the hosted Studio is",
+  "stale — Admin must run `pnpm run deploy:studio`. Brand PRs are under Com → News,",
+  "not Org → Press. Use Vision or local `pnpm dev` until redeployed.",
 ].join("\n");
 
 export function SectionCheatsheet(): ReactNode {

@@ -129,5 +129,32 @@ Supported in imported Markdown: `##`/`###`/`####`, `**bold**` `*em*` `` `code` `
 ## Studio deploy
 
 `pnpm deploy` is a pnpm builtin. Use `pnpm run deploy:studio` (`sanity deploy`).
-`npx sanity login` first. After a Studio version bump, deploy once even if
-auto-updates are on.
+`npx sanity login` first (Admin or a token with `deployStudio` + `deploySchema`).
+After a Studio version bump, deploy once even if auto-updates are on —
+auto-updates only bump the Sanity shell, **not** custom structure/schema.
+
+### Why hosted Studio looks empty
+
+`remilia.sanity.studio` was last deployed **2026-08-29** with the old desks
+(Press / Studio→Journal / Devblog) filtering `press` / `studio` / `devblog`.
+The dataset was since retagged into the ratified map (`updates`, `thought`,
+`archive`, `news`, `events`, `dev-blog`, `dev-updates`, …), so those old panes
+show nothing (or one leftover Press post).
+
+Until an Admin redeploys:
+
+1. Run Studio locally: `pnpm dev` → http://localhost:3333
+2. Or Vision → `*[_type=="post" && channel=="dev-blog"]` (etc.)
+
+Where content actually is (production counts):
+
+| Desk (after deploy) | channel | ~count |
+| --- | --- | --- |
+| Org → Updates | `updates` | 5 |
+| Org → Press | `press` | 1 (org statements only) |
+| Org → Thought | `thought` | 30 |
+| Org → Archive | `archive` | 56 |
+| Com → News | `news` | 7 (brand PRs live here) |
+| Com → Events | `events` | 27 |
+| Net → Dev blog | `dev-blog` | 16 |
+| Net → Dev updates | `dev-updates` | 2 |
