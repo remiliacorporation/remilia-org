@@ -4,13 +4,13 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
-  EVENTS_BASEPATH,
+  SHOWS_BASEPATH,
   atom,
   blogPosting,
   canonicalFor,
   event as eventJsonLd,
   eventUrl,
-  eventsIndexUrl,
+  showsIndexUrl,
   feedLinks,
   imageGallery,
   indexUrl,
@@ -327,11 +327,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  // Events + albums (Com host — /a/events, not nested under a post section)
+  // Dated shows + albums (Com) — under /a/events/shows so event posts own /a/events
   let eventPages = 0;
   if (opts.bakeEvents) {
-    const eventsDir = join(outDir, ...EVENTS_BASEPATH.split("/").filter(Boolean));
-    const eventsBase = EVENTS_BASEPATH;
+    const eventsDir = join(outDir, ...SHOWS_BASEPATH.split("/").filter(Boolean));
+    const eventsBase = SHOWS_BASEPATH;
     const events = await client.fetch<FetchedEvent[]>(EVENTS_QUERY);
     for (const ev of events) {
       const canonical = eventUrl(ev.slug);
@@ -390,16 +390,16 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         htmlPage({
           title: `Events — ${host.title}`,
           description: `Events from ${host.title}.`,
-          canonical: eventsIndexUrl(),
+          canonical: showsIndexUrl(),
           jsonld: orgLd ? [orgLd] : [],
           headExtra: feedLinks(meta),
           chrome,
           leftRail: rail,
           bodyEnd: navScript,
-          mainHtml: simpleMain(`<h1>Events</h1>\n<ul class="post-list">\n${evListing}\n</ul>`),
+          mainHtml: simpleMain(`<h1>Shows</h1>\n<ul class="post-list">\n${evListing}\n</ul>`),
         }),
       );
-      sitemapEntries.push({ loc: eventsIndexUrl() });
+      sitemapEntries.push({ loc: showsIndexUrl() });
       await writeFile(join(eventsDir, "gallery.js"), LIGHTBOX_JS);
     }
   }

@@ -59,12 +59,13 @@ export const structure: StructureResolver = (S) =>
             .title("Com — remilia.com")
             .items([
               sectionList(S, "News", "news"),
+              sectionList(S, "Events", "events"),
               S.listItem()
-                .title("Events")
+                .title("Shows")
                 .icon(CalendarIcon)
                 .child(
                   S.documentTypeList("event")
-                    .title("Events — remilia.com/a/events")
+                    .title("Shows — dated listings + albums")
                     .filter('_type == "event"'),
                 ),
               S.documentTypeListItem("album").title("Albums").icon(ImagesIcon),

@@ -10,9 +10,9 @@ Sanity studio + remilia.org static tree. One project (`8x9419lh`), one
 | .net | net-updates, devblog | `/updates`, `/blog` |
 
 Posts use schema field `channel` = section id (`net-updates` so GROQ never
-collides with org `updates`). **Events** are document type `event` (not a
-post channel) under the Com desk — same host surface as news, path `/a/events`.
-Albums attach to events.
+collides with org `updates`). **Events** is a post section (`channel: events`
+→ `/a/events`), same as news. Dated **Shows** (`_type == "event"`, albums)
+live under Com as companion docs at `/a/events/shows`.
 
 **Archive:** `origin` is `first-party` or `external`. External entries set
 `externalUrl`, `outlet`, optional `commentary`; `/archive/<slug>` is the

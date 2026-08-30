@@ -1,8 +1,8 @@
-# Retired Studio journal paths on remilia.com (publish root for .com).
-# news replaces /a/studio; events moved to /a/events.
-/a/studio/events/*  /a/events/:splat  301!
-/a/studio/events    /a/events/  301!
-/a/studio/events/   /a/events/  301!
+# Retired Studio paths on remilia.com (publish root for .com).
+# news + events posts replace /a/studio; dated shows move under /a/events/shows.
+/a/studio/events/*  /a/events/shows/:splat  301!
+/a/studio/events    /a/events/shows/  301!
+/a/studio/events/   /a/events/shows/  301!
 /a/studio/*         /a/news/:splat  301!
 /a/studio           /a/news/  301!
 /a/studio/          /a/news/  301!

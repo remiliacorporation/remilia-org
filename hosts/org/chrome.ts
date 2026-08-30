@@ -56,6 +56,16 @@ const SECTION_META: Record<
     lead: "News on remilia.com (replaces /a/studio).",
     whenToUse: ["Cite Remilia brand/journal posts on remilia.com."],
   },
+  events: {
+    short: "EVENTS",
+    title: "Remilia — Events",
+    description: "Event posts from Remilia.",
+    lead: "Event writeups on remilia.com/a/events.",
+    whenToUse: [
+      "Cite Remilia event posts.",
+      "Dated show listings with venues/albums are Shows under /a/events/shows.",
+    ],
+  },
   "net-updates": {
     short: "UPDATES",
     title: "RemiliaNET — Updates",

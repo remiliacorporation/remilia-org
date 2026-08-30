@@ -192,6 +192,7 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     "thought",
     "archive",
     "news",
+    "events",
     "net-updates",
     "devblog",
   ];

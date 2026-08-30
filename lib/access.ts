@@ -11,6 +11,7 @@ export type Channel =
   | "thought"
   | "archive"
   | "news"
+  | "events"
   | "net-updates"
   | "devblog";
 
@@ -20,6 +21,7 @@ export const CHANNELS: { title: string; value: Channel }[] = [
   { title: "Thought (remilia.org/thought)", value: "thought" },
   { title: "Archive (remilia.org/archive)", value: "archive" },
   { title: "News (remilia.com/a/news)", value: "news" },
+  { title: "Events (remilia.com/a/events)", value: "events" },
   { title: "Updates — Net (remilia.net/updates)", value: "net-updates" },
   { title: "Devblog (remilia.net/blog)", value: "devblog" },
 ];
@@ -30,6 +32,7 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   thought: "remilia.org/thought",
   archive: "remilia.org/archive",
   news: "remilia.com/a/news",
+  events: "remilia.com/a/events",
   "net-updates": "remilia.net/updates",
   devblog: "remilia.net/blog",
 };
@@ -45,6 +48,7 @@ const CHANNEL_EDITORS: Record<Channel, string[]> = {
   thought: [],
   archive: [],
   news: [],
+  events: [],
   "net-updates": [],
   devblog: [],
 };

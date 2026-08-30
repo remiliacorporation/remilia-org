@@ -1,10 +1,10 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { CalendarIcon } from "@sanity/icons/Calendar";
 
-/** Events (.com). Drives Event structured data — rich results a blog post never gets. */
+/** Dated shows (.com). Event JSON-LD + albums. Posts for the Events section use channel `events`. */
 export const event = defineType({
   name: "event",
-  title: "Event",
+  title: "Show",
   type: "document",
   icon: CalendarIcon,
   fields: [

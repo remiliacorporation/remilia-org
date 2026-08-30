@@ -17,6 +17,7 @@ import {
   CHANNEL_BASEPATH,
   ORG_SECTIONS,
   COM_SECTIONS,
+  COM_POST_SECTIONS,
   EVENTS_PATH_LABEL,
 } from "./index";
 
@@ -26,15 +27,18 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(canonicalFor("thought", "essay"), "https://remilia.org/thought/essay");
   assert.equal(canonicalFor("archive", "interview"), "https://remilia.org/archive/interview");
   assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
+  assert.equal(canonicalFor("events", "party"), "https://remilia.com/a/events/party");
   assert.equal(canonicalFor("net-updates", "ship"), "https://www.remilia.net/updates/ship");
   assert.equal(canonicalFor("devblog", "vaults"), "https://www.remilia.net/blog/vaults");
-  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
+  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/shows/tokyo");
   assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("devblog"), "https://www.remilia.net/blog/rss.xml");
   assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
   assert.equal(CHANNEL_BASEPATH["net-updates"], "/updates");
+  assert.equal(CHANNEL_BASEPATH.events, "/a/events");
   assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
   assert.deepEqual(COM_SECTIONS, ["news", "events"]);
+  assert.deepEqual(COM_POST_SECTIONS, ["news", "events"]);
   assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/events");
 });
 
@@ -90,7 +94,7 @@ test("event JSON-LD distinguishes physical and online locations", () => {
 test("imageGallery emits one ImageObject per photo with alt as description", () => {
   const ld = imageGallery({
     title: "FW26",
-    pageUrl: "https://remilia.com/a/events/fw26",
+    pageUrl: "https://remilia.com/a/events/shows/fw26",
     images: [{ url: "https://cdn.sanity.io/x.jpg", alt: "Runway look 1", credit: "Photo: A" }],
   });
   assert.equal(ld.image.length, 1);

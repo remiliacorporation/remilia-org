@@ -26,6 +26,7 @@ const CHANNELS = new Set<string>([
   "thought",
   "archive",
   "news",
+  "events",
   "net-updates",
   "devblog",
 ]);
@@ -267,7 +268,9 @@ function spanToMd(span: { text: string; marks?: string[] }, defs: MarkDef[], fns
   if (m.strong) t = `**${t}**`;
   if (m.em) t = `*${t}*`;
   if (m.href) {
-    const path = m.href.match(/^\/(?:updates|press|thought|archive|a\/news|a\/studio|blog)\/([^/?#]+)/);
+    const path = m.href.match(
+      /^\/(?:updates|press|thought|archive|a\/news|a\/events|a\/studio|blog)\/([^/?#]+)/,
+    );
     t = path ? `[[${path[1]}|${span.text}]]` : `[${span.text}](${m.href})`;
   }
   if (m.fn !== undefined) {
