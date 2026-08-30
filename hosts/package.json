@@ -14,6 +14,8 @@
     "archive:firecrawl": "node --import tsx archive-firecrawl.ts",
     "import:miladychan": "node --import tsx miladychan-import.ts",
     "fix:archive": "node --import tsx fix-archive-fields.ts",
+    "clean:archive": "node --import tsx clean-archive-snapshots.ts",
+    "repair:substack-covers": "node --import tsx repair-substack-covers.ts",
     "repair:substack": "node --import tsx repair-substack.ts",
     "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
