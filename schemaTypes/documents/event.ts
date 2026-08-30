@@ -1,12 +1,13 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { CalendarIcon } from "@sanity/icons/Calendar";
 
-/** Dated shows (.com). Event JSON-LD + albums. Posts for the Events section use channel `events`. */
+/** @deprecated Prefer Events posts (`channel: events`) with albums. Kept for legacy data. */
 export const event = defineType({
   name: "event",
-  title: "Show",
+  title: "Event (legacy)",
   type: "document",
   icon: CalendarIcon,
+  hidden: true,
   fields: [
     defineField({ name: "title", type: "string", validation: (r) => r.required() }),
     defineField({

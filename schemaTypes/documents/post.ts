@@ -176,6 +176,33 @@ export const post = defineType({
         ),
     }),
     defineField({
+      name: "startsAt",
+      title: "Event starts",
+      type: "datetime",
+      hidden: ({ document }) => document?.channel !== "events",
+      description: "Events only — optional; used for Event JSON-LD when set.",
+    }),
+    defineField({
+      name: "endsAt",
+      title: "Event ends",
+      type: "datetime",
+      hidden: ({ document }) => document?.channel !== "events",
+    }),
+    defineField({
+      name: "locationName",
+      title: "Venue / location",
+      type: "string",
+      hidden: ({ document }) => document?.channel !== "events",
+    }),
+    defineField({
+      name: "albums",
+      title: "Gallery",
+      type: "array",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "album" }] })],
+      hidden: ({ document }) => document?.channel !== "events",
+      description: "Events only — photo albums embedded on the post (like Ghost galleries).",
+    }),
+    defineField({
       name: "markdown",
       title: "Imported Markdown",
       type: "text",

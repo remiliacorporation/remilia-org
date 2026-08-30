@@ -59,12 +59,9 @@ const SECTION_META: Record<
   events: {
     short: "EVENTS",
     title: "Remilia — Events",
-    description: "Event posts from Remilia.",
-    lead: "Event writeups on remilia.com/a/events.",
-    whenToUse: [
-      "Cite Remilia event posts.",
-      "Dated show listings with venues/albums are Shows under /a/events/shows.",
-    ],
+    description: "Event posts from Remilia — writeups with photo galleries.",
+    lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
+    whenToUse: ["Cite Remilia event writeups and photo galleries on remilia.com/a/events."],
   },
   "net-updates": {
     short: "UPDATES",

@@ -30,7 +30,7 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(canonicalFor("events", "party"), "https://remilia.com/a/events/party");
   assert.equal(canonicalFor("net-updates", "ship"), "https://www.remilia.net/updates/ship");
   assert.equal(canonicalFor("devblog", "vaults"), "https://www.remilia.net/blog/vaults");
-  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/shows/tokyo");
+  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
   assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("devblog"), "https://www.remilia.net/blog/rss.xml");
   assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
@@ -94,7 +94,7 @@ test("event JSON-LD distinguishes physical and online locations", () => {
 test("imageGallery emits one ImageObject per photo with alt as description", () => {
   const ld = imageGallery({
     title: "FW26",
-    pageUrl: "https://remilia.com/a/events/shows/fw26",
+    pageUrl: "https://remilia.com/a/events/fw26",
     images: [{ url: "https://cdn.sanity.io/x.jpg", alt: "Runway look 1", credit: "Photo: A" }],
   });
   assert.equal(ld.image.length, 1);

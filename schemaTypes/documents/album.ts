@@ -2,9 +2,8 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 import { ImagesIcon } from "@sanity/icons/Images";
 
 /**
- * Photo album — first-class, not a blog attachment. Referenced from events
- * and embeddable in posts; renders as a gallery page with ImageGallery/
- * ImageObject JSON-LD (the ".com photos surface in search" requirement).
+ * Photo album — first-class gallery. Attached to Events posts (channel
+ * `events`); also usable as standalone lookbooks.
  */
 export const album = defineType({
   name: "album",
@@ -21,11 +20,19 @@ export const album = defineType({
     }),
     defineField({ name: "date", type: "date" }),
     defineField({
+      name: "post",
+      title: "Event post",
+      type: "reference",
+      to: [{ type: "post" }],
+      description: "Optional — which Events post embeds this gallery.",
+    }),
+    defineField({
       name: "event",
-      title: "Event",
+      title: "Legacy event doc",
       type: "reference",
       to: [{ type: "event" }],
-      description: "Optional — standalone shoots (lookbooks) have no event.",
+      hidden: true,
+      description: "Deprecated — prefer attaching albums on the Events post.",
     }),
     defineField({
       name: "description",

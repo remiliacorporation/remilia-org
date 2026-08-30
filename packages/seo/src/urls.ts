@@ -6,6 +6,9 @@
  * Editors pick a section id; host + public path are derived. Schema id
  * `net-updates` avoids colliding with org `updates` in GROQ; both publish
  * at `/updates` on their own host.
+ *
+ * .com events are blog-style posts (describe + gallery), same shape as
+ * Ghost blog.remilia.org writeups — not a separate “shows” surface.
  */
 export type Channel =
   | "updates"
@@ -69,13 +72,9 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
 /** Org post sections baked into remilia.org `deploy/`. */
 export const ORG_SECTIONS: Channel[] = ["updates", "press", "thought", "archive"];
 
-/** Com post sections (news + events). */
+/** Com post sections — news + events (events = describe + gallery). */
 export const COM_POST_SECTIONS: Channel[] = ["news", "events"];
 
-/**
- * Full .com surface. `events` is a post section at /a/events.
- * Dated shows (`_type == "event"`) + albums are companion docs under Com.
- */
 export const COM_SECTIONS = ["news", "events"] as const;
 export type ComSection = (typeof COM_SECTIONS)[number];
 
@@ -94,17 +93,10 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   devblog: "remilia.net/blog",
 };
 
-/**
- * Dated show pages (`_type == "event"`) — companion to the events post section.
- * Kept under /a/events/shows so they don't collide with event posts.
- */
 export const EVENTS_PATH_LABEL = "remilia.com/a/events";
-export const SHOWS_PATH_LABEL = "remilia.com/a/events/shows";
 
 export const EVENTS_ORIGIN = "https://remilia.com";
-/** Post section index / posts live at /a/events; shows nest underneath. */
 export const EVENTS_BASEPATH = "/a/events";
-export const SHOWS_BASEPATH = "/a/events/shows";
 
 export const indexUrl = (c: Channel): string =>
   `${CHANNEL_ORIGIN[c]}${CHANNEL_BASEPATH[c]}`;
@@ -118,12 +110,10 @@ export const atomUrl = (c: Channel): string => `${indexUrl(c)}/atom.xml`;
 
 export const sitemapUrl = (c: Channel): string => `${indexUrl(c)}/sitemap.xml`;
 
-export const eventUrl = (slug: string): string =>
-  `${EVENTS_ORIGIN}${SHOWS_BASEPATH}/${slug}`;
+/** Event post URL — events are posts at /a/events/<slug>. */
+export const eventUrl = (slug: string): string => canonicalFor("events", slug);
 
-export const eventsIndexUrl = (): string => `${EVENTS_ORIGIN}${EVENTS_BASEPATH}`;
-
-export const showsIndexUrl = (): string => `${EVENTS_ORIGIN}${SHOWS_BASEPATH}`;
+export const eventsIndexUrl = (): string => indexUrl("events");
 
 /** Ghost cutover: legacy blog URL → new canonical (the per-slug 301 map). */
 export const legacyRedirect = (c: Channel, slug: string): { from: string; to: string } => ({
@@ -131,12 +121,12 @@ export const legacyRedirect = (c: Channel, slug: string): { from: string; to: st
   to: canonicalFor(c, slug),
 });
 
-/** Retired Studio journal → News. */
+/** Retired Studio journal → News; nested studio events → Events posts. */
 export const STUDIO_TO_NEWS_REDIRECTS: { from: string; to: string }[] = [
   { from: "/a/studio", to: "/a/news" },
   { from: "/a/studio/", to: "/a/news/" },
   { from: "/a/studio/*", to: "/a/news/:splat" },
-  { from: "/a/studio/events", to: "/a/events/shows" },
-  { from: "/a/studio/events/", to: "/a/events/shows/" },
-  { from: "/a/studio/events/*", to: "/a/events/shows/:splat" },
+  { from: "/a/studio/events", to: "/a/events" },
+  { from: "/a/studio/events/", to: "/a/events/" },
+  { from: "/a/studio/events/*", to: "/a/events/:splat" },
 ];

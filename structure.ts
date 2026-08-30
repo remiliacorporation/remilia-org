@@ -1,6 +1,5 @@
 import type { StructureResolver } from "sanity/structure";
 import { DocumentTextIcon } from "@sanity/icons/DocumentText";
-import { CalendarIcon } from "@sanity/icons/Calendar";
 import { ImagesIcon } from "@sanity/icons/Images";
 import { UserIcon } from "@sanity/icons/User";
 import { TagIcon } from "@sanity/icons/Tag";
@@ -60,14 +59,6 @@ export const structure: StructureResolver = (S) =>
             .items([
               sectionList(S, "News", "news"),
               sectionList(S, "Events", "events"),
-              S.listItem()
-                .title("Shows")
-                .icon(CalendarIcon)
-                .child(
-                  S.documentTypeList("event")
-                    .title("Shows — dated listings + albums")
-                    .filter('_type == "event"'),
-                ),
               S.documentTypeListItem("album").title("Albums").icon(ImagesIcon),
             ]),
         ),
