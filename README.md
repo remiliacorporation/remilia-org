@@ -7,9 +7,9 @@ Sanity studio + remilia.org static tree. One project (`8x9419lh`), one
 |---|---|---|
 | .org | updates, press, thought, archive | `/updates`, `/press`, `/thought`, `/archive` |
 | .com | news, events | `/a/news`, `/a/events` (retires `/a/studio`) |
-| .net | net-updates, devblog | `/updates`, `/blog` |
+| .net | dev-updates, devblog | `/updates`, `/blog` |
 
-Posts use schema field `channel` = section id (`net-updates` so GROQ never
+Posts use schema field `channel` = section id (`dev-updates` so GROQ never
 collides with org `updates`). **Events** are posts (`channel: events` →
 `/a/events`): write a description in the body and attach gallery **albums** —
 same idea as Ghost posts on blog.remilia.org. Optional venue/start fields
@@ -64,7 +64,7 @@ Also in Studio under **Section cheatsheet**:
 - **Thought** — essays, longform, positions.
 - **Archive** — notable writing by or about Remilia (incl. external coverage).
 - **News** (.com) — brand/journal posts (replaces `/a/studio`).
-- **Updates** (.net, id `net-updates`) — product/network routine notes.
+- **Dev updates** (.net, id `dev-updates`) — product/network routine notes.
 - **Devblog** — engineering depth and changelogs.
 
 ### Retiring `/a/studio`

@@ -14,7 +14,7 @@ const TEXT = [
   "• Events — like blog.remilia.org: describe the event in the body, attach gallery albums → /a/events",
   "",
   "NET (remilia.net)",
-  "• Updates — product/network routine notes (schema id net-updates; path /updates).",
+  "• Dev updates — product/network routine notes (schema id `dev-updates`; path /updates).",
   "• Devblog — engineering depth, changelogs, technical writeups.",
   "",
   "One Sanity project / dataset. Pick the section; host + URL are derived.",

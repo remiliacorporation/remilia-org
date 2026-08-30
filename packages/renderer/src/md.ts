@@ -27,7 +27,7 @@ const CHANNELS = new Set<string>([
   "archive",
   "news",
   "events",
-  "net-updates",
+  "dev-updates",
   "devblog",
 ]);
 

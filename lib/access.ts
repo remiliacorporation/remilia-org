@@ -2,7 +2,7 @@ import type { CurrentUser } from "sanity";
 
 /**
  * Section ids (field still named `channel` on post docs). Host + public path
- * are derived — see `@remilia/seo` CHANNEL_* maps. `net-updates` is the schema
+ * are derived — see `@remilia/seo` CHANNEL_* maps. `dev-updates` is the schema
  * id for remilia.net/updates so GROQ never confuses it with org `updates`.
  */
 export type Channel =
@@ -12,7 +12,7 @@ export type Channel =
   | "archive"
   | "news"
   | "events"
-  | "net-updates"
+  | "dev-updates"
   | "devblog";
 
 export const CHANNELS: { title: string; value: Channel }[] = [
@@ -22,7 +22,7 @@ export const CHANNELS: { title: string; value: Channel }[] = [
   { title: "Archive (remilia.org/archive)", value: "archive" },
   { title: "News (remilia.com/a/news)", value: "news" },
   { title: "Events (remilia.com/a/events)", value: "events" },
-  { title: "Updates — Net (remilia.net/updates)", value: "net-updates" },
+  { title: "Dev updates (remilia.net/updates)", value: "dev-updates" },
   { title: "Devblog (remilia.net/blog)", value: "devblog" },
 ];
 
@@ -33,7 +33,7 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   archive: "remilia.org/archive",
   news: "remilia.com/a/news",
   events: "remilia.com/a/events",
-  "net-updates": "remilia.net/updates",
+  "dev-updates": "remilia.net/updates",
   devblog: "remilia.net/blog",
 };
 
@@ -49,7 +49,7 @@ const CHANNEL_EDITORS: Record<Channel, string[]> = {
   archive: [],
   news: [],
   events: [],
-  "net-updates": [],
+  "dev-updates": [],
   devblog: [],
 };
 

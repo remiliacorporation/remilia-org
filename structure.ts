@@ -69,7 +69,7 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title("Net — remilia.net")
             .items([
-              sectionList(S, "Updates", "net-updates"),
+              sectionList(S, "Dev updates", "dev-updates"),
               sectionList(S, "Devblog", "devblog"),
             ]),
         ),

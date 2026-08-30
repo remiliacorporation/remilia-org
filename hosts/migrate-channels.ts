@@ -181,10 +181,10 @@ export function classify(p: PostRow): Plan {
     if (/api|developer portal/i.test(title)) {
       return { ...base, to: "devblog", reason: "RemiliaNET API / developer portal" };
     }
-    return { ...base, to: "net-updates", reason: "RemiliaNET product update" };
+    return { ...base, to: "dev-updates", reason: "RemiliaNET product update" };
   }
   if (/vault architecture/i.test(title)) {
-    return { ...base, to: "net-updates", reason: "network architecture note" };
+    return { ...base, to: "dev-updates", reason: "network architecture note" };
   }
 
   // 4. First-party press releases
