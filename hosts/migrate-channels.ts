@@ -179,12 +179,12 @@ export function classify(p: PostRow): Plan {
   // 3. RemiliaNET product / eng (title must lead with RemiliaNET / Alpha)
   if (/^RemiliaNET\b/i.test(title) || /RemiliaNET Alpha/i.test(title)) {
     if (/api|developer portal/i.test(title)) {
-      return { ...base, to: "devblog", reason: "RemiliaNET API / developer portal" };
+      return { ...base, to: "dev-blog", reason: "RemiliaNET API / developer portal" };
     }
-    return { ...base, to: "devupdates", reason: "RemiliaNET product update" };
+    return { ...base, to: "dev-updates", reason: "RemiliaNET product update" };
   }
   if (/vault architecture/i.test(title)) {
-    return { ...base, to: "devupdates", reason: "network architecture note" };
+    return { ...base, to: "dev-updates", reason: "network architecture note" };
   }
 
   // 4. First-party press releases

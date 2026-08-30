@@ -36,7 +36,7 @@ assert.equal(
     title: "RemiliaNET Alpha v0.8: Global Chat",
     tags: ["Project"],
   }).to,
-  "devupdates",
+  "dev-updates",
 );
 assert.equal(
   classify({
@@ -44,7 +44,7 @@ assert.equal(
     title: "RemiliaNET Alpha v0.8.1: Remilia API and Developer Portal",
     tags: ["Feature"],
   }).to,
-  "devblog",
+  "dev-blog",
 );
 assert.equal(
   classify({

@@ -27,8 +27,8 @@ const CHANNELS = new Set<string>([
   "archive",
   "news",
   "events",
-  "devupdates",
-  "devblog",
+  "dev-updates",
+  "dev-blog",
 ]);
 
 function isChannel(v: string): v is Channel {

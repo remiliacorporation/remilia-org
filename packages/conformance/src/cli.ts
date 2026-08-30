@@ -41,13 +41,13 @@ function isChannel(v: string | undefined): v is Channel {
     v === "archive" ||
     v === "news" ||
     v === "events" ||
-    v === "devupdates" ||
-    v === "devblog"
+    v === "dev-updates" ||
+    v === "dev-blog"
   );
 }
 if (!isChannel(channelArg)) {
   console.error(
-    "usage: seo-conformance <updates|press|thought|archive|news|events|devupdates|devblog> [--base <origin>]",
+    "usage: seo-conformance <updates|press|thought|archive|news|events|dev-updates|dev-blog> [--base <origin>]",
   );
   process.exit(2);
 }

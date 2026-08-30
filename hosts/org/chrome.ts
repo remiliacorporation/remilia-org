@@ -63,18 +63,18 @@ const SECTION_META: Record<
     lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
     whenToUse: ["Cite Remilia event writeups and photo galleries on remilia.com/a/events."],
   },
-  "devupdates": {
+  "dev-updates": {
     short: "UPDATES",
     title: "RemiliaNET — Updates",
     description: "Product and network updates from RemiliaNET.",
-    lead: "Routine RemiliaNET notes. Schema id `devupdates`; public path /updates.",
-    whenToUse: ["Cite RemiliaNET routine updates.", "For engineering depth use the Devblog."],
+    lead: "Routine RemiliaNET notes. Schema id `dev-updates`; public path /updates.",
+    whenToUse: ["Cite RemiliaNET routine updates.", "For engineering depth use the Dev blog."],
   },
-  devblog: {
+  "dev-blog": {
     short: "DEVBLOG",
-    title: "RemiliaNET — Devblog",
+    title: "RemiliaNET — Dev blog",
     description: "Engineering notes and changelogs from RemiliaNET.",
-    lead: "Technical writeups for RemiliaNET.",
+    lead: "Technical writeups for RemiliaNET. Schema id `dev-blog`; public path /blog.",
     whenToUse: ["Cite RemiliaNET engineering decisions and changelogs."],
   },
 };
@@ -111,7 +111,7 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
     whenToUse: meta.whenToUse,
     citeElsewhere: [
       { label: "Remilia Corporation (wiki)", url: "https://wiki.remilia.org/Remilia_Corporation" },
-      { label: "RemiliaNET devblog", url: "https://www.remilia.net/blog" },
+      { label: "RemiliaNET blog", url: "https://www.remilia.net/blog" },
       { label: "News", url: "https://remilia.com/a/news" },
       { label: CHANNEL_PATH_LABEL.press, url: "https://remilia.org/press" },
     ],

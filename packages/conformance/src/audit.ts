@@ -193,8 +193,8 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     "archive",
     "news",
     "events",
-    "devupdates",
-    "devblog",
+    "dev-updates",
+    "dev-blog",
   ];
   const foreign = channels
     .filter((c) => c !== channel)

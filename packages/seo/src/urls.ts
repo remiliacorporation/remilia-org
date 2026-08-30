@@ -4,7 +4,7 @@
  * scheme change is one edit, not three app audits.
  *
  * Editors pick a section id; host + public path are derived. Schema id
- * `devupdates` avoids colliding with org `updates` in GROQ; both publish
+ * `dev-updates` avoids colliding with org `updates` in GROQ; both publish
  * at `/updates` on their own host.
  *
  * .com events are blog-style posts (describe + gallery), same shape as
@@ -17,8 +17,8 @@ export type Channel =
   | "archive"
   | "news"
   | "events"
-  | "devupdates"
-  | "devblog";
+  | "dev-updates"
+  | "dev-blog";
 
 export type HostId = "org" | "com" | "net";
 
@@ -29,8 +29,8 @@ export const CHANNELS: Channel[] = [
   "archive",
   "news",
   "events",
-  "devupdates",
-  "devblog",
+  "dev-updates",
+  "dev-blog",
 ];
 
 export const isChannel = (v: string | undefined): v is Channel =>
@@ -43,8 +43,8 @@ export const CHANNEL_ORIGIN: Record<Channel, string> = {
   archive: "https://remilia.org",
   news: "https://remilia.com",
   events: "https://remilia.com",
-  "devupdates": "https://www.remilia.net",
-  devblog: "https://www.remilia.net",
+  "dev-updates": "https://www.remilia.net",
+  "dev-blog": "https://www.remilia.net",
 };
 
 export const CHANNEL_BASEPATH: Record<Channel, string> = {
@@ -54,8 +54,8 @@ export const CHANNEL_BASEPATH: Record<Channel, string> = {
   archive: "/archive",
   news: "/a/news",
   events: "/a/events",
-  "devupdates": "/updates",
-  devblog: "/blog",
+  "dev-updates": "/updates",
+  "dev-blog": "/blog",
 };
 
 export const CHANNEL_HOST: Record<Channel, HostId> = {
@@ -65,8 +65,8 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   archive: "org",
   news: "com",
   events: "com",
-  "devupdates": "net",
-  devblog: "net",
+  "dev-updates": "net",
+  "dev-blog": "net",
 };
 
 /** Org post sections baked into remilia.org `deploy/`. */
@@ -79,7 +79,7 @@ export const COM_SECTIONS = ["news", "events"] as const;
 export type ComSection = (typeof COM_SECTIONS)[number];
 
 /** Net post sections. */
-export const NET_SECTIONS: Channel[] = ["devupdates", "devblog"];
+export const NET_SECTIONS: Channel[] = ["dev-updates", "dev-blog"];
 
 /** Public host label for previews / Studio lists (no scheme). */
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
@@ -89,8 +89,8 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   archive: "remilia.org/archive",
   news: "remilia.com/a/news",
   events: "remilia.com/a/events",
-  "devupdates": "remilia.net/updates",
-  devblog: "remilia.net/blog",
+  "dev-updates": "remilia.net/updates",
+  "dev-blog": "remilia.net/blog",
 };
 
 export const EVENTS_PATH_LABEL = "remilia.com/a/events";

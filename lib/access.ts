@@ -2,7 +2,7 @@ import type { CurrentUser } from "sanity";
 
 /**
  * Section ids (field still named `channel` on post docs). Host + public path
- * are derived — see `@remilia/seo` CHANNEL_* maps. `devupdates` is the schema
+ * are derived — see `@remilia/seo` CHANNEL_* maps. `dev-updates` is the schema
  * id for remilia.net/updates so GROQ never confuses it with org `updates`.
  */
 export type Channel =
@@ -12,8 +12,8 @@ export type Channel =
   | "archive"
   | "news"
   | "events"
-  | "devupdates"
-  | "devblog";
+  | "dev-updates"
+  | "dev-blog";
 
 export const CHANNELS: { title: string; value: Channel }[] = [
   { title: "Updates (remilia.org/updates)", value: "updates" },
@@ -22,8 +22,8 @@ export const CHANNELS: { title: string; value: Channel }[] = [
   { title: "Archive (remilia.org/archive)", value: "archive" },
   { title: "News (remilia.com/a/news)", value: "news" },
   { title: "Events (remilia.com/a/events)", value: "events" },
-  { title: "Dev updates (remilia.net/updates)", value: "devupdates" },
-  { title: "Devblog (remilia.net/blog)", value: "devblog" },
+  { title: "Dev updates (remilia.net/updates)", value: "dev-updates" },
+  { title: "Dev blog (remilia.net/blog)", value: "dev-blog" },
 ];
 
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
@@ -33,8 +33,8 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   archive: "remilia.org/archive",
   news: "remilia.com/a/news",
   events: "remilia.com/a/events",
-  "devupdates": "remilia.net/updates",
-  devblog: "remilia.net/blog",
+  "dev-updates": "remilia.net/updates",
+  "dev-blog": "remilia.net/blog",
 };
 
 /**
@@ -49,8 +49,8 @@ const CHANNEL_EDITORS: Record<Channel, string[]> = {
   archive: [],
   news: [],
   events: [],
-  "devupdates": [],
-  devblog: [],
+  "dev-updates": [],
+  "dev-blog": [],
 };
 
 export function canEditChannel(
