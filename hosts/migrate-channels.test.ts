@@ -26,33 +26,47 @@ assert.equal(
     ...base,
     title: "Feature: Decrypt - Something (2025)",
     tags: ["Press", "Feature"],
+    hrefs: ["https://decrypt.co/1/article?ref=blog.remilia.org"],
   }).to,
-  "press",
+  "archive",
 );
 assert.equal(
   classify({
     ...base,
-    title: "RemiliaNET Alpha v0.8: Global Chat",
-    tags: ["Project"],
-  }).to,
-  "dev-updates",
+    title: "Feature: Decrypt - Something (2025)",
+    tags: ["Press", "Feature"],
+    hrefs: ["https://decrypt.co/1/article?ref=blog.remilia.org"],
+  }).origin,
+  "external",
 );
 assert.equal(
   classify({
     ...base,
-    title: "RemiliaNET Alpha v0.8.1: Remilia API and Developer Portal",
-    tags: ["Feature"],
+    title: "Corporate Memo: Remilia 2024 Christmas Missive",
+    tags: ["Announcements"],
+    slug: "corporate-memo-remilia-2024-christmas-missive",
   }).to,
-  "dev-blog",
+  "updates",
 );
 assert.equal(
   classify({
     ...base,
-    title: "Remilia Wiki Launch",
-    tags: ["Announcements", "Feature"],
-    slug: "remilia-wiki-launch",
+    title: "Admin Reveal: I said I'm just a vessel bro",
+    tags: [],
+    source: "paragraph",
+    slug: "admin-reveal-i-said-i-m-just-a-vessel-bro",
   }).to,
-  "dev-updates",
+  "updates",
+);
+assert.equal(
+  classify({
+    ...base,
+    title: "Remilia Corporation Onboarding Package",
+    tags: [],
+    source: "paragraph",
+    slug: "remilia-corporation-onboarding-package",
+  }).to,
+  "thought",
 );
 assert.equal(
   classify({
@@ -60,8 +74,9 @@ assert.equal(
     title: "Dynasty Mindset",
     tags: [],
     source: "paragraph",
+    slug: "dynasty-mindset",
   }).to,
-  "thought",
+  "archive",
 );
 assert.equal(
   classify({
@@ -69,17 +84,18 @@ assert.equal(
     title: "Neogyaru",
     tags: [],
     source: "substack",
+    slug: "neogyaru",
   }).to,
-  "news",
+  "archive",
 );
 assert.equal(
   classify({
     ...base,
-    title: "Pre-Release Announcement: The Exegesis of Miya…",
+    title: "Remilia Wiki Launch",
     tags: ["Announcements"],
-    slug: "pre-release-announcement-the-exegesis-of-miya-black-hearted-cyber-angel-baby",
+    slug: "remilia-wiki-launch",
   }).to,
-  "news",
+  "dev-updates",
 );
 
 console.log("migrate-channels.test.ts: ok");

@@ -123,6 +123,17 @@ export const post = defineType({
       description: "Optional notes on the citing record (why it matters, corrections, context).",
     }),
     defineField({
+      name: "archiveSnapshot",
+      title: "Archived page (Firecrawl)",
+      type: "text",
+      rows: 12,
+      hidden: ({ document }) =>
+        document?.channel !== "archive" || document?.origin !== "external",
+      description:
+        "Markdown snapshot of externalUrl via Firecrawl. Filled by archive-firecrawl.ts — do not paste by hand unless re-scraping failed.",
+      readOnly: true,
+    }),
+    defineField({
       name: "body",
       title: "Body",
       type: "blockContent",

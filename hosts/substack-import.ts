@@ -12,7 +12,7 @@ import { markdownToPost, slugify } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
 
 const ORIGIN = "https://goldenlight.substack.com";
-const CHANNEL = "news" as const;
+const CHANNEL = "archive" as const;
 const AUTHOR = "Charlotte Fang";
 
 function normTitle(s: string): string {
@@ -129,6 +129,7 @@ async function main() {
       _id: postId(p.slug),
       _type: "post",
       channel: CHANNEL,
+      origin: "first-party",
       title: p.title,
       slug: { _type: "slug", current: p.slug },
       publishedAt: p.post_date ?? "2021-06-01T00:00:00.000Z",

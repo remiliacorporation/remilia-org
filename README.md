@@ -15,12 +15,14 @@ collides with org `updates`). **Events** are posts (`channel: events` →
 same idea as Ghost posts on blog.remilia.org. Optional venue/start fields
 feed Event JSON-LD. Albums stay first-class docs under Com.
 
-**Archive:** reserved for rare first-party archival cites. External coverage
-(Decrypt, Forbes, interviews, etc.) lives in **Press**, not Archive.
+**Host missions:** remilia.org = theory + NFTs (thought) / press releases /
+company updates / archive (coverage via Firecrawl + secondary essays);
+remilia.com = fashion / lifestyle / publishing (+ events);
+remilia.net = software outside NFTs (RemiliaNET, wiki, miladychan).
 
-**Host missions:** remilia.org = theory + NFTs; remilia.com = fashion /
-lifestyle brand / publishing (+ events); remilia.net = software outside NFTs
-(RemiliaNET, wiki, miladychan).
+**Archive:** external coverage & interviews set `origin: external` +
+`externalUrl` / `outlet`; Firecrawl fills `archiveSnapshot`. Secondary
+Substack/Paragraph (not core TL) use `origin: first-party` and keep body.
 
 **remilia.org** lives in this repo (`deploy/`). [remilia-site](https://github.com/remiliacorp/remilia-site)
 is archived. Later project archives go under `deploy/<name>/` (e.g. `/maker`).
@@ -61,32 +63,21 @@ posts change. A static archive under `/maker` only needs a line in the root
 
 Also in Studio under **Section cheatsheet**:
 
-**Host missions:** .org = theory + NFTs · .com = fashion / lifestyle / publishing (+ events) · .net = software outside NFTs (RemiliaNET, wiki, miladychan).
-
-- **Updates** (.org) — small company notes / memos.
-- **Press** — formal releases **and** external coverage (Decrypt, Forbes, interviews…).
-- **Thought** — theory, positions, NFT essays.
-- **Archive** — rare first-party archival cites (not Decrypt-style coverage).
+- **Updates** — company essays/memos (Christmas, Level-2, Admin Reveal, …).
+- **Press** — first-party press releases only.
+- **Thought** — org/product-relevant thought leadership (theory + NFTs).
+- **Archive** — external coverage/interviews (Firecrawl snapshot) + secondary Substack/Paragraph.
 - **News** (.com) — fashion, lifestyle brand, publishing.
 - **Events** (.com) — event writeups + galleries.
-- **Dev updates** (.net, id `dev-updates`) — RemiliaNET / wiki / miladychan notes.
-- **Dev blog** (.net, id `dev-blog`) — engineering depth.
+- **Dev updates** / **Dev blog** (.net) — RemiliaNET / wiki / miladychan.
 
-### Retiring `/a/studio`
-
-Migrate existing journal posts:  
-`SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-studio-to-news.ts --write`  
-Com publish root should ship `hosts/com/_redirects` (`/a/studio` → `/a/news`,
-`/a/studio/events` → `/a/events`).
-
-### Route imported posts onto sections
+### Route / re-route posts
 
 ```
 SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all
 SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-channels.ts --all --write
+FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx archive-firecrawl.ts --write
 ```
-
-Dry-run prints the plan. `--write` patches `channel` (and clears archive-only fields when leaving archive).
 
 ## Shape
 
