@@ -15,14 +15,21 @@ function sectionList(
   title: string,
   channel: Channel,
 ) {
+  // Stable pane id → URLs like …/structure/pressRemiliaOrg stay consistent.
+  const id = `${channel}Remilia`;
   return S.listItem()
     .title(title)
+    .id(id)
     .icon(DocumentTextIcon)
     .child(
-      S.documentTypeList("post")
+      // documentList (not documentTypeList) — filtered lists are reliable this way.
+      S.documentList()
+        .id(`${id}List`)
         .title(title)
-        .filter("_type == $type && channel == $channel")
-        .params({ type: "post", channel })
+        .schemaType("post")
+        .filter('_type == "post" && channel == $channel')
+        .params({ channel })
+        .defaultOrdering([{ field: "publishedAt", direction: "desc" }])
         .initialValueTemplates([
           S.initialValueTemplateItem("post-by-channel", { channel }),
         ]),
