@@ -62,6 +62,10 @@ interface FetchedPost {
   body: PTBlock[];
   markdown?: string;
   coverRef?: string;
+  ogImageRef?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  noIndex?: boolean;
   authors?: { name: string; url?: string }[];
   tags?: string[];
   origin?: "first-party" | "external";
@@ -99,6 +103,10 @@ export function cdnUrl(projectId: string, dataset: string, ref: string, params: 
 const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && !(_id in path("drafts.**"))] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
+  "ogImageRef": coalesce(seo.ogImage.asset._ref, coverImage.asset._ref),
+  "seoTitle": seo.metaTitle,
+  "seoDescription": seo.metaDescription,
+  "noIndex": seo.noIndex,
   "authors": authors[]->{ name, url },
   "tags": tags[]->name,
   origin, externalUrl, outlet, commentary,
@@ -274,11 +282,22 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           ]
         : [];
     const page = htmlPage({
-      title: `${p.title} — ${host.title}`,
-      description: p.excerpt,
+      title: p.seoTitle?.trim() || `${p.title} — ${host.title}`,
+      description: p.seoDescription?.trim() || p.excerpt,
       canonical,
+      ogImage: img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ?? img(p.coverRef, "w=1200&auto=format"),
+      noindex: p.noIndex === true,
       jsonld: [
-        ...withOrg(blogPosting({ ...p, channel, coverImageUrl: img(p.coverRef, "w=1200&auto=format") })),
+        ...withOrg(
+          blogPosting({
+            ...p,
+            channel,
+            excerpt: p.seoDescription?.trim() || p.excerpt,
+            coverImageUrl:
+              img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ??
+              img(p.coverRef, "w=1200&auto=format"),
+          }),
+        ),
         ...eventLd,
         ...galleryLd,
       ],

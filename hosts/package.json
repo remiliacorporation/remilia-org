@@ -18,6 +18,7 @@
     "repair:substack-covers": "node --import tsx repair-substack-covers.ts",
     "repair:substack": "node --import tsx repair-substack.ts",
     "enrich:substack": "node --import tsx enrich-substack-text.ts",
+    "polish:posts": "node --import tsx polish-posts.ts",
     "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
