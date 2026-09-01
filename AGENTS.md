@@ -11,9 +11,8 @@ bd dolt push
 ```
 
 Use `bd` for task tracking (not markdown TODO lists). Use `bd remember` for
-durable project memory. Issues live in a local Dolt DB; sync uses
-`refs/dolt/data` on the git remote. See
-[SYNC_CONCEPTS.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md).
+durable project memory. Issues sync to the **private** `remilia-beads` remote —
+see [docs/beads-sync.md](docs/beads-sync.md). **Sanity posts/drafts are not in Beads.**
 
 Skill: `.agents/skills/beads/SKILL.md`
 
