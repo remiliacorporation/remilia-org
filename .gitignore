@@ -16,8 +16,13 @@ substack-posts.ndjson
 !.env.example
 .DS_Store
 
-# Beads / Dolt files (added by bd init)
-.dolt/
-*.db
+# Beads / Dolt (local runtime — see docs/beads-sync.md)
+.beads/embeddeddolt/
+.beads/backup/
+.beads/interactions.jsonl
+.beads/last-touched
+.beads/.local_version
 .beads-credential-key
 .beads/proxieddb/
+.dolt/
+*.db

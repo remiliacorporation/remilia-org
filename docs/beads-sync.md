@@ -15,13 +15,13 @@ bd dolt remote add origin git+https://github.com/remiliacorporation/remilia-bead
 bd dolt push --force
 ```
 
-3. Remove any old Dolt ref from the public code repo (if it exists):
+3. Remove any old Dolt ref from the public code repo (already done on remilia-org):
 
 ```bash
 git push origin :refs/dolt/data
 ```
 
-4. Confirm `remilia-org` has **no** `refs/dolt/*` on GitHub (Settings → or `git ls-remote origin 'refs/dolt/*'`).
+4. Confirm `remilia-org` has **no** `refs/dolt/*` on GitHub (`git ls-remote origin 'refs/dolt/*'` should be empty).
 
 ## Daily use
 
