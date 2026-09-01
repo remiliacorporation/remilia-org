@@ -8,6 +8,8 @@
     "build": "sanity build",
     "deploy:studio": "sanity deploy",
     "bake:org": "pnpm --filter @remilia/hosts bake:org",
+    "bake:fx": "pnpm --filter @remilia/hosts bake:fx",
+    "bake": "pnpm --filter @remilia/hosts bake",
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit"
   },

@@ -6,6 +6,8 @@
   "description": "Per-host chrome (header/footer + theme.css) and bake entries; core/ holds the shared blog component system.",
   "scripts": {
     "bake:org": "node --import tsx org/bake.ts",
+    "bake:fx": "node --import tsx bake-fx.ts",
+    "bake": "pnpm bake:org && pnpm bake:fx",
     "import:md": "node --import tsx md-import.ts",
     "import:ghost": "node --import tsx ghost-import.ts",
     "import:paragraph": "node --import tsx paragraph-import.ts",

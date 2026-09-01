@@ -42,12 +42,16 @@ deploy/                 Netlify publish root
 pnpm install
 pnpm dev          # Studio — http://localhost:3399
 pnpm bake:org     # writes deploy/{updates,press,thought,archive} from Sanity
+pnpm bake:fx      # injects .layer-fx twins from .layer-base (print FX)
+pnpm bake         # bake:org then bake:fx (Netlify build)
 pnpm validate
 pnpm typecheck
 ```
 
-Netlify: `publish = deploy`, build = `pnpm bake:org`. Studio stays on Sanity
-(`pnpm run deploy:studio` → remilia.sanity.studio), not on remilia.org.
+Netlify: `publish = deploy`, build = `pnpm bake` (`bake:org` + `bake:fx`).
+Studio stays on Sanity (`pnpm run deploy:studio` → remilia.sanity.studio),
+not on remilia.org. Corporate pages author only `.layer-base`; `bake:fx`
+clones a decorative `.layer-fx` twin at build time (no client JS).
 
 Publishing in Studio does **not** update remilia.org by itself. Netlify rebuilds
 on git push, or when you hit a [build hook](https://docs.netlify.com/manage/webhooks/build-hooks/).
