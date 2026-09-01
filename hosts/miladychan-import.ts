@@ -1,16 +1,4 @@
-/**
- * blog.miladychan.org (Ghost behind Cloudflare) → Sanity NDJSON via Firecrawl.
- * Channel: `dev-blog`.
- *
- *   FIRECRAWL_API_KEY=… pnpm --filter @remilia/hosts exec node --import tsx miladychan-import.ts
- *   FIRECRAWL_API_KEY=… pnpm --filter @remilia/hosts exec node --import tsx miladychan-import.ts --out miladychan-posts.ndjson
- *
- * Then import (Editor token as Sanity session):
- *   echo "$SANITY_TOKEN" | npx sanity login --with-token
- *   npx sanity dataset import miladychan-posts.ndjson production --replace
- *
- * Or with --write: login + dataset import in one shot (needs SANITY_TOKEN).
- */
+
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
@@ -110,7 +98,7 @@ function isPostUrl(u: string): boolean {
     const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
     if (parts.length !== 1) return false;
     const p = parts[0]!;
-    if (p.includes(".")) return false; // sitemaps, assets
+    if (p.includes(".")) return false;
     if (["about", "tag", "author", "page", "archive", "rss", "feed"].includes(p)) return false;
     return true;
   } catch {
@@ -132,7 +120,7 @@ async function scrapeAll(): Promise<Scraped[]> {
   console.log(`scraping ${postUrls.length} miladychan posts…`);
   const out: Scraped[] = [];
   for (const url of postUrls) {
-    const slug = new URL(url).pathname.replace(/\//g, "") || "index";
+    const slug = new URL(url).pathname.replace(/\
     process.stdout.write(`• ${slug} `);
     const s = await firecrawlScrape(url);
     if (!s.markdown) {
@@ -233,3 +221,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

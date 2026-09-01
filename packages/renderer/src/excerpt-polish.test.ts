@@ -14,7 +14,7 @@ test("smartExcerpt ends at sentence for vessel lead", () => {
 test("smartExcerpt never mid-word", () => {
   const out = smartExcerpt("Short words only here without period " + "x".repeat(200), 80);
   assert.equal(/\s$/.test(out) || /[a-z]$/i.test(out), true);
-  assert.equal(out.includes("xx"), false); // cut on space before the x-run if possible
+  assert.equal(out.includes("xx"), false);
 });
 
 test("splitSuperscripts handles multi-digit", () => {
@@ -102,3 +102,4 @@ test("plainFromBlocks skips quotes", () => {
   ]);
   assert.equal(t, "Lead sentence.");
 });
+

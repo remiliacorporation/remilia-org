@@ -1,7 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { UserIcon } from "@sanity/icons/User";
 
-/** Byline. Migrated from Ghost users. Feeds Article JSON-LD author entities. */
 export const author = defineType({
   name: "author",
   title: "Author",
@@ -32,3 +31,4 @@ export const author = defineType({
   ],
   preview: { select: { title: "name", media: "image" } },
 });
+

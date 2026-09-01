@@ -71,3 +71,4 @@ test("markdown export keeps headings, wikilinks, and footnotes", () => {
   assert.ok(file.startsWith("---\n"));
   assert.ok(file.includes("channel: press"));
 });
+

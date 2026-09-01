@@ -139,3 +139,4 @@ test("footnotes render as one .fn with nested note", () => {
   assert.ok(html.includes("Second &lt;source&gt;."));
   assert.ok(!html.includes("sn-toggle"));
 });
+

@@ -1,15 +1,4 @@
-/**
- * Build-time print FX twin.
- *
- * Corporate pages author a single `.layer-base`. This step injects a
- * decorative `.layer-fx` clone (aria-hidden / inert / data-nosnippet) so the
- * SVG print filter can misregister ink without a second hand-maintained tree.
- *
- *   node --import tsx hosts/bake-fx.ts [deployDir]
- *
- * Idempotent: replaces any existing `.layer-fx`. Wired into Netlify after
- * `bake:org`.
- */
+
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -30,7 +19,6 @@ async function* walkHtml(dir: string): AsyncGenerator<string> {
   }
 }
 
-/** Locate `<div class="layer-{name}">…</div><!-- /layer-{name} -->` (comment optional). */
 export function layerBounds(
   html: string,
   name: "fx" | "base",
@@ -71,11 +59,9 @@ export function layerBounds(
   return null;
 }
 
-/** Demote a layer-base inner HTML into FX-safe markup. */
 export function toFxInner(inner: string): string {
   let out = inner;
   out = out.replace(/\s+id="[^"]*"/gi, "");
-  // Avoid double-fetching embeds; CSS hides iframes in FX but keeps layout.
   out = out.replace(/<iframe\b([^>]*)>/gi, (_all, attrs: string) => {
     let a = String(attrs).replace(/\s+src="[^"]*"/i, "");
     a = a.replace(/\s+srcdoc="[^"]*"/i, "");
@@ -111,7 +97,7 @@ export function injectFx(html: string): { html: string; status: "injected" | "re
 
   const existing = layerBounds(html, "fx");
   if (existing) {
-    // Preserve a blank line before layer-base when we had one.
+
     const between = html.slice(existing.end, base.start);
     const sep = /^\s*$/.test(between) ? "\n\n" : between;
     const next = html.slice(0, existing.start) + fxBlock + sep + html.slice(base.start);
@@ -147,3 +133,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

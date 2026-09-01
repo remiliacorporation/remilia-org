@@ -1,10 +1,3 @@
-/**
- * Body polish for Mirror/Paragraph/Ghost imports:
- * - unicode superscripts + trailing "1. … 2. …" dumps → footnote annotations
- * - italic-only paragraphs → blockquote
- * - drop empty spacer list items
- * - improve weak image alt/caption
- */
 
 export type Span = { _type?: "span"; text?: string; marks?: string[] };
 export type MarkDef = { _key: string; _type: string; href?: string; text?: string };
@@ -73,7 +66,7 @@ function isItalicOnlyParagraph(b: PTBlock): boolean {
     if ((c.marks ?? []).includes("em")) italic += t.length;
   }
   if (total < 40) return false;
-  // Mirror often mixes italic pull-quote lines with plain lines in one block.
+
   return italic / total >= 0.35;
 }
 
@@ -90,7 +83,6 @@ function toBlockquote(b: PTBlock): PTBlock {
   };
 }
 
-/** Parse trailing "1. note" dump into a map. */
 export function parseFootnoteDump(text: string): Map<number, string> {
   const map = new Map<number, string>();
   const cleaned = text.replace(/\r/g, "").trim();
@@ -109,15 +101,11 @@ export function parseFootnoteDump(text: string): Map<number, string> {
 function looksLikeFootnoteDump(text: string): boolean {
   const t = text.trim();
   if (!/^\d+\.\s/.test(t)) return false;
-  // At least two numbered entries, or one long note starting at 1.
+
   const hits = t.match(/^\d+\.\s/gm) ?? [];
   return hits.length >= 2 || (hits.length === 1 && t.length > 80);
 }
 
-/**
- * Split text on unicode superscript runs → plain + footnote ids.
- * "IQ¹⁵ and" → [{text:"IQ"},{fn:15},{text:" and"}]
- */
 export function splitSuperscripts(
   text: string,
 ): Array<{ text: string } | { fn: number }> {
@@ -199,7 +187,6 @@ function improveImage(b: PTBlock, title: string): PTBlock {
 export function polishBody(blocks: PTBlock[], title: string): PTBlock[] {
   if (!blocks?.length) return blocks;
 
-  // Collect footnote dump from the end
   const notes = new Map<number, string>();
   let end = blocks.length;
   while (end > 0) {
@@ -233,3 +220,4 @@ export function polishBody(blocks: PTBlock[], title: string): PTBlock[] {
   }
   return out;
 }
+

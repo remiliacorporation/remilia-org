@@ -21,7 +21,6 @@ export interface ChannelMeta {
   description: string;
 }
 
-/** Per-channel RSS 2.0. Posts MUST already be filtered to the channel. */
 export function rss(meta: ChannelMeta, posts: FeedPost[]): string {
   const items = posts
     .map((p) => {
@@ -49,7 +48,6 @@ ${items}
 `;
 }
 
-/** Atom 1.0 (RFC 4287) sibling of the RSS feed — same posts, both formats. */
 export function atom(meta: ChannelMeta, posts: FeedPost[]): string {
   const updated =
     posts.length > 0
@@ -80,10 +78,6 @@ ${entries}
 `;
 }
 
-/**
- * Feed-autodiscovery <link> tags for the channel index <head>. Apps render
- * these verbatim; the conformance auditor requires them on index pages.
- */
 export function feedLinks(meta: ChannelMeta): string {
   return (
     `<link rel="alternate" type="application/rss+xml" title="${esc(meta.title)}" href="${rssUrl(meta.channel)}">\n` +
@@ -96,7 +90,6 @@ export interface SitemapEntry {
   lastmod?: string;
 }
 
-/** Per-host sitemap. Callers pass ONLY that host's URLs. */
 export function sitemap(entries: SitemapEntry[]): string {
   const urls = entries
     .map(
@@ -118,21 +111,14 @@ export interface LlmsTxtInput {
   lead: string;
   channel: Channel;
   channelLabel: string;
-  /**
-   * Explicit agent guidance — concrete "reach for this host when…" lines
-   * (agent-readiness checks score generic link lists as partial).
-   */
+
   whenToUse: string[];
   posts: FeedPost[];
-  /** Cross-host + wiki citations ("cite elsewhere"). */
+
   citeElsewhere: { label: string; url: string }[];
   maxPosts?: number;
 }
 
-/**
- * llms.txt per host: that host's index + latest posts + citations.
- * NEVER list another host's content here (plan §6).
- */
 export function llmsTxt(input: LlmsTxtInput): string {
   const posts = input.posts
     .slice(0, input.maxPosts ?? 10)
@@ -159,3 +145,4 @@ ${posts}
 ${cites}
 `;
 }
+

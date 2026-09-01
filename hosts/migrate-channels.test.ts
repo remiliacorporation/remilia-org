@@ -123,3 +123,4 @@ assert.equal(
 );
 
 console.log("migrate-channels.test.ts: ok");
+

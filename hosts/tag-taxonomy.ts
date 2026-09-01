@@ -1,7 +1,4 @@
-/**
- * Shared Remilia tag taxonomy — topical, not section duplicates.
- * Channels already encode updates/press/thought/archive/news/events/….
- */
+
 export const TAG_TAXONOMY: Array<{ name: string; slug: string; description: string }> = [
   { name: "Milady", slug: "milady", description: "Milady Maker and related culture." },
   { name: "Remilia", slug: "remilia", description: "Remilia Corporation as subject." },
@@ -23,7 +20,6 @@ export const TAG_TAXONOMY: Array<{ name: string; slug: string; description: stri
   { name: "Feature", slug: "feature", description: "Feature stories and spotlights." },
 ];
 
-/** Map legacy Ghost tag names → taxonomy names (drop section-alias tags). */
 const LEGACY_MAP: Record<string, string | null> = {
   Announcements: "Announcement",
   Events: "Event",
@@ -32,7 +28,7 @@ const LEGACY_MAP: Record<string, string | null> = {
   Review: "Essay",
   Project: "Remilia",
   Archive: "Coverage",
-  Press: null, // too ambiguous — re-derive
+  Press: null,
   Feature: "Feature",
   "Press Release": "Press Release",
   Interview: "Interview",
@@ -109,7 +105,6 @@ export function suggestTags(input: {
   if (has(title, "Interview")) out.add("Interview");
   if (has(title, "Guide", "Onboarding", "travel guide")) out.add("Guide");
 
-  // Channel-primary first, then topical, then format
   const preferred = [
     "Announcement",
     "Press Release",
@@ -133,3 +128,4 @@ export function suggestTags(input: {
   const ordered = preferred.filter((t) => out.has(t));
   return ordered.slice(0, 4);
 }
+

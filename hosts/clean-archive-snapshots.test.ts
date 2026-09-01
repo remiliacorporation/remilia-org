@@ -79,3 +79,4 @@ By Ryan`;
   const out = stripMarketChrome(md);
   assert.match(out, /^# Milady CULT/);
 });
+

@@ -1,6 +1,5 @@
 import { type Channel, canonicalFor, eventUrl, indexUrl } from "./urls";
 
-/** Minimal shapes the builders need — superset-safe against GROQ projections. */
 export interface OrgInput {
   name: string;
   legalName?: string;
@@ -136,5 +135,5 @@ export function imageGallery(album: AlbumInput) {
   };
 }
 
-/** Render helper: the exact <script> body. */
 export const jsonLdScript = (data: object): string => JSON.stringify(data);
+

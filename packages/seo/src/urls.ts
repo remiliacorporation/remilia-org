@@ -1,15 +1,4 @@
-/**
- * THE single source of truth for where each section lives. Render apps,
- * the 301 map, and the conformance checker all import from here — a URL
- * scheme change is one edit, not three app audits.
- *
- * Editors pick a section id; host + public path are derived. Schema id
- * `dev-updates` avoids colliding with org `updates` in GROQ; both publish
- * at `/updates` on their own host.
- *
- * .com events are blog-style posts (describe + gallery), same shape as
- * Ghost blog.remilia.org writeups — not a separate “shows” surface.
- */
+
 export type Channel =
   | "updates"
   | "press"
@@ -69,19 +58,15 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   "dev-blog": "net",
 };
 
-/** Org post sections baked into remilia.org `deploy/`. */
 export const ORG_SECTIONS: Channel[] = ["updates", "press", "thought", "archive"];
 
-/** Com post sections — news + events (events = describe + gallery). */
 export const COM_POST_SECTIONS: Channel[] = ["news", "events"];
 
 export const COM_SECTIONS = ["news", "events"] as const;
 export type ComSection = (typeof COM_SECTIONS)[number];
 
-/** Net post sections. */
 export const NET_SECTIONS: Channel[] = ["dev-updates", "dev-blog"];
 
-/** Public host label for previews / Studio lists (no scheme). */
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   updates: "remilia.org/updates",
   press: "remilia.org/press",
@@ -110,18 +95,15 @@ export const atomUrl = (c: Channel): string => `${indexUrl(c)}/atom.xml`;
 
 export const sitemapUrl = (c: Channel): string => `${indexUrl(c)}/sitemap.xml`;
 
-/** Event post URL — events are posts at /a/events/<slug>. */
 export const eventUrl = (slug: string): string => canonicalFor("events", slug);
 
 export const eventsIndexUrl = (): string => indexUrl("events");
 
-/** Ghost cutover: legacy blog URL → new canonical (the per-slug 301 map). */
 export const legacyRedirect = (c: Channel, slug: string): { from: string; to: string } => ({
   from: `https://blog.remilia.org/${slug}/`,
   to: canonicalFor(c, slug),
 });
 
-/** Retired Studio journal → News; nested studio events → Events posts. */
 export const STUDIO_TO_NEWS_REDIRECTS: { from: string; to: string }[] = [
   { from: "/a/studio", to: "/a/news" },
   { from: "/a/studio/", to: "/a/news/" },
@@ -130,3 +112,4 @@ export const STUDIO_TO_NEWS_REDIRECTS: { from: string; to: string }[] = [
   { from: "/a/studio/events/", to: "/a/events/" },
   { from: "/a/studio/events/*", to: "/a/events/:splat" },
 ];
+

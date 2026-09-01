@@ -1,13 +1,5 @@
 import { defineArrayMember, defineType } from "sanity";
 
-/**
- * Rich text used for body copy across documents. Presentation-neutral:
- * each render app maps these blocks to its own components/chrome.
- *
- * Ghost "Koenig" card objects (embed, gallery, code, callout, …) get added
- * here only after the export audit shows which cards actually occur —
- * see the Ghost export audit before adding cards.
- */
 export const blockContent = defineType({
   name: "blockContent",
   title: "Body",
@@ -82,3 +74,4 @@ export const blockContent = defineType({
     }),
   ],
 });
+

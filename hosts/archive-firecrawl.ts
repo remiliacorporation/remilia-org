@@ -1,13 +1,4 @@
-/**
- * Firecrawl external archive URLs into `archiveSnapshot` (markdown).
- *
- *   FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx archive-firecrawl.ts
- *   FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx archive-firecrawl.ts --write
- *   … --force          re-scrape even when snapshot exists
- *   … --bad-only       only snapshots that look like nav chrome / wrong page / mojibake
- *
- * Only targets archive posts with origin=external and an externalUrl.
- */
+
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 
@@ -25,7 +16,6 @@ type Row = {
   archiveSnapshot?: string;
 };
 
-/** Drop tracking junk that sometimes lands Firecrawl on the wrong page. */
 export function cleanExternalUrl(raw: string): string {
   try {
     const u = new URL(raw);
@@ -34,7 +24,7 @@ export function cleanExternalUrl(raw: string): string {
         u.searchParams.delete(key);
       }
     }
-    // Yahoo / spectator sometimes need a bare article path
+
     u.hash = "";
     return u.toString();
   } catch {
@@ -47,7 +37,7 @@ function looksBad(snap: string | undefined, title: string): boolean {
   const head = snap.slice(0, 1200);
   if (/â¬|ï¸|Ã©|â€/i.test(head)) return true;
   if (/Left Arrow|Option Sliders|Skip to content/i.test(head) && snap.length < 12000) return true;
-  // Wrong-page heuristic: title keywords absent from snapshot
+
   const key = title
     .replace(/^(Feature|News|Interview|Cultural Coverage|Event Coverage|Thought Leadership):\s*/i, "")
     .replace(/\s*\(\d{4}\)\s*$/, "")
@@ -59,7 +49,7 @@ function looksBad(snap: string | undefined, title: string): boolean {
       return true;
     }
   }
-  // Palladium wrong-page: Homer's Odyssey chrome
+
   if (/Homer.?s Odyssey|Chinese companies.? AI strategy/i.test(head)) return true;
   return false;
 }
@@ -152,3 +142,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

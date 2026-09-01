@@ -1,7 +1,4 @@
-/**
- * Vault → Sanity NDJSON. Does not write the dataset.
- *   node --import tsx hosts/md-import.ts <vaultDir> [--channel press] [--out posts.ndjson]
- */
+
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { markdownToPost, slugFromPath, slugify } from "@remilia/renderer";
@@ -87,3 +84,4 @@ for (const file of await walk(dir)) {
 await writeFile(outFile, docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
 console.log(`wrote ${docs.length} docs to ${outFile}`);
 console.log("import: npx sanity dataset import", outFile, "<dataset> --replace");
+

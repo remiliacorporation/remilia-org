@@ -1,6 +1,5 @@
 import { defineField, defineType } from "sanity";
 
-/** Reusable per-document SEO / social metadata overrides. */
 export const seo = defineType({
   name: "seo",
   title: "SEO & Social",
@@ -44,3 +43,4 @@ export const seo = defineType({
     }),
   ],
 });
+

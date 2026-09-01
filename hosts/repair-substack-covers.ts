@@ -1,8 +1,4 @@
-/**
- * Re-fetch Substack cover images (+ repair image-only bodies missing text).
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx repair-substack-covers.ts --write
- */
+
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
@@ -30,7 +26,7 @@ const client = createClient({
 const assetCache = new Map<string, string>();
 
 function toFetchableCover(url: string): string {
-  // Unwrap nested CDN → S3 (path may be percent-encoded), then re-wrap.
+
   const m =
     url.match(/substackcdn\.com\/image\/fetch\/[^/]+\/(.+)$/) ||
     url.match(/cdn\.substack\.com\/image\/fetch\/[^/]+\/(.+)$/);
@@ -38,9 +34,9 @@ function toFetchableCover(url: string): string {
   try {
     s3 = decodeURIComponent(s3);
   } catch {
-    /* keep */
+
   }
-  if (!/^https?:\/\//i.test(s3)) return url;
+  if (!/^https?:\/\
   return `https://substackcdn.com/image/fetch/$s_!aa1e!,w_1456,c_limit,f_auto,q_auto:good,fl_progressive:steep/${encodeURIComponent(s3)}`;
 }
 
@@ -166,3 +162,4 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+

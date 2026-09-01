@@ -1,12 +1,4 @@
-/**
- * External archive field repair:
- *   - Ghost/press body → commentary (Remilia's citing note)
- *   - Firecrawl scrape stays in archiveSnapshot (the archived page)
- *   - unset body so Studio shows the right fields
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx fix-archive-fields.ts
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx fix-archive-fields.ts --write
- */
+
 import { createClient } from "@sanity/client";
 
 const write = process.argv.includes("--write");
@@ -76,3 +68,4 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+

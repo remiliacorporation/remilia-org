@@ -1,7 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { TagIcon } from "@sanity/icons/Tag";
 
-/** Topic tag. Migrated from Ghost tags. Dev blog renders /blog/tag/<slug> pages. */
 export const tag = defineType({
   name: "tag",
   title: "Tag",
@@ -24,3 +23,4 @@ export const tag = defineType({
   ],
   preview: { select: { title: "name", subtitle: "slug.current" } },
 });
+

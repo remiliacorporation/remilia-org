@@ -1,13 +1,5 @@
 import { esc } from "./html";
 
-/**
- * The one HTML document shell every baked page uses. Semantic structure is
- * fixed here (lang, single title/description/canonical, landmarks); hosts
- * differ only through `chrome` (header/footer fragments + stylesheet href).
- *
- * Layout: left rail is site-head + ToC + cite; right rail is theme + post-nav;
- * `<main>` is the article (title stays in the center column).
- */
 export interface Chrome {
   stylesheet: string;
   header: string;
@@ -20,19 +12,19 @@ export interface PageInput {
   canonical: string;
   jsonld: object[];
   headExtra?: string;
-  /** The <main> element (from articleHtml / simpleMain). */
+
   mainHtml: string;
-  /** Optional post-nav markup. Right rail on desktop. */
+
   leftRail?: string;
-  /** Optional ToC box. Left rail on desktop; stacked under the article on mobile. */
+
   tocHtml?: string;
-  /** Optional cite box (permalink / copy). Left rail, under ToC. */
+
   citeHtml?: string;
-  /** Extra class on `.layout` (e.g. `is-index`). */
+
   layoutClass?: string;
-  /** Optional scripts before </body> (e.g. the nav fuzzy filter). */
+
   bodyEnd?: string;
-  /** Absolute (or site-root) image URL for Open Graph / Twitter cards. */
+
   ogImage?: string;
   chrome: Chrome;
   noindex?: boolean;
@@ -194,11 +186,6 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
-/**
- * Post: `<main class="article-wrap">` is the bordered `.article-body`.
- * Site-head + ToC + cite sit in the left rail; theme + post-nav in the
- * right. Title stays in the center mast. Notes sit in the right leftover (3-col).
- */
 function bylineDate(iso: string): string {
   const d = new Date(iso);
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -377,7 +364,6 @@ ${cards}
 </main>`;
 }
 
-/** Non-post pages (index, event, 404): bordered body, no ToC rail. */
 export function simpleMain(innerHtml: string): string {
   return `<main class="article-wrap simple">
 <article class="article-body">
@@ -386,7 +372,6 @@ ${innerHtml}
 </main>`;
 }
 
-/** Markdown 404 page body (agent-friendly: points at sitemap + llms.txt). */
 export function notFoundHtml(chrome: Chrome, basePath: string): string {
   return htmlPage({
     title: "404 — Not found",
@@ -404,3 +389,4 @@ export function notFoundHtml(chrome: Chrome, basePath: string): string {
 </ul>`),
   });
 }
+

@@ -83,10 +83,7 @@ const SECTION_META: Record<
     whenToUse: ["Cite RemiliaNET Alpha, wiki, or miladychan engineering posts."],
   },
 };
-/**
- * remilia.org section chrome. No <h1> in the header — the page content owns
- * the single h1 (conformance contract).
- */
+
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const meta = SECTION_META[channel];
@@ -122,7 +119,7 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
   };
 }
 
-/** @deprecated Prefer chromeFor("press") */
 export const chrome: Chrome = chromeFor("press");
-/** @deprecated Prefer hostFor("press") */
+
 export const host: BakeOptions["host"] = hostFor("press");
+

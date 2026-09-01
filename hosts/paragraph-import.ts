@@ -1,9 +1,4 @@
-/**
- * Charlotte Fang / goldenlight Paragraph posts → Sanity NDJSON.
- * Skips slugs/titles already imported from Ghost.
- *
- *   node --import tsx hosts/paragraph-import.ts [--out paragraph-posts.ndjson]
- */
+
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -159,7 +154,7 @@ async function main() {
       migration: {
         source: "paragraph",
         ghostId: p.id,
-        legacyUrl: `https://paragraph.com/@${HANDLE}/${p.slug}`,
+        legacyUrl: `https:
       },
     });
     process.stdout.write(".");
@@ -173,3 +168,4 @@ async function main() {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   await main();
 }
+

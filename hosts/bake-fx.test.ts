@@ -62,3 +62,4 @@ test("injectFx inserts when twin missing", () => {
   assert.ok(fx);
   assert.equal(/id=/.test(fx!.inner), false);
 });
+

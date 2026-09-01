@@ -1,9 +1,4 @@
-/**
- * Hoist Substack subtitle/description + promote alt→caption on existing bodies
- * (no re-upload). Fixes "image-only" posts that actually have text content.
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx enrich-substack-text.ts --write
- */
+
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { enrichSubstackBody, substackExcerpt } from "./substack-import";
@@ -92,3 +87,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

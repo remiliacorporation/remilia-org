@@ -1,10 +1,4 @@
-/**
- * Clean Firecrawl archive snapshots: strip nav chrome / mojibake headers,
- * optionally re-scrape with cleaner options.
- *
- *   FIRECRAWL_API_KEY=… SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx clean-archive-snapshots.ts --write
- *   … --rescrape   also re-fetch via Firecrawl before cleaning
- */
+
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { cleanExternalUrl } from "./archive-firecrawl";
@@ -13,7 +7,6 @@ const write = process.argv.includes("--write");
 const rescrape = process.argv.includes("--rescrape");
 const all = process.argv.includes("--all");
 
-/** True if a line is outlet chrome (nav, skip links, embeds), not article body. */
 function isChromeLine(t: string): boolean {
   if (!t) return false;
   if (/â¬|ï¸|Ã©|â€|â­|âœ|âƒ|Left Arrow|Option Sliders|MailExit|Asterisk/i.test(t)) return true;
@@ -63,11 +56,9 @@ function isChromeLine(t: string): boolean {
   return false;
 }
 
-/** Drop leading Firecrawl/nav junk and mid-doc outlet chrome. */
 export function cleanSnapshotMarkdown(md: string): string {
   let lines = md.replace(/^\uFEFF/, "").split(/\r?\n/);
 
-  // Leading junk / skip links / mojibake
   while (lines.length) {
     const t = lines[0].trim();
     if (!t || isChromeLine(t)) {
@@ -77,7 +68,6 @@ export function cleanSnapshotMarkdown(md: string): string {
     break;
   }
 
-  // Forbes / similar: drop nav until first real H1
   const h1 = lines.findIndex((l) => /^#\s+\S/.test(l.trim()));
   if (h1 > 0) {
     const before = lines.slice(0, h1);
@@ -86,7 +76,6 @@ export function cleanSnapshotMarkdown(md: string): string {
     }
   }
 
-  // Spectator / Condé-style: jump to first H2/H3 headline when leading is chrome/UI
   const hx = lines.findIndex((l) => /^#{2,3}\s+\S/.test(l.trim()));
   if (hx > 0) {
     const before = lines.slice(0, hx);
@@ -120,7 +109,6 @@ export function cleanSnapshotMarkdown(md: string): string {
     out.push(line);
   }
 
-  // Drop trailing cookie / preference chrome once it starts
   let joined = out.join("\n").trim();
   const cookieAt = joined.search(
     /\n(?:Manage preferences|Essential cookies only|You can object to such processing|process personal data on the basis of legitimate interest)/i,
@@ -129,7 +117,6 @@ export function cleanSnapshotMarkdown(md: string): string {
   return joined;
 }
 
-/** Strip Decrypt (and similar) market-widget preamble; keep from first real H1. */
 export function stripMarketChrome(md: string): string {
   const lines = md.split(/\r?\n/);
   let start = -1;
@@ -266,3 +253,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

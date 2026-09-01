@@ -1,10 +1,4 @@
-/**
- * Polish all Sanity posts: smart excerpts, quotes, footnotes, SEO, tags, image alts.
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx polish-posts.ts
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx polish-posts.ts --write
- *   … --id=drafts.post-press-admin-reveal-i-said-i-m-just-a-vessel-bro
- */
+
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { plainFromBlocks, polishBody, smartExcerpt } from "@remilia/renderer";
@@ -182,3 +176,4 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
+

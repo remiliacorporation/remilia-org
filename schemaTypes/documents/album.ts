@@ -1,10 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { ImagesIcon } from "@sanity/icons/Images";
 
-/**
- * Photo album — first-class gallery. Attached to Events posts (channel
- * `events`); also usable as standalone lookbooks.
- */
 export const album = defineType({
   name: "album",
   title: "Album",
@@ -74,3 +70,4 @@ export const album = defineType({
     select: { title: "title", subtitle: "date", media: "images.0" },
   },
 });
+

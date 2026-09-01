@@ -35,7 +35,6 @@ function isChannel(v: string): v is Channel {
   return CHANNELS.has(v);
 }
 
-/** Split `---` YAML from the Markdown body. Values are strings or string lists. */
 export function splitFrontmatter(src: string): { raw: Record<string, string | string[]>; body: string } {
   const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!m) return { raw: {}, body: src };
@@ -237,7 +236,6 @@ function blocksFromMarkdown(md: string, channel: Channel): PTBlock[] {
   return out;
 }
 
-/** Obsidian-style Markdown file → frontmatter + Portable Text for the bake. */
 export function markdownToPost(src: string, fallbackChannel: Channel = "press"): MdPost {
   const { raw, body } = splitFrontmatter(src);
   const meta = metaFromRaw(raw);
@@ -280,7 +278,6 @@ function spanToMd(span: { text: string; marks?: string[] }, defs: MarkDef[], fns
   return t;
 }
 
-/** Portable Text → Obsidian Markdown (bake sibling / vault export). */
 export function portableTextToMarkdown(blocks: PTBlock[]): string {
   const fns: string[] = [];
   const lines: string[] = [];
@@ -367,3 +364,4 @@ export function postToMarkdownFile(input: {
 export function slugFromPath(file: string): string {
   return slugify(file.replace(/\\/g, "/").split("/").pop()?.replace(/\.md$/i, "") ?? "post");
 }
+
