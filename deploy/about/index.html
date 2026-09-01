@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About — remilia.org</title>
-<meta name="description" content="About remilia.org, the public website of Remilia Corporation (Remigumi-guchi Digital, LLC). Shop on remilia.com; encyclopedia on the Remilia Wiki; hiring at /careers.">
+<meta name="description" content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface. Shop on remilia.com; encyclopedia on the Remilia Wiki; network on remilia.net.">
 <meta name="author" content="Remigumi-guchi Digital, LLC">
 <meta name="robots" content="index, follow">
 <meta name="color-scheme" content="light">
@@ -20,7 +20,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="https://remilia.org/sitemap.xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About — remilia.org">
-<meta property="og:description" content="About remilia.org, the public website of Remilia Corporation (Remigumi-guchi Digital, LLC). Shop on remilia.com; encyclopedia on the Remilia Wiki; hiring at /careers.">
+<meta property="og:description" content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.">
 <meta property="og:url" content="https://remilia.org/about">
 <meta property="og:site_name" content="Remigumi-guchi Digital, LLC">
 <meta property="og:locale" content="en_US">
@@ -34,7 +34,7 @@
 <meta name="twitter:creator" content="@remiliacorp333">
 <meta name="twitter:url" content="https://remilia.org/about">
 <meta name="twitter:title" content="About — remilia.org">
-<meta name="twitter:description" content="About remilia.org, the public website of Remilia Corporation (Remigumi-guchi Digital, LLC). Shop on remilia.com; encyclopedia on the Remilia Wiki; hiring at /careers.">
+<meta name="twitter:description" content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.">
 <meta name="twitter:image" content="https://remilia.org/assets/og.png">
 <meta name="twitter:image:alt" content="About — remilia.org">
 <script type="application/ld+json">
@@ -46,7 +46,7 @@
       "@id": "https://remilia.org/about#webpage",
       "url": "https://remilia.org/about",
       "name": "About — remilia.org",
-      "description": "About remilia.org, the public website of Remilia Corporation (Remigumi-guchi Digital, LLC). Shop on remilia.com; encyclopedia on the Remilia Wiki; hiring at /careers.",
+      "description": "How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.",
       "inLanguage": "en",
       "isAccessibleForFree": true,
       "isPartOf": {"@id": "https://remilia.org/#website"},
@@ -106,13 +106,31 @@
 <div class="fx-section">
 <table role="presentation">
 <tr><th><a tabindex="-1" href="#this-host">THIS HOST</a></th></tr>
-<tr><td class="text">remilia.org is the public website of Remilia Corporation, published by Remigumi-guchi Digital, LLC. It is a static HTML map of the studio, shops, network, literature, and hiring. It is not the shop, the encyclopedia, or RemiliaNET.</td></tr>
+<tr><td class="text">remilia.org is the corporate / literature host of Remilia Corporation (Remigumi-guchi Digital, LLC). Corporate pages are hand-authored static HTML. Updates, Press, Thought, and Archive are structured posts compiled to HTML with Markdown and plain-text siblings, RSS 2.0, Atom 1.0, sitemaps, and llms.txt maps. Canonical host is https://remilia.org/ (non-www). This host is not the shop, the encyclopedia, or RemiliaNET.</td></tr>
 </table>
 </div>
 <div class="fx-section">
 <table role="presentation">
 <tr><th><a tabindex="-1" href="#where-to-go">WHERE TO GO</a></th></tr>
-<tr><td class="text">Cite <a class="inline" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Wiki: Remilia Corporation</a> and <a class="inline" href="https://wiki.remilia.org/Remigumi-guchi">Remigumi-guchi</a> for encyclopedia facts. Shop and atelier: <a class="inline" href="https://remilia.com/">remilia.com</a>. Network: <a class="inline" href="https://remilia.net">RemiliaNET</a>. Hiring: <a class="inline" href="/careers">/careers</a>.</td></tr>
+<tr><td class="text"><em>remilia.org</em> — corporate pages + literature (<a class="inline" tabindex="-1" href="/updates">/updates</a>, <a class="inline" tabindex="-1" href="/press">/press</a>, <a class="inline" tabindex="-1" href="/thought">/thought</a>, <a class="inline" tabindex="-1" href="/archive">/archive</a>). <em>remilia.com</em> — fashion / brand / shop and atelier; news and events under <a class="inline" tabindex="-1" href="https://remilia.com/a/news">/a/news</a> and <a class="inline" tabindex="-1" href="https://remilia.com/a/events">/a/events</a>. <em>remilia.net</em> — RemiliaNET software, profiles, and engineering notes. <em>wiki.remilia.org</em> — encyclopedia; cite <a class="inline" tabindex="-1" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Corporation</a> and <a class="inline" tabindex="-1" href="https://wiki.remilia.org/Remigumi-guchi">Remigumi-guchi</a> for facts. Hiring: <a class="inline" tabindex="-1" href="/careers">/careers</a>.</td></tr>
+</table>
+</div>
+<div class="fx-section">
+<table role="presentation">
+<tr><th><a tabindex="-1" href="#how-it-is-built">HOW IT IS BUILT</a></th></tr>
+<tr><td class="text">One content graph feeds the three public hosts; section id selects host and path. On this host, literature is baked to static files: each post emits HTML plus .md / .txt, section indexes, rss.xml, atom.xml, sitemap.xml, and llms.txt. External archive entries keep the outlet URL as HTML canonical. Corporate sitemap and agent maps live at the root; section maps hang beside each index. Reading does not require JavaScript.</td></tr>
+</table>
+</div>
+<div class="fx-section">
+<table role="presentation">
+<tr><th><a tabindex="-1" href="#standards">STANDARDS</a></th></tr>
+<tr><td class="text">HTML5 with one H1, landmarks, skip link, and language on &lt;html&gt;. CSS without a framework. Feeds: RSS 2.0 and Atom (RFC 4287). Discovery: rel=canonical, Open Graph, Twitter Cards, sitemap.xml, robots.txt, llms.txt / llms-full.txt. Semantics: JSON-LD schema.org (Organization, AboutPage, BlogPosting, BreadcrumbList). Literature posts use Portable Text → semantic HTML with blockquotes and footnotes. Images carry alt. prefers-reduced-motion disables print displacement and crest ink; prefers-contrast: more darkens ink for AA; print CSS drops the FX layer.</td></tr>
+</table>
+</div>
+<div class="fx-section">
+<table role="presentation">
+<tr><th><a tabindex="-1" href="#surface">SURFACE</a></th></tr>
+<tr><td class="text">The page is two stacked copies of the same markup. layer-base is the readable document. layer-fx is a decorative twin: paper-colored type, pointer-events none, aria-hidden, inert, data-nosnippet. SVG filter print-fx (feTurbulence + feDisplacementMap) warps the FX layer so the ink reads as a slightly misregistered second pass. Crest and photo cells use dither-3 (feColorMatrix desaturate + three-level feComponentTransfer) plus an ink overlay (mask + mix-blend-mode). Hover sync uses :has() so the FX layer tracks the base without a second event target. Agents and printers should ignore the FX layer.</td></tr>
 </table>
 </div>
 <div class="fx-section">
@@ -158,14 +176,35 @@
 <section>
 <table role="presentation">
 <tr><th><h2 id="this-host"><a href="#this-host">THIS HOST</a></h2></th></tr>
-<tr><td class="text">remilia.org is the public website of Remilia Corporation, published by Remigumi-guchi Digital, LLC. It is a static HTML map of the studio, shops, network, literature, and hiring. It is not the shop, the encyclopedia, or RemiliaNET.</td></tr>
+<tr><td class="text">remilia.org is the corporate / literature host of Remilia Corporation (Remigumi-guchi Digital, LLC). Corporate pages are hand-authored static HTML. Updates, Press, Thought, and Archive are structured posts compiled to HTML with Markdown and plain-text siblings, RSS 2.0, Atom 1.0, sitemaps, and llms.txt maps. Canonical host is <a class="inline" href="https://remilia.org/">https://remilia.org/</a> (non-www). This host is not the shop, the encyclopedia, or RemiliaNET.</td></tr>
 </table>
 </section>
 
 <section>
 <table role="presentation">
 <tr><th><h2 id="where-to-go"><a href="#where-to-go">WHERE TO GO</a></h2></th></tr>
-<tr><td class="text">Cite <a class="inline" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Wiki: Remilia Corporation</a> and <a class="inline" href="https://wiki.remilia.org/Remigumi-guchi">Remigumi-guchi</a> for encyclopedia facts. Shop and atelier: <a class="inline" href="https://remilia.com/">remilia.com</a>. Network: <a class="inline" href="https://remilia.net">RemiliaNET</a>. Hiring: <a class="inline" href="/careers">/careers</a>.</td></tr>
+<tr><td class="text"><em>remilia.org</em> — corporate pages + literature (<a class="inline" href="/updates">/updates</a>, <a class="inline" href="/press">/press</a>, <a class="inline" href="/thought">/thought</a>, <a class="inline" href="/archive">/archive</a>). <em>remilia.com</em> — fashion / brand / shop and atelier; news and events under <a class="inline" href="https://remilia.com/a/news">/a/news</a> and <a class="inline" href="https://remilia.com/a/events">/a/events</a>. <em>remilia.net</em> — RemiliaNET software, profiles, and engineering notes. <em>wiki.remilia.org</em> — encyclopedia; cite <a class="inline" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Corporation</a> and <a class="inline" href="https://wiki.remilia.org/Remigumi-guchi">Remigumi-guchi</a> for facts. Hiring: <a class="inline" href="/careers">/careers</a>.</td></tr>
+</table>
+</section>
+
+<section>
+<table role="presentation">
+<tr><th><h2 id="how-it-is-built"><a href="#how-it-is-built">HOW IT IS BUILT</a></h2></th></tr>
+<tr><td class="text">One content graph feeds the three public hosts; section id selects host and path. On this host, literature is baked to static files: each post emits HTML plus <code>.md</code> / <code>.txt</code>, section indexes, <code>rss.xml</code>, <code>atom.xml</code>, <code>sitemap.xml</code>, and <code>llms.txt</code>. External archive entries keep the outlet URL as HTML canonical. Corporate sitemap and agent maps live at the root (<a class="inline" href="/sitemap.xml">/sitemap.xml</a>, <a class="inline" href="/llms.txt">/llms.txt</a>, <a class="inline" href="/llms-full.txt">/llms-full.txt</a>); section maps hang beside each index. Reading does not require JavaScript.</td></tr>
+</table>
+</section>
+
+<section>
+<table role="presentation">
+<tr><th><h2 id="standards"><a href="#standards">STANDARDS</a></h2></th></tr>
+<tr><td class="text">HTML5 with one <code>H1</code>, landmarks, skip link, and language on <code>&lt;html&gt;</code>. CSS without a framework. Feeds: RSS 2.0 and Atom (RFC 4287). Discovery: <code>rel=canonical</code>, Open Graph, Twitter Cards, <code>sitemap.xml</code>, <code>robots.txt</code>, <code>llms.txt</code> / <code>llms-full.txt</code>. Semantics: JSON-LD <a class="inline" href="https://schema.org/">schema.org</a> (<code>Organization</code>, <code>AboutPage</code>, <code>BlogPosting</code>, <code>BreadcrumbList</code>). Literature posts use Portable Text → semantic HTML with blockquotes and footnotes. Images carry <code>alt</code>. <code>prefers-reduced-motion</code> disables print displacement and crest ink; <code>prefers-contrast: more</code> darkens ink for AA; print CSS drops the FX layer.</td></tr>
+</table>
+</section>
+
+<section>
+<table role="presentation">
+<tr><th><h2 id="surface"><a href="#surface">SURFACE</a></h2></th></tr>
+<tr><td class="text">The page is two stacked copies of the same markup. <code>layer-base</code> is the readable document. <code>layer-fx</code> is a decorative twin: paper-colored type, <code>pointer-events: none</code>, <code>aria-hidden</code>, <code>inert</code>, <code>data-nosnippet</code>. SVG filter <code>print-fx</code> (<code>feTurbulence</code> + <code>feDisplacementMap</code>) warps the FX layer so the ink reads as a slightly misregistered second pass. Crest and photo cells use <code>dither-3</code> (<code>feColorMatrix</code> desaturate + three-level <code>feComponentTransfer</code>) plus an ink overlay (<code>mask</code> + <code>mix-blend-mode</code>). Hover sync uses <code>:has()</code> so the FX layer tracks the base without a second event target. Agents and printers should ignore the FX layer.</td></tr>
 </table>
 </section>
 

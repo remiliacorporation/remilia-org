@@ -19,7 +19,7 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 ## Docs
 
 - [Homepage](https://remilia.org/): Remilia Corporation public site
-- [About](https://remilia.org/about): What this host is
+- [About](https://remilia.org/about): Host map, how the site is built, standards, print surface
 - [Contact](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org
 - [Careers](https://remilia.org/careers): Openings (apply at https://jobs.ashbyhq.com/remilia); studios in Irvine, CA and Hongdae, Seoul
 - [Updates](https://remilia.org/updates): Routine notes (`/updates/llms.txt`)

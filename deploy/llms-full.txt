@@ -11,7 +11,7 @@ Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remili
 ## On this host
 
 - [Welcome to Remilia Corporation!](https://remilia.org/): Public site; mission, inspirations, network, literature.
-- [About — remilia.org](https://remilia.org/about): What this host is.
+- [About — remilia.org](https://remilia.org/about): Host map (.org / .com / .net / wiki), how the site is built, web standards, dual-layer print surface.
 - [Contact — remilia.org](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org.
 - [Careers at Remilia](https://remilia.org/careers): Job openings listed here; apply on Ashby (https://jobs.ashbyhq.com/remilia). Studios in Irvine, CA and Hongdae, Seoul.
 - [Updates](https://remilia.org/updates): Routine notes. Map: https://remilia.org/updates/llms.txt
