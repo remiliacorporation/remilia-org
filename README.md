@@ -1,10 +1,6 @@
 # remilia-org
 
-Sanity Studio + static site generator for [remilia.org](https://remilia.org/) and the
-shared Remilia content graph (org / com / net).
-
-Posts and drafts live in **Sanity Cloud** (project `8x9419lh`, dataset `production`).
-This repo holds the Studio schema, bake pipeline, and hand-authored corporate HTML.
+Sanity Studio + static site generator for [remilia.org](https://remilia.org/) and the shared Remilia content graph (org / com / net).
 
 ## Host map
 
@@ -13,38 +9,6 @@ This repo holds the Studio schema, bake pipeline, and hand-authored corporate HT
 | remilia.org | updates, press, thought, archive | `/updates`, `/press`, `/thought`, `/archive` |
 | remilia.com | news, events | `/a/news`, `/a/events` |
 | remilia.net | dev-updates, dev-blog | `/updates`, `/blog` |
-
-Posts use schema field `channel` = section id. Events are posts with gallery albums.
-Archive entries can store an external outlet URL plus a Firecrawl snapshot and commentary.
-
-## Run
-
-```bash
-pnpm install
-pnpm dev              # Studio — http://localhost:3333
-pnpm bake             # bake:org then bake:fx
-pnpm validate
-pnpm typecheck
-```
-
-### Netlify
-
-`netlify.toml`: `publish = deploy`, `command = "pnpm bake"`.
-
-Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access for `bake:org`).
-
-Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webhook to a
-Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`
-locally and push.
-
-### Studio
-
-```bash
-pnpm run deploy:studio
-npx sanity login
-```
-
-Hosted at `remilia.sanity.studio`. Do not use `pnpm deploy` (pnpm builtin).
 
 ## Layout
 
@@ -58,14 +22,6 @@ schemaTypes/     Sanity schema
 structure.ts     Org / Com / Net desks
 ```
 
-Bake emits per post: HTML, `.md`, `.txt`, section indexes, `rss.xml`, `atom.xml`,
-`sitemap.xml`, `llms.txt`. Drafts (`drafts.*` in Sanity) are skipped at bake.
-
-## Corporate pages
-
-Edit `.layer-base` only in `deploy/` (about, home, careers, contact). `bake:fx` clones
-`.layer-fx` at build for the print filter — no client JS. Details: [/about](https://remilia.org/about).
-
 ## License
 
-All rights reserved unless otherwise noted. Site content © Remilia.
+[Viral Public License (VPL)](https://viralpubliclicense.org/) — see [LICENSE](LICENSE).
