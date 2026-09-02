@@ -103,15 +103,17 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
               </th>
             </tr>
             <tr>
-              <td class="text"><em>remilia.org</em> — corporate pages + literature (<a class="inline"
-                  href="/updates">/updates</a>, <a class="inline" href="/press">/press</a>, <a class="inline"
-                  href="/thought">/thought</a>, <a class="inline" href="/archive">/archive</a>). <em>remilia.com</em> —
-                fashion / brand / shop / culture; news and events under <a class="inline"
+              <td class="text"><a class="inline" href="https://remilia.org/"><em>remilia.org</em></a> — corporate
+                pages + literature (<a class="inline" href="/updates">/updates</a>, <a class="inline"
+                  href="/press">/press</a>, <a class="inline" href="/thought">/thought</a>, <a class="inline"
+                  href="/archive">/archive</a>). <a class="inline" href="https://remilia.com/"><em>remilia.com</em></a>
+                — fashion / brand / shop / culture; news and events under <a class="inline"
                   href="https://remilia.com/a/news">/a/news</a> and <a class="inline"
-                  href="https://remilia.com/a/events">/a/events</a>. <em>remilia.net</em> — Remilia software products
-                and engineering blog. <em>wiki.remilia.org</em> — encyclopedia; cite <a class="inline"
-                  href="https://wiki.remilia.org/Remilia_Corporation">Remilia Corporation</a> for facts. Hiring: <a
-                  class="inline" href="/careers">/careers</a>.</td>
+                  href="https://remilia.com/a/events">/a/events</a>. <a class="inline"
+                  href="https://remilia.net/"><em>remilia.net</em></a> — Remilia software products and engineering blog.
+                <a class="inline" href="https://wiki.remilia.org/"><em>wiki.remilia.org</em></a> — encyclopedia; cite
+                <a class="inline" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Corporation</a> for facts.
+                Hiring: <a class="inline" href="/careers">/careers</a>.</td>
             </tr>
           </table>
         </section>
@@ -124,57 +126,34 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
               </th>
             </tr>
             <tr>
+              <td class="text">Standards-compliant HTML5 and CSS — no framework. Markup uses one <code>H1</code>,
+                landmarks, a skip link, and <code>lang</code> on <code>&lt;html&gt;</code>. Discovery:
+                <code>rel=canonical</code>, Open Graph / Twitter Cards, RSS 2.0 + Atom (RFC 4287),
+                <code>sitemap.xml</code>, <code>robots.txt</code>, <code>llms.txt</code> /
+                <code>llms-full.txt</code>, and JSON-LD <a class="inline"
+                  href="https://schema.org/">schema.org</a>. Images carry <code>alt</code>.
+                <code>prefers-reduced-motion</code> and <code>prefers-contrast: more</code> are honored; print CSS drops
+                the FX layer. Pages are readable without JavaScript. JS is loaded only for in-page hash scrolling
+                (<code>headings.js</code>), the homepage inspirations rotator (<code>inspo.js</code>), and the careers
+                Ashby job board (<code>jobs.js</code>).</td>
+            </tr>
+            <tr>
               <td class="text">One content graph feeds the three public hosts; section id selects host and path. On this
                 host, literature is baked to static files: each post emits HTML plus <code>.md</code> /
                 <code>.txt</code>, section indexes, <code>rss.xml</code>, <code>atom.xml</code>,
                 <code>sitemap.xml</code>, and <code>llms.txt</code>. External archive entries keep the outlet URL as
-                HTML canonical. Corporate sitemap and agent maps live at the root; section maps hang beside each index.
-                Reading does not require JavaScript.</td>
-            </tr>
-          </table>
-        </section>
-
-        <section>
-          <table role="presentation">
-            <tr>
-              <th>
-                <h2 id="standards"><a href="#standards">STANDARDS</a></h2>
-              </th>
-            </tr>
-            <tr>
-              <td class="text">HTML5 with one <code>H1</code>, landmarks, skip link, and language on
-                <code>&lt;html&gt;</code>. CSS without a framework. Feeds: RSS 2.0 and Atom (RFC 4287). Discovery:
-                <code>rel=canonical</code>, Open Graph, Twitter Cards, <code>sitemap.xml</code>,
-                <code>robots.txt</code>, <code>llms.txt</code> / <code>llms-full.txt</code>. Semantics: JSON-LD <a
-                  class="inline" href="https://schema.org/">schema.org</a> (<code>Organization</code>,
-                <code>AboutPage</code>, <code>BlogPosting</code>, <code>BreadcrumbList</code>). Literature posts use
-                Portable Text → semantic HTML with blockquotes and footnotes. Images carry <code>alt</code>.
-                <code>prefers-reduced-motion</code> disables print displacement and crest ink;
-                <code>prefers-contrast: more</code> darkens ink for AA; print CSS drops the FX layer.</td>
-            </tr>
-          </table>
-        </section>
-
-        <section>
-          <table role="presentation">
-            <tr>
-              <th>
-                <h2 id="surface"><a href="#surface">SURFACE</a></h2>
-              </th>
+                HTML canonical. Corporate sitemap and agent maps live at the root; section maps hang beside each index.</td>
             </tr>
             <tr>
               <td class="text">Authors maintain one tree in <code>deploy/src/</code>: <code>layer-base</code>, the
                 readable document. Shared head tags live in <code>_partials/</code> and merge at
                 <code>bake:corp</code>. At <code>bake:fx</code>, a decorative <code>layer-fx</code> twin is cloned from
-                it —
-                paper-colored type, <code>pointer-events: none</code>, <code>aria-hidden</code>,
-                <code>inert</code>, <code>data-nosnippet</code>, embeds blanked so they do not double-load.
-                SVG filter <code>print-fx</code> (<code>feTurbulence</code> +
-                <code>feDisplacementMap</code>) warps the FX layer so the ink reads as a slightly misregistered second
-                pass. Crest and photo cells use <code>dither-3</code> (<code>feColorMatrix</code> desaturate +
-                three-level <code>feComponentTransfer</code>) plus an ink overlay (<code>mask</code> +
-                <code>mix-blend-mode</code>). Hover sync uses <code>:has()</code> so the FX layer tracks the base
-                without a second event target. Agents and printers should ignore the FX layer.</td>
+                it — ink ghost under the sharp base, <code>pointer-events: none</code>, <code>aria-hidden</code>,
+                <code>inert</code>, <code>data-nosnippet</code>, embeds blanked so they do not double-load. SVG filter
+                <code>print-fx</code> (<code>feTurbulence</code> + <code>feDisplacementMap</code>) warps the FX layer
+                so the ink reads as a slightly misregistered second pass. Crest and photo cells use
+                <code>dither-3</code> plus an ink overlay. Hover sync uses <code>:has()</code> so the FX layer tracks
+                the base without a second event target. Agents and printers should ignore the FX layer.</td>
             </tr>
           </table>
         </section>
