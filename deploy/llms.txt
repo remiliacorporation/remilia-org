@@ -27,8 +27,9 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [Thought](https://remilia.org/thought): Essays / longform (`/thought/llms.txt`)
 - [Archive](https://remilia.org/archive): Notable writing + coverage (`/archive/llms.txt`)
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article
-- [Remilia Wiki: Remigumi-guchi](https://wiki.remilia.org/Remigumi-guchi): Parent-entity article
 - [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host
+
+Literature sections (`/updates`, `/press`, `/thought`, `/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
 
 ## Optional
 
@@ -38,4 +39,10 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [Miladycraft](https://miladycraft.net/): Sibling Minecraft metaverse
 - [CULT, INC.](https://cult.inc/): CULT token site
 - [Twitter / X](https://x.com/remiliacorp333): Updates
+- [Instagram](https://www.instagram.com/remilia.corporation/)
+- [YouTube](https://www.youtube.com/@remiliacorp)
+- [TikTok](https://www.tiktok.com/@remilia.corp)
+- [SoundCloud](https://soundcloud.com/remiliaco)
+- [Remilia Records (Bandcamp)](https://remiliacorporation.bandcamp.com/)
+- [Discord](https://discord.gg/milady)
 - [Wiki llms.txt](https://wiki.remilia.org/llms.txt): Remilia encyclopedia map

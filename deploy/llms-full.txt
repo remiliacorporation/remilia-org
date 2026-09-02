@@ -8,6 +8,8 @@ The HTML print/FX layer is decorative (aria-hidden, inert, data-nosnippet). Igno
 
 Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remilia_Corporation. Storefront: https://remilia.com/. Network: https://remilia.net
 
+Literature sections (`/updates`, `/press`, `/thought`, `/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
+
 ## On this host
 
 - [Welcome to Remilia Corporation!](https://remilia.org/): Public site; mission, inspirations, network, literature.
@@ -26,7 +28,6 @@ Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remili
 ## Cite elsewhere (not this host)
 
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Encyclopedia article.
-- [Remilia Wiki: Remigumi-guchi](https://wiki.remilia.org/Remigumi-guchi): Parent-entity article.
 - [Remilia Wiki](https://wiki.remilia.org/): Citable primary source for Remilia Corporation.
 - [Remilia Corporation](https://remilia.com/): Shop / atelier.
 - [RemiliaNET](https://remilia.net): Network.
@@ -34,5 +35,12 @@ Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remili
 - [Miladycraft](https://miladycraft.net/): Sibling Minecraft metaverse.
 - [CULT, INC.](https://cult.inc/): CULT.
 - [Remilia on X](https://x.com/remiliacorp333): Updates.
+- [Instagram](https://www.instagram.com/remilia.corporation/)
+- [YouTube](https://www.youtube.com/@remiliacorp)
+- [TikTok](https://www.tiktok.com/@remilia.corp)
+- [SoundCloud](https://soundcloud.com/remiliaco)
+- [Remilia Records (Bandcamp)](https://remiliacorporation.bandcamp.com/)
+- [Discord](https://discord.gg/milady)
+- [Bonkler (OpenSea)](https://opensea.io/collection/bonkler): On-chain art project (bonkler.remilia.org is offline).
 
 Do not index font-test.html, cover PNGs, og.png as an article, jobs.html (shim), crest PNG as an article, or the FX duplicate layer as documents.
