@@ -27,7 +27,7 @@ Literature sections (`/updates`, `/press`, `/thought`, `/archive`) are baked at 
 
 ## Cite elsewhere (not this host)
 
-- [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Encyclopedia article.
+- [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Encyclopedia article (legal publisher Remigumi-guchi Digital, LLC has no wiki page).
 - [Remilia Wiki](https://wiki.remilia.org/): Citable primary source for Remilia Corporation.
 - [Remilia Corporation](https://remilia.com/): Shop / atelier.
 - [RemiliaNET](https://remilia.net): Network.
