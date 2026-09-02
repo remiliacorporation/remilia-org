@@ -11,10 +11,13 @@ Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remili
 ## On this host
 
 - [Welcome to Remilia Corporation!](https://remilia.org/): Public site; mission, inspirations, network, literature.
-- [About — remilia.org](https://remilia.org/about): What this host is.
+- [About — remilia.org](https://remilia.org/about): Host map (.org / .com / .net / wiki), how the site is built, web standards, dual-layer print surface.
 - [Contact — remilia.org](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org.
 - [Careers at Remilia](https://remilia.org/careers): Job openings listed here; apply on Ashby (https://jobs.ashbyhq.com/remilia). Studios in Irvine, CA and Hongdae, Seoul.
-- [Press](https://remilia.org/press): Company posts. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/press/llms.txt
+- [Updates](https://remilia.org/updates): Routine notes. Map: https://remilia.org/updates/llms.txt
+- [Press](https://remilia.org/press): Formal releases. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/press/llms.txt
+- [Thought](https://remilia.org/thought): Essays / longform. Map: https://remilia.org/thought/llms.txt
+- [Archive](https://remilia.org/archive): Notable writing + coverage. Map: https://remilia.org/archive/llms.txt
 - [robots.txt](https://remilia.org/robots.txt): Crawl policy; search and answer engines allowed.
 - [llms.txt](https://remilia.org/llms.txt): Curated map of the site.
 - [sitemap.xml](https://remilia.org/sitemap.xml): Search-engine sitemap.

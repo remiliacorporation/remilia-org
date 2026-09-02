@@ -2,12 +2,14 @@
   "name": "remilia-content",
   "private": true,
   "version": "0.0.0",
-  "description": "Sanity studio for the Remilia content graph (press / studio / devblog)",
+  "description": "Sanity studio for the Remilia content graph (org / com / net sections)",
   "scripts": {
     "dev": "sanity dev",
     "build": "sanity build",
     "deploy:studio": "sanity deploy",
     "bake:org": "pnpm --filter @remilia/hosts bake:org",
+    "bake:fx": "pnpm --filter @remilia/hosts bake:fx",
+    "bake": "pnpm --filter @remilia/hosts bake",
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit"
   },

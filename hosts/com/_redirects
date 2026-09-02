@@ -1,0 +1,8 @@
+# Retired Studio paths on remilia.com.
+# news + events posts replace /a/studio (events were nested under studio).
+/a/studio/events/*  /a/events/:splat  301!
+/a/studio/events    /a/events/  301!
+/a/studio/events/   /a/events/  301!
+/a/studio/*         /a/news/:splat  301!
+/a/studio           /a/news/  301!
+/a/studio/          /a/news/  301!

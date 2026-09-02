@@ -59,26 +59,26 @@ test("auditIndexability enforces both directions", () => {
 });
 
 const POSTS = [
-  { channel: "devblog" as const, slug: "vaults", title: "Vaults", excerpt: "e", publishedAt: "2026-08-01T00:00:00Z" },
+  { channel: "dev-blog" as const, slug: "vaults", title: "Vaults", excerpt: "e", publishedAt: "2026-08-01T00:00:00Z" },
 ];
 
 test("generated feeds pass their own audits (generator ↔ auditor lockstep)", () => {
-  const rssXml = rss({ channel: "devblog", title: "Devblog", description: "d" }, POSTS);
-  assert.deepEqual(auditRss(rssXml, "devblog"), []);
+  const rssXml = rss({ channel: "dev-blog", title: "Devblog", description: "d" }, POSTS);
+  assert.deepEqual(auditRss(rssXml, "dev-blog"), []);
 
-  const atomXml = atom({ channel: "devblog", title: "Devblog", description: "d" }, POSTS);
-  assert.deepEqual(auditAtom(atomXml, "devblog"), []);
+  const atomXml = atom({ channel: "dev-blog", title: "Devblog", description: "d" }, POSTS);
+  assert.deepEqual(auditAtom(atomXml, "dev-blog"), []);
 
-  const head = feedLinks({ channel: "devblog", title: "Devblog", description: "d" });
-  assert.deepEqual(auditFeedDiscovery(`<head>${head}</head>`, "devblog"), []);
+  const head = feedLinks({ channel: "dev-blog", title: "Devblog", description: "d" });
+  assert.deepEqual(auditFeedDiscovery(`<head>${head}</head>`, "dev-blog"), []);
 
   const sitemapXml = sitemap([{ loc: "https://www.remilia.net/blog/vaults", lastmod: "2026-08-01" }]);
-  assert.deepEqual(auditSitemap(sitemapXml, "devblog"), []);
+  assert.deepEqual(auditSitemap(sitemapXml, "dev-blog"), []);
 
   const llms = llmsTxt({
     hostTitle: "RemiliaNET",
     lead: "Product notes.",
-    channel: "devblog",
+    channel: "dev-blog",
     channelLabel: "Devblog",
     whenToUse: ["Cite RemiliaNET engineering decisions, changelogs, and vault mechanics."],
     posts: POSTS,
@@ -87,11 +87,11 @@ test("generated feeds pass their own audits (generator ↔ auditor lockstep)", (
       { label: "Press", url: "https://remilia.org/press" },
     ],
   });
-  assert.deepEqual(auditLlmsTxt(llms, "devblog"), []);
+  assert.deepEqual(auditLlmsTxt(llms, "dev-blog"), []);
 });
 
 test("feed discovery and article semantics catch omissions", () => {
-  assert.ok(auditFeedDiscovery("<head></head>", "devblog").length === 2);
+  assert.ok(auditFeedDiscovery("<head></head>", "dev-blog").length === 2);
 
   const article = `<main><article><h1>V</h1><time datetime="2026-08-01">Aug 1</time></article></main>`;
   assert.deepEqual(auditArticleSemantics(article), []);
@@ -101,10 +101,10 @@ test("feed discovery and article semantics catch omissions", () => {
 
 test("audits reject cross-host leaks", () => {
   const leakySitemap = sitemap([{ loc: "https://remilia.org/press/launch" }]);
-  assert.ok(auditSitemap(leakySitemap, "devblog").some((e) => e.includes("foreign host")));
+  assert.ok(auditSitemap(leakySitemap, "dev-blog").some((e) => e.includes("foreign host")));
 
   const leakyLlms = "# X\nwiki.remilia.org\n- [post](https://remilia.org/press/launch)";
-  assert.ok(auditLlmsTxt(leakyLlms, "devblog").some((e) => e.includes("foreign-host")));
+  assert.ok(auditLlmsTxt(leakyLlms, "dev-blog").some((e) => e.includes("foreign-host")));
 });
 
 test("audit404 rejects soft-404s and bare 404 bodies", () => {
@@ -116,8 +116,8 @@ test("audit404 rejects soft-404s and bare 404 bodies", () => {
 
 test("auditRobots requires the channel sitemap line", () => {
   assert.deepEqual(
-    auditRobots("User-agent: *\nSitemap: https://www.remilia.net/blog/sitemap.xml", "devblog"),
+    auditRobots("User-agent: *\nSitemap: https://www.remilia.net/blog/sitemap.xml", "dev-blog"),
     [],
   );
-  assert.ok(auditRobots("User-agent: *", "devblog").length === 1);
+  assert.ok(auditRobots("User-agent: *", "dev-blog").length === 1);
 });

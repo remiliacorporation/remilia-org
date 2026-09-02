@@ -1,22 +1,56 @@
 import type { CurrentUser } from "sanity";
 
-export type Channel = "press" | "studio" | "devblog";
+/**
+ * Section ids (field still named `channel` on post docs). Host + public path
+ * are derived — see `@remilia/seo` CHANNEL_* maps. `dev-updates` is the schema
+ * id for remilia.net/updates so GROQ never confuses it with org `updates`.
+ */
+export type Channel =
+  | "updates"
+  | "press"
+  | "thought"
+  | "archive"
+  | "news"
+  | "events"
+  | "dev-updates"
+  | "dev-blog";
 
 export const CHANNELS: { title: string; value: Channel }[] = [
+  { title: "Updates (remilia.org/updates)", value: "updates" },
   { title: "Press (remilia.org/press)", value: "press" },
-  { title: "Studio (remilia.com/a/studio)", value: "studio" },
-  { title: "Devblog (remilia.net/blog)", value: "devblog" },
+  { title: "Thought (remilia.org/thought)", value: "thought" },
+  { title: "Archive (remilia.org/archive)", value: "archive" },
+  { title: "News (remilia.com/a/news)", value: "news" },
+  { title: "Events (remilia.com/a/events)", value: "events" },
+  { title: "Dev updates (remilia.net/updates)", value: "dev-updates" },
+  { title: "Dev blog (remilia.net/blog)", value: "dev-blog" },
 ];
 
+export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
+  updates: "remilia.org/updates",
+  press: "remilia.org/press",
+  thought: "remilia.org/thought",
+  archive: "remilia.org/archive",
+  news: "remilia.com/a/news",
+  events: "remilia.com/a/events",
+  "dev-updates": "remilia.net/updates",
+  "dev-blog": "remilia.net/blog",
+};
+
 /**
- * Channel → editor emails. UI-level soft lock only (content-scoped roles are
- * Enterprise-only; API tokens bypass this). Empty list = channel open to all.
- * Admins always pass.
+ * Section → editor emails. UI-level soft lock only (content-scoped roles are
+ * Enterprise-only; API tokens bypass this). Empty list = section open to all.
+ * Admins always pass. Soft-lock seats stay sane when desks filter by host.
  */
 const CHANNEL_EDITORS: Record<Channel, string[]> = {
+  updates: [],
   press: [],
-  studio: [],
-  devblog: [],
+  thought: [],
+  archive: [],
+  news: [],
+  events: [],
+  "dev-updates": [],
+  "dev-blog": [],
 };
 
 export function canEditChannel(

@@ -6,6 +6,7 @@ import {
   rssUrl,
   sitemapUrl,
   eventUrl,
+  eventsIndexUrl,
   blogPosting,
   event,
   imageGallery,
@@ -13,21 +14,42 @@ import {
   rss,
   sitemap,
   llmsTxt,
+  CHANNEL_BASEPATH,
+  ORG_SECTIONS,
+  COM_SECTIONS,
+  COM_POST_SECTIONS,
+  EVENTS_PATH_LABEL,
 } from "./index";
 
-test("canonical URLs are exact per channel (the ratified plan)", () => {
+test("canonical URLs follow the ratified section map", () => {
+  assert.equal(canonicalFor("updates", "note"), "https://remilia.org/updates/note");
   assert.equal(canonicalFor("press", "launch"), "https://remilia.org/press/launch");
-  assert.equal(canonicalFor("studio", "fw26"), "https://remilia.com/a/studio/fw26");
-  assert.equal(canonicalFor("devblog", "vaults"), "https://www.remilia.net/blog/vaults");
-  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/studio/events/tokyo");
-  assert.equal(rssUrl("devblog"), "https://www.remilia.net/blog/rss.xml");
-  assert.equal(sitemapUrl("studio"), "https://remilia.com/a/studio/sitemap.xml");
+  assert.equal(canonicalFor("thought", "essay"), "https://remilia.org/thought/essay");
+  assert.equal(canonicalFor("archive", "interview"), "https://remilia.org/archive/interview");
+  assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
+  assert.equal(canonicalFor("events", "party"), "https://remilia.com/a/events/party");
+  assert.equal(canonicalFor("dev-updates", "ship"), "https://www.remilia.net/updates/ship");
+  assert.equal(canonicalFor("dev-blog", "vaults"), "https://www.remilia.net/blog/vaults");
+  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
+  assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
+  assert.equal(rssUrl("dev-blog"), "https://www.remilia.net/blog/rss.xml");
+  assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
+  assert.equal(CHANNEL_BASEPATH["dev-updates"], "/updates");
+  assert.equal(CHANNEL_BASEPATH.events, "/a/events");
+  assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
+  assert.deepEqual(COM_SECTIONS, ["news", "events"]);
+  assert.deepEqual(COM_POST_SECTIONS, ["news", "events"]);
+  assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/events");
 });
 
 test("legacy Ghost redirect maps slug to the channel host", () => {
-  assert.deepEqual(legacyRedirect("devblog", "vault-notes"), {
+  assert.deepEqual(legacyRedirect("dev-blog", "vault-notes"), {
     from: "https://blog.remilia.org/vault-notes/",
     to: "https://www.remilia.net/blog/vault-notes",
+  });
+  assert.deepEqual(legacyRedirect("press", "vault-notes"), {
+    from: "https://blog.remilia.org/vault-notes/",
+    to: "https://remilia.org/press/vault-notes",
   });
 });
 
@@ -72,7 +94,7 @@ test("event JSON-LD distinguishes physical and online locations", () => {
 test("imageGallery emits one ImageObject per photo with alt as description", () => {
   const ld = imageGallery({
     title: "FW26",
-    pageUrl: "https://remilia.com/a/studio/events/fw26",
+    pageUrl: "https://remilia.com/a/events/fw26",
     images: [{ url: "https://cdn.sanity.io/x.jpg", alt: "Runway look 1", credit: "Photo: A" }],
   });
   assert.equal(ld.image.length, 1);
@@ -88,7 +110,7 @@ test("organization JSON-LD is the shared @id entity", () => {
 
 const POSTS = [
   {
-    channel: "devblog" as const,
+    channel: "dev-blog" as const,
     slug: "vaults",
     title: "Vaults <2>",
     excerpt: 'Notes & "vaults"',
@@ -97,7 +119,7 @@ const POSTS = [
 ];
 
 test("rss escapes entities and uses canonical permalinks", () => {
-  const xml = rss({ channel: "devblog", title: "RemiliaNET — Devblog", description: "d" }, POSTS);
+  const xml = rss({ channel: "dev-blog", title: "RemiliaNET — Devblog", description: "d" }, POSTS);
   assert.ok(xml.includes("<guid isPermaLink=\"true\">https://www.remilia.net/blog/vaults</guid>"));
   assert.ok(xml.includes("Vaults &lt;2&gt;"));
   assert.ok(xml.includes("Notes &amp; &quot;vaults&quot;"));
@@ -114,7 +136,7 @@ test("llmsTxt lists only the host channel plus citations", () => {
   const txt = llmsTxt({
     hostTitle: "RemiliaNET",
     lead: "Product notes.",
-    channel: "devblog",
+    channel: "dev-blog",
     channelLabel: "Devblog",
     whenToUse: ["Cite RemiliaNET engineering decisions and changelogs."],
     posts: POSTS,

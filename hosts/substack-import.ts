@@ -12,7 +12,7 @@ import { markdownToPost, slugify } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
 
 const ORIGIN = "https://goldenlight.substack.com";
-const CHANNEL = "press" as const;
+const CHANNEL = "archive" as const;
 const AUTHOR = "Charlotte Fang";
 
 function normTitle(s: string): string {
@@ -30,11 +30,21 @@ export function unwrapSubstackImg(url: string): string {
   return m ? decodeURIComponent(m[1]) : url;
 }
 
-function hoistImages(body: { _type?: string; asset?: { url?: string }; alt?: string; caption?: string }[], title: string) {
+type PTLike = {
+  _type?: string;
+  _key?: string;
+  asset?: { url?: string };
+  alt?: string;
+  caption?: string;
+  children?: Array<{ text?: string }>;
+};
+
+function hoistImages(body: PTLike[], title: string) {
   return body.map((b, i) => {
     if (b._type !== "image") return { ...b, _key: `b${i}` };
-    const url = b.asset?.url ? unwrapSubstackImg(b.asset.url) : undefined;
+    const url = b.asset?.url;
     if (!url) return { ...b, _key: `b${i}` };
+    // Keep CDN fetch URLs — raw S3 bucketeer returns 403.
     return {
       _type: "image",
       _key: `b${i}`,
@@ -43,6 +53,70 @@ function hoistImages(body: { _type?: string; asset?: { url?: string }; alt?: str
       caption: b.caption,
     };
   });
+}
+
+function blockText(b: PTLike): string {
+  return (b.children ?? []).map((c) => c.text ?? "").join("");
+}
+
+/** Prefer real captions; fall back to descriptive alt (not generic "Image"). */
+export function promoteImageCaptions(body: PTLike[], title: string): PTLike[] {
+  return body.map((b) => {
+    if (b._type !== "image") return b;
+    const alt = (b.alt ?? "").trim();
+    const caption = (b.caption ?? "").trim();
+    if (caption) return b;
+    if (alt && !/^image$/i.test(alt) && alt.toLowerCase() !== title.toLowerCase()) {
+      return { ...b, caption: alt };
+    }
+    return b;
+  });
+}
+
+/** Substack subtitle/description is post content — hoist into body when missing. */
+export function prependSubtitle(body: PTLike[], subtitle?: string): PTLike[] {
+  const sub = (subtitle ?? "").trim();
+  if (!sub) return body;
+  const already = body.some((b) => b._type === "block" && blockText(b).includes(sub));
+  if (already) return body;
+  return [
+    {
+      _type: "block",
+      _key: "subtitle",
+      style: "normal",
+      markDefs: [],
+      children: [{ _type: "span", _key: "subtitle0", text: sub, marks: [] }],
+    },
+    ...body,
+  ];
+}
+
+export function enrichSubstackBody(
+  body: PTLike[],
+  opts: { title: string; subtitle?: string; description?: string },
+): PTLike[] {
+  const withCaps = promoteImageCaptions(body, opts.title);
+  return prependSubtitle(withCaps, opts.subtitle || opts.description);
+}
+
+export function substackExcerpt(
+  p: { title: string; subtitle?: string; description?: string },
+  body: PTLike[],
+  mdFallback = "",
+): string {
+  const fromDesc = (p.description || p.subtitle || "").trim();
+  if (fromDesc) return fromDesc.slice(0, 300);
+  const fromBody = body
+    .flatMap((b) => {
+      if (b._type === "block") return [blockText(b)];
+      if (b._type === "image") return [b.caption, b.alt].filter(Boolean) as string[];
+      return [];
+    })
+    .map((s) => s.trim())
+    .find((s) => s && !/^image$/i.test(s) && !/^https?:\/\//i.test(s));
+  if (fromBody) return fromBody.slice(0, 300);
+  const fromMd = mdFallback.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim();
+  return (fromMd || p.title).slice(0, 300);
 }
 
 async function existing(paths: string[]): Promise<{ slugs: Set<string>; titles: Set<string> }> {
@@ -115,25 +189,26 @@ async function main() {
       continue;
     }
     const p = (await res.json()) as FullPost;
-    const html = (p.body_html ?? "").replace(
-      /https:\/\/substackcdn\.com\/image\/fetch\/[^"'\s]+/g,
-      unwrapSubstackImg,
-    );
+    const html = p.body_html ?? "";
+    // Keep substackcdn.com/image/fetch/… URLs — unwrapping to S3 bucketeer 403s.
     const md = ghostHtmlToMarkdown(html);
-    const { body } = markdownToPost(md, CHANNEL);
-    const excerpt = (p.description || p.subtitle || md.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() || p.title).slice(
-      0,
-      300,
-    );
+    const { body: rawBody } = markdownToPost(md, CHANNEL);
+    const body = enrichSubstackBody(hoistImages(rawBody, p.title), {
+      title: p.title,
+      subtitle: p.subtitle,
+      description: p.description,
+    });
+    const excerpt = substackExcerpt(p, body, md);
     add({
       _id: postId(p.slug),
       _type: "post",
       channel: CHANNEL,
+      origin: "first-party",
       title: p.title,
       slug: { _type: "slug", current: p.slug },
       publishedAt: p.post_date ?? "2021-06-01T00:00:00.000Z",
       excerpt,
-      body: hoistImages(body, p.title),
+      body,
       authors: [{ _type: "reference", _ref: `author-${slugify(AUTHOR)}`, _key: "a0" }],
       coverImage: p.cover_image
         ? { _type: "image", _sanityAsset: `image@${unwrapSubstackImg(p.cover_image)}`, alt: p.title }

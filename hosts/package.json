@@ -6,16 +6,29 @@
   "description": "Per-host chrome (header/footer + theme.css) and bake entries; core/ holds the shared blog component system.",
   "scripts": {
     "bake:org": "node --import tsx org/bake.ts",
+    "bake:fx": "node --import tsx bake-fx.ts",
+    "bake": "pnpm bake:org && pnpm bake:fx",
     "import:md": "node --import tsx md-import.ts",
     "import:ghost": "node --import tsx ghost-import.ts",
     "import:paragraph": "node --import tsx paragraph-import.ts",
     "import:substack": "node --import tsx substack-import.ts",
+    "migrate:channels": "node --import tsx migrate-channels.ts",
+    "archive:firecrawl": "node --import tsx archive-firecrawl.ts",
+    "import:miladychan": "node --import tsx miladychan-import.ts",
+    "fix:archive": "node --import tsx fix-archive-fields.ts",
+    "clean:archive": "node --import tsx clean-archive-snapshots.ts",
+    "repair:substack-covers": "node --import tsx repair-substack-covers.ts",
+    "repair:substack": "node --import tsx repair-substack.ts",
+    "enrich:substack": "node --import tsx enrich-substack-text.ts",
+    "polish:posts": "node --import tsx polish-posts.ts",
+    "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",
-    "@remilia/seo": "workspace:*"
+    "@remilia/seo": "workspace:*",
+    "@sanity/client": "^7.14.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

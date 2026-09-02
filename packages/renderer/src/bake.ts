@@ -8,7 +8,6 @@ import {
   blogPosting,
   canonicalFor,
   event as eventJsonLd,
-  eventUrl,
   feedLinks,
   imageGallery,
   indexUrl,
@@ -28,10 +27,9 @@ import {
   type PTBlock,
 } from "./pt";
 import { markdownToPost, postToMarkdownFile } from "./md";
-import { articleHtml, citeBox, htmlPage, notFoundHtml, simpleMain, tocBox, adjacentHtml, indexMain, type Chrome } from "./page";
+import { articleHtml, citeBox, htmlPage, notFoundHtml, tocBox, adjacentHtml, indexMain, type Chrome } from "./page";
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
-import { esc } from "./html";
 
 export interface BakeOptions {
   channel: Channel;
@@ -64,8 +62,20 @@ interface FetchedPost {
   body: PTBlock[];
   markdown?: string;
   coverRef?: string;
+  ogImageRef?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  noIndex?: boolean;
   authors?: { name: string; url?: string }[];
   tags?: string[];
+  origin?: "first-party" | "external";
+  externalUrl?: string;
+  outlet?: string;
+  commentary?: PTBlock[];
+  startsAt?: string;
+  endsAt?: string;
+  locationName?: string;
+  albums?: FetchedAlbum[];
 }
 
 interface FetchedImage {
@@ -83,19 +93,6 @@ interface FetchedAlbum {
   images: FetchedImage[];
 }
 
-interface FetchedEvent {
-  title: string;
-  slug: string;
-  summary: string;
-  startsAt: string;
-  endsAt?: string;
-  locationName?: string;
-  url?: string;
-  imageRef?: string;
-  body?: PTBlock[];
-  albums?: FetchedAlbum[];
-}
-
 /** image-<id>-<WxH>-<fmt> asset ref → CDN URL with params. */
 export function cdnUrl(projectId: string, dataset: string, ref: string, params: string): string | undefined {
   const m = /^image-([a-f0-9]+)-(\d+x\d+)-(\w+)$/.exec(ref);
@@ -106,13 +103,14 @@ export function cdnUrl(projectId: string, dataset: string, ref: string, params: 
 const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && !(_id in path("drafts.**"))] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
+  "ogImageRef": coalesce(seo.ogImage.asset._ref, coverImage.asset._ref),
+  "seoTitle": seo.metaTitle,
+  "seoDescription": seo.metaDescription,
+  "noIndex": seo.noIndex,
   "authors": authors[]->{ name, url },
-  "tags": tags[]->name
-}`;
-
-const EVENTS_QUERY = `*[_type == "event" && !(_id in path("drafts.**"))] | order(startsAt desc) {
-  title, "slug": slug.current, summary, startsAt, endsAt, locationName, url,
-  "imageRef": image.asset._ref, body,
+  "tags": tags[]->name,
+  origin, externalUrl, outlet, commentary,
+  startsAt, endsAt, locationName,
   "albums": albums[]->{ title, "slug": slug.current, date, description,
     "images": images[]{ "ref": asset._ref, alt, caption, credit } }
 }`;
@@ -128,9 +126,36 @@ function postPlain(blocks: PTBlock[]): string {
 }
 
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
+  if (channel === "archive" && p.origin === "external" && p.commentary?.length) {
+    return p.commentary;
+  }
   if (p.body?.length) return p.body;
   if (p.markdown?.trim()) return markdownToPost(p.markdown, channel).body;
+  if (channel === "archive" && p.origin === "external") {
+    const outlet = p.outlet ? ` (${p.outlet})` : "";
+    const href = p.externalUrl ?? "#";
+    return [
+      {
+        _type: "block",
+        style: "normal",
+        markDefs: [{ _type: "link", _key: "l", href }],
+        children: [
+          { _type: "span", text: "Originally published", marks: [] },
+          { _type: "span", text: outlet, marks: [] },
+          { _type: "span", text: ": ", marks: [] },
+          { _type: "span", text: href, marks: ["l"] },
+        ],
+      },
+    ];
+  }
   return [];
+}
+
+function postCanonical(p: FetchedPost, channel: Channel): string {
+  if (channel === "archive" && p.origin === "external" && p.externalUrl) {
+    return p.externalUrl;
+  }
+  return canonicalFor(channel, p.slug);
 }
 
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
@@ -194,29 +219,94 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const rail = leftRail(navPosts, host.title, basePath);
   const navScript = `<script src="${basePath}/nav.js" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined => cards.get(href.replace(/\/$/, ""));
+  const needsLightbox = channel === "events" && posts.some((p) => (p.albums?.length ?? 0) > 0);
+  const galleryScript = needsLightbox
+    ? `\n<script src="${basePath}/gallery.js" defer></script>`
+    : "";
 
   const imgUrl = (b: { asset?: { _ref?: string; url?: string } }): string | undefined =>
     (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ?? b.asset?.url;
 
   // Posts
   for (const p of posts) {
-    const canonical = canonicalFor(channel, p.slug);
+    const pageUrl = canonicalFor(channel, p.slug);
+    const canonical = postCanonical(p, channel);
     const body = postBody(p, channel);
     const bodyHtml = portableTextToHtml(body, {
       imageUrl: imgUrl,
       linkCard,
     });
+    const galleries =
+      channel === "events"
+        ? (p.albums ?? [])
+            .map((a) =>
+              galleryHtml(
+                a.title,
+                a.images.flatMap((i) => {
+                  const url = img(i.ref, "w=800&auto=format");
+                  const fullUrl = img(i.ref, "w=2400&auto=format");
+                  return url && fullUrl
+                    ? [{ url, fullUrl, alt: i.alt ?? "", caption: i.caption, credit: i.credit }]
+                    : [];
+                }),
+              ),
+            )
+            .join("\n")
+        : "";
+    const galleryLd =
+      channel === "events"
+        ? (p.albums ?? []).map((a) =>
+            imageGallery({
+              title: a.title,
+              description: a.description,
+              pageUrl,
+              images: a.images.flatMap((i) => {
+                const url = img(i.ref, "w=2400&auto=format");
+                return url ? [{ url, alt: i.alt ?? "", caption: i.caption, credit: i.credit }] : [];
+              }),
+            }),
+          )
+        : [];
+    const eventLd =
+      channel === "events" && p.startsAt
+        ? [
+            eventJsonLd({
+              slug: p.slug,
+              title: p.title,
+              summary: p.excerpt,
+              startsAt: p.startsAt,
+              endsAt: p.endsAt,
+              locationName: p.locationName,
+              imageUrl: img(p.coverRef, "w=1200&auto=format"),
+            }),
+          ]
+        : [];
     const page = htmlPage({
-      title: `${p.title} — ${host.title}`,
-      description: p.excerpt,
+      title: p.seoTitle?.trim() || `${p.title} — ${host.title}`,
+      description: p.seoDescription?.trim() || p.excerpt,
       canonical,
-      jsonld: withOrg(blogPosting({ ...p, channel, coverImageUrl: img(p.coverRef, "w=1200&auto=format") })),
-      headExtra: feedLinks(meta),
+      ogImage: img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ?? img(p.coverRef, "w=1200&auto=format"),
+      noindex: p.noIndex === true,
+      jsonld: [
+        ...withOrg(
+          blogPosting({
+            ...p,
+            channel,
+            excerpt: p.seoDescription?.trim() || p.excerpt,
+            coverImageUrl:
+              img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ??
+              img(p.coverRef, "w=1200&auto=format"),
+          }),
+        ),
+        ...eventLd,
+        ...galleryLd,
+      ],
+      headExtra: `${feedLinks(meta)}${galleryScript}`,
       chrome,
       leftRail: rail,
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
-        canonical,
+        canonical: pageUrl,
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
       }),
@@ -228,11 +318,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         authorHref: p.authors?.[0]?.name
           ? `${basePath}/?author=${encodeURIComponent(p.authors.map((a) => a.name).join(", "))}`
           : undefined,
-        canonical,
-        category: p.tags?.[0],
+        canonical: pageUrl,
+        category: p.tags?.[0] ?? (p.outlet ? p.outlet : undefined),
         categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
         monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
-        bodyHtml,
+        bodyHtml: galleries ? `${bodyHtml}\n${galleries}` : bodyHtml,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
@@ -242,21 +332,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     await writeFile(join(dir, p.slug, "index.html"), page);
     await writeFile(
       join(dir, `${p.slug}.md`),
-      p.body?.length
+      p.body?.length || p.commentary?.length
         ? postToMarkdownFile({
             title: p.title,
             slug: p.slug,
             channel,
             publishedAt: p.publishedAt,
             excerpt: p.excerpt,
-            canonical,
+            canonical: pageUrl,
             author: p.authors?.map((a) => a.name).join(", "),
             tags: p.tags,
             body,
           })
         : (p.markdown ?? "").replace(/\s*$/, "\n"),
     );
-    await writeFile(join(dir, `${p.slug}.txt`), postText(p, canonical, body));
+    await writeFile(join(dir, `${p.slug}.txt`), postText(p, pageUrl, body));
   }
 
   // Index
@@ -287,86 +377,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  // Events + albums (studio only)
-  let eventPages = 0;
-  if (channel === "studio") {
-    const events = await client.fetch<FetchedEvent[]>(EVENTS_QUERY);
-    for (const ev of events) {
-      const canonical = eventUrl(ev.slug);
-      const galleries = (ev.albums ?? [])
-        .map((a) =>
-          galleryHtml(
-            a.title,
-            a.images.flatMap((i) => {
-              const url = img(i.ref, "w=800&auto=format");
-              const fullUrl = img(i.ref, "w=2400&auto=format");
-              return url && fullUrl ? [{ url, fullUrl, alt: i.alt ?? "", caption: i.caption, credit: i.credit }] : [];
-            }),
-          ),
-        )
-        .join("\n");
-      const galleryLd = (ev.albums ?? []).map((a) =>
-        imageGallery({
-          title: a.title,
-          description: a.description,
-          pageUrl: canonical,
-          images: a.images.flatMap((i) => {
-            const url = img(i.ref, "w=2400&auto=format");
-            return url ? [{ url, alt: i.alt ?? "", caption: i.caption, credit: i.credit }] : [];
-          }),
-        }),
-      );
-      const bodyHtml = ev.body
-        ? portableTextToHtml(ev.body, { imageUrl: (b) => img(b.asset?._ref, "w=1600&auto=format") })
-        : "";
-      const page = htmlPage({
-        title: `${ev.title} — ${host.title}`,
-        description: ev.summary,
-        canonical,
-        jsonld: [...withOrg(eventJsonLd({ ...ev, imageUrl: img(ev.imageRef, "w=1200&auto=format") })), ...galleryLd],
-        headExtra: `${feedLinks(meta)}\n<script src="${basePath}/gallery.js" defer></script>`,
-        chrome,
-        leftRail: rail,
-        bodyEnd: navScript,
-        mainHtml: simpleMain(`<header><h1>${esc(ev.title)}</h1><p><time datetime="${esc(ev.startsAt)}">${ev.startsAt.slice(0, 10)}</time>${ev.locationName ? ` — ${esc(ev.locationName)}` : ""}</p></header>\n<div class="prose">\n${bodyHtml}\n</div>\n${galleries}`),
-      });
-      await mkdir(join(dir, "events", ev.slug), { recursive: true });
-      await writeFile(join(dir, "events", ev.slug, "index.html"), page);
-      sitemapEntries.push({ loc: canonical, lastmod: ev.startsAt });
-      eventPages++;
-    }
-    if (events.length > 0) {
-      const evListing = events
-        .map(
-          (ev) =>
-            `<li><a href="${basePath}/events/${esc(ev.slug)}"><h2>${esc(ev.title)}</h2></a> <time datetime="${esc(ev.startsAt)}">${ev.startsAt.slice(0, 10)}</time><p>${esc(ev.summary)}</p></li>`,
-        )
-        .join("\n");
-      await mkdir(join(dir, "events"), { recursive: true });
-      await writeFile(
-        join(dir, "events", "index.html"),
-        htmlPage({
-          title: `Events — ${host.title}`,
-          description: `Events from ${host.title}.`,
-          canonical: `${indexUrl(channel)}/events`,
-
-          jsonld: orgLd ? [orgLd] : [],
-          headExtra: feedLinks(meta),
-          chrome,
-          leftRail: rail,
-          bodyEnd: navScript,
-          mainHtml: simpleMain(`<h1>Events</h1>\n<ul class="post-list">\n${evListing}\n</ul>`),
-        }),
-      );
-      sitemapEntries.push({ loc: `${indexUrl(channel)}/events` });
-      await writeFile(join(dir, "gallery.js"), LIGHTBOX_JS);
-    }
-  }
-
   // Feeds, sitemap, llms.txt, 404
   const css = await Promise.all(opts.stylesheets.map((f) => readFile(f, "utf8")));
   await writeFile(join(dir, "blog.css"), css.join("\n"));
   await writeFile(join(dir, "nav.js"), NAV_JS);
+  if (needsLightbox) await writeFile(join(dir, "gallery.js"), LIGHTBOX_JS);
 
   await writeFile(join(dir, "rss.xml"), rss(meta, feedPosts));
   await writeFile(join(dir, "atom.xml"), atom(meta, feedPosts));
@@ -385,5 +400,5 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  return { pages: posts.length + eventPages + 1 };
+  return { pages: posts.length + 1 };
 }

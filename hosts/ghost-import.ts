@@ -10,14 +10,9 @@ import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { markdownToPost, slugify } from "@remilia/renderer";
-import { type Channel } from "@remilia/seo";
+import { type Channel, isChannel } from "@remilia/seo";
 
 const ORIGIN = "https://blog.remilia.org";
-const CHANNELS: Channel[] = ["press", "studio", "devblog"];
-
-function isChannel(v: string): v is Channel {
-  return (CHANNELS as string[]).includes(v);
-}
 
 function decode(s: string): string {
   return s
@@ -259,7 +254,7 @@ async function main() {
   const posts = docs.filter((d) => d._type === "post").length;
   console.log(`\nwrote ${docs.length} docs (${posts} posts, ${failed} failed) to ${outFile}`);
   console.log("import: npx sanity dataset import", outFile, "production");
-  console.log("channel is", channel, "— retag press/studio/devblog in Studio");
+  console.log("channel is", channel, "— retag sections in Studio if needed");
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
