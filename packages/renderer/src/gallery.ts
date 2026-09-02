@@ -1,10 +1,5 @@
 import { esc } from "./html";
 
-/**
- * Album → static <figure> grid with a native-<dialog> lightbox.
- * Progressive enhancement: without JS, images are plain links to the
- * full-size CDN asset.
- */
 export interface GalleryImage {
   url: string;
   fullUrl: string;
@@ -30,7 +25,6 @@ ${figures}
 <dialog class="lightbox" aria-label="Image viewer"><img alt=""><button autofocus aria-label="Close">×</button></dialog>`;
 }
 
-/** ~30 lines of vanilla JS; ship as /​<section>/gallery.js only on album pages. */
 export const LIGHTBOX_JS = `(() => {
   const dialog = document.querySelector("dialog.lightbox");
   if (!dialog || !dialog.showModal) return;
@@ -47,3 +41,4 @@ export const LIGHTBOX_JS = `(() => {
   dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
 })();
 `;
+

@@ -1,9 +1,4 @@
-/**
- * Unpublish all published posts via Sanity document actions.
- * Keeps `publishedAt` backdates. Creates drafts when missing.
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx unpublish-posts.ts --write
- */
+
 import { createClient, type SanityClient } from "@sanity/client";
 import { createHash } from "node:crypto";
 
@@ -33,7 +28,7 @@ function shortenId(id: string, channel: string, slug: string): string {
 async function unpublishOne(c: SanityClient, id: string) {
   const draftId = `drafts.${id}`;
   if (draftId.length > 128) {
-    // Rename to a shorter published id first, then unpublish.
+
     const doc = await c.getDocument(id);
     if (!doc) return { id, ok: false, reason: "missing" };
     const channel = String(doc.channel ?? "press");
@@ -65,7 +60,7 @@ async function unpublishOne(c: SanityClient, id: string) {
 }
 
 async function main() {
-  // Drop empty junk drafts
+
   const junk = await client.fetch<string[]>(
     `*[_type=="post" && _id in path("drafts.**") && (!defined(title) || title == null)]._id`,
   );
@@ -129,3 +124,4 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+

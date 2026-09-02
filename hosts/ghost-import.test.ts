@@ -23,3 +23,4 @@ test("galleries emit every image; sized Ghost URLs unwrap", () => {
   assert.match(md, /!\[A\]\(https:\/\/cdn\.example\/a\.jpg\)/);
   assert.match(md, /!\[B\]\(https:\/\/cdn\.example\/b\.jpg\)/);
 });
+

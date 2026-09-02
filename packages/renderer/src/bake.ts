@@ -44,12 +44,9 @@ export interface BakeOptions {
     whenToUse: string[];
     citeElsewhere: { label: string; url: string }[];
   };
-  /** Hand-authored pages already on the host (for the merged sitemap). */
+
   extraSitemapUrls?: SitemapEntry[];
-  /**
-   * CSS files concatenated (in order) into `<basePath>/blog.css` —
-   * conventionally [hosts/core/blog-core.css, hosts/<host>/theme.css].
-   */
+
   stylesheets: string[];
 }
 
@@ -93,7 +90,6 @@ interface FetchedAlbum {
   images: FetchedImage[];
 }
 
-/** image-<id>-<WxH>-<fmt> asset ref → CDN URL with params. */
 export function cdnUrl(projectId: string, dataset: string, ref: string, params: string): string | undefined {
   const m = /^image-([a-f0-9]+)-(\d+x\d+)-(\w+)$/.exec(ref);
   if (!m) return undefined;
@@ -192,9 +188,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const dir = join(outDir, ...basePath.split("/").filter(Boolean));
   await mkdir(dir, { recursive: true });
 
-  // Interlink hover cards: canonical AND path-relative URLs of every post
-  // on this channel resolve to the same social-card data the target
-  // page advertises.
   const cards = new Map<string, LinkCard>();
   for (const p of posts) {
     const card: LinkCard = {
@@ -206,7 +199,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     cards.set(`${basePath}/${p.slug}`, card);
   }
 
-  // Left rail: all posts on this channel (date-sorted; category = first tag).
   const navPosts: NavPost[] = posts.map((p) => ({
     title: p.title,
     url: `${basePath}/${p.slug}`,
@@ -227,7 +219,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const imgUrl = (b: { asset?: { _ref?: string; url?: string } }): string | undefined =>
     (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ?? b.asset?.url;
 
-  // Posts
   for (const p of posts) {
     const pageUrl = canonicalFor(channel, p.slug);
     const canonical = postCanonical(p, channel);
@@ -349,7 +340,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     await writeFile(join(dir, `${p.slug}.txt`), postText(p, pageUrl, body));
   }
 
-  // Index
   await writeFile(
     join(dir, "index.html"),
     htmlPage({
@@ -377,7 +367,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  // Feeds, sitemap, llms.txt, 404
   const css = await Promise.all(opts.stylesheets.map((f) => readFile(f, "utf8")));
   await writeFile(join(dir, "blog.css"), css.join("\n"));
   await writeFile(join(dir, "nav.js"), NAV_JS);
@@ -402,3 +391,4 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   return { pages: posts.length + 1 };
 }
+

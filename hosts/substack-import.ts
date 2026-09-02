@@ -1,9 +1,4 @@
-/**
- * goldenlight.substack.com → Sanity NDJSON. Skips slugs/titles already
- * imported from Ghost or Paragraph.
- *
- *   node --import tsx hosts/substack-import.ts [--out substack-posts.ndjson]
- */
+
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -24,7 +19,6 @@ function postId(slug: string): string {
   return id.length <= 128 ? id : `post-${CHANNEL}-${createHash("sha1").update(slug).digest("hex")}`;
 }
 
-/** Prefer the original S3 file inside a Substack CDN fetch URL. */
 export function unwrapSubstackImg(url: string): string {
   const m = url.match(/substackcdn\.com\/image\/fetch\/[^/]+\/(https?.+)$/);
   return m ? decodeURIComponent(m[1]) : url;
@@ -44,7 +38,7 @@ function hoistImages(body: PTLike[], title: string) {
     if (b._type !== "image") return { ...b, _key: `b${i}` };
     const url = b.asset?.url;
     if (!url) return { ...b, _key: `b${i}` };
-    // Keep CDN fetch URLs — raw S3 bucketeer returns 403.
+
     return {
       _type: "image",
       _key: `b${i}`,
@@ -59,7 +53,6 @@ function blockText(b: PTLike): string {
   return (b.children ?? []).map((c) => c.text ?? "").join("");
 }
 
-/** Prefer real captions; fall back to descriptive alt (not generic "Image"). */
 export function promoteImageCaptions(body: PTLike[], title: string): PTLike[] {
   return body.map((b) => {
     if (b._type !== "image") return b;
@@ -73,7 +66,6 @@ export function promoteImageCaptions(body: PTLike[], title: string): PTLike[] {
   });
 }
 
-/** Substack subtitle/description is post content — hoist into body when missing. */
 export function prependSubtitle(body: PTLike[], subtitle?: string): PTLike[] {
   const sub = (subtitle ?? "").trim();
   if (!sub) return body;
@@ -113,7 +105,7 @@ export function substackExcerpt(
       return [];
     })
     .map((s) => s.trim())
-    .find((s) => s && !/^image$/i.test(s) && !/^https?:\/\//i.test(s));
+    .find((s) => s && !/^image$/i.test(s) && !/^https?:\/\
   if (fromBody) return fromBody.slice(0, 300);
   const fromMd = mdFallback.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim();
   return (fromMd || p.title).slice(0, 300);
@@ -190,7 +182,6 @@ async function main() {
     }
     const p = (await res.json()) as FullPost;
     const html = p.body_html ?? "";
-    // Keep substackcdn.com/image/fetch/… URLs — unwrapping to S3 bucketeer 403s.
     const md = ghostHtmlToMarkdown(html);
     const { body: rawBody } = markdownToPost(md, CHANNEL);
     const body = enrichSubstackBody(hoistImages(rawBody, p.title), {
@@ -230,3 +221,4 @@ async function main() {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   await main();
 }
+

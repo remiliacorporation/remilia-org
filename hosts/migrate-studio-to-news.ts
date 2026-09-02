@@ -1,10 +1,4 @@
-/**
- * One-shot: rewrite post.channel "studio" → "news" in a Sanity dataset.
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx migrate-studio-to-news.ts
- *
- * Dry-run by default; pass --write to mutate.
- */
+
 import { createClient } from "@sanity/client";
 
 const write = process.argv.includes("--write");
@@ -35,3 +29,4 @@ const tx = client.transaction();
 for (const id of ids) tx.patch(id, { set: { channel: "news" } });
 await tx.commit();
 console.log(`patched ${ids.length} docs to channel:news`);
+

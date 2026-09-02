@@ -1,9 +1,4 @@
-/**
- * Visual preview without Sanity content: renders a fixture post (modeled on
- * the live Ghost post "RemiliaNET Alpha v0.8.1") through the real renderer
- * + the org chrome, with left rail, ToC, sidenotes, and interlinks.
- *   node --import tsx hosts/preview.ts org /tmp/press-preview
- */
+
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
@@ -99,7 +94,6 @@ const post = {
   tags: ["Feature"],
 };
 
-// A few sibling posts so the left rail + search have something to show.
 const navPosts: NavPost[] = [
   { title: post.title, url: `/press/${post.slug}`, date: post.publishedAt, category: "Feature", excerpt: post.excerpt, imageUrl: "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg", author: "Remilia Jackson" },
   { title: "Remilia Q3 Company Update", url: "/press/q3-update", date: "2026-07-02T00:00:00Z", category: "Company", excerpt: "Quarterly notes from the studio.", author: "Remilia Jackson" },
@@ -246,3 +240,4 @@ if (process.argv.includes("--serve")) {
     console.log(`http://127.0.0.1:${port}/press/${post.slug}/`);
   });
 }
+

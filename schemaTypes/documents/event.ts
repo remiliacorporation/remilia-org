@@ -1,7 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { CalendarIcon } from "@sanity/icons/Calendar";
 
-/** @deprecated Prefer Events posts (`channel: events`) with albums. Kept for legacy data. */
 export const event = defineType({
   name: "event",
   title: "Event (legacy)",
@@ -84,3 +83,4 @@ export const event = defineType({
     select: { title: "title", subtitle: "startsAt", media: "image" },
   },
 });
+

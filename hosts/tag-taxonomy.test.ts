@@ -31,3 +31,4 @@ test("events channel → Event first", () => {
   assert.equal(tags[0], "Event");
   assert.ok(tags.includes("Fashion") || tags.includes("Remilia") || tags.includes("Milady"));
 });
+

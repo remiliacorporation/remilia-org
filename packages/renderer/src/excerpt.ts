@@ -1,12 +1,9 @@
-/**
- * Sentence-aware excerpt truncation for meta / RSS / cards.
- * Prefer ending on `.!?` within the budget — never mid-word / mid-sentence.
- */
+
 export function smartExcerpt(raw: string, max = 300): string {
   const text = raw.replace(/\s+/g, " ").trim();
   if (!text) return "";
   if (text.length <= max) {
-    // Repair sources that were already hard-truncated mid-sentence (~at max).
+
     const looksTruncated = text.length >= Math.min(max - 20, 200) && /[a-z0-9]$/i.test(text) && !/[.!?]"?$/.test(text);
     if (looksTruncated) {
       const ends: number[] = [];
@@ -43,7 +40,6 @@ export function smartExcerpt(raw: string, max = 300): string {
   return slice.trim();
 }
 
-/** First N plain-text characters from Portable Text blocks (for excerpt fallback). */
 export function plainFromBlocks(
   blocks: Array<{
     _type?: string;
@@ -64,3 +60,4 @@ export function plainFromBlocks(
   }
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
+

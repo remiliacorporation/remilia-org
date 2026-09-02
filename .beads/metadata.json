@@ -1,7 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "remilia_content",
-  "project_id": "fdab4714-1355-4d8a-a52e-2337dbe41ef7"
-}

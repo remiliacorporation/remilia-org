@@ -18,15 +18,14 @@ function sectionList(
   channel: Channel,
   host: HostSuffix,
 ) {
-  // Stable pane ids: strip hyphens so URLs stay like …/structure/devblogRemiliaNet
-  // even when the channel field is `dev-blog`.
+
   const id = `${channel.replace(/-/g, "")}Remilia${host}`;
   return S.listItem()
     .title(title)
     .id(id)
     .icon(DocumentTextIcon)
     .child(
-      // documentList (not documentTypeList) — filtered lists are reliable this way.
+
       S.documentList()
         .id(`${id}List`)
         .title(title)
@@ -40,15 +39,6 @@ function sectionList(
     );
 }
 
-/**
- * Desks by host (Org / Com / Net) with section filters — keeps soft-lock
- * seats sane. Events/Albums live under Com (.com owns them).
- *
- * Hosted Studio must be redeployed after structure changes
- * (`pnpm run deploy:studio` as Admin). Until then, remilia.sanity.studio
- * still serves the Aug 2026 Press/Studio/Devblog desks and looks empty
- * against the retagged dataset.
- */
 export const structure: StructureResolver = (S) =>
   S.list()
     .title("Content")
@@ -114,3 +104,4 @@ export const structure: StructureResolver = (S) =>
         .icon(CaseIcon)
         .child(S.document().schemaType("org").documentId("org")),
     ]);
+

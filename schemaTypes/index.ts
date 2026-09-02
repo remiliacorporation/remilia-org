@@ -8,14 +8,15 @@ import { seo } from "./objects/seo";
 import { blockContent } from "./objects/blockContent";
 
 export const schemaTypes = [
-  // documents
+
   post,
   author,
   tag,
   event,
   album,
   org,
-  // objects
+
   seo,
   blockContent,
 ];
+

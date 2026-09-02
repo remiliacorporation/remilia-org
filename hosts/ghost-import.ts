@@ -1,11 +1,4 @@
-/**
- * Published Ghost posts → Sanity NDJSON. No Ghost admin / API key.
- * Uses the public sitemap + each post page (blog.remilia.org).
- *
- *   node --import tsx hosts/ghost-import.ts [--channel press] [--out ghost-posts.ndjson]
- *
- * Drafts/scheduled are not public — those still need a Ghost export.
- */
+
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -30,9 +23,8 @@ function stripTags(html: string): string {
   return decode(html.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
 }
 
-/** Prefer the original Ghost file, not the `/size/w600/` thumbnail. */
 export function fullImageUrl(url: string): string {
-  return url.replace(/\/size\/w\d+\//, "/");
+  return url.replace(/\/size\/w\d+\
 }
 
 function imgMarkdown(tag: string): string {
@@ -42,7 +34,6 @@ function imgMarkdown(tag: string): string {
   return `![${decode(alt)}](${fullImageUrl(src)})`;
 }
 
-/** Ghost / Koenig HTML → Markdown the existing PT compiler already understands. */
 export function ghostHtmlToMarkdown(html: string): string {
   let h = html.replace(/\r/g, "");
   h = h.replace(/<script[\s\S]*?<\/script>/gi, "");
@@ -260,3 +251,4 @@ async function main() {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   await main();
 }
+

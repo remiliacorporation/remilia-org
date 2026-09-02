@@ -24,7 +24,8 @@ export default defineConfig({
     ],
   },
   document: {
-    // Singleton is created/opened via Structure only.
+
     newDocumentOptions: (prev) => prev.filter((t) => t.templateId !== "org"),
   },
 });
+

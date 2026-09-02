@@ -8,20 +8,9 @@ import {
   sitemapUrl,
 } from "@remilia/seo";
 
-/**
- * Pure auditors for the SEO/LLM contract (BLOG-MIGRATION.md §6). Each takes
- * fetched text and returns human-readable violations — empty array = pass.
- * The CLI wires them to live URLs; tests wire them to fixtures.
- */
-
 const matchAll = (html: string, re: RegExp): string[] =>
   Array.from(html.matchAll(re), (m) => m[1] ?? m[0]);
 
-/**
- * A rendered post/index page: exactly one title/description/canonical,
- * JSON-LD present and parseable, one H1, and enough raw text that an agent
- * without JavaScript sees real content (is-agentic "content without JS").
- */
 export function auditPage(
   html: string,
   expectedCanonical: string,
@@ -83,7 +72,6 @@ export function auditPage(
   return errors;
 }
 
-/** Post pages must never be noindex; origin hosts must be. */
 export function auditIndexability(html: string, expectIndexable: boolean): string[] {
   const noindex = /<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(html);
   if (expectIndexable && noindex) return ["page is noindex but must be indexable"];
@@ -91,11 +79,6 @@ export function auditIndexability(html: string, expectIndexable: boolean): strin
   return [];
 }
 
-/**
- * Nonexistent paths must return a real 404/410 — never a 200 app shell
- * (soft-404 makes agents believe every path exists). Full agent-readiness
- * credit wants the 404 body to point at the sitemap or llms.txt.
- */
 export function audit404(status: number, body: string): string[] {
   if (status !== 404 && status !== 410)
     return [`nonexistent path returned HTTP ${status} (soft-404) — must be 404 or 410`];
@@ -104,7 +87,6 @@ export function audit404(status: number, body: string): string[] {
   return [];
 }
 
-/** Sitemap: parseable, non-empty, and every URL belongs to this channel's host+basepath. */
 export function auditSitemap(xml: string, channel: Channel): string[] {
   const errors: string[] = [];
   const locs = matchAll(xml, /<loc>([^<]+)<\/loc>/gi);
@@ -117,7 +99,6 @@ export function auditSitemap(xml: string, channel: Channel): string[] {
   return errors;
 }
 
-/** RSS: right channel link, self link, and at least one item with a permalink guid. */
 export function auditRss(xml: string, channel: Channel): string[] {
   const errors: string[] = [];
   if (!xml.includes(`<link>${indexUrl(channel)}</link>`))
@@ -133,7 +114,6 @@ export function auditRss(xml: string, channel: Channel): string[] {
   return errors;
 }
 
-/** Atom 1.0: self link, feed id, and on-channel entry ids. */
 export function auditAtom(xml: string, channel: Channel): string[] {
   const errors: string[] = [];
   if (!xml.includes(`href="${atomUrl(channel)}"`))
@@ -148,7 +128,6 @@ export function auditAtom(xml: string, channel: Channel): string[] {
   return errors;
 }
 
-/** Channel index pages must advertise their feeds for autodiscovery. */
 export function auditFeedDiscovery(html: string, channel: Channel): string[] {
   const errors: string[] = [];
   if (!new RegExp(`rel=["']alternate["'][^>]*application/rss\\+xml[^>]*href=["']${rssUrl(channel)}["']|href=["']${rssUrl(channel)}["'][^>]*application/rss\\+xml`).test(html))
@@ -158,11 +137,6 @@ export function auditFeedDiscovery(html: string, channel: Channel): string[] {
   return errors;
 }
 
-/**
- * Semantic HTML on article pages: content in <article> inside <main>, with
- * a machine-readable <time datetime>. Landmarks are what let agents and
- * readers extract the article without heuristics.
- */
 export function auditArticleSemantics(html: string): string[] {
   const errors: string[] = [];
   if (!/<main[\s>]/i.test(html)) errors.push("no <main> landmark");
@@ -172,14 +146,12 @@ export function auditArticleSemantics(html: string): string[] {
   return errors;
 }
 
-/** robots.txt must advertise this channel's sitemap. */
 export function auditRobots(txt: string, channel: Channel): string[] {
   return txt.includes(sitemapUrl(channel))
     ? []
     : [`robots.txt missing "Sitemap: ${sitemapUrl(channel)}"`];
 }
 
-/** llms.txt: exists, cites the wiki, and never lists another host's posts. */
 export function auditLlmsTxt(txt: string, channel: Channel): string[] {
   const errors: string[] = [];
   if (!txt.trim()) errors.push("llms.txt is empty");
@@ -199,7 +171,7 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
   const foreign = channels
     .filter((c) => c !== channel)
     .map((c) => `${CHANNEL_ORIGIN[c]}${CHANNEL_BASEPATH[c]}/`);
-  // Same public path /updates on org and net — only flag when origin differs.
+
   const seen = new Set<string>();
   for (const prefix of foreign) {
     if (seen.has(prefix)) continue;
@@ -209,3 +181,4 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
   }
   return errors;
 }
+

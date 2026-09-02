@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { htmlPage, articleHtml, adjacentHtml, citeBox, notFoundHtml, tocBox, indexMain, type Chrome } from "./page";
 import { leftRail, filterBar } from "./nav";
-// Cross-package source import: lockstep proof that baked output passes the auditor.
+
 import { auditPage, auditArticleSemantics, auditIndexability } from "../../conformance/src/audit";
 import { galleryHtml } from "./gallery";
 
@@ -198,3 +198,4 @@ test("gallery renders figures with alt and a dialog lightbox", () => {
   assert.ok(html.includes("<dialog"));
   assert.ok(html.includes("<figcaption>A</figcaption>"));
 });
+

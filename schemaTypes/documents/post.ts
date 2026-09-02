@@ -7,11 +7,6 @@ import {
   type Channel,
 } from "../../lib/access";
 
-/**
- * One post type for all host sections. `channel` is the section id; the
- * canonical URL is always derived from section + slug — editors never pick
- * a URL by hand. Use `dev-updates` (not org `updates`) for remilia.net/updates.
- */
 export const post = defineType({
   name: "post",
   title: "Post",
@@ -250,3 +245,4 @@ export const post = defineType({
     },
   },
 });
+

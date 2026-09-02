@@ -1,21 +1,5 @@
 import { esc } from "./html";
 
-/**
- * Portable Text → semantic HTML. No framework. JS is optional: left-rail
- * search + ToC spy (progressive — the page works without either).
- *
- * Emits:
- * - h2/h3 with slug ids; the WHOLE heading text is the anchor link, and a
- *   #/## marker is revealed in the left gutter on hover (pure CSS).
- * - external links marked `rel="external noopener"` (CSS adds the ↗).
- * - internal links with bake-supplied card data → `.interlink` + CSS hover
- *   card (the target's own social-card data).
- * - footnotes: one `.fn` wrapping [N] + the note. Compact is a CSS
- *   tooltip (hover / checkbox sticky / scrim dismiss). Desktop: gutter.
- *
- * Returns the html string; notes are inline.
- */
-
 interface Span {
   _type: "span";
   text: string;
@@ -97,7 +81,6 @@ function plainText(block: TextBlock): string {
   return block.children.map((s) => s.text).join("");
 }
 
-/** Deduped slug ids in document order — MUST match portableTextToHtml. */
 export function extractHeadings(blocks: PTBlock[]): Heading[] {
   const seen = new Map<string, number>();
   return headingBlocks(blocks).map(({ block, level }) => {
@@ -109,10 +92,6 @@ export function extractHeadings(blocks: PTBlock[]): Heading[] {
   });
 }
 
-/**
- * ToC list items — h2/h3 only (h4+ excluded). Numbering (1. / 1.a.) is
- * CSS counters in blog-core.css. Caller supplies the wrapper + heading.
- */
 export function tocItems(headings: Heading[], minHeadings = 3): string {
   const usable = headings.filter((h) => h.level <= 3);
   if (usable.length < minHeadings) return "";
@@ -121,7 +100,6 @@ export function tocItems(headings: Heading[], minHeadings = 3): string {
     .join("\n");
 }
 
-/** Same numbering as portableTextToHtml / fnHtml. */
 export function footnoteCount(blocks: PTBlock[]): number {
   let n = 0;
   for (const b of blocks) {
@@ -246,12 +224,11 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
         `<figure><a href="${esc(src)}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
       );
     }
-    // Unknown types are skipped deliberately: the Ghost card audit adds
-    // explicit cases here; silent HTML injection is never a fallback.
+
   }
   flushList();
   closeH2();
 
-
   return out.join("\n");
 }
+

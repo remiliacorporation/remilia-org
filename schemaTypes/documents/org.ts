@@ -1,11 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { CaseIcon } from "@sanity/icons/Case";
 
-/**
- * Singleton (_id: "org"). One source of truth for Organization JSON-LD on
- * all three hosts — the entity search engines and LLMs resolve everything
- * else against. Created/opened via Structure only.
- */
 export const org = defineType({
   name: "org",
   title: "Organization",
@@ -57,3 +52,4 @@ export const org = defineType({
   ],
   preview: { select: { title: "name", subtitle: "legalName" } },
 });
+

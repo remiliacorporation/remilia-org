@@ -1,14 +1,5 @@
 #!/usr/bin/env node
-/**
- * Audits a live host against the SEO/LLM contract. CI gate for every
- * render app (post-deploy smoke, like reminet's deploy-docs smoke check).
- *
- *   seo-conformance <channel> [--base https://staging-host]
- *
- * Without --base, audits the production host for the channel. Discovers a
- * sample post from the sitemap, then audits: robots.txt, sitemap, RSS,
- * llms.txt, the index page, and the sample post page. Exit 1 on violations.
- */
+
 import {
   type Channel,
   CHANNEL_BASEPATH,
@@ -81,7 +72,6 @@ try {
   });
   record("404 behavior", audit404(missing.status, await missing.text()));
 
-  // Emerging bonus, warn-only: text/markdown content negotiation with Vary.
   const md = await fetch(`${origin}${basePath}`, {
     headers: { accept: "text/markdown" },
     redirect: "follow",
@@ -96,7 +86,6 @@ try {
     ...auditFeedDiscovery(indexHtml, channel),
   ]);
 
-  // Sample the newest post URL out of the sitemap (any loc under the basepath that isn't the index).
   const sample = Array.from(sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/gi), (m) => m[1]).find(
     (loc) => loc.startsWith(`${CHANNEL_ORIGIN[channel]}${basePath}/`) && !loc.endsWith(basePath),
   );
@@ -123,3 +112,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`✓ ${channel} host conforms to the SEO/LLM contract`);
+

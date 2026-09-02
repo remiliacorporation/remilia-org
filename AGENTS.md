@@ -1,25 +1,9 @@
 # Agent instructions
 
-Issue tracking is **bd (beads)**. Run `bd prime` for workflow context.
-
-```bash
-bd ready
-bd show <id>
-bd update <id> --claim
-bd close <id>
-bd dolt push
-```
-
-Use `bd` for task tracking (not markdown TODO lists). Use `bd remember` for
-durable project memory. Issues sync to the **private** `remilia-beads` remote —
-see [docs/beads-sync.md](docs/beads-sync.md). **Sanity posts/drafts are not in Beads.**
-
-Skill: `.agents/skills/beads/SKILL.md`
-
 ## Shell
 
-Always use non-interactive file ops (`cp -f`, `mv -f`, `rm -f` / `rm -rf`).
-Prefer `ssh`/`scp` with `-o BatchMode=yes`.
+Use non-interactive file ops: `cp -f`, `mv -f`, `rm -f` / `rm -rf`.
+For `ssh` / `scp`: `-o BatchMode=yes`.
 
 ## Build
 
@@ -27,9 +11,14 @@ Prefer `ssh`/`scp` with `-o BatchMode=yes`.
 pnpm install
 pnpm validate
 pnpm typecheck
-pnpm bake          # bake:org + bake:fx
+pnpm bake
 cd hosts && node --import tsx --test bake-fx.test.ts
 ```
 
-Corporate pages: edit `.layer-base` only; `bake:fx` regenerates `.layer-fx`.
-Ops/import recipes: [docs/ops.md](docs/ops.md).
+Sanity: project `8x9419lh`, dataset `production`.
+
+Corporate HTML: edit `.layer-base` only; run `pnpm bake:fx` (or full `pnpm bake`) to
+regenerate `.layer-fx`. Generated literature under `deploy/{updates,press,thought,archive}/`
+is gitignored — do not hand-edit.
+
+Studio deploy: `pnpm run deploy:studio` (not `pnpm deploy`).

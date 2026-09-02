@@ -1,10 +1,5 @@
 import type { CurrentUser } from "sanity";
 
-/**
- * Section ids (field still named `channel` on post docs). Host + public path
- * are derived — see `@remilia/seo` CHANNEL_* maps. `dev-updates` is the schema
- * id for remilia.net/updates so GROQ never confuses it with org `updates`.
- */
 export type Channel =
   | "updates"
   | "press"
@@ -37,11 +32,6 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   "dev-blog": "remilia.net/blog",
 };
 
-/**
- * Section → editor emails. UI-level soft lock only (content-scoped roles are
- * Enterprise-only; API tokens bypass this). Empty list = section open to all.
- * Admins always pass. Soft-lock seats stay sane when desks filter by host.
- */
 const CHANNEL_EDITORS: Record<Channel, string[]> = {
   updates: [],
   press: [],
@@ -63,3 +53,4 @@ export function canEditChannel(
   if (!allowed || allowed.length === 0) return true;
   return allowed.includes(user.email ?? "");
 }
+

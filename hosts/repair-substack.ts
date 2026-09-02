@@ -1,10 +1,4 @@
-/**
- * Re-fetch goldenlight.substack.com posts and rewrite Sanity bodies with
- * uploaded image assets (NDJSON `_sanityAsset` never resolved on mutate).
- *
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx repair-substack.ts
- *   SANITY_TOKEN=… pnpm --filter @remilia/hosts exec node --import tsx repair-substack.ts --write
- */
+
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
@@ -34,8 +28,8 @@ type PTBlock = Record<string, unknown> & { _type?: string; _key?: string };
 const assetCache = new Map<string, string>();
 
 async function uploadImage(url: string): Promise<string | null> {
-  // Prefer Substack CDN fetch URLs — raw bucketeer S3 returns 403.
-  const clean = /substackcdn\.com\/image\/fetch\//.test(url) ? url : unwrapSubstackImg(url);
+
+  const clean = /substackcdn\.com\/image\/fetch\
   if (assetCache.has(clean)) return assetCache.get(clean)!;
   try {
     const res = await fetch(clean, {
@@ -76,7 +70,7 @@ async function resolveImages(body: PTBlock[], title: string): Promise<PTBlock[]>
           ? (b.asset as { url: string }).url
           : undefined;
     if (!url) {
-      // already a ref?
+
       if (b.asset && typeof b.asset === "object" && "_ref" in (b.asset as object)) {
         out.push({ ...b, _key: b._key ?? `b${i}` });
         continue;
@@ -120,7 +114,7 @@ async function main() {
       post_date?: string;
       canonical_url?: string;
     };
-    // Keep substackcdn fetch URLs (S3 originals 403).
+
     const html = p.body_html ?? "";
     const md = ghostHtmlToMarkdown(html);
     const { body: rawBody } = markdownToPost(md, CHANNEL);
@@ -183,3 +177,4 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+

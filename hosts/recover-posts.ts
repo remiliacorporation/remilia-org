@@ -1,7 +1,4 @@
-/**
- * Recover posts deleted during a bad unpublish batch, via Sanity history.
- * Then unpublish safely using the document actions API.
- */
+
 import { createClient } from "@sanity/client";
 import { createHash } from "node:crypto";
 
@@ -22,7 +19,7 @@ const client = createClient({
 });
 
 function shortId(prefix: string, slug: string): string {
-  // Keep under 128 even with drafts. prefix (7 chars)
+
   const base = `${prefix}-${slug}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
   if (base.length <= 120) return base;
   const hash = createHash("sha1").update(base).digest("hex").slice(0, 10);
@@ -109,10 +106,10 @@ async function main() {
     if (!slug) continue;
     for (const ch of channels) {
       candidates.add(`post-${ch}-${slug}`);
-      candidates.add(`post-press-${slug}`); // common import prefix historically
+      candidates.add(`post-press-${slug}`);
     }
   }
-  // Miladychan import ids (post-dev-blog-miladychan-v0N)
+
   for (const slug of ["v01", "v02", "v03", "v04"]) {
     candidates.add(`post-dev-blog-miladychan-${slug}`);
     candidates.add(`post-devblog-miladychan-${slug}`);
@@ -132,7 +129,6 @@ async function main() {
     if (i % 100 === 0) console.log(`  …checked ${i}/${candidates.size}`);
   }
 
-  // Dedupe by _id
   const byId = new Map(recovered.map((d) => [String(d._id), d]));
   console.log(`unique recovered from history: ${byId.size}`);
 
@@ -141,7 +137,6 @@ async function main() {
     return;
   }
 
-  // Restore as DRAFTS only (unpublished), shortening IDs if needed for drafts. prefix
   let n = 0;
   for (const doc of byId.values()) {
     const rawId = String(doc._id);
@@ -173,3 +168,4 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
