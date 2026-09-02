@@ -61,11 +61,21 @@ svg.fx{position:absolute;width:0;height:0}
 /* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-/* FX twin under base: ink ghost, slightly offset = second press pass on type (not border scribble). */
-.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.38;user-select:none}
+/*
+ * FX twin = second ink pass on type only.
+ * feOffset shifts glyphs; borders/rules/frames are stripped so box edges stay single and sharp.
+ */
+.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.42;user-select:none}
 .page-careers .layer-fx{filter:none}
-.page-careers .layer-fx table{filter:url(#print-fx);opacity:0.38}
-.layer-fx iframe{visibility:hidden}
+.page-careers .layer-fx table{filter:url(#print-fx);opacity:0.42}
+.layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
+  border:none !important;
+  border-color:transparent !important;
+  background:transparent !important;
+  box-shadow:none !important
+}
+.layer-fx header > :is(h1, .mast){border:none !important;background:transparent !important}
+.layer-fx :is(hr, iframe, .ht, .home-crest, .fx-ph, .fx-ph-yt, .office-frame, .scroll-wrap){visibility:hidden}
 .layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
 .layer-base{position:relative;z-index:2;background:transparent}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
@@ -247,7 +257,6 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
   mask-size:100% 100%;mask-repeat:no-repeat;mask-position:center
 }
 .home-crest:hover .ht::after,.home-crest:focus-visible .ht::after{opacity:0}
-.layer-fx .home-crest{visibility:hidden}
 /* Jackson portrait sits above the hr, centered */
 .rj-block{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin:0 0 20px}
 .rj-photo{display:block;width:40px;height:40px;object-fit:cover;border:1px solid var(--ink)}
