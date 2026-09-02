@@ -20,15 +20,15 @@ pnpm install
 pnpm dev              # Studio — http://localhost:3333
 pnpm validate
 pnpm typecheck
-pnpm bake             # bake:org then bake:fx
-cd hosts && node --import tsx --test bake-fx.test.ts
+pnpm bake             # bake:corp then bake:org then bake:fx
+cd hosts && node --import tsx --test bake-corp.test.ts bake-fx.test.ts
 ```
 
 Sanity: project `8x9419lh`, dataset `production`.
 
-Corporate HTML: edit `.layer-base` only; run `pnpm bake:fx` (or full `pnpm bake`) to
-regenerate `.layer-fx`. Generated literature under `deploy/{updates,press,thought,archive}/`
-is gitignored — do not hand-edit.
+Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
+`bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated
+literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
 
 Bake emits per post: HTML, `.md`, `.txt`, section indexes, `rss.xml`, `atom.xml`,
 `sitemap.xml`, `llms.txt`. Drafts (`drafts.*` in Sanity) are skipped at bake.
@@ -54,8 +54,9 @@ Hosted at `remilia.sanity.studio`. Do not use `pnpm deploy` (pnpm builtin).
 
 ## Corporate pages
 
-Edit `.layer-base` only in `deploy/` (about, home, careers, contact). `bake:fx` clones
-`.layer-fx` at build for the print filter — no client JS. Details: [/about](https://remilia.org/about).
+Edit `.layer-base` only in `deploy/src/` (about, home, careers, contact). `bake:corp` merges
+head partials; `bake:fx` clones `.layer-fx` at build for the print filter — no client JS.
+Details: [/about](https://remilia.org/about).
 
 ## License
 

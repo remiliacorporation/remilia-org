@@ -11,7 +11,7 @@ async function* walkHtml(dir: string): AsyncGenerator<string> {
   for (const e of entries) {
     const p = join(dir, e.name);
     if (e.isDirectory()) {
-      if (e.name === "node_modules" || e.name === ".git" || e.name === "assets") continue;
+      if (e.name === "node_modules" || e.name === ".git" || e.name === "assets" || e.name === "src") continue;
       yield* walkHtml(p);
     } else if (e.isFile() && e.name.endsWith(".html")) {
       yield p;
