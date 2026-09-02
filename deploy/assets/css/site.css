@@ -61,18 +61,14 @@ svg.fx{position:absolute;width:0;height:0}
 /* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.90;user-select:none}
+/* FX twin sits under base: ink ghost + displacement = misregistered second pass.
+   Paper-colored FX text made the overprint invisible — keep ink, lower opacity. */
+.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.42;user-select:none}
 .page-careers .layer-fx{filter:none}
-.page-careers .layer-fx table{filter:url(#print-fx)}
-.layer-fx,
-.layer-fx *{
-  color:var(--paper) !important;
-  -webkit-text-fill-color:var(--paper) !important;
-  text-decoration-color:var(--paper) !important
-}
+.page-careers .layer-fx table{filter:url(#print-fx);opacity:0.42}
 .layer-fx iframe{visibility:hidden}
 .layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
-.layer-base{position:relative;z-index:2}
+.layer-base{position:relative;z-index:2;background:transparent}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
