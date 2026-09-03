@@ -148,12 +148,13 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
               <td class="text">Authors maintain one tree in <code>deploy/src/</code>: <code>layer-base</code>, the
                 readable document. Shared head tags live in <code>_partials/</code> and merge at
                 <code>bake:corp</code>. At <code>bake:fx</code>, a decorative <code>layer-fx</code> twin is cloned from
-                it — ink ghost under the sharp base, <code>pointer-events: none</code>, <code>aria-hidden</code>,
-                <code>inert</code>, <code>data-nosnippet</code>, embeds blanked so they do not double-load. SVG filter
-                Live type keeps its misregistered ink feel with a direct paper-tinted text shadow, so letters get
-                the offset pass without doubling frames or rules. The baked <code>layer-fx</code> twin stays
-                decorative/inert; embeds are blanked so they do not double-load. Crest and photo cells use
-                <code>dither-3</code> plus an ink overlay. Agents and printers should ignore the FX layer.</td>
+                it — a paper-colored type twin is cloned on top of the sharp ink and
+                shifted 1px, so each glyph loses a paper edge on one side and keeps extra
+                ink on the other. Borders and frames are omitted from that layer.
+                <code>pointer-events: none</code>, <code>aria-hidden</code>, <code>inert</code>,
+                <code>data-nosnippet</code>, embeds blanked. Crest and photo cells use
+                <code>dither-3</code> plus an ink overlay. Agents and printers should ignore
+                the FX layer.</td>
             </tr>
           </table>
         </section>
