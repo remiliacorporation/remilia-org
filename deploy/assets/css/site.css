@@ -67,15 +67,15 @@ svg.fx{position:absolute;width:0;height:0}
 .layer-fx{
   position:absolute;top:0;left:0;right:0;z-index:1;
   pointer-events:none;user-select:none;
-  transform:translate(2px, 1px)
+  transform:translate(3px, 2px)
 }
 .page-careers .layer-fx{transform:none}
-.page-careers .layer-fx table{transform:translate(2px, 1px)}
+.page-careers .layer-fx table{transform:translate(3px, 2px)}
 .layer-fx,
 .layer-fx *{
-  color:color-mix(in srgb, var(--ink) 55%, white) !important;
-  -webkit-text-fill-color:color-mix(in srgb, var(--ink) 55%, white) !important;
-  text-decoration-color:color-mix(in srgb, var(--ink) 55%, white) !important
+  color:#ff7a7a !important;
+  -webkit-text-fill-color:#ff7a7a !important;
+  text-decoration-color:#ff7a7a !important
 }
 .layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
   border:none !important;

@@ -148,12 +148,12 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
               <td class="text">Authors maintain one tree in <code>deploy/src/</code>: <code>layer-base</code>, the
                 readable document. Shared head tags live in <code>_partials/</code> and merge at
                 <code>bake:corp</code>. At <code>bake:fx</code>, a decorative <code>layer-fx</code> twin is cloned from
-                it — a lighter ink twin sits under the sharp base and is shifted 2px,
-                so each glyph shows a visible second press. Borders and frames are omitted
-                from that layer. <code>pointer-events: none</code>, <code>aria-hidden</code>,
-                <code>inert</code>, <code>data-nosnippet</code>, embeds blanked. Crest and
-                photo cells use <code>dither-3</code> plus an ink overlay. Agents and
-                printers should ignore the FX layer.</td>
+                it — a lighter ink twin (<code>#ff7a7a</code>) sits under the sharp base and
+                is shifted 3px/2px so each glyph shows a visible second press. Borders and
+                frames are omitted from that layer. <code>pointer-events: none</code>,
+                <code>aria-hidden</code>, <code>inert</code>, <code>data-nosnippet</code>,
+                embeds blanked. Crest and photo cells use <code>dither-3</code> plus an ink
+                overlay. Agents and printers should ignore the FX layer.</td>
             </tr>
           </table>
         </section>
