@@ -165,7 +165,7 @@ td.marquee .scroll-wrap{border:none;padding:8px 0;max-width:100%}
 .logo-wiki{height:129px}
 .logo-word{height:113px}
 /* Lift RemiliaNET mark only; .logo-tag stays on the link box (bottom:100%) */
-.page-home a.hot-net .logo-word{transform:translateY(-36px)}
+.page-home a.hot-net .logo-word{transform:translateY(-24px)}
 .logo-tag{
   position:absolute;z-index:1;bottom:100%;
   border:1px solid var(--ink);background:var(--paper);
@@ -228,7 +228,7 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .home-crest{
   display:block;width:64px;margin:12px auto 20px;text-decoration:none;position:relative;
   /* room so the offset dither shadow is not clipped */
-  padding:0 5px 7px 0
+  padding:0 3px 4px 0
 }
 .home-crest .ht{
   width:64px;height:64px;aspect-ratio:1;background:transparent;position:relative;z-index:1;
@@ -238,7 +238,7 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 /* Dithered drop shadow behind the flower pin (on crest, not .ht — avoids overflow/isolation clip) */
 .home-crest::before{
   content:"";position:absolute;left:0;top:0;width:64px;height:64px;z-index:0;
-  transform:translate(4px,5px);
+  transform:translate(2px,2px);
   background-color:var(--ink);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%23fff'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23fff'/%3E%3C/svg%3E");
   background-size:var(--dither-cell,2px) var(--dither-cell,2px);
