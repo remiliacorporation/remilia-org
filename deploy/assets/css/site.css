@@ -161,7 +161,7 @@ td.marquee .scroll-wrap{border:none;padding:8px 0;max-width:100%}
 .logo-wiki{height:129px}
 .logo-word{height:113px}
 /* Lift RemiliaNET mark only; .logo-tag stays on the link box (bottom:100%) */
-.page-home a.hot-net .logo-word{transform:translateY(-36px)}
+.page-home a.hot-net .logo-word{transform:translateY(-42px)}
 .logo-tag{
   position:absolute;z-index:1;bottom:100%;
   border:1px solid var(--ink);background:var(--paper);
