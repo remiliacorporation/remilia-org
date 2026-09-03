@@ -59,19 +59,24 @@ svg.fx{position:absolute;width:0;height:0}
 .page-simple main{max-width:720px;margin:40px auto;padding:20px}
 
 /* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx.
- * Double text = second INK plate under the sharp base, shifted 2px.
- * Twin keeps ink color (not paper — paper under is invisible). Chrome/borders
- * stripped so only glyphs show the second press. */
+ * Double text = lighter ink twin UNDER the sharp base, shifted 2px — a second
+ * press you can actually see (same-red twin only looked like thicker type).
+ * Chrome/borders stripped so frames stay single. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
 .layer-fx{
   position:absolute;top:0;left:0;right:0;z-index:1;
   pointer-events:none;user-select:none;
-  transform:translate(3px, 2px)
+  transform:translate(2px, 1px)
 }
 .page-careers .layer-fx{transform:none}
-.page-careers .layer-fx table{transform:translate(3px, 2px)}
-/* no paper force — twin must stay ink-colored to read as a second press */
+.page-careers .layer-fx table{transform:translate(2px, 1px)}
+.layer-fx,
+.layer-fx *{
+  color:color-mix(in srgb, var(--ink) 55%, white) !important;
+  -webkit-text-fill-color:color-mix(in srgb, var(--ink) 55%, white) !important;
+  text-decoration-color:color-mix(in srgb, var(--ink) 55%, white) !important
+}
 .layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
   border:none !important;
   border-color:transparent !important;
