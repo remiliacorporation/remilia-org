@@ -58,33 +58,24 @@ svg.fx{position:absolute;width:0;height:0}
 .fx-ph-yt{width:100%;height:405px}
 .page-simple main{max-width:720px;margin:40px auto;padding:20px}
 
-/* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build. */
+/* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build.
+ * Mechanism (exact pre-FX / f397fed): paper-colored twin UNDER the sharp base,
+ * lightly displaced by print-fx (turbulence scale 0.7). Type stays solid red;
+ * the twin’s ink chrome (borders) is what misregisters. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-/*
- * Visual target (from f397fed vs current A/B): solid readable red type, with a
- * second ink plate peeking 1px off the glyphs — not a paper knockout on top
- * (that hollowed letters into outlines) and not turbulence (that scribbled frames).
- * FX sits UNDER the sharp base; chrome is stripped so only type misregisters.
- */
-.layer-fx{
-  position:absolute;top:0;left:0;right:0;z-index:1;
-  pointer-events:none;user-select:none;
-  transform:translate(1px, 1px);
-  opacity:0.55
+.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.90;user-select:none}
+.page-careers .layer-fx{filter:none}
+.page-careers .layer-fx table{filter:url(#print-fx)}
+.layer-fx,
+.layer-fx *{
+  color:var(--paper) !important;
+  -webkit-text-fill-color:var(--paper) !important;
+  text-decoration-color:var(--paper) !important
 }
-.layer-base{position:relative;z-index:2;background:transparent}
-.layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
-  border:none !important;
-  border-color:transparent !important;
-  background:transparent !important;
-  box-shadow:none !important
-}
-.layer-fx header > :is(h1, .mast){border:none !important;background:transparent !important}
-.layer-fx :is(hr, iframe, .ht, .home-crest, .fx-ph, .fx-ph-yt, .office-frame, .scroll-wrap){visibility:hidden}
+.layer-fx iframe{visibility:hidden}
 .layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
-.page-careers .layer-fx{transform:none;opacity:1}
-.page-careers .layer-fx table{transform:translate(1px, 1px);opacity:0.55}
+.layer-base{position:relative;z-index:2}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
@@ -395,7 +386,7 @@ header > h1:focus-visible{outline-offset:4px}
 
 @media (prefers-reduced-motion: reduce){
   .scroll-track{animation:none}
-  .layer-fx,.page-careers .layer-fx table{transform:none}
+  .layer-fx,.page-careers .layer-fx table{filter:none}
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
