@@ -62,22 +62,18 @@ svg.fx{position:absolute;width:0;height:0}
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
 /*
- * Original ink offset: a paper-colored type twin sits on top of the sharp ink,
- * shifted 1px. That knocks a paper edge off one side of each glyph and leaves
- * extra ink on the other — a second plate, not a shadow and not a warped frame.
+ * Visual target (from f397fed vs current A/B): solid readable red type, with a
+ * second ink plate peeking 1px off the glyphs — not a paper knockout on top
+ * (that hollowed letters into outlines) and not turbulence (that scribbled frames).
+ * FX sits UNDER the sharp base; chrome is stripped so only type misregisters.
  */
-.layer-base{position:relative;z-index:2;background:transparent}
 .layer-fx{
-  position:absolute;top:0;left:0;right:0;z-index:3;
+  position:absolute;top:0;left:0;right:0;z-index:1;
   pointer-events:none;user-select:none;
-  transform:translate(1px, 1px)
+  transform:translate(1px, 1px);
+  opacity:0.55
 }
-.layer-fx,
-.layer-fx *{
-  color:var(--paper) !important;
-  -webkit-text-fill-color:var(--paper) !important;
-  text-decoration-color:var(--paper) !important
-}
+.layer-base{position:relative;z-index:2;background:transparent}
 .layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
   border:none !important;
   border-color:transparent !important;
@@ -87,8 +83,8 @@ svg.fx{position:absolute;width:0;height:0}
 .layer-fx header > :is(h1, .mast){border:none !important;background:transparent !important}
 .layer-fx :is(hr, iframe, .ht, .home-crest, .fx-ph, .fx-ph-yt, .office-frame, .scroll-wrap){visibility:hidden}
 .layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
-.page-careers .layer-fx{transform:none}
-.page-careers .layer-fx table{transform:translate(1px, 1px)}
+.page-careers .layer-fx{transform:none;opacity:1}
+.page-careers .layer-fx table{transform:translate(1px, 1px);opacity:0.55}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
