@@ -399,6 +399,7 @@ header > h1:focus-visible{outline-offset:4px}
 
 @media (prefers-reduced-motion: reduce){
   .scroll-track{animation:none}
+  .layer-fx,.page-careers .layer-fx table{transform:none}
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
