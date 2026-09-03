@@ -59,41 +59,26 @@ svg.fx{position:absolute;width:0;height:0}
 .page-simple main{max-width:720px;margin:40px auto;padding:20px}
 
 /* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx.
- * Double text = lighter ink twin UNDER the sharp base, shifted 2px — a second
- * press you can actually see (same-red twin only looked like thicker type).
- * Chrome/borders stripped so frames stay single. */
+ * Double text on glyphs: hard pink text-shadow on the base (never paints borders).
+ * Index stacking/overflow was swallowing the under-twin, so the twin is hidden
+ * and the second press is painted as text-shadow instead. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-.layer-fx{
-  position:absolute;top:0;left:0;right:0;z-index:1;
-  pointer-events:none;user-select:none;
-  transform:translate(3px, 2px)
+.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;user-select:none;visibility:hidden}
+.page-careers .layer-fx{visibility:hidden}
+.layer-base{
+  position:relative;z-index:2;background:transparent;
+  /* hard second press — blur 0; offset large enough to read at page scale */
+  text-shadow:4px 3px 0 #ffb0b0
 }
-.page-careers .layer-fx{transform:none}
-.page-careers .layer-fx table{transform:translate(3px, 2px)}
-.layer-fx,
-.layer-fx *{
-  color:#ff7a7a !important;
-  -webkit-text-fill-color:#ff7a7a !important;
-  text-decoration-color:#ff7a7a !important
-}
-.layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
-  border:none !important;
-  border-color:transparent !important;
-  background:transparent !important;
-  box-shadow:none !important
-}
-.layer-fx header > :is(h1, .mast){border:none !important;background:transparent !important}
-.layer-fx :is(hr, iframe, .ht, .home-crest, .fx-ph, .fx-ph-yt, .office-frame, .scroll-wrap, .logo-tag){visibility:hidden}
-.layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
-.layer-base{position:relative;z-index:2;background:transparent}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
   font-size:inherit;font-weight:inherit;color:inherit;line-height:inherit;
   margin:0;padding:0;display:block
 }
-header{border:1px solid var(--ink);margin:0 0 20px;max-width:100%;overflow:hidden}
+/* overflow visible so the ink ghost text-shadow is not clipped on the mast */
+header{border:1px solid var(--ink);margin:0 0 20px;max-width:100%;overflow:visible}
 header > :is(h1, .mast){
   border:none;border-bottom:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold;
   font-size:inherit;line-height:inherit;margin:0;color:var(--ink)
@@ -176,7 +161,7 @@ td.marquee .scroll-wrap{border:none;padding:8px 0;max-width:100%}
 .logo-wiki{height:129px}
 .logo-word{height:113px}
 /* Lift RemiliaNET mark only; .logo-tag stays on the link box (bottom:100%) */
-.page-home a.hot-net .logo-word{transform:translateY(-24px)}
+.page-home a.hot-net .logo-word{transform:translateY(-36px)}
 .logo-tag{
   position:absolute;z-index:1;bottom:100%;
   border:1px solid var(--ink);background:var(--paper);
@@ -397,7 +382,7 @@ header > h1:focus-visible{outline-offset:4px}
 
 @media (prefers-reduced-motion: reduce){
   .scroll-track{animation:none}
-  .layer-fx,.page-careers .layer-fx table{transform:none}
+  /* keep static ink ghost — it is not motion */
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
