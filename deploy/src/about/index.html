@@ -150,11 +150,10 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
                 <code>bake:corp</code>. At <code>bake:fx</code>, a decorative <code>layer-fx</code> twin is cloned from
                 it — ink ghost under the sharp base, <code>pointer-events: none</code>, <code>aria-hidden</code>,
                 <code>inert</code>, <code>data-nosnippet</code>, embeds blanked so they do not double-load. SVG filter
-                <code>print-fx</code> (<code>feOffset</code>) shifts the FX twin so type reads as a slightly
-                misregistered second ink pass; borders and frames are omitted from that layer so box edges stay
-                single and sharp. Crest and photo cells use <code>dither-3</code> plus an ink overlay. Hover sync
-                uses <code>:has()</code> so the FX layer tracks the base without a second event target. Agents and
-                printers should ignore the FX layer.</td>
+                Live type keeps its misregistered ink feel with a direct paper-tinted text shadow, so letters get
+                the offset pass without doubling frames or rules. The baked <code>layer-fx</code> twin stays
+                decorative/inert; embeds are blanked so they do not double-load. Crest and photo cells use
+                <code>dither-3</code> plus an ink overlay. Agents and printers should ignore the FX layer.</td>
             </tr>
           </table>
         </section>

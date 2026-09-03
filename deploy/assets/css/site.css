@@ -21,13 +21,14 @@
   --ink:#f00;
   --focus:#000;
   --skip-bg:#b00000;
+  --ink-shadow:var(--paper);
   --dither-cell:2px;
   --dither-mid:#ffc8c8;
   --dither-light:#fff8f7;
   --dither-hover:0.7;
 }
 
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:var(--ink);font-weight:bold}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:var(--ink);font-weight:bold;text-shadow:1.5px 1px 0 var(--ink-shadow)}
 ::selection{background:var(--ink);color:#fff}
 th:hover ::selection,
 td:hover:not(.empty, .embed, .nav-row, .text, .office, .marquee) ::selection,
@@ -61,13 +62,16 @@ svg.fx{position:absolute;width:0;height:0}
 /* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-/*
- * FX twin = second ink pass on type only.
- * feOffset shifts glyphs; borders/rules/frames are stripped so box edges stay single and sharp.
- */
-.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.42;user-select:none}
+/* Keep the baked FX twin available, but the live ink offset comes from direct text shadows. */
+.layer-fx{display:none}
 .page-careers .layer-fx{filter:none}
-.page-careers .layer-fx table{filter:url(#print-fx);opacity:0.42}
+.page-careers .layer-fx table{display:none}
+.layer-fx,
+.layer-fx *{
+  color:var(--paper) !important;
+  -webkit-text-fill-color:var(--paper) !important;
+  text-decoration-color:var(--paper) !important
+}
 .layer-fx :is(header, th, td, hr, .scroll-wrap, .office-frame, .logo-tag, .marquee-cap, .rj-photo){
   border:none !important;
   border-color:transparent !important;
@@ -131,6 +135,9 @@ a.inline{display:inline;padding:0;white-space:nowrap}
 body:not(.page-careers) td.text:hover{background:var(--ink);border-color:#fff}
 body:not(.page-careers) td.text:hover,
 body:not(.page-careers) td.text:hover em{color:#fff}
+body:not(.page-careers) :is(th:hover, td:hover:not(.empty, .embed, .nav-row, .text, .office, .marquee, .inspo-cell, .inspo-row), td.text:hover, header > h1:hover, .scroll-wrap:hover, .scroll-wrap.scroll-hovered, .logo-link:hover .logo-tag, .wiki-float:hover .logo-tag, .wiki-float:focus-visible .logo-tag){
+  --ink-shadow:var(--ink)
+}
 body:not(.page-careers) td.text:hover a.inline{background:var(--paper);color:var(--ink)}
 td.text:hover a.inline:hover,
 a.inline:hover{background:var(--ink);color:#fff}
