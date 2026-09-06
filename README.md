@@ -1,6 +1,6 @@
 # remilia-org
 
-Sanity Studio + static site generator for [remilia.org](https://remilia.org/) and the shared Remilia content graph (org / com / net).
+Static site generator for [remilia.org](https://remilia.org/), Sanity studio blogs (org / com / net) and the shared Remilia content graph.
 
 ## Host map
 
