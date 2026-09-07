@@ -12,6 +12,8 @@ import {
   auditRobots,
   auditRss,
   auditSitemap,
+  auditMarkup,
+  auditStylesheet,
 } from "./audit";
 
 const BODY_TEXT =
@@ -200,4 +202,10 @@ test("page audits accept typed JSON-LD graphs", () => {
 
 test("sitemaps reject lookalike origins", () => {
   assert.ok(auditSitemap('<urlset><url><loc>https://remilia.org.example.com/press/post</loc></url></urlset>', "press").length > 0);
+});
+
+test("markup and stylesheet audits catch structural defects", () => {
+  assert.ok(auditMarkup('<html><main><img src="x"><label for="missing">x</label></main></html>').length >= 3);
+  assert.deepEqual(auditStylesheet(".ok { color: red; }"), []);
+  assert.ok(auditStylesheet(".broken { color: red;").length > 0);
 });

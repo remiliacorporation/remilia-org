@@ -18,6 +18,8 @@ import {
   auditRobots,
   auditRss,
   auditSitemap,
+  auditMarkup,
+  auditStylesheet,
 } from "./audit";
 
 const args = process.argv.slice(2);
@@ -63,7 +65,10 @@ try {
     "atom.xml",
     auditAtom(await get(`${origin}${basePath}/atom.xml`), channel),
   );
-  record("llms.txt", auditLlmsTxt(await get(`${origin}/llms.txt`), channel));
+  record(
+    "llms.txt",
+    auditLlmsTxt(await get(`${origin}${basePath}/llms.txt`), channel),
+  );
 
   const missing = await fetch(
     `${origin}${basePath}/this-page-does-not-exist-9f3a`,
@@ -85,6 +90,7 @@ try {
   const indexHtml = await get(`${origin}${basePath}`);
   record("index page", [
     ...auditPage(indexHtml, indexUrl(channel)),
+    ...auditMarkup(indexHtml),
     ...auditIndexability(indexHtml, true),
     ...auditFeedDiscovery(indexHtml, channel),
   ]);
@@ -104,12 +110,16 @@ try {
     const postHtml = await get(postUrl);
     record(`post ${sample}`, [
       ...auditPage(postHtml, sample),
+      ...auditMarkup(postHtml),
       ...auditIndexability(postHtml, true),
       ...auditArticleSemantics(postHtml),
     ]);
   } else {
     console.warn("no post URL in sitemap yet — page-level post audit skipped");
   }
+
+  const stylesheet = Array.from(indexHtml.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi), (m) => m[1])[0];
+  if (stylesheet) record("stylesheet", auditStylesheet(await get(new URL(stylesheet, origin).href)));
 } catch (err) {
   failures.push({ where: "fetch", errors: [String(err)] });
 }

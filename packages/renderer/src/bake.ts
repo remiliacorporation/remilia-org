@@ -177,6 +177,10 @@ function postCanonical(p: FetchedPost, channel: Channel): string {
   return canonicalFor(channel, p.slug);
 }
 
+function isExternalArchive(p: FetchedPost, channel: Channel): boolean {
+  return channel === "archive" && p.origin === "external" && Boolean(p.externalUrl);
+}
+
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
   return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
 }
@@ -206,13 +210,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   const meta = { channel, title: host.title, description: host.description };
   const feedPosts = posts
-    .filter((p) => !p.noIndex)
+    .filter((p) => !p.noIndex && !isExternalArchive(p, channel))
     .map((p) => ({ ...p, channel }));
   const sitemapEntries: SitemapEntry[] = [
     ...(opts.extraSitemapUrls ?? []),
     { loc: indexUrl(channel) },
     ...posts
-      .filter((p) => !p.noIndex)
+      .filter((p) => !p.noIndex && !isExternalArchive(p, channel))
       .map((p) => ({
         loc: canonicalFor(channel, p.slug),
         lastmod: p.updatedAt ?? p.publishedAt,
@@ -341,6 +345,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           blogPosting({
             ...p,
             channel,
+            canonicalUrl: canonical,
             excerpt: p.seoDescription?.trim() || p.excerpt,
             coverImageUrl:
               img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ??
