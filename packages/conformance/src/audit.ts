@@ -94,6 +94,39 @@ export function auditPage(
   return errors;
 }
 
+export function auditMarkup(html: string): string[] {
+  const errors: string[] = [];
+  if (!/^<!doctype html>/i.test(html.trim())) errors.push("missing HTML5 doctype");
+  if (!/<html\b[^>]*\blang=["'][^"']+["']/i.test(html)) errors.push("html element has no lang attribute");
+  if (!/<main[\s>]/i.test(html)) errors.push("no <main> landmark");
+
+  const ids = new Set<string>();
+  for (const id of html.matchAll(/\bid=["']([^"']+)["']/gi)) {
+    if (ids.has(id[1])) errors.push(`duplicate id: ${id[1]}`);
+    ids.add(id[1]);
+  }
+  for (const img of html.matchAll(/<img\b([^>]*)>/gi)) {
+    if (!/\balt=["']/i.test(img[1])) errors.push("image is missing an alt attribute");
+  }
+  for (const ref of html.matchAll(/\b(?:for|aria-labelledby|aria-describedby)=["']([^"']+)["']/gi)) {
+    for (const id of ref[1].split(/\s+/)) if (id && !ids.has(id)) errors.push(`missing referenced id: ${id}`);
+  }
+  return errors;
+}
+
+export function auditStylesheet(css: string): string[] {
+  const errors: string[] = [];
+  let depth = 0;
+  for (const char of css.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, "")) {
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    if (depth < 0) return ["stylesheet has an unmatched closing brace"];
+  }
+  if (depth !== 0) errors.push("stylesheet has unbalanced braces");
+  if (/<!--[\s\S]*?-->/i.test(css)) errors.push("stylesheet contains HTML markup");
+  return errors;
+}
+
 export function auditIndexability(
   html: string,
   expectIndexable: boolean,

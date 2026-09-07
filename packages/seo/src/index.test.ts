@@ -96,6 +96,19 @@ test("blogPosting JSON-LD carries required Article fields", () => {
   );
 });
 
+test("blogPosting honors an external canonical URL", () => {
+  const ld = blogPosting({
+    channel: "archive",
+    slug: "coverage",
+    title: "Coverage",
+    excerpt: "Coverage excerpt.",
+    publishedAt: "2026-08-01T00:00:00Z",
+    canonicalUrl: "https://example.com/coverage",
+  });
+  assert.equal(ld.url, "https://example.com/coverage");
+  assert.equal(ld.mainEntityOfPage, "https://example.com/coverage");
+});
+
 test("event JSON-LD distinguishes physical and online locations", () => {
   const physical = event({
     slug: "tokyo",

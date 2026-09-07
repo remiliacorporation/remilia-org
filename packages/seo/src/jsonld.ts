@@ -25,6 +25,7 @@ export interface PostInput {
   coverImageUrl?: string;
   authors?: { name: string; url?: string }[];
   tags?: string[];
+  canonicalUrl?: string;
 }
 
 export interface EventInput {
@@ -71,7 +72,7 @@ export function organization(org: OrgInput) {
 }
 
 export function blogPosting(post: PostInput) {
-  const url = canonicalFor(post.channel, post.slug);
+  const url = post.canonicalUrl ?? canonicalFor(post.channel, post.slug);
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
