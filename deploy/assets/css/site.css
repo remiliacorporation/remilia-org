@@ -58,28 +58,27 @@ svg.fx{position:absolute;width:0;height:0}
 .fx-ph-yt{width:100%;height:405px}
 .page-simple main{max-width:720px;margin:40px auto;padding:20px}
 
-/* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx at build. */
+/* Dual-layer print surface: author .layer-base; bake:fx injects .layer-fx.
+ * Double text on glyphs: hard pink text-shadow on the base (never paints borders).
+ * Index stacking/overflow was swallowing the under-twin, so the twin is hidden
+ * and the second press is painted as text-shadow instead. */
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;filter:url(#print-fx);opacity:0.90;user-select:none}
-.page-careers .layer-fx{filter:none}
-.page-careers .layer-fx table{filter:url(#print-fx)}
-.layer-fx,
-.layer-fx *{
-  color:var(--paper) !important;
-  -webkit-text-fill-color:var(--paper) !important;
-  text-decoration-color:var(--paper) !important
+.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;user-select:none;visibility:hidden}
+.page-careers .layer-fx{visibility:hidden}
+.layer-base{
+  position:relative;z-index:2;background:transparent;
+  /* hard second press — blur 0; offset large enough to read at page scale */
+  text-shadow:4px 3px 0 #ffb0b0
 }
-.layer-fx iframe{visibility:hidden}
-.layer-fx :is(img.logo, img.logo-word, img.logo-wiki, img.rj-photo){visibility:hidden}
-.layer-base{position:relative;z-index:2}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
   font-size:inherit;font-weight:inherit;color:inherit;line-height:inherit;
   margin:0;padding:0;display:block
 }
-header{border:1px solid var(--ink);margin:0 0 20px;max-width:100%;overflow:hidden}
+/* overflow visible so the ink ghost text-shadow is not clipped on the mast */
+header{border:1px solid var(--ink);margin:0 0 20px;max-width:100%;overflow:visible}
 header > :is(h1, .mast){
   border:none;border-bottom:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold;
   font-size:inherit;line-height:inherit;margin:0;color:var(--ink)
@@ -161,6 +160,8 @@ td.marquee .scroll-wrap{border:none;padding:8px 0;max-width:100%}
 .logo{height:148px}
 .logo-wiki{height:129px}
 .logo-word{height:113px}
+/* Lift RemiliaNET mark only; .logo-tag stays on the link box (bottom:100%) */
+.page-home a.hot-net .logo-word{transform:translateY(-42px)}
 .logo-tag{
   position:absolute;z-index:1;bottom:100%;
   border:1px solid var(--ink);background:var(--paper);
@@ -221,12 +222,28 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .scroll-copy{flex-shrink:0;font-size:12px}
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .home-crest{
-  display:block;width:64px;margin:12px auto 16px;text-decoration:none
+  display:block;width:64px;margin:12px auto 20px;text-decoration:none;position:relative;
+  /* room so the offset dither shadow is not clipped */
+  padding:0 3px 4px 0
 }
 .home-crest .ht{
-  width:64px;height:64px;aspect-ratio:1;background:transparent
+  width:64px;height:64px;aspect-ratio:1;background:transparent;position:relative;z-index:1;
+  overflow:visible;isolation:auto
 }
-.home-crest .ht-map{background:transparent;filter:none}
+.home-crest .ht-map{background:transparent;filter:none;overflow:visible}
+/* Dithered drop shadow behind the flower pin (on crest, not .ht — avoids overflow/isolation clip) */
+.home-crest::before{
+  content:"";position:absolute;left:0;top:0;width:64px;height:64px;z-index:0;
+  transform:translate(2px,2px);
+  background-color:var(--ink);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%23fff'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23fff'/%3E%3C/svg%3E");
+  background-size:var(--dither-cell,2px) var(--dither-cell,2px);
+  -webkit-mask-image:url(/assets/remilia-crest.png);
+  mask-image:url(/assets/remilia-crest.png);
+  mask-mode:alpha;
+  mask-size:100% 100%;mask-repeat:no-repeat;mask-position:center;
+  opacity:0.65;pointer-events:none
+}
 .home-crest .ht-ink,.home-crest .ht::after{
   -webkit-mask-image:url(/assets/remilia-crest.png);
   mask-image:url(/assets/remilia-crest.png);
@@ -234,7 +251,9 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
   mask-size:100% 100%;mask-repeat:no-repeat;mask-position:center
 }
 .home-crest:hover .ht::after,.home-crest:focus-visible .ht::after{opacity:0}
-.layer-fx .home-crest{visibility:hidden}
+/* Jackson portrait sits above the hr, centered */
+.rj-block{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin:0 0 20px}
+.rj-photo{display:block;width:40px;height:40px;object-fit:cover;border:1px solid var(--ink)}
 .offices td.office{width:50%;padding:20px;vertical-align:top;text-align:center}
 .office-card{display:inline-block;width:100%;max-width:280px;cursor:pointer;text-align:center;margin:0 auto}
 .office-frame{position:relative;border:1px solid var(--ink);padding:16px;background:#fff}
@@ -363,7 +382,7 @@ header > h1:focus-visible{outline-offset:4px}
 
 @media (prefers-reduced-motion: reduce){
   .scroll-track{animation:none}
-  .layer-fx,.page-careers .layer-fx table{filter:none}
+  /* keep static ink ghost — it is not motion */
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
