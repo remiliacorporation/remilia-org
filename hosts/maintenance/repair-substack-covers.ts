@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
@@ -26,17 +25,14 @@ const client = createClient({
 const assetCache = new Map<string, string>();
 
 function toFetchableCover(url: string): string {
-
   const m =
     url.match(/substackcdn\.com\/image\/fetch\/[^/]+\/(.+)$/) ||
     url.match(/cdn\.substack\.com\/image\/fetch\/[^/]+\/(.+)$/);
   let s3 = m ? m[1] : url;
   try {
     s3 = decodeURIComponent(s3);
-  } catch {
-
-  }
-  if (!/^https?:\/\
+  } catch {}
+  if (!/^https?:\/\//i.test(s3)) return url;
   return `https://substackcdn.com/image/fetch/$s_!aa1e!,w_1456,c_limit,f_auto,q_auto:good,fl_progressive:steep/${encodeURIComponent(s3)}`;
 }
 
@@ -45,7 +41,9 @@ async function uploadImage(url: string): Promise<string | null> {
   if (assetCache.has(clean)) return assetCache.get(clean)!;
   try {
     const res = await fetch(clean, {
-      headers: { "user-agent": "Mozilla/5.0 (compatible; remilia-substack-covers/1.0)" },
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; remilia-substack-covers/1.0)",
+      },
       redirect: "follow",
     });
     if (!res.ok) {
@@ -54,7 +52,11 @@ async function uploadImage(url: string): Promise<string | null> {
     }
     const buf = Buffer.from(await res.arrayBuffer());
     const ctype = res.headers.get("content-type") || "image/jpeg";
-    const ext = ctype.includes("png") ? "png" : ctype.includes("webp") ? "webp" : "jpg";
+    const ext = ctype.includes("png")
+      ? "png"
+      : ctype.includes("webp")
+        ? "webp"
+        : "jpg";
     const asset = await client.assets.upload("image", buf, {
       filename: `substack-cover-${assetCache.size}.${ext}`,
       contentType: ctype.split(";")[0],
@@ -87,10 +89,14 @@ async function main() {
   );
 
   const targets = rows.filter((r) => !r.hasCover || !r.textLen);
-  console.log(`${rows.length} substack; ${targets.length} need cover and/or text${write ? "" : " (dry-run)"}`);
+  console.log(
+    `${rows.length} substack; ${targets.length} need cover and/or text${write ? "" : " (dry-run)"}`,
+  );
 
   for (const row of targets) {
-    process.stdout.write(`• ${row.slug} (cover=${row.hasCover} text=${row.textLen ?? 0}) … `);
+    process.stdout.write(
+      `• ${row.slug} (cover=${row.hasCover} text=${row.textLen ?? 0}) … `,
+    );
     const res = await fetch(`${ORIGIN}/api/v1/posts/${row.slug}`);
     if (!res.ok) {
       console.log(`API ${res.status}`);
@@ -120,7 +126,12 @@ async function main() {
     if (!row.textLen && p.body_html) {
       const md = ghostHtmlToMarkdown(p.body_html);
       const { body: rawBody } = markdownToPost(md, CHANNEL);
-      type PT = Record<string, unknown> & { _type?: string; asset?: { url?: string }; alt?: string; caption?: string };
+      type PT = Record<string, unknown> & {
+        _type?: string;
+        asset?: { url?: string; _type?: "reference"; _ref?: string };
+        alt?: string;
+        caption?: string;
+      };
       const blocks: PT[] = [];
       for (let i = 0; i < (rawBody as PT[]).length; i++) {
         const b = (rawBody as PT[])[i];
@@ -162,4 +173,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

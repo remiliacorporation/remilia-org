@@ -24,8 +24,6 @@ export default defineConfig({
     ],
   },
   document: {
-
     newDocumentOptions: (prev) => prev.filter((t) => t.templateId !== "org"),
   },
 });
-

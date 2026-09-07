@@ -7,7 +7,11 @@ export const tag = defineType({
   type: "document",
   icon: TagIcon,
   fields: [
-    defineField({ name: "name", type: "string", validation: (r) => r.required() }),
+    defineField({
+      name: "name",
+      type: "string",
+      validation: (r) => r.required(),
+    }),
     defineField({
       name: "slug",
       type: "slug",
@@ -18,9 +22,9 @@ export const tag = defineType({
       name: "description",
       type: "text",
       rows: 2,
-      description: "Tag page meta description — without it tag pages are thin/duplicate content.",
+      description:
+        "Tag page meta description — without it tag pages are thin/duplicate content.",
     }),
   ],
   preview: { select: { title: "name", subtitle: "slug.current" } },
 });
-

@@ -35,7 +35,10 @@ function isChannel(v: string): v is Channel {
   return CHANNELS.has(v);
 }
 
-export function splitFrontmatter(src: string): { raw: Record<string, string | string[]>; body: string } {
+export function splitFrontmatter(src: string): {
+  raw: Record<string, string | string[]>;
+  body: string;
+} {
   const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!m) return { raw: {}, body: src };
   const raw: Record<string, string | string[]> = {};
@@ -44,7 +47,9 @@ export function splitFrontmatter(src: string): { raw: Record<string, string | st
     const list = line.match(/^\s+-\s+(.*)$/);
     if (list && key) {
       const cur = raw[key];
-      raw[key] = Array.isArray(cur) ? [...cur, list[1].trim()] : [list[1].trim()];
+      raw[key] = Array.isArray(cur)
+        ? [...cur, list[1].trim()]
+        : [list[1].trim()];
       continue;
     }
     const kv = line.match(/^([A-Za-z][\w]*)\s*:\s*(.*?)\s*$/);
@@ -67,10 +72,18 @@ function metaFromRaw(raw: Record<string, string | string[]>): MdMeta {
     title: str("title"),
     slug: str("slug"),
     channel: channel && isChannel(channel) ? channel : undefined,
-    publishedAt: published ? (published.length === 10 ? `${published}T00:00:00.000Z` : published) : undefined,
+    publishedAt: published
+      ? published.length === 10
+        ? `${published}T00:00:00.000Z`
+        : published
+      : undefined,
     excerpt: str("excerpt") ?? str("description"),
     author: str("author"),
-    tags: Array.isArray(tags) ? tags : typeof tags === "string" && tags ? tags.split(/,\s*/) : undefined,
+    tags: Array.isArray(tags)
+      ? tags
+      : typeof tags === "string" && tags
+        ? tags.split(/,\s*/)
+        : undefined,
     cover: str("cover") ?? str("image"),
   };
 }
@@ -82,10 +95,13 @@ function keys() {
 
 function takeFootnotes(md: string): { md: string; notes: Map<string, string> } {
   const notes = new Map<string, string>();
-  const md2 = md.replace(/^\[\^([^\]]+)\]:\s*(.*)$/gm, (_, id: string, text: string) => {
-    notes.set(id, text.trim());
-    return "";
-  });
+  const md2 = md.replace(
+    /^\[\^([^\]]+)\]:\s*(.*)$/gm,
+    (_, id: string, text: string) => {
+      notes.set(id, text.trim());
+      return "";
+    },
+  );
   return { md: md2.trim(), notes };
 }
 
@@ -99,7 +115,11 @@ function inlineToSpans(
   const markDefs: MarkDef[] = [];
   const push = (t: string, marks?: string[]) => {
     if (!t && !marks?.length) return;
-    children.push(marks?.length ? { _type: "span", text: t, marks } : { _type: "span", text: t });
+    children.push(
+      marks?.length
+        ? { _type: "span", text: t, marks }
+        : { _type: "span", text: t },
+    );
   };
   let i = 0;
   while (i < text.length) {
@@ -110,7 +130,9 @@ function inlineToSpans(
         break;
       }
       const inner = text.slice(i + 2, end);
-      const [target, label] = inner.includes("|") ? inner.split("|", 2) : [inner, inner];
+      const [target, label] = inner.includes("|")
+        ? inner.split("|", 2)
+        : [inner, inner];
       const href = /^(https?:|\/)/.test(target)
         ? target
         : `${CHANNEL_BASEPATH[channel]}/${slugify(target)}`;
@@ -125,7 +147,11 @@ function inlineToSpans(
       if (end > i) {
         const id = text.slice(i + 2, end);
         const k = key();
-        markDefs.push({ _key: k, _type: "footnote", text: notes.get(id) ?? id });
+        markDefs.push({
+          _key: k,
+          _type: "footnote",
+          text: notes.get(id) ?? id,
+        });
         push("", [k]);
         i = end + 1;
         continue;
@@ -136,7 +162,11 @@ function inlineToSpans(
       const end = mid >= 0 ? text.indexOf(")", mid + 2) : -1;
       if (mid > i && end > mid) {
         const k = key();
-        markDefs.push({ _key: k, _type: "link", href: text.slice(mid + 2, end) });
+        markDefs.push({
+          _key: k,
+          _type: "link",
+          href: text.slice(mid + 2, end),
+        });
         push(text.slice(i + 1, mid), [k]);
         i = end + 1;
         continue;
@@ -180,7 +210,10 @@ function inlineToSpans(
     push(text.slice(i, i + next));
     i += next;
   }
-  return { children: children.length ? children : [{ _type: "span", text: "" }], markDefs };
+  return {
+    children: children.length ? children : [{ _type: "span", text: "" }],
+    markDefs,
+  };
 }
 
 function blocksFromMarkdown(md: string, channel: Channel): PTBlock[] {
@@ -191,9 +224,16 @@ function blocksFromMarkdown(md: string, channel: Channel): PTBlock[] {
   for (const chunk of chunks) {
     const lines = chunk.split(/\n/).filter((l) => l.length > 0);
     if (!lines.length) continue;
-    const img = chunk.trim().match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/);
+    const img = chunk
+      .trim()
+      .match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/);
     if (img) {
-      out.push({ _type: "image", alt: img[1], caption: img[3], asset: { url: img[2] } });
+      out.push({
+        _type: "image",
+        alt: img[1],
+        caption: img[3],
+        asset: { url: img[2] },
+      });
       continue;
     }
     const listKind = lines.every((l) => /^\d+\.\s/.test(l))
@@ -231,21 +271,47 @@ function blocksFromMarkdown(md: string, channel: Channel): PTBlock[] {
       text = lines.map((l) => l.replace(/^>\s?/, "")).join("\n");
     }
     const inline = inlineToSpans(text, channel, notes, key);
-    out.push({ _type: "block", style, children: inline.children, markDefs: inline.markDefs });
+    out.push({
+      _type: "block",
+      style,
+      children: inline.children,
+      markDefs: inline.markDefs,
+    });
   }
   return out;
 }
 
-export function markdownToPost(src: string, fallbackChannel: Channel = "press"): MdPost {
+export function markdownToPost(
+  src: string,
+  fallbackChannel: Channel = "press",
+): MdPost {
   const { raw, body } = splitFrontmatter(src);
   const meta = metaFromRaw(raw);
   const channel = meta.channel ?? fallbackChannel;
   if (!meta.slug && meta.title) meta.slug = slugify(meta.title);
-  return { meta: { ...meta, channel }, body: blocksFromMarkdown(body, channel) };
+  return {
+    meta: { ...meta, channel },
+    body: blocksFromMarkdown(body, channel),
+  };
 }
 
-function marksOf(span: { marks?: string[] }, defs: MarkDef[]): { strong?: boolean; em?: boolean; code?: boolean; href?: string; fn?: string } {
-  const out: { strong?: boolean; em?: boolean; code?: boolean; href?: string; fn?: string } = {};
+function marksOf(
+  span: { marks?: string[] },
+  defs: MarkDef[],
+): {
+  strong?: boolean;
+  em?: boolean;
+  code?: boolean;
+  href?: string;
+  fn?: string;
+} {
+  const out: {
+    strong?: boolean;
+    em?: boolean;
+    code?: boolean;
+    href?: string;
+    fn?: string;
+  } = {};
   for (const m of span.marks ?? []) {
     if (m === "strong") out.strong = true;
     else if (m === "em") out.em = true;
@@ -259,7 +325,11 @@ function marksOf(span: { marks?: string[] }, defs: MarkDef[]): { strong?: boolea
   return out;
 }
 
-function spanToMd(span: { text: string; marks?: string[] }, defs: MarkDef[], fns: string[]): string {
+function spanToMd(
+  span: { text: string; marks?: string[] },
+  defs: MarkDef[],
+  fns: string[],
+): string {
   const m = marksOf(span, defs);
   let t = span.text.replace(/\[/g, "\\[");
   if (m.code) t = `\`${t}\``;
@@ -293,7 +363,11 @@ export function portableTextToMarkdown(blocks: PTBlock[]): string {
   for (const b of blocks) {
     if (b._type === "image") {
       flushList();
-      const img = b as { alt?: string; caption?: string; asset?: { url?: string; _ref?: string } };
+      const img = b as {
+        alt?: string;
+        caption?: string;
+        asset?: { url?: string; _ref?: string };
+      };
       const src = img.asset?.url ?? img.asset?._ref ?? "";
       const cap = img.caption ? ` "${img.caption}"` : "";
       lines.push(`![${img.alt ?? ""}](${src}${cap})`, "");
@@ -330,7 +404,12 @@ export function portableTextToMarkdown(blocks: PTBlock[]): string {
     lines.push("");
     fns.forEach((t, i) => lines.push(`[^${i + 1}]: ${t}`));
   }
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  return (
+    lines
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + "\n"
+  );
 }
 
 export function postToMarkdownFile(input: {
@@ -362,6 +441,7 @@ export function postToMarkdownFile(input: {
 }
 
 export function slugFromPath(file: string): string {
-  return slugify(file.replace(/\\/g, "/").split("/").pop()?.replace(/\.md$/i, "") ?? "post");
+  return slugify(
+    file.replace(/\\/g, "/").split("/").pop()?.replace(/\.md$/i, "") ?? "post",
+  );
 }
-

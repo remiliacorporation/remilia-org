@@ -5,6 +5,7 @@ import {
   CHANNEL_BASEPATH,
   CHANNEL_ORIGIN,
   indexUrl,
+  isChannel,
 } from "@remilia/seo";
 import {
   audit404,
@@ -24,18 +25,6 @@ const channelArg = args.find((a) => !a.startsWith("--"));
 const baseFlag = args.indexOf("--base");
 const base = baseFlag >= 0 ? args[baseFlag + 1]?.replace(/\/$/, "") : undefined;
 
-function isChannel(v: string | undefined): v is Channel {
-  return (
-    v === "updates" ||
-    v === "press" ||
-    v === "thought" ||
-    v === "archive" ||
-    v === "news" ||
-    v === "events" ||
-    v === "dev-updates" ||
-    v === "dev-blog"
-  );
-}
 if (!isChannel(channelArg)) {
   console.error(
     "usage: seo-conformance <updates|press|thought|archive|news|events|dev-updates|dev-blog> [--base <origin>]",
@@ -58,18 +47,30 @@ function record(where: string, errors: string[]): void {
 }
 
 try {
-  record(`${origin}/robots.txt`, auditRobots(await get(`${origin}/robots.txt`), channel));
+  record(
+    `${origin}/robots.txt`,
+    auditRobots(await get(`${origin}/robots.txt`), channel),
+  );
 
   const sitemapXml = await get(`${origin}${basePath}/sitemap.xml`);
   record("sitemap.xml", auditSitemap(sitemapXml, channel));
 
-  record("rss.xml", auditRss(await get(`${origin}${basePath}/rss.xml`), channel));
-  record("atom.xml", auditAtom(await get(`${origin}${basePath}/atom.xml`), channel));
+  record(
+    "rss.xml",
+    auditRss(await get(`${origin}${basePath}/rss.xml`), channel),
+  );
+  record(
+    "atom.xml",
+    auditAtom(await get(`${origin}${basePath}/atom.xml`), channel),
+  );
   record("llms.txt", auditLlmsTxt(await get(`${origin}/llms.txt`), channel));
 
-  const missing = await fetch(`${origin}${basePath}/this-page-does-not-exist-9f3a`, {
-    redirect: "follow",
-  });
+  const missing = await fetch(
+    `${origin}${basePath}/this-page-does-not-exist-9f3a`,
+    {
+      redirect: "follow",
+    },
+  );
   record("404 behavior", audit404(missing.status, await missing.text()));
 
   const md = await fetch(`${origin}${basePath}`, {
@@ -77,7 +78,9 @@ try {
     redirect: "follow",
   });
   if (!md.headers.get("content-type")?.includes("markdown"))
-    console.warn("note: no text/markdown content negotiation (bonus signal, not scored)");
+    console.warn(
+      "note: no text/markdown content negotiation (bonus signal, not scored)",
+    );
 
   const indexHtml = await get(`${origin}${basePath}`);
   record("index page", [
@@ -86,11 +89,18 @@ try {
     ...auditFeedDiscovery(indexHtml, channel),
   ]);
 
-  const sample = Array.from(sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/gi), (m) => m[1]).find(
-    (loc) => loc.startsWith(`${CHANNEL_ORIGIN[channel]}${basePath}/`) && !loc.endsWith(basePath),
+  const sample = Array.from(
+    sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/gi),
+    (m) => m[1],
+  ).find(
+    (loc) =>
+      loc.startsWith(`${CHANNEL_ORIGIN[channel]}${basePath}/`) &&
+      !loc.endsWith(basePath),
   );
   if (sample) {
-    const postUrl = base ? sample.replace(CHANNEL_ORIGIN[channel], origin) : sample;
+    const postUrl = base
+      ? sample.replace(CHANNEL_ORIGIN[channel], origin)
+      : sample;
     const postHtml = await get(postUrl);
     record(`post ${sample}`, [
       ...auditPage(postHtml, sample),
@@ -112,4 +122,3 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`✓ ${channel} host conforms to the SEO/LLM contract`);
-

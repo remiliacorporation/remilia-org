@@ -18,14 +18,12 @@ function sectionList(
   channel: Channel,
   host: HostSuffix,
 ) {
-
   const id = `${channel.replace(/-/g, "")}Remilia${host}`;
   return S.listItem()
     .title(title)
     .id(id)
     .icon(DocumentTextIcon)
     .child(
-
       S.documentList()
         .id(`${id}List`)
         .title(title)
@@ -104,4 +102,3 @@ export const structure: StructureResolver = (S) =>
         .icon(CaseIcon)
         .child(S.document().schemaType("org").documentId("org")),
     ]);
-

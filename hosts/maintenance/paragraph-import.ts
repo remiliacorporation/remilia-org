@@ -1,4 +1,3 @@
-
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -11,22 +10,41 @@ const HANDLE = "charlemagnefang";
 const CHANNEL: Channel = "thought";
 
 function normTitle(s: string): string {
-  return s.toLowerCase().replace(/\[gp\]/g, "").replace(/[^a-z0-9]+/g, "");
+  return s
+    .toLowerCase()
+    .replace(/\[gp\]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function postId(slug: string): string {
   const id = `post-${CHANNEL}-${slug}`;
-  return id.length <= 128 ? id : `post-${CHANNEL}-${createHash("sha1").update(slug).digest("hex")}`;
+  return id.length <= 128
+    ? id
+    : `post-${CHANNEL}-${createHash("sha1").update(slug).digest("hex")}`;
 }
 
 function publishedAt(raw: unknown): string {
-  const n = typeof raw === "number" ? raw : typeof raw === "string" && /^\d+$/.test(raw) ? Number(raw) : NaN;
-  if (Number.isFinite(n)) return new Date(n > 1e12 ? n : n * 1000).toISOString();
+  const n =
+    typeof raw === "number"
+      ? raw
+      : typeof raw === "string" && /^\d+$/.test(raw)
+        ? Number(raw)
+        : NaN;
+  if (Number.isFinite(n))
+    return new Date(n > 1e12 ? n : n * 1000).toISOString();
   if (typeof raw === "string" && raw) return raw;
   return "2021-01-01T00:00:00.000Z";
 }
 
-function hoistImages(body: { _type?: string; asset?: { url?: string }; alt?: string; caption?: string }[], title: string) {
+function hoistImages(
+  body: {
+    _type?: string;
+    asset?: { url?: string };
+    alt?: string;
+    caption?: string;
+  }[],
+  title: string,
+) {
   return body.map((b, i) => {
     if (b._type !== "image") return { ...b, _key: `b${i}` };
     const url = b.asset?.url;
@@ -41,7 +59,9 @@ function hoistImages(body: { _type?: string; asset?: { url?: string }; alt?: str
   });
 }
 
-async function existingFromGhost(path: string): Promise<{ slugs: Set<string>; titles: Set<string> }> {
+async function existingFromGhost(
+  path: string,
+): Promise<{ slugs: Set<string>; titles: Set<string> }> {
   const slugs = new Set<string>();
   const titles = new Set<string>();
   let raw = "";
@@ -52,7 +72,11 @@ async function existingFromGhost(path: string): Promise<{ slugs: Set<string>; ti
   }
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
-    const d = JSON.parse(line) as { _type?: string; slug?: { current?: string }; title?: string };
+    const d = JSON.parse(line) as {
+      _type?: string;
+      slug?: { current?: string };
+      title?: string;
+    };
     if (d._type !== "post") continue;
     if (d.slug?.current) slugs.add(d.slug.current);
     if (d.title) titles.add(normTitle(d.title));
@@ -60,7 +84,12 @@ async function existingFromGhost(path: string): Promise<{ slugs: Set<string>; ti
   return { slugs, titles };
 }
 
-function alreadyHave(slug: string, title: string, slugs: Set<string>, titles: Set<string>): boolean {
+function alreadyHave(
+  slug: string,
+  title: string,
+  slugs: Set<string>,
+  titles: Set<string>,
+): boolean {
   if (slugs.has(slug) || titles.has(normTitle(title))) return true;
   for (const g of slugs) {
     const a = slug.length >= g.length ? slug : g;
@@ -89,7 +118,10 @@ async function fetchPosts(): Promise<ParaPost[]> {
     if (cursor) q.set("cursor", cursor);
     const res = await fetch(`${API}/publications/${PUB}/posts?${q}`);
     if (!res.ok) throw new Error(`paragraph ${res.status}`);
-    const json = (await res.json()) as { items: ParaPost[]; pagination?: { hasMore?: boolean; cursor?: string } };
+    const json = (await res.json()) as {
+      items: ParaPost[];
+      pagination?: { hasMore?: boolean; cursor?: string };
+    };
     items.push(...json.items);
     cursor = json.pagination?.hasMore ? json.pagination.cursor : undefined;
   } while (cursor);
@@ -98,8 +130,10 @@ async function fetchPosts(): Promise<ParaPost[]> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const outFile = args.find((a, i) => args[i - 1] === "--out") ?? "paragraph-posts.ndjson";
-  const ghostFile = args.find((a, i) => args[i - 1] === "--ghost") ?? "ghost-posts.ndjson";
+  const outFile =
+    args.find((a, i) => args[i - 1] === "--out") ?? "paragraph-posts.ndjson";
+  const ghostFile =
+    args.find((a, i) => args[i - 1] === "--ghost") ?? "ghost-posts.ndjson";
   const { slugs, titles } = await existingFromGhost(ghostFile);
 
   const docs: Record<string, unknown>[] = [];
@@ -140,9 +174,17 @@ async function main() {
       title: p.title,
       slug: { _type: "slug", current: p.slug },
       publishedAt: publishedAt(p.publishedAt),
-      excerpt: (md.replace(/^#.*\n/, "").replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() || p.title).slice(0, 300),
+      excerpt: (
+        md
+          .replace(/^#.*\n/, "")
+          .replace(/[#*_>`\[\]]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim() || p.title
+      ).slice(0, 300),
       body: hoistImages(body, p.title),
-      authors: [{ _type: "reference", _ref: `author-${slugify(author)}`, _key: "a0" }],
+      authors: [
+        { _type: "reference", _ref: `author-${slugify(author)}`, _key: "a0" },
+      ],
       tags: (p.categories ?? []).map((name, i) => ({
         _type: "reference",
         _ref: `tag-${slugify(name)}`,
@@ -154,18 +196,22 @@ async function main() {
       migration: {
         source: "paragraph",
         ghostId: p.id,
-        legacyUrl: `https:
+        legacyUrl: `https://paragraph.com/@${HANDLE}/${p.slug}`,
       },
     });
     process.stdout.write(".");
   }
 
-  await writeFile(outFile, docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
+  await writeFile(
+    outFile,
+    docs.map((d) => JSON.stringify(d)).join("\n") + "\n",
+  );
   const posts = docs.filter((d) => d._type === "post").length;
-  console.log(`\nwrote ${docs.length} docs (${posts} new posts, ${skipped} already on Ghost) to ${outFile}`);
+  console.log(
+    `\nwrote ${docs.length} docs (${posts} new posts, ${skipped} already on Ghost) to ${outFile}`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   await main();
 }
-

@@ -1,14 +1,18 @@
-
 export function smartExcerpt(raw: string, max = 300): string {
   const text = raw.replace(/\s+/g, " ").trim();
   if (!text) return "";
   if (text.length <= max) {
-
-    const looksTruncated = text.length >= Math.min(max - 20, 200) && /[a-z0-9]$/i.test(text) && !/[.!?]"?$/.test(text);
+    const looksTruncated =
+      text.length >= Math.min(max - 20, 200) &&
+      /[a-z0-9]$/i.test(text) &&
+      !/[.!?]"?$/.test(text);
     if (looksTruncated) {
       const ends: number[] = [];
       for (let i = 0; i < text.length; i++) {
-        if (/[.!?]/.test(text[i]) && (i + 1 >= text.length || /\s/.test(text[i + 1]))) {
+        if (
+          /[.!?]/.test(text[i]) &&
+          (i + 1 >= text.length || /\s/.test(text[i + 1]))
+        ) {
           ends.push(i + 1);
         }
       }
@@ -26,7 +30,8 @@ export function smartExcerpt(raw: string, max = 300): string {
     const ch = window[i];
     if (!/[.!?]/.test(ch)) continue;
     const next = window[i + 1];
-    if (next !== undefined && !/\s/.test(next) && !/["'”)\]]/.test(next)) continue;
+    if (next !== undefined && !/\s/.test(next) && !/["'”)\]]/.test(next))
+      continue;
     sentenceEnds.push(i + 1);
   }
   const good = sentenceEnds.filter((i) => i >= minKeep && i <= max);
@@ -44,7 +49,7 @@ export function plainFromBlocks(
   blocks: Array<{
     _type?: string;
     children?: Array<{ text?: string }>;
-    style?: string;
+    style?: string | null;
   }>,
   maxScan = 800,
 ): string {
@@ -52,7 +57,10 @@ export function plainFromBlocks(
   let n = 0;
   for (const b of blocks) {
     if (b._type !== "block" || b.style === "blockquote") continue;
-    const t = (b.children ?? []).map((c) => c.text ?? "").join("").trim();
+    const t = (b.children ?? [])
+      .map((c) => c.text ?? "")
+      .join("")
+      .trim();
     if (!t) continue;
     parts.push(t);
     n += t.length;
@@ -60,4 +68,3 @@ export function plainFromBlocks(
   }
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
-

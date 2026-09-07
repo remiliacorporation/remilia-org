@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 import { createHash } from "node:crypto";
 
@@ -8,7 +7,9 @@ if (!token) {
   process.exit(1);
 }
 const write = process.argv.includes("--write");
-const time = process.argv.find((a) => a.startsWith("--time="))?.slice(7) ?? "2026-08-30T18:55:00.000Z";
+const time =
+  process.argv.find((a) => a.startsWith("--time="))?.slice(7) ??
+  "2026-08-30T18:55:00.000Z";
 
 const client = createClient({
   projectId: "8x9419lh",
@@ -19,7 +20,6 @@ const client = createClient({
 });
 
 function shortId(prefix: string, slug: string): string {
-
   const base = `${prefix}-${slug}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
   if (base.length <= 120) return base;
   const hash = createHash("sha1").update(base).digest("hex").slice(0, 10);
@@ -59,7 +59,10 @@ async function ghostPostUrls(): Promise<string[]> {
 
 function slugFromUrl(u: string): string | null {
   try {
-    const parts = new URL(u).pathname.replace(/\/$/, "").split("/").filter(Boolean);
+    const parts = new URL(u).pathname
+      .replace(/\/$/, "")
+      .split("/")
+      .filter(Boolean);
     return parts.at(-1) ?? null;
   } catch {
     return null;
@@ -69,12 +72,20 @@ function slugFromUrl(u: string): string | null {
 async function main() {
   const existing = await client.fetch<
     Array<{ _id: string; slug?: string; legacy?: string; title?: string }>
-  >(`*[_type=="post"]{_id, "slug": slug.current, "legacy": migration.legacyUrl, title}`);
+  >(
+    `*[_type=="post"]{_id, "slug": slug.current, "legacy": migration.legacyUrl, title}`,
+  );
   console.log(`existing posts: ${existing.length}`);
 
-  const existingIds = new Set(existing.map((e) => e._id.replace(/^drafts\./, "")));
-  const existingSlugs = new Set(existing.map((e) => e.slug).filter(Boolean) as string[]);
-  const existingLegacy = new Set(existing.map((e) => e.legacy).filter(Boolean) as string[]);
+  const existingIds = new Set(
+    existing.map((e) => e._id.replace(/^drafts\./, "")),
+  );
+  const existingSlugs = new Set(
+    existing.map((e) => e.slug).filter(Boolean) as string[],
+  );
+  const existingLegacy = new Set(
+    existing.map((e) => e.legacy).filter(Boolean) as string[],
+  );
 
   const ghostUrls = await ghostPostUrls();
   console.log(`ghost sitemap urls: ${ghostUrls.length}`);
@@ -124,7 +135,9 @@ async function main() {
     const doc = await historyDoc(id, time);
     if (doc && doc._type === "post") {
       recovered.push(doc);
-      console.log(`  found ${doc._id} — ${String(doc.title ?? "").slice(0, 50)}`);
+      console.log(
+        `  found ${doc._id} — ${String(doc.title ?? "").slice(0, 50)}`,
+      );
     }
     if (i % 100 === 0) console.log(`  …checked ${i}/${candidates.size}`);
   }
@@ -140,19 +153,24 @@ async function main() {
   let n = 0;
   for (const doc of byId.values()) {
     const rawId = String(doc._id);
-    const { _rev, ...rest } = doc as Record<string, unknown> & { _rev?: string };
+    const { _rev, ...rest } = doc as Record<string, unknown> & {
+      _rev?: string;
+    };
     let publishedId = rawId;
     if (`drafts.${publishedId}`.length > 128) {
       const slug =
-        typeof (doc as { slug?: { current?: string } }).slug?.current === "string"
+        typeof (doc as { slug?: { current?: string } }).slug?.current ===
+        "string"
           ? (doc as { slug: { current: string } }).slug.current
           : publishedId.slice(-40);
       const channel = String((doc as { channel?: string }).channel ?? "press");
       publishedId = shortId(`post-${channel}`, slug);
-      console.log(`  shorten id ${rawId.length}→${publishedId} (${publishedId.length})`);
+      console.log(
+        `  shorten id ${rawId.length}→${publishedId} (${publishedId.length})`,
+      );
     }
     const draftId = `drafts.${publishedId}`;
-    await client.createOrReplace({ ...rest, _id: draftId });
+    await client.createOrReplace({ ...rest, _type: "post", _id: draftId });
     n++;
   }
   console.log(`restored ${n} posts as drafts`);
@@ -168,4 +186,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

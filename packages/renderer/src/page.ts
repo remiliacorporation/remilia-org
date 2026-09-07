@@ -1,3 +1,5 @@
+import { THEME_JS } from "./theme";
+import { jsonLdScript } from "@remilia/seo";
 import { esc } from "./html";
 
 export interface Chrome {
@@ -26,6 +28,7 @@ export interface PageInput {
   bodyEnd?: string;
 
   ogImage?: string;
+  ogType?: "article" | "website";
   chrome: Chrome;
   noindex?: boolean;
   lang?: string;
@@ -76,10 +79,18 @@ ${dots}
 
 export function htmlPage(p: PageInput): string {
   const ld = p.jsonld
-    .map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`)
+    .map(
+      (d) => `<script type="application/ld+json">${jsonLdScript(d)}</script>`,
+    )
     .join("\n");
+  const header = p.leftRail
+    ? p.chrome.header
+    : p.chrome.header.replace(/<span class="head-dials">[\s\S]*?<\/span>/, "");
+  const main = p.tocHtml
+    ? p.mainHtml
+    : p.mainHtml.replace(/<label class="mast-toc"[^>]*>[\s\S]*?<\/label>/, "");
   return `<!DOCTYPE html>
-<html lang="${p.lang ?? "en"}">
+<html lang="${esc(p.lang ?? "en")}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -89,21 +100,26 @@ export function htmlPage(p: PageInput): string {
 <meta property="og:title" content="${esc(p.title)}">
 <meta property="og:description" content="${esc(p.description)}">
 <meta property="og:url" content="${esc(p.canonical)}">
-<meta property="og:type" content="article">
-${p.ogImage ? `<meta property="og:image" content="${esc(p.ogImage)}">
+<meta property="og:type" content="${p.ogType ?? (p.jsonld.some((item) => "@type" in item && item["@type"] === "BlogPosting") ? "article" : "website")}">
+${
+  p.ogImage
+    ? `<meta property="og:image" content="${esc(p.ogImage)}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${esc(p.ogImage)}">` : `<meta name="twitter:card" content="summary">`}
+<meta name="twitter:image" content="${esc(p.ogImage)}">`
+    : `<meta name="twitter:card" content="summary">`
+}
 ${p.noindex ? '<meta name="robots" content="noindex">\n' : ""}<link rel="stylesheet" href="${esc(p.chrome.stylesheet)}">
-<script>(()=>{try{var d=document.documentElement;var h=localStorage.getItem("remilia-hue");var s=localStorage.getItem("remilia-scheme");var t=localStorage.getItem("remilia-dots");if(h){d.style.setProperty("--hue",h);d.setAttribute("data-hue",h)}if(s==="light"||s==="dark")d.setAttribute("data-scheme",s);if(t==="none"||t==="small"||t==="large")d.setAttribute("data-dots",t)}catch(e){}document.addEventListener("DOMContentLoaded",function(){try{var d=document.documentElement;var dark=document.getElementById("theme-dark");var s=localStorage.getItem("remilia-scheme");var h=localStorage.getItem("remilia-hue");var t=localStorage.getItem("remilia-dots");if(dark){dark.checked=s?s==="dark":matchMedia("(prefers-color-scheme: dark)").matches;dark.addEventListener("change",function(){var v=dark.checked?"dark":"light";d.setAttribute("data-scheme",v);localStorage.setItem("remilia-scheme",v)})}if(h){var r=document.getElementById("theme-hue-"+h);if(r)r.checked=true}document.querySelectorAll('input[name="theme-hue"]').forEach(function(el){el.addEventListener("change",function(){if(el.checked){d.style.setProperty("--hue",el.value);d.setAttribute("data-hue",el.value);localStorage.setItem("remilia-hue",el.value)}})});if(t){var r=document.getElementById("theme-dots-"+t);if(r)r.checked=true}document.querySelectorAll('input[name="theme-dots"]').forEach(function(el){el.addEventListener("change",function(){if(el.checked){d.setAttribute("data-dots",el.value);localStorage.setItem("remilia-dots",el.value)}})})}catch(e){}})})();</script>
+<script>${THEME_JS}</script>
 ${p.headExtra ?? ""}
 ${ld}
 </head>
 <body>
+<a class="skip" href="#content">Skip to content</a>
 <div class="wm" aria-hidden="true">
 <svg class="wm-field" xmlns="http://www.w3.org/2000/svg">
 <defs>
-<pattern id="wm-pat" patternUnits="userSpaceOnUse" width="var(--rose-period)" height="var(--rose-period)">
-<image href="/press/emblem.svg" width="var(--rose-size)" height="var(--rose-size)" preserveAspectRatio="xMidYMid meet"/>
+<pattern id="wm-pat" patternUnits="userSpaceOnUse" width="288" height="288">
+<image href="/assets/emblem.svg" width="240" height="240" preserveAspectRatio="xMidYMid meet"/>
 </pattern>
 <mask id="wm-mask" mask-type="alpha" maskContentUnits="userSpaceOnUse">
 <rect width="100%" height="100%" fill="url(#wm-pat)"/>
@@ -162,10 +178,11 @@ ${ld}
 </filter>
 </svg>
 <div class="layout${p.layoutClass ? ` ${esc(p.layoutClass)}` : ""}">
-${p.leftRail
+${
+  p.leftRail
     ? `<div class="side-col">
 <div class="left-rail">
-${p.chrome.header}
+${header}
 <div class="left-stack">
 ${p.tocHtml ?? ""}
 ${p.citeHtml ?? ""}
@@ -176,8 +193,9 @@ ${themeSelHtml()}
 ${p.leftRail}
 </div>
 </div>`
-    : p.chrome.header}
-${p.mainHtml}
+    : header
+}
+${main}
 </div>
 ${p.chrome.footer}
 ${p.bodyEnd ?? ""}
@@ -200,8 +218,7 @@ export function tocBox(items?: string, noteCount = 0): string {
     noteCount > 0
       ? `\n<hr class="nav-rule">\n<p class="toc-notes">Notes: ${Array.from(
           { length: noteCount },
-          (_, i) =>
-            `<a class="toc-note" href="#fn-${i + 1}">[${i + 1}]</a>`,
+          (_, i) => `<a class="toc-note" href="#fn-${i + 1}">[${i + 1}]</a>`,
         ).join(" ")}</p>`
       : "";
   return `<div class="toc">
@@ -281,17 +298,20 @@ export function articleHtml(input: {
   const dated = input.monthHref
     ? `<a class="byline-date" href="${esc(input.monthHref)}">${time}</a>`
     : time;
-  const meta = input.metaHtml ? `\n<div class="sec post-meta">${input.metaHtml}</div>` : "";
+  const meta = input.metaHtml
+    ? `\n<div class="sec post-meta">${input.metaHtml}</div>`
+    : "";
   const md = input.mdHref
     ? `<button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button>`
     : "";
   const txt = input.txtHref
     ? `<button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button>`
     : "";
-  const copy = md && txt
-    ? `<span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} <span class="nav-sep" aria-hidden="true">|</span> ${txt}`
-    : "";
-  return `<main class="article-wrap">
+  const copy =
+    md && txt
+      ? `<span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} <span class="nav-sep" aria-hidden="true">|</span> ${txt}`
+      : "";
+  return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
 <header>
@@ -323,49 +343,55 @@ export interface IndexCard {
   author?: string;
 }
 
-export function indexMain(posts: IndexCard[], toolsHtml: string): string {
+export function indexMain(
+  posts: IndexCard[],
+  toolsHtml: string,
+  title = "Posts",
+): string {
   const cards = posts
     .map((p) => {
       const month = p.date.slice(0, 7);
       const img = p.imageUrl
-        ? `<a class="card-thumb" href="${esc(p.url)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
+        ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
         : "";
       const author = p.author
         ? `<a class="author" href="?author=${esc(encodeURIComponent(p.author))}">${esc(p.author)}</a>`
         : `<span class="author"></span>`;
-      const row = img || p.excerpt
-        ? `<div class="card-row">
+      const row =
+        img || p.excerpt
+          ? `<div class="card-row">
 ${img}
 ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 </div>
 <hr class="nav-rule">`
-        : "";
+          : "";
       return `<article class="sec post-card" data-title="${esc(p.title)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
 <header>
 <p class="card-meta"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time>${author}</p>
 <h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
 </header>
 ${row}
-<p class="card-foot"><span class="byline-cat">${esc(p.category)}</span><a class="card-more" href="${esc(p.url)}">Read more</a></p>
+<p class="card-foot"><span class="byline-cat">${esc(p.category)}</span><a class="card-more" href="${esc(p.url)}" aria-label="Read more: ${esc(p.title)}">Read more</a></p>
 </article>`;
     })
     .join("\n");
-  return `<main class="article-wrap">
+  return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
+<h1>${esc(title)}</h1>
 ${toolsHtml}
 </header>
 </div>
 <div class="article-rest">
-${cards}
+${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 </div>
 </article>
 </main>`;
 }
 
 export function simpleMain(innerHtml: string): string {
-  return `<main class="article-wrap simple">
+  return `<main id="content" tabindex="-1" class="article-wrap simple">
 <article class="article-body">
 ${innerHtml}
 </article>
@@ -389,4 +415,3 @@ export function notFoundHtml(chrome: Chrome, basePath: string): string {
 </ul>`),
   });
 }
-

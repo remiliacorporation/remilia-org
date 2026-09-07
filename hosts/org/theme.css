@@ -1,201 +1,253 @@
-/*
- * remilia.org/press theme — tokens from remilia-site assets/css/site.css:
- * paper #fff8f7 / brand ink #f00, Alte Haas Grotesk, 1px ink borders,
- * ink/white hover inversion. Layout/structure come from blog-core.css.
- * Body text is NOT bold; weight/underline/caps carry hierarchy. Only the
- * title has a larger size. All spacing stays on the 4px grid.
- */
-
 @font-face {
-  font-family: 'Alte Haas Grotesk';
-  src: url('/assets/fonts/AlteHaasGroteskRegular.woff') format('woff');
+  font-family: "Alte Haas Grotesk";
+  src: url("/assets/fonts/AlteHaasGroteskRegular.woff") format("woff");
   font-weight: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Alte Haas Grotesk';
-  src: url('/assets/fonts/AlteHaasGroteskBold.woff') format('woff');
+  font-family: "Alte Haas Grotesk";
+  src: url("/assets/fonts/AlteHaasGroteskBold.woff") format("woff");
   font-weight: bold;
   font-display: swap;
 }
 
-:root{
-  --hue:30;
-  /* Yellow (~95) and cyan (~200) are light primaries: same L/C as #f00 goes
-     muddy/out of gamut. Darken those hues so ink stays readable; leave red,
-     green, blue close to the locked brand values. */
-  --hue-yellow:max(0,cos(calc((var(--hue) - 95) * 1deg)));
-  --hue-cyan:max(0,cos(calc((var(--hue) - 200) * 1deg)));
-  --hue-wash:max(var(--hue-yellow),var(--hue-cyan));
-  --hue-wash-2:calc(var(--hue-wash) * var(--hue-wash));
-  --hue-wash-4:calc(var(--hue-wash-2) * var(--hue-wash-2));
-  --ink-l:calc(0.628 - 0.22 * var(--hue-wash-4));
-  --ink-c:calc(0.2577 - 0.09 * var(--hue-wash-4));
-  --paper:oklch(0.984 calc(0.012 + 0.016 * var(--hue-wash-2)) var(--hue));
-  --wm-wash:color-mix(in oklch, var(--ink) 10%, var(--paper));
-  --surface:#fff;
-  /* Brand ink tracks --hue (default ≈ #f00). Contrast via prefers-contrast. */
-  --ink:oklch(var(--ink-l) var(--ink-c) var(--hue));
-  --ink-contrast:#fff;
-  --accent:var(--ink);
-  --muted:var(--ink);
-  --focus:#000;
+:root {
+  --hue: 30;
 
-  --font-body:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;
-  --font-mono:monospace;
-  --size-base:12px;
-  --size-title:20px;
-  --weight-body:normal;   /* body not bold */
-  --weight-strong:bold;   /* headings, nav, links-of-note */
+  --hue-yellow: max(0, cos(calc((var(--hue) - 95) * 1deg)));
+  --hue-cyan: max(0, cos(calc((var(--hue) - 200) * 1deg)));
+  --hue-wash: max(var(--hue-yellow), var(--hue-cyan));
+  --hue-wash-2: calc(var(--hue-wash) * var(--hue-wash));
+  --hue-wash-4: calc(var(--hue-wash-2) * var(--hue-wash-2));
+  --ink-l: calc(0.54 - 0.15 * var(--hue-wash-4));
+  --ink-c: calc(0.2577 - 0.09 * var(--hue-wash-4));
+  --paper: oklch(0.984 calc(0.012 + 0.016 * var(--hue-wash-2)) var(--hue));
+  --wm-wash: color-mix(in oklch, var(--ink) 10%, var(--paper));
+  --surface: #fff;
 
-  /* Layout — 8px box grid. --rail-gap is section↔section AND column↔nav/ToC. */
-  --measure:560px; /* ≈80ch body at 12px, 70 × 8 */
-  --gutter:24px;
-  --rail-gap:12px;
-  --rail:240px;
-  --toc-rail:240px;
-  --space-xs:8px;
-  --space-s:16px;
-  --space:24px;
-  --space-l:32px;
+  --ink: oklch(var(--ink-l) var(--ink-c) var(--hue));
+  --ink-contrast: #fff;
+  --accent: var(--ink);
+  --muted: var(--ink);
+  --focus: #000;
 
-  --dot-size:2px;
-  --dot-gap:8px;
-  --dot-ox:3px;
-  --dot-oy:2px;
-  --rose-size:240px;
-  --rose-gap:48px;
-  --rose-rot:45deg;
-  --rose-opacity:0.85;
-  --rose-contrast:1;
-  --rose-saturate:1;
-  --rose-brightness:1;
-  --rose-invert:0;
-  --rose-blend:normal;
-  --rose-period:calc(var(--rose-size) + var(--rose-gap));
+  --font-body: "Alte Haas Grotesk", Helvetica, Arial, sans-serif;
+  --font-mono: monospace;
+  --size-base: 12px;
+  --size-title: 20px;
+  --weight-body: normal;
+  --weight-strong: bold;
 
-  /* Ordered dither — Bayer 4×4, 3 tones (dark / mid / light). */
-  --dither-cell:2px;
-  --dither-dark:oklch(0.16 calc(0.05 + 0.02 * (1 - var(--hue-wash-2))) var(--hue));
-  --dither-mid:oklch(0.88 calc(0.07 + 0.03 * var(--hue-wash-2)) var(--hue));
-  --dither-light:oklch(0.995 0.004 var(--hue));
-  --dither-hover:0.7;
-  --dither-filter:url(#dither-3);
-  --dither-hover-filter:url(#dither-hover);
+  --measure: 560px;
+  --gutter: 24px;
+  --rail-gap: 12px;
+  --rail: 240px;
+  --toc-rail: 240px;
+  --space-xs: 8px;
+  --space-s: 16px;
+  --space: 24px;
+  --space-l: 32px;
+
+  --dot-size: 2px;
+  --dot-gap: 8px;
+  --dot-ox: 3px;
+  --dot-oy: 2px;
+  --rose-size: 240px;
+  --rose-gap: 48px;
+  --rose-rot: 45deg;
+  --rose-opacity: 0.85;
+  --rose-contrast: 1;
+  --rose-saturate: 1;
+  --rose-brightness: 1;
+  --rose-invert: 0;
+  --rose-blend: normal;
+  --rose-period: calc(var(--rose-size) + var(--rose-gap));
+
+  --dither-cell: 2px;
+  --dither-dark: oklch(
+    0.16 calc(0.05 + 0.02 * (1 - var(--hue-wash-2))) var(--hue)
+  );
+  --dither-mid: oklch(0.88 calc(0.07 + 0.03 * var(--hue-wash-2)) var(--hue));
+  --dither-light: oklch(0.995 0.004 var(--hue));
+  --dither-hover: 0.7;
+  --dither-filter: url(#dither-3);
+  --dither-hover-filter: url(#dither-hover);
 }
 
-html{color-scheme:light}
-html:has(#theme-hue-30:checked),html[data-hue="30"]{--hue:30}
-html:has(#theme-hue-95:checked),html[data-hue="95"]{--hue:95}
-html:has(#theme-hue-145:checked),html[data-hue="145"]{--hue:145}
-html:has(#theme-hue-255:checked),html[data-hue="255"]{--hue:255}
-html:has(#theme-hue-330:checked),html[data-hue="330"]{--hue:330}
+html {
+  color-scheme: light;
+}
+html:has(#theme-hue-30:checked),
+html[data-hue="30"] {
+  --hue: 30;
+}
+html:has(#theme-hue-95:checked),
+html[data-hue="95"] {
+  --hue: 95;
+}
+html:has(#theme-hue-145:checked),
+html[data-hue="145"] {
+  --hue: 145;
+}
+html:has(#theme-hue-255:checked),
+html[data-hue="255"] {
+  --hue: 255;
+}
+html:has(#theme-hue-330:checked),
+html[data-hue="330"] {
+  --hue: 330;
+}
 html:has(#theme-dots-none:checked),
-html[data-dots="none"]{--dot-size:0px;--dot-gap:8px;--dot-ox:0px;--dot-oy:0px}
-html:has(#theme-dots-small:checked),
-html[data-dots="small"]{--dot-size:1px;--dot-gap:4px;--dot-ox:0px;--dot-oy:0px}
-html:has(#theme-dots-large:checked),
-html[data-dots="large"]{--dot-size:2px;--dot-gap:8px;--dot-ox:3px;--dot-oy:2px}
-html:has(#theme-dots-none:checked) .wm::before,
-html[data-dots="none"] .wm::before{content:none;display:none}
-
-/* Same primaries on dark, quieter: charcoal paper with a hint of hue,
-   ink dimmed and desaturated so it does not glare. Yellow still lifts
-   a little so it stays readable on black. */
-html:has(#theme-dark:checked),
-html[data-scheme="dark"]{
-  color-scheme:dark;
-  --ink-l:calc(0.68 + 0.06 * var(--hue-wash-4));
-  --ink-c:calc(0.11 - 0.03 * var(--hue-wash-4));
-  --paper:oklch(0.15 calc(0.010 + 0.006 * var(--hue-wash-2)) var(--hue));
-  --wm-wash:color-mix(in oklch, var(--paper) 88%, var(--ink));
-  --surface:oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
-  --ink-contrast:oklch(0.13 0.008 var(--hue));
-  --focus:#fff;
+html[data-dots="none"] {
+  --dot-size: 0px;
+  --dot-gap: 8px;
+  --dot-ox: 0px;
+  --dot-oy: 0px;
 }
-@media (prefers-color-scheme: dark){
-  html:not([data-scheme="light"]){
-  color-scheme:dark;
-  --ink-l:calc(0.68 + 0.06 * var(--hue-wash-4));
-  --ink-c:calc(0.11 - 0.03 * var(--hue-wash-4));
-  --paper:oklch(0.15 calc(0.010 + 0.006 * var(--hue-wash-2)) var(--hue));
-  --wm-wash:color-mix(in oklch, var(--paper) 88%, var(--ink));
-  --surface:oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
-  --ink-contrast:oklch(0.13 0.008 var(--hue));
-  --focus:#fff;
+html:has(#theme-dots-small:checked),
+html[data-dots="small"] {
+  --dot-size: 1px;
+  --dot-gap: 4px;
+  --dot-ox: 0px;
+  --dot-oy: 0px;
+}
+html:has(#theme-dots-large:checked),
+html[data-dots="large"] {
+  --dot-size: 2px;
+  --dot-gap: 8px;
+  --dot-ox: 3px;
+  --dot-oy: 2px;
+}
+html:has(#theme-dots-none:checked) .wm::before,
+html[data-dots="none"] .wm::before {
+  content: none;
+  display: none;
+}
+
+html:has(#theme-dark:checked),
+html[data-scheme="dark"] {
+  color-scheme: dark;
+  --ink-l: calc(0.68 + 0.06 * var(--hue-wash-4));
+  --ink-c: calc(0.11 - 0.03 * var(--hue-wash-4));
+  --paper: oklch(0.15 calc(0.01 + 0.006 * var(--hue-wash-2)) var(--hue));
+  --wm-wash: color-mix(in oklch, var(--paper) 88%, var(--ink));
+  --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
+  --ink-contrast: oklch(0.13 0.008 var(--hue));
+  --focus: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-scheme="light"]) {
+    color-scheme: dark;
+    --ink-l: calc(0.68 + 0.06 * var(--hue-wash-4));
+    --ink-c: calc(0.11 - 0.03 * var(--hue-wash-4));
+    --paper: oklch(0.15 calc(0.01 + 0.006 * var(--hue-wash-2)) var(--hue));
+    --wm-wash: color-mix(in oklch, var(--paper) 88%, var(--ink));
+    --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
+    --ink-contrast: oklch(0.13 0.008 var(--hue));
+    --focus: #fff;
   }
 }
 
-/* Wallpaper: ink wash + paper dots. Emblem is the SVG used only as
-   a silhouette; #wm-stamp paints an inner bevel (stamped-in), not fill. */
-body{position:relative}
-.layout,footer{position:relative;z-index:1}
-.wm{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  overflow:hidden;
-  pointer-events:none;
-  isolation:isolate;
-  color:var(--ink);
-  background:color-mix(in oklch, var(--ink) 10%, var(--paper));
+body {
+  position: relative;
 }
-.wm::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:0;
-  /* Origin = left edge of the centered --measure column, so the 8px
-     lattice stays glued to the boxes when the viewport width changes. */
-  background-image:radial-gradient(
+.layout,
+footer {
+  position: relative;
+  z-index: 1;
+}
+.wm {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  color: var(--ink);
+  background: color-mix(in oklch, var(--ink) 10%, var(--paper));
+}
+.wm::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-image: radial-gradient(
     circle at calc(var(--dot-size) / 2) calc(var(--dot-size) / 2),
     var(--paper) calc(var(--dot-size) / 2),
     transparent calc(var(--dot-size) / 2 + 0.4px)
   );
-  background-size:var(--dot-gap) var(--dot-gap);
-  background-repeat:repeat;
-  background-position: calc(50% - var(--measure) / 2 + var(--dot-ox)) var(--dot-oy);
-  background-attachment:fixed;
+  background-size: var(--dot-gap) var(--dot-gap);
+  background-repeat: repeat;
+  background-position: calc(50% - var(--measure) / 2 + var(--dot-ox))
+    var(--dot-oy);
+  background-attachment: fixed;
 }
-.wm-field{
-  position:absolute;
-  left:50%;
-  top:50%;
-  z-index:1;
-  width:300%;
-  height:300%;
-  overflow:visible;
-  transform:translate(-50%,-50%) rotate(var(--rose-rot));
-  transform-origin:center;
-  color:transparent;
-  opacity:var(--rose-opacity);
-  mix-blend-mode:var(--rose-blend);
-  filter:
-    invert(var(--rose-invert))
-    contrast(var(--rose-contrast))
-    saturate(var(--rose-saturate))
-    brightness(var(--rose-brightness));
+.wm-field {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 300%;
+  height: 300%;
+  overflow: visible;
+  transform: translate(-50%, -50%) rotate(var(--rose-rot));
+  transform-origin: center;
+  color: transparent;
+  opacity: var(--rose-opacity);
+  mix-blend-mode: var(--rose-blend);
+  filter: invert(var(--rose-invert)) contrast(var(--rose-contrast))
+    saturate(var(--rose-saturate)) brightness(var(--rose-brightness));
 }
-.wm-tile{fill:#000}
-#wm-pat{width:var(--rose-period);height:var(--rose-period)}
-#wm-pat image{width:var(--rose-size);height:var(--rose-size)}
+.wm-tile {
+  fill: #000;
+}
+#wm-pat {
+  width: var(--rose-period);
+  height: var(--rose-period);
+}
+#wm-pat image {
+  width: var(--rose-size);
+  height: var(--rose-size);
+}
 html:has(#theme-dark:checked) .wm,
-html[data-scheme="dark"] .wm{
-  background:color-mix(in oklch, var(--paper) 88%, var(--ink));
+html[data-scheme="dark"] .wm {
+  background: color-mix(in oklch, var(--paper) 88%, var(--ink));
 }
-@media (prefers-color-scheme: dark){
-  html:not([data-scheme="light"]) .wm{
-    background:color-mix(in oklch, var(--paper) 88%, var(--ink));
+@media (prefers-color-scheme: dark) {
+  html:not([data-scheme="light"]) .wm {
+    background: color-mix(in oklch, var(--paper) 88%, var(--ink));
   }
 }
 
-@media (prefers-contrast: more){
-  :root{--paper:#fff;--surface:#fff;--ink:oklch(0.40 calc(0.18 - 0.05 * var(--hue-wash-4)) var(--hue));--accent:var(--ink);--muted:var(--ink)}
-  .wm-field{opacity:1}
+@media (prefers-contrast: more) {
+  :root {
+    --paper: #fff;
+    --surface: #fff;
+    --ink: oklch(0.4 calc(0.18 - 0.05 * var(--hue-wash-4)) var(--hue));
+    --accent: var(--ink);
+    --muted: var(--ink);
+  }
+  .wm-field {
+    opacity: 1;
+  }
   html:has(#theme-dark:checked),
-  html[data-scheme="dark"]{--paper:#000;--surface:#111;--ink:oklch(0.82 calc(0.16 - 0.04 * var(--hue-wash-4)) var(--hue));--ink-contrast:#000;--accent:var(--ink);--muted:var(--ink)}
+  html[data-scheme="dark"] {
+    --paper: #000;
+    --surface: #111;
+    --ink: oklch(0.82 calc(0.16 - 0.04 * var(--hue-wash-4)) var(--hue));
+    --ink-contrast: #000;
+    --accent: var(--ink);
+    --muted: var(--ink);
+  }
 }
-@media (prefers-contrast: more) and (prefers-color-scheme: dark){
-  html:not([data-scheme="light"]){--paper:#000;--surface:#111;--ink:oklch(0.82 calc(0.16 - 0.04 * var(--hue-wash-4)) var(--hue));--ink-contrast:#000;--accent:var(--ink);--muted:var(--ink)}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  html:not([data-scheme="light"]) {
+    --paper: #000;
+    --surface: #111;
+    --ink: oklch(0.82 calc(0.16 - 0.04 * var(--hue-wash-4)) var(--hue));
+    --ink-contrast: #000;
+    --accent: var(--ink);
+    --muted: var(--ink);
+  }
 }
-

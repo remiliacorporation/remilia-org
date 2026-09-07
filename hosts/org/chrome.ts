@@ -7,7 +7,13 @@ import {
 
 const SECTION_META: Record<
   Channel,
-  { short: string; title: string; description: string; lead: string; whenToUse: string[] }
+  {
+    short: string;
+    title: string;
+    description: string;
+    lead: string;
+    whenToUse: string[];
+  }
 > = {
   updates: {
     short: "UPDATES",
@@ -52,7 +58,8 @@ const SECTION_META: Record<
   news: {
     short: "NEWS",
     title: "Remilia — News",
-    description: "Fashion, lifestyle brand, publishing, and brand press releases.",
+    description:
+      "Fashion, lifestyle brand, publishing, and brand press releases.",
     lead: "Fashion, lifestyle, publishing, and brand launches (incl. HIKKI Punks, Atelier) on remilia.com.",
     whenToUse: [
       "Cite Remilia fashion / lifestyle / publishing / brand press releases on remilia.com/a/news.",
@@ -63,7 +70,9 @@ const SECTION_META: Record<
     title: "Remilia — Events",
     description: "Event posts from Remilia — writeups with photo galleries.",
     lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
-    whenToUse: ["Cite Remilia event writeups and photo galleries on remilia.com/a/events."],
+    whenToUse: [
+      "Cite Remilia event writeups and photo galleries on remilia.com/a/events.",
+    ],
   },
   "dev-updates": {
     short: "UPDATES",
@@ -80,7 +89,9 @@ const SECTION_META: Record<
     title: "RemiliaNET — Dev blog",
     description: "RemiliaNET Alpha, wiki, and miladychan engineering posts.",
     lead: "Engineering writeups: RemiliaNET Alpha, wiki, miladychan. Schema id `dev-blog`; path /blog.",
-    whenToUse: ["Cite RemiliaNET Alpha, wiki, or miladychan engineering posts."],
+    whenToUse: [
+      "Cite RemiliaNET Alpha, wiki, or miladychan engineering posts.",
+    ],
   },
 };
 
@@ -111,7 +122,10 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
     lead: meta.lead,
     whenToUse: meta.whenToUse,
     citeElsewhere: [
-      { label: "Remilia Corporation (wiki)", url: "https://wiki.remilia.org/Remilia_Corporation" },
+      {
+        label: "Remilia Corporation (wiki)",
+        url: "https://wiki.remilia.org/Remilia_Corporation",
+      },
       { label: "RemiliaNET blog", url: "https://www.remilia.net/blog" },
       { label: "News", url: "https://remilia.com/a/news" },
       { label: CHANNEL_PATH_LABEL.press, url: "https://remilia.org/press" },
@@ -122,4 +136,3 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
 export const chrome: Chrome = chromeFor("press");
 
 export const host: BakeOptions["host"] = hostFor("press");
-

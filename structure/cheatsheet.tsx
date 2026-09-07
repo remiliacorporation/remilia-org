@@ -48,4 +48,3 @@ export function SectionCheatsheet(): ReactNode {
     </pre>
   );
 }
-
