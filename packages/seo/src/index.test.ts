@@ -22,35 +22,16 @@ import {
 } from "./index";
 
 test("canonical URLs follow the ratified section map", () => {
-  assert.equal(
-    canonicalFor("updates", "note"),
-    "https://remilia.org/updates/note",
-  );
-  assert.equal(
-    canonicalFor("press", "launch"),
-    "https://remilia.org/press/launch",
-  );
-  assert.equal(
-    canonicalFor("thought", "essay"),
-    "https://remilia.org/thought/essay",
-  );
-  assert.equal(
-    canonicalFor("archive", "interview"),
-    "https://remilia.org/archive/interview",
-  );
-  assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
-  assert.equal(
-    canonicalFor("events", "party"),
-    "https://remilia.com/a/events/party",
-  );
-  assert.equal(
-    canonicalFor("dev-updates", "ship"),
-    "https://www.remilia.net/updates/ship",
-  );
-  assert.equal(
-    canonicalFor("dev-blog", "vaults"),
-    "https://www.remilia.net/blog/vaults",
-  );
+  for (const [channel, slug, expected] of [
+    ["updates", "note", "https://remilia.org/updates/note"],
+    ["press", "launch", "https://remilia.org/press/launch"],
+    ["thought", "essay", "https://remilia.org/thought/essay"],
+    ["archive", "interview", "https://remilia.org/archive/interview"],
+    ["news", "fw26", "https://remilia.com/a/news/fw26"],
+    ["events", "party", "https://remilia.com/a/events/party"],
+    ["dev-updates", "ship", "https://www.remilia.net/updates/ship"],
+    ["dev-blog", "vaults", "https://www.remilia.net/blog/vaults"],
+  ] as const) assert.equal(canonicalFor(channel, slug), expected);
   assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
   assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("dev-blog"), "https://www.remilia.net/blog/rss.xml");
@@ -64,14 +45,14 @@ test("canonical URLs follow the ratified section map", () => {
 });
 
 test("legacy Ghost redirect maps slug to the channel host", () => {
-  assert.deepEqual(legacyRedirect("dev-blog", "vault-notes"), {
-    from: "https://blog.remilia.org/vault-notes/",
-    to: "https://www.remilia.net/blog/vault-notes",
-  });
-  assert.deepEqual(legacyRedirect("press", "vault-notes"), {
-    from: "https://blog.remilia.org/vault-notes/",
-    to: "https://remilia.org/press/vault-notes",
-  });
+  for (const [channel, to] of [
+    ["dev-blog", "https://www.remilia.net/blog/vault-notes"],
+    ["press", "https://remilia.org/press/vault-notes"],
+  ] as const)
+    assert.deepEqual(legacyRedirect(channel, "vault-notes"), {
+      from: "https://blog.remilia.org/vault-notes/",
+      to,
+    });
 });
 
 test("blogPosting JSON-LD carries required Article fields", () => {

@@ -7,9 +7,10 @@ import {
   citeBox,
   notFoundHtml,
   tocBox,
+  indexMain,
   type Chrome,
 } from "./page";
-import { filterBar } from "./nav";
+import { filterBar, leftRail } from "./nav";
 
 import {
   auditPage,
@@ -44,6 +45,15 @@ const PAGE = htmlPage({
     bodyHtml: `<p>${"Vault mechanics explained at length. ".repeat(20)}</p>`,
   }),
 });
+
+const POST = {
+  title: "Vaults",
+  url: "/press/vaults",
+  date: "2026-08-01T00:00:00Z",
+  category: "Feature",
+  excerpt: "How vaults work.",
+  author: "Remilia",
+};
 
 test("page shell emits the fixed semantic structure", () => {
   assert.ok(PAGE.includes('<html lang="en">'));
@@ -141,20 +151,18 @@ test("toc notes are a labeled row, not bold-only chips", () => {
 });
 
 test("index filter bar includes category and author dropdowns", () => {
-  const html = filterBar([
-    {
-      title: "A",
-      url: "/press/a",
-      date: "2026-08-10T00:00:00Z",
-      category: "Feature",
-      author: "Remilia",
-    },
-  ]);
+  const html = filterBar([POST]);
   assert.ok(html.includes('id="post-cat"'));
   assert.ok(html.includes(">All posts</button>"));
   assert.ok(html.includes('id="post-author"'));
   assert.ok(html.includes(">All authors</button>"));
   assert.ok(html.includes(">Remilia</button>"));
+  const index = indexMain([POST], "<p>tools</p>");
+  const rail = leftRail([POST], "Press", "/press");
+  assert.match(index, /Read more: Vaults/);
+  assert.match(index, /08\.01\.26/);
+  assert.match(rail, /placeholder="Search"/);
+  assert.match(rail, /aria-label="Previous page"/);
 });
 
 test("gallery renders figures with alt and a dialog lightbox", () => {
