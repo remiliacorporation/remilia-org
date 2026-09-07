@@ -2,7 +2,7 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { layerBounds } from "./bake-fx.ts";
+import { layerBounds } from "./bake-fx";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const defaultSrc = join(here, "../deploy/src");

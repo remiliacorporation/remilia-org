@@ -51,7 +51,9 @@ ${items}
 export function atom(meta: ChannelMeta, posts: FeedPost[]): string {
   const updated =
     posts.length > 0
-      ? new Date(Math.max(...posts.map((p) => Date.parse(p.publishedAt)))).toISOString()
+      ? new Date(
+          Math.max(...posts.map((p) => Date.parse(p.publishedAt))),
+        ).toISOString()
       : new Date(0).toISOString();
   const entries = posts
     .map((p) => {
@@ -122,9 +124,13 @@ export interface LlmsTxtInput {
 export function llmsTxt(input: LlmsTxtInput): string {
   const posts = input.posts
     .slice(0, input.maxPosts ?? 10)
-    .map((p) => `- [${p.title}](${canonicalFor(p.channel, p.slug)}): ${p.excerpt}`)
+    .map(
+      (p) => `- [${p.title}](${canonicalFor(p.channel, p.slug)}): ${p.excerpt}`,
+    )
     .join("\n");
-  const cites = input.citeElsewhere.map((c) => `- [${c.label}](${c.url})`).join("\n");
+  const cites = input.citeElsewhere
+    .map((c) => `- [${c.label}](${c.url})`)
+    .join("\n");
   const uses = input.whenToUse.map((u) => `- ${u}`).join("\n");
   return `# ${input.hostTitle}
 
@@ -145,4 +151,3 @@ ${posts}
 ${cites}
 `;
 }
-

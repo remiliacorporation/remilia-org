@@ -1,8 +1,42 @@
 # remilia-org
 
-Static site generator for [remilia.org](https://remilia.org/), Sanity studio blogs (org / com / net) and the shared Remilia content graph.
+The corporate website at [remilia.org](https://remilia.org), its static publishing pipeline, and the Sanity Studio for the shared Remilia content graph.
 
-## Host map
+## Development
+
+Use Node.js 22 or newer and pnpm 10.27.0.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
+pnpm check
+pnpm validate
+pnpm build
+pnpm bake
+pnpm --filter @remilia/hosts preview
+```
+
+`dev` starts Studio at localhost:3333. `check` runs TypeScript and every Node test. `validate` checks the Studio schema; `build` builds Studio. `bake` reads published Sanity content and generates the corporate site. `preview` serves the corporate pages and a sample article at http://127.0.0.1:8477, without changing Sanity content.
+
+## Structure
+
+| Directory | Responsibility |
+| --- | --- |
+| `deploy/` | Netlify publish root; corporate HTML and static assets |
+| `hosts/org/` | Section configuration and publishing entry point |
+| `hosts/core/` | Shared article and navigation styles |
+| `hosts/maintenance/` | Content imports, migrations, repairs, and their tests |
+| `hosts/bake-fx.ts` | Builds the decorative print layer from corporate content |
+| `hosts/preview.ts` | Local fixture pages and preview server |
+| `packages/renderer/` | Portable Text, Markdown, and HTML generation |
+| `packages/seo/` | Canonical URLs, structured data, feeds, and sitemaps |
+| `packages/conformance/` | SEO contract checks |
+| `schemaTypes/` | Sanity content schema |
+| `structure/` | Studio reference view |
+
+Corporate pages are hand-authored in `deploy/`. Edit `.layer-base` and run `pnpm bake:fx` to regenerate the decorative `.layer-fx`. Keep implementation explanations here rather than in code comments. Generated literature under `deploy/{updates,press,thought,archive}/` is ignored by Git.
+
+## Content and publishing
 
 | Host | Sections | Paths |
 | --- | --- | --- |
@@ -10,7 +44,7 @@ Static site generator for [remilia.org](https://remilia.org/), Sanity studio blo
 | remilia.com | news, events | `/a/news`, `/a/events` |
 | remilia.net | dev-updates, dev-blog | `/updates`, `/blog` |
 
-## Layout
+Sanity uses project `8x9419lh`, dataset `production`. The `.org` build reads published content only. Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` to a read token when authenticated access is needed. Keep credentials in the deployment environment, never in source control.
 
 ```
 deploy/          Netlify publish root (assets, llms, sitemap; corporate HTML baked)
@@ -24,6 +58,10 @@ packages/        renderer, seo
 schemaTypes/     Sanity schema
 structure.ts     Org / Com / Net desks
 ```
+
+Netlify runs `pnpm bake` and publishes `deploy/`. Connect a Sanity post-publishing webhook to a Netlify build hook to trigger rebuilds. `pnpm deploy:studio` publishes Studio separately; it does not publish the corporate website.
+
+Maintenance commands retain their names, for example `pnpm --filter @remilia/hosts import:ghost`. Their source is in `hosts/maintenance/`. Read the command before running it: imports can write local exports, and migration/repair commands can change Sanity content. They are not part of the site build or release checks.
 
 ## License
 

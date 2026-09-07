@@ -1,4 +1,3 @@
-
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -11,12 +10,17 @@ const CHANNEL = "archive" as const;
 const AUTHOR = "Charlotte Fang";
 
 function normTitle(s: string): string {
-  return s.toLowerCase().replace(/\[gp\]/g, "").replace(/[^a-z0-9]+/g, "");
+  return s
+    .toLowerCase()
+    .replace(/\[gp\]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function postId(slug: string): string {
   const id = `post-${CHANNEL}-${slug}`;
-  return id.length <= 128 ? id : `post-${CHANNEL}-${createHash("sha1").update(slug).digest("hex")}`;
+  return id.length <= 128
+    ? id
+    : `post-${CHANNEL}-${createHash("sha1").update(slug).digest("hex")}`;
 }
 
 export function unwrapSubstackImg(url: string): string {
@@ -30,7 +34,14 @@ type PTLike = {
   asset?: { url?: string };
   alt?: string;
   caption?: string;
-  children?: Array<{ text?: string }>;
+  style?: string;
+  markDefs?: unknown[];
+  children?: Array<{
+    _type?: "span";
+    _key?: string;
+    text?: string;
+    marks?: string[];
+  }>;
 };
 
 function hoistImages(body: PTLike[], title: string) {
@@ -59,7 +70,11 @@ export function promoteImageCaptions(body: PTLike[], title: string): PTLike[] {
     const alt = (b.alt ?? "").trim();
     const caption = (b.caption ?? "").trim();
     if (caption) return b;
-    if (alt && !/^image$/i.test(alt) && alt.toLowerCase() !== title.toLowerCase()) {
+    if (
+      alt &&
+      !/^image$/i.test(alt) &&
+      alt.toLowerCase() !== title.toLowerCase()
+    ) {
       return { ...b, caption: alt };
     }
     return b;
@@ -69,7 +84,9 @@ export function promoteImageCaptions(body: PTLike[], title: string): PTLike[] {
 export function prependSubtitle(body: PTLike[], subtitle?: string): PTLike[] {
   const sub = (subtitle ?? "").trim();
   if (!sub) return body;
-  const already = body.some((b) => b._type === "block" && blockText(b).includes(sub));
+  const already = body.some(
+    (b) => b._type === "block" && blockText(b).includes(sub),
+  );
   if (already) return body;
   return [
     {
@@ -101,17 +118,23 @@ export function substackExcerpt(
   const fromBody = body
     .flatMap((b) => {
       if (b._type === "block") return [blockText(b)];
-      if (b._type === "image") return [b.caption, b.alt].filter(Boolean) as string[];
+      if (b._type === "image")
+        return [b.caption, b.alt].filter(Boolean) as string[];
       return [];
     })
     .map((s) => s.trim())
-    .find((s) => s && !/^image$/i.test(s) && !/^https?:\/\
+    .find((s) => s && !/^image$/i.test(s) && !/^https?:\/\//i.test(s));
   if (fromBody) return fromBody.slice(0, 300);
-  const fromMd = mdFallback.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim();
+  const fromMd = mdFallback
+    .replace(/[#*_>`\[\]]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return (fromMd || p.title).slice(0, 300);
 }
 
-async function existing(paths: string[]): Promise<{ slugs: Set<string>; titles: Set<string> }> {
+async function existing(
+  paths: string[],
+): Promise<{ slugs: Set<string>; titles: Set<string> }> {
   const slugs = new Set<string>();
   const titles = new Set<string>();
   for (const path of paths) {
@@ -123,7 +146,11 @@ async function existing(paths: string[]): Promise<{ slugs: Set<string>; titles: 
     }
     for (const line of raw.split("\n")) {
       if (!line.trim()) continue;
-      const d = JSON.parse(line) as { _type?: string; slug?: { current?: string }; title?: string };
+      const d = JSON.parse(line) as {
+        _type?: string;
+        slug?: { current?: string };
+        title?: string;
+      };
       if (d._type !== "post") continue;
       if (d.slug?.current) slugs.add(d.slug.current);
       if (d.title) titles.add(normTitle(d.title));
@@ -147,9 +174,14 @@ type FullPost = {
 
 async function main() {
   const args = process.argv.slice(2);
-  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-  const outFile = args.find((a, i) => args[i - 1] === "--out") ?? join(root, "substack-posts.ndjson");
-  const { slugs, titles } = await existing([join(root, "ghost-posts.ndjson"), join(root, "paragraph-posts.ndjson")]);
+  const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
+  const outFile =
+    args.find((a, i) => args[i - 1] === "--out") ??
+    join(root, "substack-posts.ndjson");
+  const { slugs, titles } = await existing([
+    join(root, "ghost-posts.ndjson"),
+    join(root, "paragraph-posts.ndjson"),
+  ]);
 
   const archiveRes = await fetch(`${ORIGIN}/api/v1/archive?sort=new&limit=50`);
   if (!archiveRes.ok) throw new Error(`archive ${archiveRes.status}`);
@@ -200,9 +232,15 @@ async function main() {
       publishedAt: p.post_date ?? "2021-06-01T00:00:00.000Z",
       excerpt,
       body,
-      authors: [{ _type: "reference", _ref: `author-${slugify(AUTHOR)}`, _key: "a0" }],
+      authors: [
+        { _type: "reference", _ref: `author-${slugify(AUTHOR)}`, _key: "a0" },
+      ],
       coverImage: p.cover_image
-        ? { _type: "image", _sanityAsset: `image@${unwrapSubstackImg(p.cover_image)}`, alt: p.title }
+        ? {
+            _type: "image",
+            _sanityAsset: `image@${unwrapSubstackImg(p.cover_image)}`,
+            alt: p.title,
+          }
         : undefined,
       migration: {
         source: "substack",
@@ -213,12 +251,16 @@ async function main() {
     process.stdout.write(".");
   }
 
-  await writeFile(outFile, docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
+  await writeFile(
+    outFile,
+    docs.map((d) => JSON.stringify(d)).join("\n") + "\n",
+  );
   const posts = docs.filter((d) => d._type === "post").length;
-  console.log(`\nwrote ${docs.length} docs (${posts} new posts, ${skipped} already imported) to ${outFile}`);
+  console.log(
+    `\nwrote ${docs.length} docs (${posts} new posts, ${skipped} already imported) to ${outFile}`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   await main();
 }
-

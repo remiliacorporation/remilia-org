@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Single source of truth for canonical URLs, JSON-LD, RSS, sitemaps, and llms.txt across the three Remilia hosts",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "test": "node --import tsx --test src/index.test.ts"
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

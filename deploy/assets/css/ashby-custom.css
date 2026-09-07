@@ -1,23 +1,12 @@
-/*
- * Ashby Job Board Custom CSS
- *
- * Injected into the Ashby iframe (application form + job board).
- * Upload in Ashby admin → Theme / Job Board → Custom CSS,
- * and allowlist this file's public URL:
- *   https://remilia.org/assets/css/ashby-custom.css
- *
- * Matches remilia.org: bold grotesk, red on warm paper, square 1px rules.
- */
-
 @font-face {
-  font-family: 'Alte Haas Grotesk';
-  src: url('../fonts/AlteHaasGroteskRegular.woff') format('woff');
+  font-family: "Alte Haas Grotesk";
+  src: url("../fonts/AlteHaasGroteskRegular.woff") format("woff");
   font-weight: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Alte Haas Grotesk';
-  src: url('../fonts/AlteHaasGroteskBold.woff') format('woff');
+  font-family: "Alte Haas Grotesk";
+  src: url("../fonts/AlteHaasGroteskBold.woff") format("woff");
   font-weight: bold;
   font-display: swap;
 }
@@ -25,7 +14,7 @@
 :root {
   --paper: #fff8f7;
   --ink: #f00;
-  --fontFamily: 'Alte Haas Grotesk', Helvetica, Arial, sans-serif;
+  --fontFamily: "Alte Haas Grotesk", Helvetica, Arial, sans-serif;
   --borderRadiusContainer: 0px;
   --borderRadiusControl: 0px;
   --borderRadiusButton: 0px;
@@ -43,7 +32,8 @@
   --colorWarning900: #990000;
 }
 
-html, body {
+html,
+body {
   background: var(--paper) !important;
   color: var(--ink) !important;
   font-family: var(--fontFamily) !important;
@@ -52,14 +42,32 @@ html, body {
   line-height: 1.5 !important;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   font-family: var(--fontFamily) !important;
   box-shadow: none !important;
   border-radius: 0 !important;
 }
 
-h1, h2, h3, h4, h5, h6,
-p, li, span, div, label, td, th, a, button, input, textarea, select {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+li,
+span,
+div,
+label,
+td,
+th,
+a,
+button,
+input,
+textarea,
+select {
   font-family: var(--fontFamily) !important;
   color: var(--ink) !important;
   font-weight: bold !important;
@@ -78,8 +86,6 @@ a:hover {
   background: var(--ink);
   color: #fff;
 }
-
-/* ── Listing ── */
 
 .ashby-job-board-heading,
 .ashby-job-board-heading-count {
@@ -162,8 +168,6 @@ a:hover {
   padding: 0 8px 8px !important;
 }
 
-/* ── Job posting ── */
-
 .ashby-job-posting-header,
 .ashby-job-posting-heading {
   font-size: 12px !important;
@@ -191,8 +195,6 @@ a:hover {
   border: 1px solid var(--ink) !important;
   padding: 6px 8px !important;
 }
-
-/* ── Application form ── */
 
 .ashby-application-form-container,
 .ashby-survey-form-container {

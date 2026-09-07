@@ -6,7 +6,8 @@ test("vessel admin reveal gets authorship + announcement", () => {
   const tags = suggestTags({
     title: "Admin Reveal: I said I'm just a vessel bro",
     channel: "updates",
-    excerpt: "The deanonymization of polarizing internet writers… Miya Black Hearted Cyber Angel Baby.",
+    excerpt:
+      "The deanonymization of polarizing internet writers… Miya Black Hearted Cyber Angel Baby.",
   });
   assert.ok(tags.includes("Announcement"));
   assert.ok(tags.includes("Authorship"));
@@ -29,6 +30,9 @@ test("events channel → Event first", () => {
     existing: ["Events"],
   });
   assert.equal(tags[0], "Event");
-  assert.ok(tags.includes("Fashion") || tags.includes("Remilia") || tags.includes("Milady"));
+  assert.ok(
+    tags.includes("Fashion") ||
+      tags.includes("Remilia") ||
+      tags.includes("Milady"),
+  );
 });
-

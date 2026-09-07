@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { cleanExternalUrl } from "./archive-firecrawl";
@@ -9,7 +8,10 @@ const all = process.argv.includes("--all");
 
 function isChromeLine(t: string): boolean {
   if (!t) return false;
-  if (/â¬|ï¸|Ã©|â€|â­|âœ|âƒ|Left Arrow|Option Sliders|MailExit|Asterisk/i.test(t)) return true;
+  if (
+    /â¬|ï¸|Ã©|â€|â­|âœ|âƒ|Left Arrow|Option Sliders|MailExit|Asterisk/i.test(t)
+  )
+    return true;
   if (/^\[Skip to (main )?content\]/i.test(t)) return true;
   if (/^Skip to (main )?content$/i.test(t)) return true;
   if (/^Save Story/i.test(t) || /^Save this story/i.test(t)) return true;
@@ -22,11 +24,15 @@ function isChromeLine(t: string): boolean {
   if (/^\[Forbes Digital Assets\]/i.test(t)) return true;
   if (/^-\s+\[(News|Crypto Prices|NFT Prices|Learn)\]/i.test(t)) return true;
   if (/^-?\s*More$/i.test(t)) return true;
-  if (/^-?\s*Text settings$/i.test(t) || /^-?\s*Text size$/i.test(t)) return true;
-  if (/^issue\s+\[/i.test(t) && /spectator\.com\/magazine/i.test(t)) return true;
+  if (/^-?\s*Text settings$/i.test(t) || /^-?\s*Text size$/i.test(t))
+    return true;
+  if (/^issue\s+\[/i.test(t) && /spectator\.com\/magazine/i.test(t))
+    return true;
   if (/^\*\s*\*\s*\*$/.test(t)) return true;
-  if (/^-?\s*(Small|Medium|Large|Compact|Normal|Spacious|Slow|Fast)$/i.test(t)) return true;
-  if (/^-?\s*Line Spacing$/i.test(t) || /^-?\s*Audio settings$/i.test(t)) return true;
+  if (/^-?\s*(Small|Medium|Large|Compact|Normal|Spacious|Slow|Fast)$/i.test(t))
+    return true;
+  if (/^-?\s*Line Spacing$/i.test(t) || /^-?\s*Audio settings$/i.test(t))
+    return true;
   if (/^-?\s*Playback speed$/i.test(t)) return true;
   if (/^-?\s*\[Comments\]/i.test(t)) return true;
   if (/^-?\s*Share$/i.test(t) || /^## Share$/i.test(t)) return true;
@@ -34,11 +40,14 @@ function isChromeLine(t: string): boolean {
   if (/waveform-placeholder/i.test(t)) return true;
   if (/^\d{2}:\d{2}\d{2}:\d{2}$/.test(t)) return true;
   if (/has narrated this article for you to listen/i.test(t)) return true;
-  if (/^Manage preferences/i.test(t) || /^Essential cookies only/i.test(t)) return true;
+  if (/^Manage preferences/i.test(t) || /^Essential cookies only/i.test(t))
+    return true;
   if (/^Accept all$/i.test(t) || /^StripeM-Inner$/i.test(t)) return true;
-  if (/process personal data on the basis of legitimate interest/i.test(t)) return true;
+  if (/process personal data on the basis of legitimate interest/i.test(t))
+    return true;
   if (/Manage Cookies link at the bottom/i.test(t)) return true;
-  if (/^You can (object to such processing|change your preferences)/i.test(t)) return true;
+  if (/^You can (object to such processing|change your preferences)/i.test(t))
+    return true;
   if (/^Instagram$/i.test(t)) return true;
   if (/^\[_?Instagram_?\]/i.test(t)) return true;
   if (/^\[Visit Instagram\]/i.test(t)) return true;
@@ -71,7 +80,11 @@ export function cleanSnapshotMarkdown(md: string): string {
   const h1 = lines.findIndex((l) => /^#\s+\S/.test(l.trim()));
   if (h1 > 0) {
     const before = lines.slice(0, h1);
-    if (before.every((l) => !l.trim() || isChromeLine(l.trim()) || /^-\s+\[/.test(l.trim()))) {
+    if (
+      before.every(
+        (l) => !l.trim() || isChromeLine(l.trim()) || /^-\s+\[/.test(l.trim()),
+      )
+    ) {
       lines = lines.slice(h1);
     }
   }
@@ -152,7 +165,11 @@ export function stripMarketChrome(md: string): string {
 
 function needsClean(md: string | undefined): boolean {
   if (!md?.trim()) return true;
-  if (/\[Skip to |Save Story|US EDITION|Digital Assets\]|Visit Instagram|Create an account/i.test(md)) {
+  if (
+    /\[Skip to |Save Story|US EDITION|Digital Assets\]|Visit Instagram|Create an account/i.test(
+      md,
+    )
+  ) {
     return true;
   }
   const head = md.slice(0, 800);
@@ -171,11 +188,25 @@ async function scrape(url: string, firecrawlKey: string): Promise<string> {
       formats: ["markdown"],
       onlyMainContent: true,
       waitFor: 2500,
-      excludeTags: ["nav", "header", "footer", "aside", "script", "style", "noscript"],
+      excludeTags: [
+        "nav",
+        "header",
+        "footer",
+        "aside",
+        "script",
+        "style",
+        "noscript",
+      ],
     }),
   });
-  if (!res.ok) throw new Error(`Firecrawl ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const j = (await res.json()) as { data?: { markdown?: string }; markdown?: string };
+  if (!res.ok)
+    throw new Error(
+      `Firecrawl ${res.status}: ${(await res.text()).slice(0, 300)}`,
+    );
+  const j = (await res.json()) as {
+    data?: { markdown?: string };
+    markdown?: string;
+  };
   const md = j.data?.markdown ?? j.markdown;
   if (!md?.trim()) throw new Error("empty markdown");
   return md.trim();
@@ -206,13 +237,22 @@ async function main() {
   });
 
   const rows = await client.fetch<
-    Array<{ _id: string; title: string; externalUrl?: string; archiveSnapshot?: string }>
+    Array<{
+      _id: string;
+      title: string;
+      externalUrl?: string;
+      archiveSnapshot?: string;
+    }>
   >(
     `*[_type=="post" && channel=="archive" && origin=="external"]{_id, title, externalUrl, archiveSnapshot} | order(title)`,
   );
 
-  const targets = all ? rows : rows.filter((r) => needsClean(r.archiveSnapshot));
-  console.log(`${rows.length} external; ${targets.length} to clean${write ? "" : " (dry-run)"}`);
+  const targets = all
+    ? rows
+    : rows.filter((r) => needsClean(r.archiveSnapshot));
+  console.log(
+    `${rows.length} external; ${targets.length} to clean${write ? "" : " (dry-run)"}`,
+  );
 
   for (const r of targets) {
     let md = r.archiveSnapshot ?? "";
@@ -239,7 +279,9 @@ async function main() {
         .patch(r._id)
         .set({
           archiveSnapshot: cleaned,
-          ...(r.externalUrl ? { externalUrl: cleanExternalUrl(r.externalUrl) } : {}),
+          ...(r.externalUrl
+            ? { externalUrl: cleanExternalUrl(r.externalUrl) }
+            : {}),
         })
         .commit();
     }
@@ -253,4 +295,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

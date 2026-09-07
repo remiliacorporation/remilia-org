@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { expandIncludes, stripFxLayer } from "./bake-corp.ts";
-import { injectFx, layerBounds } from "./bake-fx.ts";
+import { expandIncludes, stripFxLayer } from "./bake-corp";
+import { injectFx, layerBounds } from "./bake-fx";
 
 const partialsDir = join(fileURLToPath(new URL(".", import.meta.url)), "../deploy/src/_partials");
 

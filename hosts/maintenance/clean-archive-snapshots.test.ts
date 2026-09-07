@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanSnapshotMarkdown, stripMarketChrome } from "./clean-archive-snapshots";
+import {
+  cleanSnapshotMarkdown,
+  stripMarketChrome,
+} from "./clean-archive-snapshots";
 
 test("strips Skip to content and Save Story chrome", () => {
   const md = `[Skip to main content](https://www.wired.com/#main)
@@ -79,4 +82,3 @@ By Ryan`;
   const out = stripMarketChrome(md);
   assert.match(out, /^# Milady CULT/);
 });
-

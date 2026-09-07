@@ -53,4 +53,3 @@ export function canEditChannel(
   if (!allowed || allowed.length === 0) return true;
   return allowed.includes(user.email ?? "");
 }
-

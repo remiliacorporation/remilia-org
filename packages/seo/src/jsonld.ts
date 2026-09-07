@@ -25,6 +25,7 @@ export interface PostInput {
   coverImageUrl?: string;
   authors?: { name: string; url?: string }[];
   tags?: string[];
+  canonicalUrl?: string;
 }
 
 export interface EventInput {
@@ -45,7 +46,7 @@ export interface AlbumInput {
   images: { url: string; alt: string; caption?: string; credit?: string }[];
 }
 
-const ORG_ID = "https://remilia.org/#org";
+const ORG_ID = "https://remilia.org/#organization";
 
 export function organization(org: OrgInput) {
   return {
@@ -64,12 +65,14 @@ export function organization(org: OrgInput) {
         contactType: "corporate",
       },
     }),
-    ...(org.address && { address: { "@type": "PostalAddress", ...org.address } }),
+    ...(org.address && {
+      address: { "@type": "PostalAddress", ...org.address },
+    }),
   };
 }
 
 export function blogPosting(post: PostInput) {
-  const url = canonicalFor(post.channel, post.slug);
+  const url = post.canonicalUrl ?? canonicalFor(post.channel, post.slug);
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -135,5 +138,5 @@ export function imageGallery(album: AlbumInput) {
   };
 }
 
-export const jsonLdScript = (data: object): string => JSON.stringify(data);
-
+export const jsonLdScript = (data: object): string =>
+  JSON.stringify(data).replaceAll("<", "\\u003c");

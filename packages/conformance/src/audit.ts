@@ -11,6 +11,13 @@ import {
 const matchAll = (html: string, re: RegExp): string[] =>
   Array.from(html.matchAll(re), (m) => m[1] ?? m[0]);
 
+function hasStructuredType(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) return value.length > 0 && value.every(hasStructuredType);
+  if ("@type" in value) return Boolean(value["@type"]);
+  return "@graph" in value && hasStructuredType(value["@graph"]);
+}
+
 export function auditPage(
   html: string,
   expectedCanonical: string,
@@ -19,16 +26,21 @@ export function auditPage(
   const errors: string[] = [];
 
   const titles = matchAll(html, /<title[^>]*>([\s\S]*?)<\/title>/gi);
-  if (titles.length !== 1) errors.push(`expected exactly one <title>, found ${titles.length}`);
+  if (titles.length !== 1)
+    errors.push(`expected exactly one <title>, found ${titles.length}`);
   else if (!titles[0].trim()) errors.push("<title> is empty");
 
-  const descs = matchAll(html, /<meta\s+name=["']description["']\s+content=["']([^"']*)["']/gi);
+  const descs = matchAll(
+    html,
+    /<meta\s+name=["']description["']\s+content=["']([^"']*)["']/gi,
+  );
   if (descs.length !== 1)
     errors.push(`expected exactly one meta description, found ${descs.length}`);
   else if (!descs[0].trim()) errors.push("meta description is empty");
 
   const h1s = matchAll(html, /<h1[\s>]/gi);
-  if (h1s.length !== 1) errors.push(`expected exactly one <h1>, found ${h1s.length}`);
+  if (h1s.length !== 1)
+    errors.push(`expected exactly one <h1>, found ${h1s.length}`);
 
   const rawText = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -41,13 +53,19 @@ export function auditPage(
       `only ${rawText.length} chars of no-JS text content (need ${minTextChars}) — agents see nothing`,
     );
 
-  const canonicals = matchAll(html, /<link\s+rel=["']canonical["']\s+href=["']([^"']*)["']/gi);
+  const canonicals = matchAll(
+    html,
+    /<link\s+rel=["']canonical["']\s+href=["']([^"']*)["']/gi,
+  );
   if (canonicals.length !== 1)
     errors.push(`expected exactly one canonical, found ${canonicals.length}`);
   else if (canonicals[0] !== expectedCanonical)
     errors.push(`canonical is ${canonicals[0]}, expected ${expectedCanonical}`);
 
-  const ogUrl = matchAll(html, /<meta\s+property=["']og:url["']\s+content=["']([^"']*)["']/gi);
+  const ogUrl = matchAll(
+    html,
+    /<meta\s+property=["']og:url["']\s+content=["']([^"']*)["']/gi,
+  );
   if (ogUrl.length === 1 && ogUrl[0] !== expectedCanonical)
     errors.push(`og:url is ${ogUrl[0]}, expected ${expectedCanonical}`);
 
@@ -59,29 +77,74 @@ export function auditPage(
   for (const block of ldBlocks) {
     try {
       const parsed: unknown = JSON.parse(block);
-      if (!parsed || typeof parsed !== "object" || !("@type" in parsed))
+      if (!hasStructuredType(parsed))
         errors.push("JSON-LD block has no @type");
     } catch {
       errors.push("JSON-LD block is not valid JSON");
     }
   }
 
-  if (/\.vercel\.app/.test(html.match(/<link\s+rel=["']canonical["'][^>]*>/i)?.[0] ?? ""))
+  if (
+    /\.vercel\.app/.test(
+      html.match(/<link\s+rel=["']canonical["'][^>]*>/i)?.[0] ?? "",
+    )
+  )
     errors.push("canonical points at a *.vercel.app origin");
 
   return errors;
 }
 
-export function auditIndexability(html: string, expectIndexable: boolean): string[] {
-  const noindex = /<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(html);
-  if (expectIndexable && noindex) return ["page is noindex but must be indexable"];
-  if (!expectIndexable && !noindex) return ["origin/studio page is indexable but must be noindex"];
+export function auditMarkup(html: string): string[] {
+  const errors: string[] = [];
+  if (!/^<!doctype html>/i.test(html.trim())) errors.push("missing HTML5 doctype");
+  if (!/<html\b[^>]*\blang=["'][^"']+["']/i.test(html)) errors.push("html element has no lang attribute");
+  if (!/<main[\s>]/i.test(html)) errors.push("no <main> landmark");
+
+  const ids = new Set<string>();
+  for (const id of html.matchAll(/\bid=["']([^"']+)["']/gi)) {
+    if (ids.has(id[1])) errors.push(`duplicate id: ${id[1]}`);
+    ids.add(id[1]);
+  }
+  for (const img of html.matchAll(/<img\b([^>]*)>/gi)) {
+    if (!/\balt=["']/i.test(img[1])) errors.push("image is missing an alt attribute");
+  }
+  for (const ref of html.matchAll(/\b(?:for|aria-labelledby|aria-describedby)=["']([^"']+)["']/gi)) {
+    for (const id of ref[1].split(/\s+/)) if (id && !ids.has(id)) errors.push(`missing referenced id: ${id}`);
+  }
+  return errors;
+}
+
+export function auditStylesheet(css: string): string[] {
+  const errors: string[] = [];
+  let depth = 0;
+  for (const char of css.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, "")) {
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    if (depth < 0) return ["stylesheet has an unmatched closing brace"];
+  }
+  if (depth !== 0) errors.push("stylesheet has unbalanced braces");
+  if (/<!--[\s\S]*?-->/i.test(css)) errors.push("stylesheet contains HTML markup");
+  return errors;
+}
+
+export function auditIndexability(
+  html: string,
+  expectIndexable: boolean,
+): string[] {
+  const noindex =
+    /<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(html);
+  if (expectIndexable && noindex)
+    return ["page is noindex but must be indexable"];
+  if (!expectIndexable && !noindex)
+    return ["origin/studio page is indexable but must be noindex"];
   return [];
 }
 
 export function audit404(status: number, body: string): string[] {
   if (status !== 404 && status !== 410)
-    return [`nonexistent path returned HTTP ${status} (soft-404) — must be 404 or 410`];
+    return [
+      `nonexistent path returned HTTP ${status} (soft-404) — must be 404 or 410`,
+    ];
   if (!/sitemap|llms\.txt/i.test(body))
     return ["404 body should point agents at the sitemap or llms.txt"];
   return [];
@@ -93,8 +156,10 @@ export function auditSitemap(xml: string, channel: Channel): string[] {
   if (locs.length === 0) errors.push("sitemap has no <loc> entries");
   const origin = CHANNEL_ORIGIN[channel];
   for (const loc of locs) {
-    if (!loc.startsWith(origin))
-      errors.push(`sitemap leaks a foreign host URL: ${loc} (host is ${origin})`);
+    if (!loc.startsWith(`${origin}/`))
+      errors.push(
+        `sitemap leaks a foreign host URL: ${loc} (host is ${origin})`,
+      );
   }
   return errors;
 }
@@ -120,17 +185,24 @@ export function auditAtom(xml: string, channel: Channel): string[] {
     errors.push("atom self link missing or wrong");
   if (!xml.includes(`<id>${indexUrl(channel)}</id>`))
     errors.push(`atom feed id is not ${indexUrl(channel)}`);
-  const ids = matchAll(xml, /<id>([^<]+)<\/id>/gi).filter((id) => id !== indexUrl(channel));
+  const ids = matchAll(xml, /<id>([^<]+)<\/id>/gi).filter(
+    (id) => id !== indexUrl(channel),
+  );
   if (ids.length === 0) errors.push("atom has no entries");
   for (const id of ids) {
-    if (!id.startsWith(indexUrl(channel))) errors.push(`atom entry id off-channel: ${id}`);
+    if (!id.startsWith(indexUrl(channel)))
+      errors.push(`atom entry id off-channel: ${id}`);
   }
   return errors;
 }
 
 export function auditFeedDiscovery(html: string, channel: Channel): string[] {
   const errors: string[] = [];
-  if (!new RegExp(`rel=["']alternate["'][^>]*application/rss\\+xml[^>]*href=["']${rssUrl(channel)}["']|href=["']${rssUrl(channel)}["'][^>]*application/rss\\+xml`).test(html))
+  if (
+    !new RegExp(
+      `rel=["']alternate["'][^>]*application/rss\\+xml[^>]*href=["']${rssUrl(channel)}["']|href=["']${rssUrl(channel)}["'][^>]*application/rss\\+xml`,
+    ).test(html)
+  )
     errors.push(`no RSS autodiscovery <link> for ${rssUrl(channel)}`);
   if (!html.includes("application/atom+xml"))
     errors.push(`no Atom autodiscovery <link> for ${atomUrl(channel)}`);
@@ -140,7 +212,8 @@ export function auditFeedDiscovery(html: string, channel: Channel): string[] {
 export function auditArticleSemantics(html: string): string[] {
   const errors: string[] = [];
   if (!/<main[\s>]/i.test(html)) errors.push("no <main> landmark");
-  if (!/<article[\s>]/i.test(html)) errors.push("post content is not in an <article>");
+  if (!/<article[\s>]/i.test(html))
+    errors.push("post content is not in an <article>");
   if (!/<time[^>]+datetime=["'][^"']+["']/i.test(html))
     errors.push("no <time datetime> — publish date is not machine-readable");
   return errors;
@@ -155,9 +228,12 @@ export function auditRobots(txt: string, channel: Channel): string[] {
 export function auditLlmsTxt(txt: string, channel: Channel): string[] {
   const errors: string[] = [];
   if (!txt.trim()) errors.push("llms.txt is empty");
-  if (!txt.includes("wiki.remilia.org")) errors.push("llms.txt has no wiki citation");
+  if (!txt.includes("wiki.remilia.org"))
+    errors.push("llms.txt has no wiki citation");
   if (!/^##\s+when to use/im.test(txt))
-    errors.push('llms.txt has no "When to use" section — agents need explicit guidance');
+    errors.push(
+      'llms.txt has no "When to use" section — agents need explicit guidance',
+    );
   const channels: Channel[] = [
     "updates",
     "press",
@@ -177,8 +253,9 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     if (seen.has(prefix)) continue;
     seen.add(prefix);
     if (txt.includes(prefix))
-      errors.push(`llms.txt lists foreign-host content under ${prefix} (cite the index, not posts)`);
+      errors.push(
+        `llms.txt lists foreign-host content under ${prefix} (cite the index, not posts)`,
+      );
   }
   return errors;
 }
-

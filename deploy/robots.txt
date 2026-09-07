@@ -1,7 +1,5 @@
-# https://remilia.org/ — public Remilia corporate directory. Search and answer engines are welcome.
 User-agent: *
 Allow: /
-Disallow: /font-test.html
 Disallow: /jobs.html
 
 User-agent: GPTBot
@@ -21,3 +19,7 @@ Allow: /
 
 Sitemap: https://remilia.org/sitemap.xml
 Sitemap: https://remilia.org/press/sitemap.xml
+
+Sitemap: https://remilia.org/updates/sitemap.xml
+Sitemap: https://remilia.org/thought/sitemap.xml
+Sitemap: https://remilia.org/archive/sitemap.xml

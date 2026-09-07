@@ -1,4 +1,3 @@
-
 export type Channel =
   | "updates"
   | "press"
@@ -58,7 +57,12 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   "dev-blog": "net",
 };
 
-export const ORG_SECTIONS: Channel[] = ["updates", "press", "thought", "archive"];
+export const ORG_SECTIONS: Channel[] = [
+  "updates",
+  "press",
+  "thought",
+  "archive",
+];
 
 export const COM_POST_SECTIONS: Channel[] = ["news", "events"];
 
@@ -99,7 +103,10 @@ export const eventUrl = (slug: string): string => canonicalFor("events", slug);
 
 export const eventsIndexUrl = (): string => indexUrl("events");
 
-export const legacyRedirect = (c: Channel, slug: string): { from: string; to: string } => ({
+export const legacyRedirect = (
+  c: Channel,
+  slug: string,
+): { from: string; to: string } => ({
   from: `https://blog.remilia.org/${slug}/`,
   to: canonicalFor(c, slug),
 });
@@ -112,4 +119,3 @@ export const STUDIO_TO_NEWS_REDIRECTS: { from: string; to: string }[] = [
   { from: "/a/studio/events/", to: "/a/events/" },
   { from: "/a/studio/events/*", to: "/a/events/:splat" },
 ];
-

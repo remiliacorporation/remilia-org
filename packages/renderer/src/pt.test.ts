@@ -1,9 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { extractHeadings, portableTextToHtml, tocItems, type PTBlock } from "./pt";
+import {
+  extractHeadings,
+  portableTextToHtml,
+  tocItems,
+  type PTBlock,
+} from "./pt";
 import { cdnUrl } from "./bake";
 
-const span = (text: string, marks: string[] = []) => ({ _type: "span" as const, text, marks });
+const span = (text: string, marks: string[] = []) => ({
+  _type: "span" as const,
+  text,
+  marks,
+});
 
 const OPTS = { imageUrl: () => "https://cdn.sanity.io/x.jpg?w=1600" };
 
@@ -18,10 +27,18 @@ test("styles, marks, and links serialize with escaping", () => {
     { _type: "block", style: "blockquote", children: [span("quoted")] },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<h2 id="head-2"><a class="hlink" href="#head-2">Head &lt;2&gt;</a></h2>'));
+  assert.ok(
+    html.includes(
+      '<h2 id="head-2"><a class="hlink" href="#head-2">Head &lt;2&gt;</a></h2>',
+    ),
+  );
   assert.ok(html.includes("<strong>bold</strong>"));
   assert.ok(html.includes(" &amp; "));
-  assert.ok(html.includes('<a href="https://example.com/a" rel="external noopener">site</a>'));
+  assert.ok(
+    html.includes(
+      '<a href="https://example.com/a" rel="external noopener">site</a>',
+    ),
+  );
   assert.ok(html.includes("<blockquote><p>quoted</p></blockquote>"));
 });
 
@@ -40,14 +57,23 @@ test("consecutive list items group into one list; style switch splits", () => {
 
 test("images render as figures with alt; unknown types are skipped", () => {
   const blocks: PTBlock[] = [
-    { _type: "image", alt: "A photo", caption: "cap", asset: { _ref: "image-x" } },
+    {
+      _type: "image",
+      alt: "A photo",
+      caption: "cap",
+      asset: { _ref: "image-x" },
+    },
     { _type: "mysteryCard" },
   ];
   const html = portableTextToHtml(blocks, OPTS);
   assert.ok(html.includes('alt="A photo"'));
   assert.ok(html.includes('<a href="https://cdn.sanity.io/x.jpg?w=1600">'));
   assert.ok(html.includes('<span class="ht">'));
-  assert.ok(html.includes("<figcaption><a href=\"https://cdn.sanity.io/x.jpg?w=1600\">cap</a></figcaption>"));
+  assert.ok(
+    html.includes(
+      '<figcaption><a href="https://cdn.sanity.io/x.jpg?w=1600">cap</a></figcaption>',
+    ),
+  );
   assert.ok(!html.includes("mysteryCard"));
 });
 
@@ -65,10 +91,21 @@ test("headings: whole text is the link; slug ids dedupe", () => {
     { _type: "block", style: "h2", children: [span("Fixes & Improvements")] },
   ];
   const html = portableTextToHtml(blocks, OPTS);
-  assert.ok(html.includes('<h2 id="fixes-improvements"><a class="hlink" href="#fixes-improvements">'));
-  assert.ok(html.includes('<h2 id="fixes-improvements-1"><a class="hlink" href="#fixes-improvements-1">'));
+  assert.ok(
+    html.includes(
+      '<h2 id="fixes-improvements"><a class="hlink" href="#fixes-improvements">',
+    ),
+  );
+  assert.ok(
+    html.includes(
+      '<h2 id="fixes-improvements-1"><a class="hlink" href="#fixes-improvements-1">',
+    ),
+  );
   const heads = extractHeadings(blocks);
-  assert.deepEqual(heads.map((h) => h.id), ["fixes-improvements", "fixes-improvements-1"]);
+  assert.deepEqual(
+    heads.map((h) => h.id),
+    ["fixes-improvements", "fixes-improvements-1"],
+  );
 });
 
 test("tocItems excludes h4; includes h2/h3", () => {
@@ -79,8 +116,16 @@ test("tocItems excludes h4; includes h2/h3", () => {
     { _type: "block", style: "h2", children: [span("Three")] },
   ];
   const items = tocItems(extractHeadings(blocks));
-  assert.ok(items.includes('<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>'));
-  assert.ok(items.includes('<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>'));
+  assert.ok(
+    items.includes(
+      '<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>',
+    ),
+  );
+  assert.ok(
+    items.includes(
+      '<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>',
+    ),
+  );
   assert.ok(!items.includes("hidden"));
 });
 
@@ -91,8 +136,16 @@ test("tocItems renders levels and respects the minimum", () => {
     { _type: "block", style: "h2", children: [span("Three")] },
   ];
   const items = tocItems(extractHeadings(blocks));
-  assert.ok(items.includes('<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>'));
-  assert.ok(items.includes('<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>'));
+  assert.ok(
+    items.includes(
+      '<li class="toc-l3"><a href="#two"><span class="toc-label">Two</span></a></li>',
+    ),
+  );
+  assert.ok(
+    items.includes(
+      '<li class="toc-l2"><a href="#one"><span class="toc-label">One</span></a></li>',
+    ),
+  );
   assert.equal(tocItems(extractHeadings(blocks.slice(0, 2))), "");
 });
 
@@ -111,12 +164,22 @@ test("external links marked rel=external; internal links get hover cards", () =>
     ...OPTS,
     linkCard: (href) =>
       href === "https://remilia.org/press/launch"
-        ? { title: "Launch", description: "We launched.", imageUrl: "https://cdn/x.jpg" }
+        ? {
+            title: "Launch",
+            description: "We launched.",
+            imageUrl: "https://cdn/x.jpg",
+          }
         : undefined,
   });
   assert.ok(html.includes('rel="external noopener">ext</a>'));
-  assert.ok(html.includes('<a class="interlink" href="https://remilia.org/press/launch">'));
-  assert.ok(html.includes('<span class="link-card" role="tooltip"><span class="ht">'));
+  assert.ok(
+    html.includes(
+      '<a class="interlink" href="https://remilia.org/press/launch">',
+    ),
+  );
+  assert.ok(
+    html.includes('<span class="link-card" role="tooltip"><span class="ht">'),
+  );
   assert.ok(html.includes('src="https://cdn/x.jpg"'));
   assert.ok(html.includes("<strong>Launch</strong><span>We launched.</span>"));
 });
@@ -134,9 +197,32 @@ test("footnotes render as one .fn with nested note", () => {
   const html = portableTextToHtml(blocks, OPTS);
   assert.ok(html.includes('<span class="fn" id="fn-1">'));
   assert.ok(html.includes('<a class="fn-ref" href="#fn-1">[1]</a>'));
-  assert.ok(html.includes('<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></span>'));
+  assert.ok(
+    html.includes(
+      '<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></span>',
+    ),
+  );
   assert.ok(!html.includes('class="sidenote"'));
   assert.ok(html.includes("Second &lt;source&gt;."));
   assert.ok(!html.includes("sn-toggle"));
 });
 
+test("link marks reject executable URL schemes", () => {
+  for (const href of [
+    "javascript:alert(1)",
+    "java\nscript:alert(1)",
+    "data:text/html,test",
+  ]) {
+    const html = portableTextToHtml(
+      [
+        {
+          _type: "block",
+          children: [{ _type: "span", text: "Link", marks: ["link"] }],
+          markDefs: [{ _key: "link", _type: "link", href }],
+        },
+      ],
+      { imageUrl: () => undefined },
+    );
+    assert.match(html, /href="#"/);
+  }
+});

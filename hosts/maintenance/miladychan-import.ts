@@ -1,4 +1,3 @@
-
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
@@ -33,10 +32,13 @@ async function firecrawlMap(url: string): Promise<string[]> {
     },
     body: JSON.stringify({ url, includeSubdomains: false, limit: 200 }),
   });
-  if (!res.ok) throw new Error(`Firecrawl map ${res.status}: ${(await res.text()).slice(0, 400)}`);
+  if (!res.ok)
+    throw new Error(
+      `Firecrawl map ${res.status}: ${(await res.text()).slice(0, 400)}`,
+    );
   const json = (await res.json()) as { links?: (string | { url?: string })[] };
   return (json.links ?? [])
-    .map((x) => (typeof x === "string" ? x : x.url ?? ""))
+    .map((x) => (typeof x === "string" ? x : (x.url ?? "")))
     .filter(Boolean);
 }
 
@@ -49,7 +51,10 @@ async function firecrawlScrape(url: string) {
     },
     body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
   });
-  if (!res.ok) throw new Error(`Firecrawl scrape ${res.status}: ${(await res.text()).slice(0, 400)}`);
+  if (!res.ok)
+    throw new Error(
+      `Firecrawl scrape ${res.status}: ${(await res.text()).slice(0, 400)}`,
+    );
   const json = (await res.json()) as {
     data?: { markdown?: string; metadata?: Record<string, string> };
   };
@@ -74,7 +79,12 @@ function postId(slug: string): string {
 }
 
 function hoistImages(
-  body: { _type?: string; asset?: { url?: string }; alt?: string; caption?: string }[],
+  body: {
+    _type?: string;
+    asset?: { url?: string };
+    alt?: string;
+    caption?: string;
+  }[],
   title: string,
 ) {
   return body.map((b, i) => {
@@ -99,7 +109,10 @@ function isPostUrl(u: string): boolean {
     if (parts.length !== 1) return false;
     const p = parts[0]!;
     if (p.includes(".")) return false;
-    if (["about", "tag", "author", "page", "archive", "rss", "feed"].includes(p)) return false;
+    if (
+      ["about", "tag", "author", "page", "archive", "rss", "feed"].includes(p)
+    )
+      return false;
     return true;
   } catch {
     return false;
@@ -120,7 +133,7 @@ async function scrapeAll(): Promise<Scraped[]> {
   console.log(`scraping ${postUrls.length} miladychan posts…`);
   const out: Scraped[] = [];
   for (const url of postUrls) {
-    const slug = new URL(url).pathname.replace(/\
+    const slug = new URL(url).pathname.replace(/\//g, "") || "index";
     process.stdout.write(`• ${slug} `);
     const s = await firecrawlScrape(url);
     if (!s.markdown) {
@@ -129,7 +142,10 @@ async function scrapeAll(): Promise<Scraped[]> {
     }
     const excerpt = (
       s.description ||
-      s.markdown.replace(/[#*_>`\[\]]/g, " ").replace(/\s+/g, " ").trim() ||
+      s.markdown
+        .replace(/[#*_>`\[\]]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() ||
       s.title
     ).slice(0, 300);
     console.log(`${s.markdown.length} chars`);
@@ -169,9 +185,15 @@ async function main() {
       publishedAt: p.publishedAt,
       excerpt: p.excerpt,
       body: hoistImages(body, p.title),
-      authors: [{ _type: "reference", _ref: `author-${slugify(AUTHOR)}`, _key: "a0" }],
+      authors: [
+        { _type: "reference", _ref: `author-${slugify(AUTHOR)}`, _key: "a0" },
+      ],
       coverImage: p.coverImage
-        ? { _type: "image", _sanityAsset: `image@${p.coverImage}`, alt: p.title }
+        ? {
+            _type: "image",
+            _sanityAsset: `image@${p.coverImage}`,
+            alt: p.title,
+          }
         : undefined,
       migration: {
         source: "miladychan",
@@ -180,8 +202,13 @@ async function main() {
     });
   }
 
-  await writeFile(outFile, docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
-  console.log(`wrote ${docs.length} docs (${scraped.length} posts) → ${outFile}`);
+  await writeFile(
+    outFile,
+    docs.map((d) => JSON.stringify(d)).join("\n") + "\n",
+  );
+  console.log(
+    `wrote ${docs.length} docs (${scraped.length} posts) → ${outFile}`,
+  );
 
   if (!write) {
     console.log("dry-run; pass --write (+ SANITY_TOKEN) to dataset-import");
@@ -221,4 +248,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

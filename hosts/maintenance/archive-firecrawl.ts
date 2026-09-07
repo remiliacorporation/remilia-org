@@ -1,11 +1,13 @@
-
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 
 const write = process.argv.includes("--write");
 const force = process.argv.includes("--force");
 const badOnly = process.argv.includes("--bad-only");
-const token = process.env.SANITY_TOKEN ?? process.env.SANITY_API_WRITE_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
+const token =
+  process.env.SANITY_TOKEN ??
+  process.env.SANITY_API_WRITE_TOKEN ??
+  process.env.SANITY_AUTH_TOKEN;
 const firecrawlKey = process.env.FIRECRAWL_API_KEY;
 
 type Row = {
@@ -20,7 +22,10 @@ export function cleanExternalUrl(raw: string): string {
   try {
     const u = new URL(raw);
     for (const key of [...u.searchParams.keys()]) {
-      if (/^(ref|utm_|fbclid|gclid|mc_|si$)/i.test(key) || key.toLowerCase().startsWith("utm_")) {
+      if (
+        /^(ref|utm_|fbclid|gclid|mc_|si$)/i.test(key) ||
+        key.toLowerCase().startsWith("utm_")
+      ) {
         u.searchParams.delete(key);
       }
     }
@@ -36,21 +41,33 @@ function looksBad(snap: string | undefined, title: string): boolean {
   if (!snap?.trim()) return true;
   const head = snap.slice(0, 1200);
   if (/â¬|ï¸|Ã©|â€/i.test(head)) return true;
-  if (/Left Arrow|Option Sliders|Skip to content/i.test(head) && snap.length < 12000) return true;
+  if (
+    /Left Arrow|Option Sliders|Skip to content/i.test(head) &&
+    snap.length < 12000
+  )
+    return true;
 
   const key = title
-    .replace(/^(Feature|News|Interview|Cultural Coverage|Event Coverage|Thought Leadership):\s*/i, "")
+    .replace(
+      /^(Feature|News|Interview|Cultural Coverage|Event Coverage|Thought Leadership):\s*/i,
+      "",
+    )
     .replace(/\s*\(\d{4}\)\s*$/, "")
     .split(/[-–—|:]/)[0]
     ?.trim();
   if (key && key.length > 12) {
     const needle = key.slice(0, 24).toLowerCase();
-    if (!snap.toLowerCase().includes(needle) && !snap.toLowerCase().includes("milady") && !snap.toLowerCase().includes("remilia")) {
+    if (
+      !snap.toLowerCase().includes(needle) &&
+      !snap.toLowerCase().includes("milady") &&
+      !snap.toLowerCase().includes("remilia")
+    ) {
       return true;
     }
   }
 
-  if (/Homer.?s Odyssey|Chinese companies.? AI strategy/i.test(head)) return true;
+  if (/Homer.?s Odyssey|Chinese companies.? AI strategy/i.test(head))
+    return true;
   return false;
 }
 
@@ -70,7 +87,9 @@ async function scrapeMarkdown(url: string): Promise<string> {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Firecrawl ${res.status} for ${url}: ${text.slice(0, 400)}`);
+    throw new Error(
+      `Firecrawl ${res.status} for ${url}: ${text.slice(0, 400)}`,
+    );
   }
   const json = (await res.json()) as {
     success?: boolean;
@@ -78,7 +97,8 @@ async function scrapeMarkdown(url: string): Promise<string> {
     markdown?: string;
   };
   const md = json.data?.markdown ?? json.markdown;
-  if (!md?.trim()) throw new Error(`Firecrawl returned empty markdown for ${url}`);
+  if (!md?.trim())
+    throw new Error(`Firecrawl returned empty markdown for ${url}`);
   return md.trim();
 }
 
@@ -132,7 +152,8 @@ async function main() {
     }
   }
 
-  if (!write) console.log("\ndry-run; pass --write to store archiveSnapshot on each doc");
+  if (!write)
+    console.log("\ndry-run; pass --write to store archiveSnapshot on each doc");
   else console.log("\ndone");
 }
 
@@ -142,4 +163,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

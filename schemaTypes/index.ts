@@ -8,7 +8,6 @@ import { seo } from "./objects/seo";
 import { blockContent } from "./objects/blockContent";
 
 export const schemaTypes = [
-
   post,
   author,
   tag,
@@ -19,4 +18,3 @@ export const schemaTypes = [
   seo,
   blockContent,
 ];
-

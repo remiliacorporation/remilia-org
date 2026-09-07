@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { markdownToPost, portableTextToMarkdown, postToMarkdownFile } from "./md";
+import {
+  markdownToPost,
+  portableTextToMarkdown,
+  postToMarkdownFile,
+} from "./md";
 import { portableTextToHtml, footnoteCount } from "./pt";
 
 const SRC = `---
@@ -48,7 +52,7 @@ test("frontmatter and Obsidian marks become Portable Text", () => {
   assert.ok(html.includes('rel="external noopener"'));
   assert.ok(html.includes("<ul><li>"));
   assert.ok(html.includes("HIKKI PUNKS"));
-  assert.ok(html.includes("class=\"fn\""));
+  assert.ok(html.includes('class="fn"'));
 });
 
 test("markdown export keeps headings, wikilinks, and footnotes", () => {
@@ -71,4 +75,3 @@ test("markdown export keeps headings, wikilinks, and footnotes", () => {
   assert.ok(file.startsWith("---\n"));
   assert.ok(file.includes("channel: press"));
 });
-

@@ -11,7 +11,9 @@
     "bake:fx": "pnpm --filter @remilia/hosts bake:fx",
     "bake": "pnpm --filter @remilia/hosts bake",
     "validate": "sanity schema validate",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm -r test",
+    "check": "pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@sanity/icons": "^5.2.1",
@@ -24,5 +26,9 @@
   "devDependencies": {
     "@types/react": "^19.2.18",
     "typescript": "^5.8.2"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=22"
   }
 }

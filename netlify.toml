@@ -1,5 +1,4 @@
 [build]
-  # Literature from Sanity, then print-FX twins for corporate dual-layer pages.
   command = "pnpm --filter @remilia/hosts bake"
   publish = "deploy"
 

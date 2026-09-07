@@ -7,7 +7,11 @@ export const author = defineType({
   type: "document",
   icon: UserIcon,
   fields: [
-    defineField({ name: "name", type: "string", validation: (r) => r.required() }),
+    defineField({
+      name: "name",
+      type: "string",
+      validation: (r) => r.required(),
+    }),
     defineField({
       name: "slug",
       type: "slug",
@@ -25,10 +29,10 @@ export const author = defineType({
       name: "url",
       title: "Website / social",
       type: "url",
-      description: "Feeds JSON-LD author.url / sameAs — helps entity resolution.",
+      description:
+        "Feeds JSON-LD author.url / sameAs — helps entity resolution.",
       validation: (r) => r.uri({ scheme: ["http", "https"] }),
     }),
   ],
   preview: { select: { title: "name", media: "image" } },
 });
-

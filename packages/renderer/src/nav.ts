@@ -36,7 +36,13 @@ function filterSel(
         `.nav-box:has(#${id}[data-value="${esc(v)}"]) .nav-all>li:not([${attr}="${esc(v)}"]){display:none}`,
     )
     .join("");
-  const items = [`<li><button type="button" data-value="">${esc(empty)}</button></li>`, ...values.map((v) => `<li><button type="button" data-value="${esc(v)}">${esc(v)}</button></li>`)].join("");
+  const items = [
+    `<li><button type="button" data-value="">${esc(empty)}</button></li>`,
+    ...values.map(
+      (v) =>
+        `<li><button type="button" data-value="${esc(v)}">${esc(v)}</button></li>`,
+    ),
+  ].join("");
   const html = `<details class="sel nav-cat-sel" id="${esc(id)}" data-value="" aria-label="${esc(aria)}">
 <summary><span class="sel-label">${esc(empty)}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
@@ -45,13 +51,29 @@ function filterSel(
 }
 
 function catSel(posts: NavPost[]): { css: string; html: string } {
-  return filterSel("post-cat", "Filter posts", "All posts", [...new Set(posts.map((p) => p.category))].sort(), "data-cat");
+  return filterSel(
+    "post-cat",
+    "Filter posts",
+    "All posts",
+    [...new Set(posts.map((p) => p.category))].sort(),
+    "data-cat",
+  );
 }
 
 function authorSel(posts: NavPost[]): { css: string; html: string } {
-  const authors = [...new Set(posts.map((p) => p.author).filter((a): a is string => Boolean(a)))].sort();
+  const authors = [
+    ...new Set(
+      posts.map((p) => p.author).filter((a): a is string => Boolean(a)),
+    ),
+  ].sort();
   if (!authors.length) return { css: "", html: "" };
-  return filterSel("post-author", "Filter authors", "All authors", authors, "data-author");
+  return filterSel(
+    "post-author",
+    "Filter authors",
+    "All authors",
+    authors,
+    "data-author",
+  );
 }
 
 export function filterBar(posts: NavPost[]): string {
@@ -64,7 +86,11 @@ ${authors}
 </div>`;
 }
 
-export function leftRail(posts: NavPost[], _label: string, _indexHref = "/press"): string {
+export function leftRail(
+  posts: NavPost[],
+  _label: string,
+  _indexHref = "/press",
+): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const { css, html: cat } = catSel(posts);
   const items = byDate
@@ -338,4 +364,3 @@ export const NAV_JS = `(() => {
   });
 })();
 `;
-

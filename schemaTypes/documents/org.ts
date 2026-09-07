@@ -44,12 +44,23 @@ export const org = defineType({
       fields: [
         defineField({ name: "streetAddress", title: "Street", type: "string" }),
         defineField({ name: "addressLocality", title: "City", type: "string" }),
-        defineField({ name: "addressRegion", title: "Region / state", type: "string" }),
-        defineField({ name: "postalCode", title: "Postal code", type: "string" }),
-        defineField({ name: "addressCountry", title: "Country", type: "string" }),
+        defineField({
+          name: "addressRegion",
+          title: "Region / state",
+          type: "string",
+        }),
+        defineField({
+          name: "postalCode",
+          title: "Postal code",
+          type: "string",
+        }),
+        defineField({
+          name: "addressCountry",
+          title: "Country",
+          type: "string",
+        }),
       ],
     }),
   ],
   preview: { select: { title: "name", subtitle: "legalName" } },
 });
-

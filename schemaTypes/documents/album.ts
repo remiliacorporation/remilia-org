@@ -7,7 +7,11 @@ export const album = defineType({
   type: "document",
   icon: ImagesIcon,
   fields: [
-    defineField({ name: "title", type: "string", validation: (r) => r.required() }),
+    defineField({
+      name: "title",
+      type: "string",
+      validation: (r) => r.required(),
+    }),
     defineField({
       name: "slug",
       type: "slug",
@@ -48,14 +52,17 @@ export const album = defineType({
               name: "alt",
               type: "string",
               title: "Alt text",
-              description: "Required — this is what makes photos legible to search and LLMs.",
+              description:
+                "Required — this is what makes photos legible to search and LLMs.",
             },
             { name: "caption", type: "string", title: "Caption" },
             { name: "credit", type: "string", title: "Credit" },
           ],
           validation: (r) =>
             r.custom((img?: { alt?: string; asset?: unknown }) =>
-              img?.asset && !img.alt ? "Alt text is required on album photos" : true,
+              img?.asset && !img.alt
+                ? "Alt text is required on album photos"
+                : true,
             ),
         }),
       ],
@@ -64,10 +71,13 @@ export const album = defineType({
     defineField({ name: "seo", type: "seo" }),
   ],
   orderings: [
-    { title: "Date, newest first", name: "dateDesc", by: [{ field: "date", direction: "desc" }] },
+    {
+      title: "Date, newest first",
+      name: "dateDesc",
+      by: [{ field: "date", direction: "desc" }],
+    },
   ],
   preview: {
     select: { title: "title", subtitle: "date", media: "images.0" },
   },
 });
-
