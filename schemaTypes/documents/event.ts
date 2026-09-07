@@ -8,7 +8,11 @@ export const event = defineType({
   icon: CalendarIcon,
   hidden: true,
   fields: [
-    defineField({ name: "title", type: "string", validation: (r) => r.required() }),
+    defineField({
+      name: "title",
+      type: "string",
+      validation: (r) => r.required(),
+    }),
     defineField({
       name: "slug",
       type: "slug",
@@ -41,7 +45,11 @@ export const event = defineType({
       description: "Physical venue, or “Online”. Feeds Event JSON-LD location.",
       validation: (r) =>
         r
-          .custom((v) => (v ? true : "Add a venue (or “Online”) — Event rich results want a location"))
+          .custom((v) =>
+            v
+              ? true
+              : "Add a venue (or “Online”) — Event rich results want a location",
+          )
           .warning(),
     }),
     defineField({ name: "url", title: "Event / ticket URL", type: "url" }),
@@ -52,7 +60,9 @@ export const event = defineType({
       fields: [{ name: "alt", type: "string", title: "Alt text" }],
       validation: (r) =>
         r.custom((img?: { alt?: string; asset?: unknown }) =>
-          img?.asset && !img.alt ? "Alt text is required on the event image" : true,
+          img?.asset && !img.alt
+            ? "Alt text is required on the event image"
+            : true,
         ),
     }),
     defineField({
@@ -83,4 +93,3 @@ export const event = defineType({
     select: { title: "title", subtitle: "startsAt", media: "image" },
   },
 });
-

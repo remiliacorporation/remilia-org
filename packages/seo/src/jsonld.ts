@@ -45,7 +45,7 @@ export interface AlbumInput {
   images: { url: string; alt: string; caption?: string; credit?: string }[];
 }
 
-const ORG_ID = "https://remilia.org/#org";
+const ORG_ID = "https://remilia.org/#organization";
 
 export function organization(org: OrgInput) {
   return {
@@ -64,7 +64,9 @@ export function organization(org: OrgInput) {
         contactType: "corporate",
       },
     }),
-    ...(org.address && { address: { "@type": "PostalAddress", ...org.address } }),
+    ...(org.address && {
+      address: { "@type": "PostalAddress", ...org.address },
+    }),
   };
 }
 
@@ -135,5 +137,5 @@ export function imageGallery(album: AlbumInput) {
   };
 }
 
-export const jsonLdScript = (data: object): string => JSON.stringify(data);
-
+export const jsonLdScript = (data: object): string =>
+  JSON.stringify(data).replaceAll("<", "\\u003c");

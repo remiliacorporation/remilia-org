@@ -1,4 +1,3 @@
-
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { markdownToPost, slugFromPath, slugify } from "@remilia/renderer";
@@ -18,7 +17,9 @@ async function walk(dir: string): Promise<string[]> {
 const args = process.argv.slice(2);
 const dir = args.find((a) => !a.startsWith("--"));
 if (!dir) {
-  console.error("usage: md-import.ts <vaultDir> [--channel press] [--out posts.ndjson]");
+  console.error(
+    "usage: md-import.ts <vaultDir> [--channel press] [--out posts.ndjson]",
+  );
   process.exit(2);
 }
 const chFlag = args.find((a, i) => args[i - 1] === "--channel");
@@ -70,7 +71,13 @@ for (const file of await walk(dir)) {
     markdown: src,
     body,
     authors: meta.author
-      ? [{ _type: "reference", _ref: `author-${slugify(meta.author)}`, _key: "a0" }]
+      ? [
+          {
+            _type: "reference",
+            _ref: `author-${slugify(meta.author)}`,
+            _key: "a0",
+          },
+        ]
       : undefined,
     tags: (meta.tags ?? []).map((name, i) => ({
       _type: "reference",
@@ -83,5 +90,8 @@ for (const file of await walk(dir)) {
 
 await writeFile(outFile, docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
 console.log(`wrote ${docs.length} docs to ${outFile}`);
-console.log("import: npx sanity dataset import", outFile, "<dataset> --replace");
-
+console.log(
+  "import: npx sanity dataset import",
+  outFile,
+  "<dataset> --replace",
+);

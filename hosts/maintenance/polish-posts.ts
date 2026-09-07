@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { plainFromBlocks, polishBody, smartExcerpt } from "@remilia/renderer";
@@ -89,9 +88,7 @@ async function main() {
 
   const tagIds = await ensureTags(client);
 
-  const filter = idArg
-    ? `_id == "${idArg}"`
-    : `_type == "post"`;
+  const filter = idArg ? `_id == "${idArg}"` : `_type == "post"`;
   const rows = await client.fetch<Row[]>(
     `*[${filter}]{
       _id, title, channel, excerpt, origin, outlet, body, commentary,
@@ -108,7 +105,7 @@ async function main() {
     const title = row.title?.trim() || "Untitled";
     const isExternal = row.channel === "archive" && row.origin === "external";
     const sourceBlocks = (isExternal ? row.commentary : row.body) ?? [];
-    const polished = polishBody(sourceBlocks as PTBlock[], title);
+    const polished = polishBody(sourceBlocks, title);
     const fromBody = plainFromBlocks(polished);
     const excerpt = smartExcerpt(row.excerpt?.trim() || fromBody || title, 300);
     const seo = buildSeo(row, smartExcerpt(excerpt, 180));
@@ -124,20 +121,23 @@ async function main() {
     const tags = tagNames
       .map((name) => tagIds.get(name))
       .filter((id): id is string => !!id)
-      .map((id, i) => ({ _type: "reference" as const, _ref: id, _key: `t${i}` }));
+      .map((id, i) => ({
+        _type: "reference" as const,
+        _ref: id,
+        _key: `t${i}`,
+      }));
 
-    const coverImage =
-      row.coverImage?.asset?._ref
-        ? {
-            ...row.coverImage,
-            alt:
-              row.coverImage.alt &&
-              row.coverImage.alt.trim() &&
-              !/^image$/i.test(row.coverImage.alt)
-                ? row.coverImage.alt
-                : title,
-          }
-        : row.coverImage;
+    const coverImage = row.coverImage?.asset?._ref
+      ? {
+          ...row.coverImage,
+          alt:
+            row.coverImage.alt &&
+            row.coverImage.alt.trim() &&
+            !/^image$/i.test(row.coverImage.alt)
+              ? row.coverImage.alt
+              : title,
+        }
+      : row.coverImage;
 
     const patch: Record<string, unknown> = {
       excerpt,
@@ -167,7 +167,11 @@ async function main() {
       await client.patch(row._id).set(patch).commit();
     }
   }
-  console.log(write ? `\ndone (${n} patched)` : `\ndry-run; ${n} would change; pass --write`);
+  console.log(
+    write
+      ? `\ndone (${n} patched)`
+      : `\ndry-run; ${n} would change; pass --write`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
@@ -176,4 +180,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

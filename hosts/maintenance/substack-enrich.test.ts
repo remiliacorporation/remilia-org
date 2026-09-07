@@ -37,8 +37,10 @@ test("Dawg gets subtitle block plus keeps caption", () => {
   assert.equal(body[1]._type, "image");
   assert.equal(body[1].caption, "Waaaaa!!");
   assert.equal(
-    substackExcerpt({ title: "Dawg", subtitle: "Here we fucking go again" }, body),
+    substackExcerpt(
+      { title: "Dawg", subtitle: "Here we fucking go again" },
+      body,
+    ),
     "Here we fucking go again",
   );
 });
-

@@ -14,7 +14,9 @@ test("Ghost HTML becomes Markdown the PT compiler can eat", () => {
 
 test("galleries emit every image; sized Ghost URLs unwrap", () => {
   assert.equal(
-    fullImageUrl("https://storage.ghost.io/x/content/images/size/w600/2025/03/P.jpg"),
+    fullImageUrl(
+      "https://storage.ghost.io/x/content/images/size/w600/2025/03/P.jpg",
+    ),
     "https://storage.ghost.io/x/content/images/2025/03/P.jpg",
   );
   const md = ghostHtmlToMarkdown(
@@ -23,4 +25,3 @@ test("galleries emit every image; sized Ghost URLs unwrap", () => {
   assert.match(md, /!\[A\]\(https:\/\/cdn\.example\/a\.jpg\)/);
   assert.match(md, /!\[B\]\(https:\/\/cdn\.example\/b\.jpg\)/);
 });
-

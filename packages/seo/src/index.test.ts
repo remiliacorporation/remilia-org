@@ -22,14 +22,35 @@ import {
 } from "./index";
 
 test("canonical URLs follow the ratified section map", () => {
-  assert.equal(canonicalFor("updates", "note"), "https://remilia.org/updates/note");
-  assert.equal(canonicalFor("press", "launch"), "https://remilia.org/press/launch");
-  assert.equal(canonicalFor("thought", "essay"), "https://remilia.org/thought/essay");
-  assert.equal(canonicalFor("archive", "interview"), "https://remilia.org/archive/interview");
+  assert.equal(
+    canonicalFor("updates", "note"),
+    "https://remilia.org/updates/note",
+  );
+  assert.equal(
+    canonicalFor("press", "launch"),
+    "https://remilia.org/press/launch",
+  );
+  assert.equal(
+    canonicalFor("thought", "essay"),
+    "https://remilia.org/thought/essay",
+  );
+  assert.equal(
+    canonicalFor("archive", "interview"),
+    "https://remilia.org/archive/interview",
+  );
   assert.equal(canonicalFor("news", "fw26"), "https://remilia.com/a/news/fw26");
-  assert.equal(canonicalFor("events", "party"), "https://remilia.com/a/events/party");
-  assert.equal(canonicalFor("dev-updates", "ship"), "https://www.remilia.net/updates/ship");
-  assert.equal(canonicalFor("dev-blog", "vaults"), "https://www.remilia.net/blog/vaults");
+  assert.equal(
+    canonicalFor("events", "party"),
+    "https://remilia.com/a/events/party",
+  );
+  assert.equal(
+    canonicalFor("dev-updates", "ship"),
+    "https://www.remilia.net/updates/ship",
+  );
+  assert.equal(
+    canonicalFor("dev-blog", "vaults"),
+    "https://www.remilia.net/blog/vaults",
+  );
   assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
   assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
   assert.equal(rssUrl("dev-blog"), "https://www.remilia.net/blog/rss.xml");
@@ -68,7 +89,11 @@ test("blogPosting JSON-LD carries required Article fields", () => {
   assert.equal(ld.datePublished, "2026-08-01T00:00:00Z");
   assert.equal(ld.dateModified, ld.datePublished);
   assert.ok(ld.description.length > 0);
-  assert.ok(JSON.stringify(ld).includes('"author":[{"@type":"Person","name":"Remilia"}]'));
+  assert.ok(
+    JSON.stringify(ld).includes(
+      '"author":[{"@type":"Person","name":"Remilia"}]',
+    ),
+  );
 });
 
 test("event JSON-LD distinguishes physical and online locations", () => {
@@ -88,14 +113,22 @@ test("event JSON-LD distinguishes physical and online locations", () => {
     locationName: "Online",
     url: "https://remilia.com/live",
   });
-  assert.ok(JSON.stringify(online.location).includes('"@type":"VirtualLocation"'));
+  assert.ok(
+    JSON.stringify(online.location).includes('"@type":"VirtualLocation"'),
+  );
 });
 
 test("imageGallery emits one ImageObject per photo with alt as description", () => {
   const ld = imageGallery({
     title: "FW26",
     pageUrl: "https://remilia.com/a/events/fw26",
-    images: [{ url: "https://cdn.sanity.io/x.jpg", alt: "Runway look 1", credit: "Photo: A" }],
+    images: [
+      {
+        url: "https://cdn.sanity.io/x.jpg",
+        alt: "Runway look 1",
+        credit: "Photo: A",
+      },
+    ],
   });
   assert.equal(ld.image.length, 1);
   assert.equal(ld.image[0].description, "Runway look 1");
@@ -103,8 +136,11 @@ test("imageGallery emits one ImageObject per photo with alt as description", () 
 });
 
 test("organization JSON-LD is the shared @id entity", () => {
-  const ld = organization({ name: "Remilia", sameAs: ["https://wiki.remilia.org/Remilia_Corporation"] });
-  assert.equal(ld["@id"], "https://remilia.org/#org");
+  const ld = organization({
+    name: "Remilia",
+    sameAs: ["https://wiki.remilia.org/Remilia_Corporation"],
+  });
+  assert.equal(ld["@id"], "https://remilia.org/#organization");
   assert.ok((ld.sameAs as string[])[0].includes("wiki.remilia.org"));
 });
 
@@ -119,15 +155,29 @@ const POSTS = [
 ];
 
 test("rss escapes entities and uses canonical permalinks", () => {
-  const xml = rss({ channel: "dev-blog", title: "RemiliaNET — Devblog", description: "d" }, POSTS);
-  assert.ok(xml.includes("<guid isPermaLink=\"true\">https://www.remilia.net/blog/vaults</guid>"));
+  const xml = rss(
+    { channel: "dev-blog", title: "RemiliaNET — Devblog", description: "d" },
+    POSTS,
+  );
+  assert.ok(
+    xml.includes(
+      '<guid isPermaLink="true">https://www.remilia.net/blog/vaults</guid>',
+    ),
+  );
   assert.ok(xml.includes("Vaults &lt;2&gt;"));
   assert.ok(xml.includes("Notes &amp; &quot;vaults&quot;"));
-  assert.ok(xml.includes('atom:link href="https://www.remilia.net/blog/rss.xml"'));
+  assert.ok(
+    xml.includes('atom:link href="https://www.remilia.net/blog/rss.xml"'),
+  );
 });
 
 test("sitemap renders loc + date-only lastmod", () => {
-  const xml = sitemap([{ loc: "https://remilia.org/press/launch", lastmod: "2026-08-01T12:30:00Z" }]);
+  const xml = sitemap([
+    {
+      loc: "https://remilia.org/press/launch",
+      lastmod: "2026-08-01T12:30:00Z",
+    },
+  ]);
   assert.ok(xml.includes("<loc>https://remilia.org/press/launch</loc>"));
   assert.ok(xml.includes("<lastmod>2026-08-01</lastmod>"));
 });
@@ -140,11 +190,15 @@ test("llmsTxt lists only the host channel plus citations", () => {
     channelLabel: "Devblog",
     whenToUse: ["Cite RemiliaNET engineering decisions and changelogs."],
     posts: POSTS,
-    citeElsewhere: [{ label: "Remilia Corporation (wiki)", url: "https://wiki.remilia.org/Remilia_Corporation" }],
+    citeElsewhere: [
+      {
+        label: "Remilia Corporation (wiki)",
+        url: "https://wiki.remilia.org/Remilia_Corporation",
+      },
+    ],
   });
   assert.ok(txt.includes("[Vaults <2>](https://www.remilia.net/blog/vaults)"));
   assert.ok(txt.includes("## Cite elsewhere"));
   assert.ok(txt.includes("## When to use this site"));
   assert.ok(!txt.includes("remilia.org/press"));
 });
-

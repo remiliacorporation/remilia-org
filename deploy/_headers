@@ -42,8 +42,5 @@
 /site.webmanifest
   Content-Type: application/manifest+json
 
-/font-test.html
-  X-Robots-Tag: noindex, nofollow
-
 /jobs.html
   X-Robots-Tag: noindex, nofollow

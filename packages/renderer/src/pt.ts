@@ -1,4 +1,4 @@
-import { esc } from "./html";
+import { esc, safeHref } from "./html";
 
 interface Span {
   _type: "span";
@@ -41,7 +41,8 @@ export interface PTOptions {
   linkCard?: (href: string) => LinkCard | undefined;
 }
 
-const INTERNAL_HOSTS = /^https?:\/\/(www\.)?(remilia\.(org|com|net)|blog\.remilia\.org)\b/;
+const INTERNAL_HOSTS =
+  /^https?:\/\/(www\.)?(remilia\.(org|com|net)|blog\.remilia\.org)\b/;
 
 export function slugify(text: string): string {
   return (
@@ -69,7 +70,9 @@ function isImageBlock(b: PTBlock): b is ImageBlock {
 
 const HEADING_LEVEL: Record<string, 2 | 3 | 4> = { h2: 2, h3: 3, h4: 4 };
 
-function headingBlocks(blocks: PTBlock[]): { block: TextBlock; level: 2 | 3 | 4 }[] {
+function headingBlocks(
+  blocks: PTBlock[],
+): { block: TextBlock; level: 2 | 3 | 4 }[] {
   return blocks.flatMap((b) =>
     isTextBlock(b) && !b.listItem && b.style && b.style in HEADING_LEVEL
       ? [{ block: b, level: HEADING_LEVEL[b.style] }]
@@ -96,7 +99,10 @@ export function tocItems(headings: Heading[], minHeadings = 3): string {
   const usable = headings.filter((h) => h.level <= 3);
   if (usable.length < minHeadings) return "";
   return usable
-    .map((h) => `<li class="toc-l${h.level}"><a href="#${h.id}"><span class="toc-label">${esc(h.text)}</span></a></li>`)
+    .map(
+      (h) =>
+        `<li class="toc-l${h.level}"><a href="#${h.id}"><span class="toc-label">${esc(h.text)}</span></a></li>`,
+    )
     .join("\n");
 }
 
@@ -121,9 +127,10 @@ interface RenderState {
 }
 
 function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
-  const href = def.href ?? "";
+  const href = safeHref(def.href ?? "");
   const external = /^https?:/.test(href) && !INTERNAL_HOSTS.test(href);
-  if (external) return `<a href="${esc(href)}" rel="external noopener">${inner}</a>`;
+  if (external)
+    return `<a href="${esc(href)}" rel="external noopener">${inner}</a>`;
   const card = state.opts.linkCard?.(href);
   if (!card) return `<a href="${esc(href)}">${inner}</a>`;
   const img = card.imageUrl
@@ -135,7 +142,7 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
 function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   state.count += 1;
   const n = state.count;
-  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on"><a class="fn-ref" href="#fn-${n}">[${n}]</a><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
+  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on" aria-label="Show note ${n}"><a class="fn-ref" href="#fn-${n}">[${n}]</a><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
@@ -157,7 +164,9 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   const state: RenderState = { count: 0, opts };
   const headingIds = new Map<TextBlock, string>();
   const headingList = headingBlocks(blocks);
-  extractHeadings(blocks).forEach((h, i) => headingIds.set(headingList[i].block, h.id));
+  extractHeadings(blocks).forEach((h, i) =>
+    headingIds.set(headingList[i].block, h.id),
+  );
 
   const out: string[] = [];
   let list: { tag: "ul" | "ol"; items: string[] } | null = null;
@@ -166,7 +175,9 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
 
   const flushList = (): void => {
     if (!list) return;
-    out.push(`<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join("")}</${list.tag}>`);
+    out.push(
+      `<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join("")}</${list.tag}>`,
+    );
     list = null;
   };
   const closeH3 = (): void => {
@@ -184,7 +195,9 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   for (const block of blocks) {
     if (isTextBlock(block) && block.listItem) {
       const tag = block.listItem === "number" ? "ol" : "ul";
-      const item = block.children.map((s) => spanHtml(s, block.markDefs ?? [], state)).join("");
+      const item = block.children
+        .map((s) => spanHtml(s, block.markDefs ?? [], state))
+        .join("");
       if (list && list.tag === tag) list.items.push(item);
       else {
         flushList();
@@ -195,18 +208,24 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
     flushList();
 
     if (isTextBlock(block)) {
-      const inner = block.children.map((s) => spanHtml(s, block.markDefs ?? [], state)).join("");
+      const inner = block.children
+        .map((s) => spanHtml(s, block.markDefs ?? [], state))
+        .join("");
       const id = headingIds.get(block);
       if (id && block.style === "h2") {
         closeH2();
         out.push(`<div class="h2-sec">`);
         openH2 = true;
-        out.push(`<h2 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h2>`);
+        out.push(
+          `<h2 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h2>`,
+        );
       } else if (id && block.style === "h3") {
         closeH3();
         out.push(`<div class="h3-sec">`);
         openH3 = true;
-        out.push(`<h3 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h3>`);
+        out.push(
+          `<h3 id="${id}"><a class="hlink" href="#${id}">${inner}</a></h3>`,
+        );
       } else if (id && block.style === "h4") {
         out.push(`<h4 id="${id}">${inner}</h4>`);
       } else if (block.style === "blockquote") {
@@ -221,14 +240,12 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
         ? `<figcaption><a href="${esc(src)}">${esc(block.caption)}</a></figcaption>`
         : "";
       out.push(
-        `<figure><a href="${esc(src)}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
+        `<figure><a href="${esc(src)}" aria-label="${esc(block.alt || block.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
       );
     }
-
   }
   flushList();
   closeH2();
 
   return out.join("\n");
 }
-

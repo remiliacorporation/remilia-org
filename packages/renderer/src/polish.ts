@@ -1,6 +1,10 @@
-
 export type Span = { _type?: "span"; text?: string; marks?: string[] };
-export type MarkDef = { _key: string; _type: string; href?: string; text?: string };
+export type MarkDef = {
+  _key: string;
+  _type: string;
+  href?: string;
+  text?: string;
+};
 export type PTBlock = {
   _type?: string;
   _key?: string;
@@ -11,7 +15,6 @@ export type PTBlock = {
   alt?: string;
   caption?: string;
   asset?: unknown;
-  [k: string]: unknown;
 };
 
 function keys(): () => string {
@@ -48,14 +51,20 @@ function blockText(b: PTBlock): string {
 
 function isEmptySpacer(b: PTBlock): boolean {
   if (b._type !== "block") return false;
-  const t = blockText(b).replace(/\u00a0/g, " ").trim();
+  const t = blockText(b)
+    .replace(/\u00a0/g, " ")
+    .trim();
   if (t.length > 0) return false;
-  return !!b.listItem || (b.children ?? []).every((c) => (c.marks ?? []).includes("em"));
+  return (
+    !!b.listItem ||
+    (b.children ?? []).every((c) => (c.marks ?? []).includes("em"))
+  );
 }
 
 function isItalicOnlyParagraph(b: PTBlock): boolean {
   if (b._type !== "block" || b.listItem) return false;
-  if (b.style === "blockquote" || (b.style && b.style !== "normal")) return false;
+  if (b.style === "blockquote" || (b.style && b.style !== "normal"))
+    return false;
   const children = b.children ?? [];
   let total = 0;
   let italic = 0;
@@ -137,19 +146,29 @@ export function splitSuperscripts(
   return out;
 }
 
-function applyFootnotesToBlock(b: PTBlock, notes: Map<number, string>, key: () => string): PTBlock {
+function applyFootnotesToBlock(
+  b: PTBlock,
+  notes: Map<number, string>,
+  key: () => string,
+): PTBlock {
   if (b._type !== "block") return b;
   const markDefs = [...(b.markDefs ?? [])];
   const children: Span[] = [];
   let changed = false;
   for (const span of b.children ?? []) {
     const parts = splitSuperscripts(span.text ?? "");
-    if (parts.length === 1 && "text" in parts[0] && parts[0].text === (span.text ?? "")) {
+    if (
+      parts.length === 1 &&
+      "text" in parts[0] &&
+      parts[0].text === (span.text ?? "")
+    ) {
       children.push(span);
       continue;
     }
     changed = true;
-    const baseMarks = (span.marks ?? []).filter((m) => !markDefs.some((d) => d._key === m && d._type === "footnote"));
+    const baseMarks = (span.marks ?? []).filter(
+      (m) => !markDefs.some((d) => d._key === m && d._type === "footnote"),
+    );
     for (const part of parts) {
       if ("text" in part) {
         if (!part.text) continue;
@@ -220,4 +239,3 @@ export function polishBody(blocks: PTBlock[], title: string): PTBlock[] {
   }
   return out;
 }
-

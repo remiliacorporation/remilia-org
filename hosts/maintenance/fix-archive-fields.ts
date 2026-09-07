@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 
 const write = process.argv.includes("--write");
@@ -36,7 +35,8 @@ async function main() {
   let skip = 0;
   for (const r of rows) {
     const hasBody = Array.isArray(r.body) && r.body.length > 0;
-    const hasCommentary = Array.isArray(r.commentary) && r.commentary.length > 0;
+    const hasCommentary =
+      Array.isArray(r.commentary) && r.commentary.length > 0;
     if (!hasBody) {
       console.log(`skip (no body)  ${r.title?.slice(0, 60)}`);
       skip++;
@@ -68,4 +68,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

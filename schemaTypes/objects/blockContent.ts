@@ -35,7 +35,10 @@ export const blockContent = defineType({
                 type: "url",
                 title: "URL",
                 validation: (r) =>
-                  r.uri({ allowRelative: true, scheme: ["http", "https", "mailto", "tel"] }),
+                  r.uri({
+                    allowRelative: true,
+                    scheme: ["http", "https", "mailto", "tel"],
+                  }),
               },
             ],
           },
@@ -63,7 +66,8 @@ export const blockContent = defineType({
           name: "alt",
           type: "string",
           title: "Alt text",
-          description: "Required — describes the image for screen readers, search, and LLMs.",
+          description:
+            "Required — describes the image for screen readers, search, and LLMs.",
         },
         { name: "caption", type: "string", title: "Caption" },
       ],
@@ -74,4 +78,3 @@ export const blockContent = defineType({
     }),
   ],
 });
-

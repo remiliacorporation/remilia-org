@@ -1,4 +1,3 @@
-
 import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { enrichSubstackBody, substackExcerpt } from "./substack-import";
@@ -29,7 +28,13 @@ async function main() {
   });
 
   const rows = await client.fetch<
-    Array<{ _id: string; title: string; slug: string; body?: PT[]; excerpt?: string }>
+    Array<{
+      _id: string;
+      title: string;
+      slug: string;
+      body?: PT[];
+      excerpt?: string;
+    }>
   >(
     `*[_type=="post" && migration.source=="substack"]{_id, title, "slug": slug.current, body, excerpt} | order(title)`,
   );
@@ -37,7 +42,9 @@ async function main() {
 
   for (const row of rows) {
     const res = await fetch(`${ORIGIN}/api/v1/posts/${row.slug}`, {
-      headers: { "user-agent": "Mozilla/5.0 (compatible; remilia-substack-enrich/1.0)" },
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; remilia-substack-enrich/1.0)",
+      },
     });
     if (!res.ok) {
       console.log(`• ${row.slug} API ${res.status}`);
@@ -55,7 +62,11 @@ async function main() {
       description: p.description,
     }) as PT[];
     const excerpt = substackExcerpt(
-      { title: p.title || row.title, subtitle: p.subtitle, description: p.description },
+      {
+        title: p.title || row.title,
+        subtitle: p.subtitle,
+        description: p.description,
+      },
       body,
     );
     const textBefore = before
@@ -68,9 +79,16 @@ async function main() {
       .map((b) => (b.children ?? []).map((c) => c.text ?? "").join(""))
       .join("")
       .trim().length;
-    const capsBefore = before.filter((b) => b._type === "image" && b.caption).length;
-    const capsAfter = body.filter((b) => b._type === "image" && b.caption).length;
-    const changed = textAfter !== textBefore || capsAfter !== capsBefore || excerpt !== row.excerpt;
+    const capsBefore = before.filter(
+      (b) => b._type === "image" && b.caption,
+    ).length;
+    const capsAfter = body.filter(
+      (b) => b._type === "image" && b.caption,
+    ).length;
+    const changed =
+      textAfter !== textBefore ||
+      capsAfter !== capsBefore ||
+      excerpt !== row.excerpt;
     console.log(
       `• ${row.slug} text ${textBefore}→${textAfter} caps ${capsBefore}→${capsAfter}${changed ? "" : " (noop)"}`,
     );
@@ -87,4 +105,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

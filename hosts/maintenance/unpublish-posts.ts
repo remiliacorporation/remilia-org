@@ -1,4 +1,3 @@
-
 import { createClient, type SanityClient } from "@sanity/client";
 import { createHash } from "node:crypto";
 
@@ -19,7 +18,9 @@ const client = createClient({
 });
 
 function shortenId(id: string, channel: string, slug: string): string {
-  const base = `post-${channel}-${slug}`.replace(/[^a-z0-9-]+/gi, "-").toLowerCase();
+  const base = `post-${channel}-${slug}`
+    .replace(/[^a-z0-9-]+/gi, "-")
+    .toLowerCase();
   if (`drafts.${base}`.length <= 128) return base;
   const hash = createHash("sha1").update(id).digest("hex").slice(0, 10);
   return `${base.slice(0, 100)}-${hash}`;
@@ -28,7 +29,6 @@ function shortenId(id: string, channel: string, slug: string): string {
 async function unpublishOne(c: SanityClient, id: string) {
   const draftId = `drafts.${id}`;
   if (draftId.length > 128) {
-
     const doc = await c.getDocument(id);
     if (!doc) return { id, ok: false, reason: "missing" };
     const channel = String(doc.channel ?? "press");
@@ -38,6 +38,7 @@ async function unpublishOne(c: SanityClient, id: string) {
         : id.slice(-40);
     const newId = shortenId(id, channel, slug);
     const { _rev, _id, ...rest } = doc as Record<string, unknown> & {
+      _type: string;
       _rev?: string;
       _id: string;
     };
@@ -60,7 +61,6 @@ async function unpublishOne(c: SanityClient, id: string) {
 }
 
 async function main() {
-
   const junk = await client.fetch<string[]>(
     `*[_type=="post" && _id in path("drafts.**") && (!defined(title) || title == null)]._id`,
   );
@@ -72,7 +72,12 @@ async function main() {
   }
 
   const published = await client.fetch<
-    Array<{ _id: string; title?: string; channel?: string; publishedAt?: string }>
+    Array<{
+      _id: string;
+      title?: string;
+      channel?: string;
+      publishedAt?: string;
+    }>
   >(
     `*[_type == "post" && !(_id in path("drafts.**"))]{_id,title,channel,publishedAt} | order(publishedAt desc)`,
   );
@@ -104,7 +109,8 @@ async function main() {
     try {
       const res = await unpublishOne(client, p._id);
       ok++;
-      if (res.renamed) console.log(`  renamed+unpublished ${p._id} → ${res.renamed}`);
+      if (res.renamed)
+        console.log(`  renamed+unpublished ${p._id} → ${res.renamed}`);
       else if (ok % 10 === 0) console.log(`  … ${ok}/${published.length}`);
     } catch (e) {
       fail++;
@@ -124,4 +130,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

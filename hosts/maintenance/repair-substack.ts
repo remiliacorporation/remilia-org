@@ -1,8 +1,11 @@
-
 import { createClient } from "@sanity/client";
 import { markdownToPost } from "@remilia/renderer";
 import { ghostHtmlToMarkdown } from "./ghost-import";
-import { enrichSubstackBody, substackExcerpt, unwrapSubstackImg } from "./substack-import";
+import {
+  enrichSubstackBody,
+  substackExcerpt,
+  unwrapSubstackImg,
+} from "./substack-import";
 
 const write = process.argv.includes("--write");
 const token = process.env.SANITY_TOKEN || process.env.SANITY_AUTH_TOKEN;
@@ -28,12 +31,15 @@ type PTBlock = Record<string, unknown> & { _type?: string; _key?: string };
 const assetCache = new Map<string, string>();
 
 async function uploadImage(url: string): Promise<string | null> {
-
-  const clean = /substackcdn\.com\/image\/fetch\
+  const clean = /substackcdn\.com\/image\/fetch\//.test(url)
+    ? url
+    : unwrapSubstackImg(url);
   if (assetCache.has(clean)) return assetCache.get(clean)!;
   try {
     const res = await fetch(clean, {
-      headers: { "user-agent": "Mozilla/5.0 (compatible; remilia-substack-repair/1.0)" },
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; remilia-substack-repair/1.0)",
+      },
       redirect: "follow",
     });
     if (!res.ok) {
@@ -42,7 +48,11 @@ async function uploadImage(url: string): Promise<string | null> {
     }
     const buf = Buffer.from(await res.arrayBuffer());
     const ctype = res.headers.get("content-type") || "image/jpeg";
-    const ext = ctype.includes("png") ? "png" : ctype.includes("webp") ? "webp" : "jpg";
+    const ext = ctype.includes("png")
+      ? "png"
+      : ctype.includes("webp")
+        ? "webp"
+        : "jpg";
     const asset = await client.assets.upload("image", buf, {
       filename: `substack-${assetCache.size}.${ext}`,
       contentType: ctype.split(";")[0],
@@ -55,7 +65,10 @@ async function uploadImage(url: string): Promise<string | null> {
   }
 }
 
-async function resolveImages(body: PTBlock[], title: string): Promise<PTBlock[]> {
+async function resolveImages(
+  body: PTBlock[],
+  title: string,
+): Promise<PTBlock[]> {
   const out: PTBlock[] = [];
   for (let i = 0; i < body.length; i++) {
     const b = body[i];
@@ -70,8 +83,11 @@ async function resolveImages(body: PTBlock[], title: string): Promise<PTBlock[]>
           ? (b.asset as { url: string }).url
           : undefined;
     if (!url) {
-
-      if (b.asset && typeof b.asset === "object" && "_ref" in (b.asset as object)) {
+      if (
+        b.asset &&
+        typeof b.asset === "object" &&
+        "_ref" in (b.asset as object)
+      ) {
         out.push({ ...b, _key: b._key ?? `b${i}` });
         continue;
       }
@@ -139,12 +155,16 @@ async function main() {
     const textLen = body
       .filter((b) => b._type === "block")
       .map((b) =>
-        ((b.children as Array<{ text?: string }> | undefined) ?? []).map((c) => c.text ?? "").join(""),
+        ((b.children as Array<{ text?: string }> | undefined) ?? [])
+          .map((c) => c.text ?? "")
+          .join(""),
       )
       .join(" ")
       .trim().length;
     const imgs = body.filter((b) => b._type === "image").length;
-    console.log(`text≈${textLen} imgs=${imgs} sub=${(p.subtitle || p.description || "").slice(0, 40)}`);
+    console.log(
+      `text≈${textLen} imgs=${imgs} sub=${(p.subtitle || p.description || "").slice(0, 40)}`,
+    );
 
     if (!write) continue;
 
@@ -177,4 +197,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

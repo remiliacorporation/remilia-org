@@ -12,14 +12,21 @@ test("smartExcerpt ends at sentence for vessel lead", () => {
 });
 
 test("smartExcerpt never mid-word", () => {
-  const out = smartExcerpt("Short words only here without period " + "x".repeat(200), 80);
+  const out = smartExcerpt(
+    "Short words only here without period " + "x".repeat(200),
+    80,
+  );
   assert.equal(/\s$/.test(out) || /[a-z]$/i.test(out), true);
   assert.equal(out.includes("xx"), false);
 });
 
 test("splitSuperscripts handles multi-digit", () => {
   const parts = splitSuperscripts("high IQ¹⁵ and undersocialized");
-  assert.deepEqual(parts, [{ text: "high IQ" }, { fn: 15 }, { text: " and undersocialized" }]);
+  assert.deepEqual(parts, [
+    { text: "high IQ" },
+    { fn: 15 },
+    { text: " and undersocialized" },
+  ]);
 });
 
 test("parseFootnoteDump reads numbered notes", () => {
@@ -89,17 +96,29 @@ test("polishBody: italics→blockquote, supers→footnotes, drop dump", () => {
   assert.equal(body[1].style, "blockquote");
   assert.equal(body[2].style, "blockquote");
   const fnDefs = (body[0].markDefs ?? []).filter((d) => d._type === "footnote");
-  assert.equal(fnDefs.some((d) => d.text?.includes("Groups of bad actors")), true);
+  assert.equal(
+    fnDefs.some((d) => d.text?.includes("Groups of bad actors")),
+    true,
+  );
   const quoteFn = (body[1].markDefs ?? []).find((d) => d._type === "footnote");
-  assert.equal(quoteFn?.text, "Did you think I’d disclose my exact IQ here? Ha!");
-  assert.equal((body[1].children ?? []).every((c) => !(c.marks ?? []).includes("em")), true);
+  assert.equal(
+    quoteFn?.text,
+    "Did you think I’d disclose my exact IQ here? Ha!",
+  );
+  assert.equal(
+    (body[1].children ?? []).every((c) => !(c.marks ?? []).includes("em")),
+    true,
+  );
 });
 
 test("plainFromBlocks skips quotes", () => {
   const t = plainFromBlocks([
     { _type: "block", style: "normal", children: [{ text: "Lead sentence." }] },
-    { _type: "block", style: "blockquote", children: [{ text: "Quoted aside." }] },
+    {
+      _type: "block",
+      style: "blockquote",
+      children: [{ text: "Quoted aside." }],
+    },
   ]);
   assert.equal(t, "Lead sentence.");
 });
-

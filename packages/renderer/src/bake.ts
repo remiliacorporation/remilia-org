@@ -27,7 +27,16 @@ import {
   type PTBlock,
 } from "./pt";
 import { markdownToPost, postToMarkdownFile } from "./md";
-import { articleHtml, citeBox, htmlPage, notFoundHtml, tocBox, adjacentHtml, indexMain, type Chrome } from "./page";
+import {
+  articleHtml,
+  citeBox,
+  htmlPage,
+  notFoundHtml,
+  tocBox,
+  adjacentHtml,
+  indexMain,
+  type Chrome,
+} from "./page";
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 
@@ -37,6 +46,7 @@ export interface BakeOptions {
   outDir: string;
   projectId: string;
   dataset: string;
+  token?: string;
   host: {
     title: string;
     description: string;
@@ -90,7 +100,12 @@ interface FetchedAlbum {
   images: FetchedImage[];
 }
 
-export function cdnUrl(projectId: string, dataset: string, ref: string, params: string): string | undefined {
+export function cdnUrl(
+  projectId: string,
+  dataset: string,
+  ref: string,
+  params: string,
+): string | undefined {
   const m = /^image-([a-f0-9]+)-(\d+x\d+)-(\w+)$/.exec(ref);
   if (!m) return undefined;
   return `https://cdn.sanity.io/images/${projectId}/${dataset}/${m[1]}-${m[2]}.${m[3]}?${params}`;
@@ -116,13 +131,21 @@ const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, ad
 
 function postPlain(blocks: PTBlock[]): string {
   return blocks
-    .flatMap((b) => ("children" in b && Array.isArray(b.children) ? b.children : []))
-    .map((s) => (s && typeof s === "object" && "text" in s ? String(s.text) : ""))
+    .flatMap((b) =>
+      "children" in b && Array.isArray(b.children) ? b.children : [],
+    )
+    .map((s) =>
+      s && typeof s === "object" && "text" in s ? String(s.text) : "",
+    )
     .join("");
 }
 
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
-  if (channel === "archive" && p.origin === "external" && p.commentary?.length) {
+  if (
+    channel === "archive" &&
+    p.origin === "external" &&
+    p.commentary?.length
+  ) {
     return p.commentary;
   }
   if (p.body?.length) return p.body;
@@ -165,11 +188,15 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     projectId: opts.projectId,
     dataset: opts.dataset,
     apiVersion: "2026-02-01",
-    useCdn: true,
+    useCdn: !opts.token,
+    token: opts.token,
+    perspective: "published",
   });
 
   const posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, { channel });
-  const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(ORG_QUERY);
+  const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(
+    ORG_QUERY,
+  );
   const img = (ref: string | undefined, params: string): string | undefined =>
     ref ? cdnUrl(opts.projectId, opts.dataset, ref, params) : undefined;
   const orgLd = orgDoc
@@ -178,11 +205,18 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const withOrg = (ld: object): object[] => (orgLd ? [ld, orgLd] : [ld]);
 
   const meta = { channel, title: host.title, description: host.description };
-  const feedPosts = posts.map((p) => ({ ...p, channel }));
+  const feedPosts = posts
+    .filter((p) => !p.noIndex)
+    .map((p) => ({ ...p, channel }));
   const sitemapEntries: SitemapEntry[] = [
     ...(opts.extraSitemapUrls ?? []),
     { loc: indexUrl(channel) },
-    ...posts.map((p) => ({ loc: canonicalFor(channel, p.slug), lastmod: p.updatedAt ?? p.publishedAt })),
+    ...posts
+      .filter((p) => !p.noIndex)
+      .map((p) => ({
+        loc: canonicalFor(channel, p.slug),
+        lastmod: p.updatedAt ?? p.publishedAt,
+      })),
   ];
 
   const dir = join(outDir, ...basePath.split("/").filter(Boolean));
@@ -210,14 +244,19 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   }));
   const rail = leftRail(navPosts, host.title, basePath);
   const navScript = `<script src="${basePath}/nav.js" defer></script>`;
-  const linkCard = (href: string): LinkCard | undefined => cards.get(href.replace(/\/$/, ""));
-  const needsLightbox = channel === "events" && posts.some((p) => (p.albums?.length ?? 0) > 0);
+  const linkCard = (href: string): LinkCard | undefined =>
+    cards.get(href.replace(/\/$/, ""));
+  const needsLightbox =
+    channel === "events" && posts.some((p) => (p.albums?.length ?? 0) > 0);
   const galleryScript = needsLightbox
     ? `\n<script src="${basePath}/gallery.js" defer></script>`
     : "";
 
-  const imgUrl = (b: { asset?: { _ref?: string; url?: string } }): string | undefined =>
-    (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ?? b.asset?.url;
+  const imgUrl = (b: {
+    asset?: { _ref?: string; url?: string };
+  }): string | undefined =>
+    (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ??
+    b.asset?.url;
 
   for (const p of posts) {
     const pageUrl = canonicalFor(channel, p.slug);
@@ -237,7 +276,15 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
                   const url = img(i.ref, "w=800&auto=format");
                   const fullUrl = img(i.ref, "w=2400&auto=format");
                   return url && fullUrl
-                    ? [{ url, fullUrl, alt: i.alt ?? "", caption: i.caption, credit: i.credit }]
+                    ? [
+                        {
+                          url,
+                          fullUrl,
+                          alt: i.alt ?? "",
+                          caption: i.caption,
+                          credit: i.credit,
+                        },
+                      ]
                     : [];
                 }),
               ),
@@ -253,7 +300,16 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               pageUrl,
               images: a.images.flatMap((i) => {
                 const url = img(i.ref, "w=2400&auto=format");
-                return url ? [{ url, alt: i.alt ?? "", caption: i.caption, credit: i.credit }] : [];
+                return url
+                  ? [
+                      {
+                        url,
+                        alt: i.alt ?? "",
+                        caption: i.caption,
+                        credit: i.credit,
+                      },
+                    ]
+                  : [];
               }),
             }),
           )
@@ -276,7 +332,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       title: p.seoTitle?.trim() || `${p.title} — ${host.title}`,
       description: p.seoDescription?.trim() || p.excerpt,
       canonical,
-      ogImage: img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ?? img(p.coverRef, "w=1200&auto=format"),
+      ogImage:
+        img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ??
+        img(p.coverRef, "w=1200&auto=format"),
       noindex: p.noIndex === true,
       jsonld: [
         ...withOrg(
@@ -311,7 +369,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           : undefined,
         canonical: pageUrl,
         category: p.tags?.[0] ?? (p.outlet ? p.outlet : undefined),
-        categoryHref: p.tags?.[0] ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}` : undefined,
+        categoryHref: p.tags?.[0]
+          ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}`
+          : undefined,
         monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
         bodyHtml: galleries ? `${bodyHtml}\n${galleries}` : bodyHtml,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
@@ -346,7 +406,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       title: host.title,
       description: host.description,
       canonical: indexUrl(channel),
-      jsonld: withOrg({ "@context": "https://schema.org", "@type": "Blog", "@id": `${indexUrl(channel)}#blog`, name: host.title, description: host.description }),
+      jsonld: withOrg({
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "@id": `${indexUrl(channel)}#blog`,
+        name: host.title,
+        description: host.description,
+      }),
       headExtra: feedLinks(meta),
       chrome,
       layoutClass: "is-index",
@@ -363,11 +429,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           author: p.author,
         })),
         filterBar(navPosts),
+        host.title,
       ),
     }),
   );
 
-  const css = await Promise.all(opts.stylesheets.map((f) => readFile(f, "utf8")));
+  const css = await Promise.all(
+    opts.stylesheets.map((f) => readFile(f, "utf8")),
+  );
   await writeFile(join(dir, "blog.css"), css.join("\n"));
   await writeFile(join(dir, "nav.js"), NAV_JS);
   if (needsLightbox) await writeFile(join(dir, "gallery.js"), LIGHTBOX_JS);
@@ -391,4 +460,3 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   return { pages: posts.length + 1 };
 }
-

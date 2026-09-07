@@ -4,10 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Audits a deployed host against the SEO/LLM contract. Run in CI / post-deploy smoke for every render app.",
-  "exports": { ".": "./src/audit.ts" },
-  "bin": { "seo-conformance": "./src/cli.ts" },
+  "exports": {
+    ".": "./src/audit.ts"
+  },
+  "bin": {
+    "seo-conformance": "./src/cli.ts"
+  },
   "scripts": {
-    "test": "node --import tsx --test src/audit.test.ts",
+    "test": "node --import tsx --test src/*.test.ts",
     "check": "node --import tsx src/cli.ts"
   },
   "dependencies": {
