@@ -63,7 +63,7 @@ svg.fx{position:absolute;width:0;height:0}
 .layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;user-select:none;transform:translate(3px,2px);filter:url(#print-fx);opacity:.9}
 .page-careers .layer-fx{transform:none;filter:none}
 .page-careers .layer-fx table{transform:translate(3px,2px);filter:url(#print-fx)}
-.layer-fx,.layer-fx *{color:color-mix(in srgb,var(--ink) 55%,white) !important;-webkit-text-fill-color:color-mix(in srgb,var(--ink) 55%,white) !important;text-decoration-color:color-mix(in srgb,var(--ink) 55%,white) !important}
+.layer-fx,.layer-fx *{color:transparent !important;-webkit-text-fill-color:transparent !important;text-decoration-color:transparent !important;text-shadow:none !important}
 .layer-fx iframe,.layer-fx :is(img.logo,img.logo-word,img.logo-wiki,img.rj-photo){visibility:hidden}
 .layer-base{position:relative;z-index:2;background:transparent}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
