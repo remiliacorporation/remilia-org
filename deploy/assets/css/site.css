@@ -60,12 +60,8 @@ svg.fx{position:absolute;width:0;height:0}
 
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
 .layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-.layer-fx{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;user-select:none;filter:url(#print-fx);opacity:.9}
-.page-careers .layer-fx{filter:none}
-.page-careers .layer-fx table{filter:url(#print-fx)}
-.layer-fx,.layer-fx *{color:transparent !important;-webkit-text-fill-color:transparent !important;text-decoration-color:transparent !important;text-shadow:none !important}
-.layer-fx iframe,.layer-fx :is(img.logo,img.logo-word,img.logo-wiki,img.rj-photo){visibility:hidden}
-.layer-base{position:relative;z-index:2;background:transparent}
+.layer-fx{display:none}
+.layer-base{position:relative;z-index:2;background:transparent;filter:url(#print-fx)}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{

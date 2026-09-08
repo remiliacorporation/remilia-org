@@ -9,6 +9,9 @@
 /assets/*
   Cache-Control: public, max-age=86400
 
+/assets/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 /favicon.ico
   Cache-Control: public, max-age=86400
 
