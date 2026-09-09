@@ -62,6 +62,14 @@ export interface BakeOptions {
 
   extraSitemapUrls?: SitemapEntry[];
 
+  /**
+   * Publish a section that fetched zero posts. Off by default: an empty
+   * result is almost always a missing `SANITY_TOKEN` or a broken query, and
+   * baking it would replace every published post, feed and sitemap entry
+   * with an empty index.
+   */
+  allowEmpty?: boolean;
+
   stylesheets: string[];
 }
 
@@ -245,6 +253,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   });
 
   const posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, { channel });
+  if (posts.length === 0 && !opts.allowEmpty) {
+    throw new Error(
+      `refusing to bake ${channel}: the query returned no posts. ` +
+        `Baking would replace the published index, feeds and sitemap with an ` +
+        `empty section. Set SANITY_TOKEN (or SANITY_AUTH_TOKEN) for read ` +
+        `access, or set ALLOW_EMPTY_BAKE=1 if the section is genuinely empty.`,
+    );
+  }
   const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(
     ORG_QUERY,
   );
