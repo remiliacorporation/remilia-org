@@ -442,12 +442,40 @@ export interface IndexCard {
   excerpt: string;
   imageUrl?: string;
   author?: string;
+  /** Author archive; falls back to the client-side filter. */
+  authorHref?: string;
+  /** Tag archive; falls back to a plain label. */
+  categoryHref?: string;
+}
+
+export interface Pager {
+  page: number;
+  pages: number;
+  prevHref?: string;
+  nextHref?: string;
+}
+
+/** Newer/older links plus position, so a long section is walkable without JS. */
+export function pagerHtml(pager?: Pager): string {
+  if (!pager || pager.pages < 2) return "";
+  const prev = pager.prevHref
+    ? `<a class="pager-prev" rel="prev" href="${esc(pager.prevHref)}">← Newer</a>`
+    : `<span class="pager-prev"></span>`;
+  const next = pager.nextHref
+    ? `<a class="pager-next" rel="next" href="${esc(pager.nextHref)}">Older →</a>`
+    : `<span class="pager-next"></span>`;
+  return `<nav class="sec pager" aria-label="Pagination">
+${prev}
+<span class="pager-at">Page ${pager.page} of ${pager.pages}</span>
+${next}
+</nav>`;
 }
 
 export function indexMain(
   posts: IndexCard[],
   toolsHtml: string,
   title = "Posts",
+  pager?: Pager,
 ): string {
   const cards = posts
     .map((p) => {
@@ -455,9 +483,14 @@ export function indexMain(
       const img = p.imageUrl
         ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
         : "";
+      const authorHref =
+        p.authorHref ?? `?author=${encodeURIComponent(p.author ?? "")}`;
       const author = p.author
-        ? `<a class="author" href="?author=${esc(encodeURIComponent(p.author))}">${esc(p.author)}</a>`
+        ? `<a class="author" href="${esc(authorHref)}">${esc(p.author)}</a>`
         : `<span class="author"></span>`;
+      const category = p.categoryHref
+        ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
+        : `<span class="byline-cat">${esc(p.category)}</span>`;
       const row =
         img || p.excerpt
           ? `<div class="card-row">
@@ -472,7 +505,7 @@ ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 <h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
 </header>
 ${row}
-<p class="card-foot"><span class="byline-cat">${esc(p.category)}</span><a class="card-more" href="${esc(p.url)}" aria-label="Read more: ${esc(p.title)}">Read more</a></p>
+<p class="card-foot">${category}<a class="card-more" href="${esc(p.url)}" aria-label="Read more: ${esc(p.title)}">Read more</a></p>
 </article>`;
     })
     .join("\n");
@@ -486,6 +519,41 @@ ${toolsHtml}
 </div>
 <div class="article-rest">
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
+${pagerHtml(pager)}
+</div>
+</article>
+</main>`;
+}
+
+/** Directory of taxonomy terms with post counts. */
+export function termIndexMain(
+  title: string,
+  noun: string,
+  terms: { label: string; href: string; count: number }[],
+): string {
+  const rows = terms
+    .map(
+      (t) =>
+        `<li><a href="${esc(t.href)}">${esc(t.label)}</a> <span class="term-count">${t.count}</span></li>`,
+    )
+    .join("\n");
+  return `<main id="content" tabindex="-1" class="article-wrap">
+<article class="article-body">
+<div class="sec mast index-mast">
+<header>
+<h1>${esc(title)}</h1>
+</header>
+</div>
+<div class="article-rest">
+<div class="sec">
+<div class="prose">
+${
+  terms.length
+    ? `<ul class="term-list">\n${rows}\n</ul>`
+    : `<p>No ${noun.toLowerCase()}s yet.</p>`
+}
+</div>
+</div>
 </div>
 </article>
 </main>`;

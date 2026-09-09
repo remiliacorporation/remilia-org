@@ -5,6 +5,7 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
+  CHANNEL_ORIGIN,
   atom,
   blogPosting,
   breadcrumbs,
@@ -27,6 +28,7 @@ import {
   portableTextToHtml,
   tocItems,
   footnoteCount,
+  slugify,
   type LinkCard,
   type PTBlock,
 } from "./pt";
@@ -39,6 +41,7 @@ import {
   tocBox,
   adjacentHtml,
   indexMain,
+  termIndexMain,
   type Chrome,
 } from "./page";
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
@@ -72,6 +75,12 @@ export interface BakeOptions {
   };
 
   extraSitemapUrls?: SitemapEntry[];
+
+  /**
+   * Content API origin. Defaults to Sanity; point it at a fixture server to
+   * bake known content without the network.
+   */
+  apiHost?: string;
 
   /**
    * Publish a section that fetched zero posts. Off by default: an empty
@@ -273,9 +282,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     projectId: opts.projectId,
     dataset: opts.dataset,
     apiVersion: "2026-02-01",
-    useCdn: !opts.token,
+    useCdn: !opts.token && !opts.apiHost,
     token: opts.token,
     perspective: "published",
+    ...(opts.apiHost
+      ? { apiHost: opts.apiHost, useProjectHostname: false }
+      : {}),
   });
 
   let posts: FetchedPost[];
@@ -507,12 +519,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         publishedAt: p.publishedAt,
         byline: p.authors?.map((a) => a.name).join(", "),
         authorHref: p.authors?.[0]?.name
-          ? `${basePath}/?author=${encodeURIComponent(p.authors.map((a) => a.name).join(", "))}`
+          ? `${basePath}/authors/${slugify(p.authors[0].name)}`
           : undefined,
         canonical: pageUrl,
         category: p.tags?.[0] ?? (p.outlet ? p.outlet : undefined),
         categoryHref: p.tags?.[0]
-          ? `${basePath}/?cat=${encodeURIComponent(p.tags[0])}`
+          ? `${basePath}/tags/${slugify(p.tags[0])}`
           : undefined,
         monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
         bodyHtml: galleries ? `${bodyHtml}\n${galleries}` : bodyHtml,
@@ -543,59 +555,248 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     await writeFile(join(dir, `${p.slug}.txt`), postText(p, pageUrl, body));
   }
 
-  await writeFile(
-    join(dir, "index.html"),
-    htmlPage({
-      title: host.title,
-      description: host.description,
-      canonical: indexUrl(channel),
-      channel,
-      alternates: [
-        {
-          type: "text/markdown",
-          title: `${host.title} (Markdown)`,
-          href: `${basePath}/index.md`,
-        },
-        {
-          type: "text/plain",
-          title: `${host.title} (plain text)`,
-          href: `${basePath}/index.txt`,
-        },
-      ],
-      jsonld: [
-        ...withOrg({
-          "@context": "https://schema.org",
-          "@type": "Blog",
-          "@id": `${indexUrl(channel)}#blog`,
-          name: host.title,
-          description: host.description,
-          url: indexUrl(channel),
+  const PAGE_SIZE = 20;
+  const listingSitemap: SitemapEntry[] = [];
+
+  /**
+   * Writes one listing — the section index, a tag archive, an author archive —
+   * paginated so a long list never becomes one enormous page. Page 1 lives at
+   * the listing root; later pages at `page/N/`.
+   */
+  const writeListing = async (listing: {
+    /** Path under the section, "" for the section index. */
+    at: string;
+    title: string;
+    description: string;
+    posts: NavPost[];
+    trail: { name: string; url: string }[];
+    alternates?: { type: string; title: string; href: string }[];
+    feed?: boolean;
+  }): Promise<void> => {
+    const root = listing.at ? `${basePath}/${listing.at}` : basePath;
+    const rootDir = join(
+      outDir,
+      ...root.split("/").filter(Boolean),
+    );
+    const pages = Math.max(1, Math.ceil(listing.posts.length / PAGE_SIZE));
+    for (let page = 1; page <= pages; page += 1) {
+      const slice = listing.posts.slice(
+        (page - 1) * PAGE_SIZE,
+        page * PAGE_SIZE,
+      );
+      const path = page === 1 ? root : `${root}/page/${page}`;
+      const canonical = `${CHANNEL_ORIGIN[channel]}${path}`;
+      const prevHref =
+        page === 2 ? root : page > 2 ? `${root}/page/${page - 1}` : undefined;
+      const nextHref = page < pages ? `${root}/page/${page + 1}` : undefined;
+      const relLinks = [
+        prevHref
+          ? `<link rel="prev" href="${CHANNEL_ORIGIN[channel]}${prevHref}">`
+          : "",
+        nextHref
+          ? `<link rel="next" href="${CHANNEL_ORIGIN[channel]}${nextHref}">`
+          : "",
+      ].join("");
+      const title =
+        page === 1 ? listing.title : `${listing.title} — page ${page}`;
+      const pageDir =
+        page === 1 ? rootDir : join(rootDir, "page", String(page));
+      await mkdir(pageDir, { recursive: true });
+      await writeFile(
+        join(pageDir, "index.html"),
+        htmlPage({
+          title,
+          description: listing.description,
+          canonical,
+          channel,
+          alternates: page === 1 ? listing.alternates : undefined,
+          jsonld: [
+            ...withOrg({
+              "@context": "https://schema.org",
+              "@type": "Blog",
+              "@id": `${canonical}#blog`,
+              name: title,
+              description: listing.description,
+              url: canonical,
+            }),
+            breadcrumbs(canonical, listing.trail),
+          ],
+          headExtra: `${feedLinks(meta)}${relLinks}`,
+          chrome: chromeStamped,
+          layoutClass: "is-index",
+          leftRail: emptyRail(),
+          bodyEnd: navScript,
+          mainHtml: indexMain(
+            slice.map((p) => ({
+              title: p.title,
+              url: p.url,
+              date: p.date,
+              category: p.category,
+              excerpt: p.excerpt ?? "",
+              imageUrl: p.imageUrl,
+              author: p.author,
+              authorHref: p.author
+                ? `${basePath}/authors/${slugify(p.author)}`
+                : undefined,
+              categoryHref:
+                p.category && p.category !== "Uncategorized"
+                  ? `${basePath}/tags/${slugify(p.category)}`
+                  : undefined,
+            })),
+            filterBar(slice),
+            title,
+            { page, pages, prevHref, nextHref },
+          ),
         }),
-        breadcrumbs(indexUrl(channel), [
+      );
+      listingSitemap.push({ loc: canonical });
+    }
+    if (listing.feed)
+      await writeFile(
+        join(rootDir, "rss.xml"),
+        rss(
+          { channel, title: listing.title, description: listing.description },
+          listing.posts.flatMap((n) => {
+            const post = posts.find((p) => `${basePath}/${p.slug}` === n.url);
+            return post ? [{ ...post, channel }] : [];
+          }),
+        ),
+      );
+  };
+
+  await writeListing({
+    at: "",
+    title: host.title,
+    description: host.description,
+    posts: navPosts,
+    trail: [
+      { name: site.name, url: `${site.origin}/` },
+      { name: host.title, url: indexUrl(channel) },
+    ],
+    alternates: [
+      {
+        type: "text/markdown",
+        title: `${host.title} (Markdown)`,
+        href: `${basePath}/index.md`,
+      },
+      {
+        type: "text/plain",
+        title: `${host.title} (plain text)`,
+        href: `${basePath}/index.txt`,
+      },
+    ],
+  });
+
+  // Tags and authors are authored on every post but only ever drove a
+  // client-side filter; each term now has a crawlable archive with its own
+  // feed, and a directory page lists them.
+  const termsOf = (
+    pick: (p: FetchedPost) => string[],
+  ): { label: string; slug: string; posts: NavPost[] }[] => {
+    const byTerm = new Map<string, { label: string; posts: NavPost[] }>();
+    for (const p of posts) {
+      const nav = navPosts.find((n) => n.url === `${basePath}/${p.slug}`);
+      if (!nav || p.noIndex) continue;
+      for (const label of pick(p)) {
+        const trimmed = label.trim();
+        if (!trimmed) continue;
+        const slug = slugify(trimmed);
+        const bucket = byTerm.get(slug) ?? { label: trimmed, posts: [] };
+        bucket.posts.push(nav);
+        byTerm.set(slug, bucket);
+      }
+    }
+    return [...byTerm]
+      .map(([slug, bucket]) => ({ slug, label: bucket.label, posts: bucket.posts }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  };
+
+  const taxonomies: {
+    at: string;
+    heading: string;
+    noun: string;
+    terms: { label: string; slug: string; posts: NavPost[] }[];
+  }[] = [
+    {
+      at: "tags",
+      heading: `${host.title} — Tags`,
+      noun: "Tag",
+      terms: termsOf((p) => p.tags ?? []),
+    },
+    {
+      at: "authors",
+      heading: `${host.title} — Authors`,
+      noun: "Author",
+      terms: termsOf((p) => p.authors?.map((a) => a.name) ?? []),
+    },
+  ];
+
+  for (const taxonomy of taxonomies) {
+    if (taxonomy.terms.length === 0) continue;
+    for (const term of taxonomy.terms)
+      await writeListing({
+        at: `${taxonomy.at}/${term.slug}`,
+        title: `${term.label} — ${host.title}`,
+        description: `${taxonomy.noun === "Tag" ? "Posts tagged" : "Posts by"} ${term.label} in ${host.title}.`,
+        posts: term.posts,
+        trail: [
           { name: site.name, url: `${site.origin}/` },
           { name: host.title, url: indexUrl(channel) },
-        ]),
-      ],
-      headExtra: feedLinks(meta),
-      chrome: chromeStamped,
-      layoutClass: "is-index",
-      leftRail: emptyRail(),
-      bodyEnd: navScript,
-      mainHtml: indexMain(
-        navPosts.map((p) => ({
-          title: p.title,
-          url: p.url,
-          date: p.date,
-          category: p.category,
-          excerpt: p.excerpt ?? "",
-          imageUrl: p.imageUrl,
-          author: p.author,
-        })),
-        filterBar(navPosts),
-        host.title,
-      ),
-    }),
-  );
+          {
+            name: `${taxonomy.noun}s`,
+            url: `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}`,
+          },
+          {
+            name: term.label,
+            url: `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}/${term.slug}`,
+          },
+        ],
+        feed: true,
+      });
+
+    const dirUrl = `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}`;
+    const dirPath = join(
+      outDir,
+      ...`${basePath}/${taxonomy.at}`.split("/").filter(Boolean),
+    );
+    await mkdir(dirPath, { recursive: true });
+    await writeFile(
+      join(dirPath, "index.html"),
+      htmlPage({
+        title: taxonomy.heading,
+        description: `Every ${taxonomy.noun.toLowerCase()} in ${host.title}, with post counts.`,
+        canonical: dirUrl,
+        channel,
+        jsonld: [
+          ...withOrg({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "@id": `${dirUrl}#collection`,
+            name: taxonomy.heading,
+            url: dirUrl,
+          }),
+          breadcrumbs(dirUrl, [
+            { name: site.name, url: `${site.origin}/` },
+            { name: host.title, url: indexUrl(channel) },
+            { name: `${taxonomy.noun}s`, url: dirUrl },
+          ]),
+        ],
+        headExtra: feedLinks(meta),
+        chrome: chromeStamped,
+        leftRail: emptyRail(),
+        mainHtml: termIndexMain(
+          taxonomy.heading,
+          taxonomy.noun,
+          taxonomy.terms.map((t) => ({
+            label: t.label,
+            href: `${basePath}/${taxonomy.at}/${t.slug}`,
+            count: t.posts.length,
+          })),
+        ),
+      }),
+    );
+    listingSitemap.push({ loc: dirUrl });
+  }
 
   const indexEntries: IndexEntry[] = posts
     .filter((p) => !p.noIndex)
@@ -620,7 +821,10 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   await writeFile(join(dir, "rss.xml"), rss(meta, feedPosts));
   await writeFile(join(dir, "atom.xml"), atom(meta, feedPosts));
-  await writeFile(join(dir, "sitemap.xml"), sitemap(sitemapEntries));
+  await writeFile(
+    join(dir, "sitemap.xml"),
+    sitemap([...sitemapEntries, ...listingSitemap]),
+  );
   await writeFile(
     join(dir, "404.html"),
     notFoundHtml(chromeStamped, basePath, {

@@ -65,6 +65,15 @@ missing `.md`/`.txt`/`.xml`/`.json` answers in its own format instead of serving
 under a machine-readable URL. `SECTION_PREFIXES` in `lib/paths.ts` is duplicated for the
 Deno runtime; a test in `packages/seo` fails if it drifts from `CHANNEL_BASEPATH`.
 
+Every section bakes tag and author archives (`<section>/tags/<term>/`,
+`<section>/authors/<term>/`) with their own RSS and sitemap entries, plus a term
+directory at `<section>/tags/` and `<section>/authors/`. Listings paginate at 20 posts
+per page (`<section>/page/2/`) with `rel=prev`/`rel=next`.
+
+`bake:org` fails on dead internal links once every section is on disk; override with
+`ALLOW_BROKEN_LINKS=1`. Future-dated posts stay out until a bake runs after their date,
+so scheduling needs a periodic or webhook-driven build.
+
 ## Studio
 
 ```bash
