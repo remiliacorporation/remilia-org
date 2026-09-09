@@ -20,8 +20,10 @@ pnpm install
 pnpm dev              # Studio — http://localhost:3333
 pnpm validate
 pnpm typecheck
-pnpm bake             # bake:corp then bake:org then bake:fx
-cd hosts && node --import tsx --test bake-corp.test.ts bake-fx.test.ts
+pnpm test
+pnpm bake             # remilia.org: bake:corp then bake:org then bake:fx
+pnpm bake:com         # remilia.com blogs → deploy-com/{a/news,a/events}
+pnpm bake:net         # remilia.net blogs → deploy-net/{updates,blog}
 ```
 
 Sanity: project `8x9419lh`, dataset `production`.
@@ -31,10 +33,19 @@ The Studio (`sanity`, `react`, `styled-components`) is a **devDependency**: `pnp
 production install is 30MB against 501MB for the full tree, so `netlify.toml` prunes
 before baking. Keep bake-time needs (`tsx`, `@sanity/client`) in `dependencies`.
 
-Each host serves its own default theme, baked onto `<html>` as `data-hue`/`data-dots`/
-`data-scheme` in `SITE_META` (`packages/seo/src/site.ts`): org red on paper with a coarse
-lattice following the reader's OS scheme, com dark red with no lattice, net light blue
-with a dense lattice. A stored reader preference still wins over the host default.
+Every host bakes from `hosts/core/bake-host.ts` — same credentials, guards and
+stylesheets — differing only in sections and output directory. `hosts/{org,com,net}/bake.ts`
+are those three declarations. Section copy and chrome live in `hosts/core/sections.ts`;
+the theme layer is `hosts/core/theme.css`, shared by all three.
+
+com and net bake **blog sections only** — their storefront and product pages are not built
+here — so their output is a fragment of a larger site and the internal-link check is off
+for them (nothing under `deploy-com/` can satisfy `/favicon.ico`). Each needs its own
+Netlify site with `publish = deploy-com` / `deploy-net` and the matching bake command.
+
+Each host pins a default theme on `<html>` (`data-hue`/`data-dots`/`data-scheme`) from
+`SITE_META` in `packages/seo/src/site.ts`: org red, light, sparse lattice; com red, dark,
+no lattice; net blue, light, dense lattice. A stored reader preference still wins.
 
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
 `bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated

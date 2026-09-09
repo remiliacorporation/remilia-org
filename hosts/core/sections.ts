@@ -1,8 +1,10 @@
 import type { BakeOptions, Chrome } from "@remilia/renderer";
 import {
   CHANNEL_BASEPATH,
+  CHANNEL_HOST,
   CHANNEL_PATH_LABEL,
   type Channel,
+  type HostId,
 } from "@remilia/seo";
 
 const SECTION_META: Record<
@@ -95,21 +97,37 @@ const SECTION_META: Record<
   },
 };
 
+/** Wordmark and root link per host, so a section wears its own brand. */
+const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = {
+  org: {
+    label: "REMILIA CORPORATION",
+    root: "remilia.org",
+    rootUrl: "https://remilia.org/",
+  },
+  com: { label: "REMILIA", root: "remilia.com", rootUrl: "https://remilia.com/" },
+  net: {
+    label: "REMILIANET",
+    root: "remilia.net",
+    rootUrl: "https://www.remilia.net/",
+  },
+};
+
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const meta = SECTION_META[channel];
+  const brand = BRAND[CHANNEL_HOST[channel]];
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
-<a class="site-title" href="${base}">REMILIA CORPORATION — ${meta.short}</a>
+<a class="site-title" href="${base}">${brand.label} — ${meta.short}</a>
 <hr class="nav-rule">
 <nav aria-label="Site">
-<a href="https://remilia.org/">remilia.org</a> — <a href="${base}">Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}">Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 </header>`,
     footer: `<footer>
 <hr>
-<p>© Remilia Corporation · <a href="https://remilia.org/">remilia.org</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
+<p>© Remilia Corporation · <a href="${brand.rootUrl}">${brand.root}</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
 </footer>`,
   };
 }

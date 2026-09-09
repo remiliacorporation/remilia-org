@@ -7,6 +7,9 @@
   "scripts": {
     "bake:corp": "node --import tsx bake-corp.ts",
     "bake:org": "node --import tsx org/bake.ts",
+    "bake:com": "node --import tsx com/bake.ts",
+    "bake:net": "node --import tsx net/bake.ts",
+    "bake:blogs": "pnpm bake:com && pnpm bake:net",
     "bake:fx": "node --import tsx bake-fx.ts",
     "bake": "pnpm bake:corp && pnpm bake:org && pnpm bake:fx",
     "import:md": "node --import tsx md-import.ts",
@@ -24,7 +27,8 @@
     "polish:posts": "node --import tsx polish-posts.ts",
     "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
-    "preview": "node --import tsx preview.ts org /tmp/org-bake --serve"
+    "preview": "node --import tsx preview.ts org /tmp/org-bake --serve",
+    "test": "node --import tsx --test bake-corp.test.ts bake-fx.test.ts host-bake.test.ts"
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",

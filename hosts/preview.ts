@@ -22,7 +22,7 @@ import {
   type PTBlock,
 } from "@remilia/renderer";
 import { blogPosting, canonicalFor, feedLinks, indexUrl } from "@remilia/seo";
-import { chrome, host } from "./org/chrome";
+import { chrome, host } from "./core/sections";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = process.argv[3] ?? "/tmp/press-preview";
@@ -278,7 +278,7 @@ const bodyHtml = portableTextToHtml(BODY, {
 await cp(join(here, "../deploy"), outDir, { recursive: true });
 await mkdir(join(outDir, "press", post.slug), { recursive: true });
 const css = await Promise.all(
-  [join(here, "core/blog-core.css"), join(here, "org/theme.css")].map((f) =>
+  [join(here, "core/blog-core.css"), join(here, "core/theme.css")].map((f) =>
     readFile(f, "utf8"),
   ),
 );
