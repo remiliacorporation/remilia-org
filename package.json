@@ -15,16 +15,14 @@
     "test": "pnpm -r test",
     "check": "pnpm typecheck && pnpm test"
   },
-  "dependencies": {
+  "devDependencies": {
     "@sanity/icons": "^5.2.1",
     "@sanity/vision": "^6.11.0",
+    "@types/react": "^19.2.18",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sanity": "^6.11.0",
-    "styled-components": "^6.1.18"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.18",
+    "styled-components": "^6.1.18",
     "typescript": "^5.8.2"
   },
   "packageManager": "pnpm@10.27.0",

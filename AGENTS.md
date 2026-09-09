@@ -26,6 +26,11 @@ cd hosts && node --import tsx --test bake-corp.test.ts bake-fx.test.ts
 
 Sanity: project `8x9419lh`, dataset `production`.
 
+The Studio (`sanity`, `react`, `styled-components`) is a **devDependency**: `pnpm dev`,
+`validate`, `typecheck` and `deploy:studio` need it, the bake never imports it. A
+production install is 30MB against 501MB for the full tree, so `netlify.toml` prunes
+before baking. Keep bake-time needs (`tsx`, `@sanity/client`) in `dependencies`.
+
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
 `bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated
 literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
