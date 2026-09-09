@@ -1,7 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { ORG_SECTIONS } from "@remilia/seo";
-import { assertDatasetReadable, bake } from "@remilia/renderer";
+import {
+  assertDatasetReadable,
+  bake,
+  checkInternalLinks,
+} from "@remilia/renderer";
 import { chromeFor, hostFor } from "./chrome";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,6 +57,25 @@ for (const channel of ORG_SECTIONS) {
   );
 }
 console.log(`baked ${total} org pages total`);
+
+// Every section is on disk now, so cross-section links can be resolved.
+const broken = await checkInternalLinks(outDir, ["https://remilia.org"]);
+if (broken.length) {
+  const shown = broken
+    .slice(0, 20)
+    .map((b) => `  ${b.page} → ${b.href}`)
+    .join("\n");
+  const more =
+    broken.length > 20 ? `\n  …and ${broken.length - 20} more` : "";
+  if (process.env.ALLOW_BROKEN_LINKS === "1")
+    console.warn(`${broken.length} dead internal links:\n${shown}${more}`);
+  else
+    throw new Error(
+      `${broken.length} dead internal links — nothing links anywhere useful:\n${shown}${more}\n` +
+        `Fix them, or set ALLOW_BROKEN_LINKS=1 to publish anyway.`,
+    );
+}
+console.log(`internal links resolve across ${ORG_SECTIONS.length} sections`);
 }
 
 main().catch((error: unknown) => {

@@ -475,6 +475,47 @@ html[data-scheme="dark"] .theme-mode::after {
   text-transform: uppercase;
   white-space: nowrap;
 }
+.pager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  padding: var(--space-xs);
+  text-transform: uppercase;
+}
+.pager .pager-prev {
+  justify-self: start;
+}
+.pager .pager-at {
+  justify-self: center;
+  color: var(--muted);
+}
+.pager .pager-next {
+  justify-self: end;
+}
+.pager a {
+  font-weight: var(--weight-strong);
+  text-decoration: none;
+}
+.pager a:hover {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
+.term-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.term-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  border-bottom: var(--border);
+  padding: var(--grid) 0;
+}
+.term-list .term-count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .mast-tools .mast-toc:hover,
 .mast-tools button:hover {
   background: var(--ink);
