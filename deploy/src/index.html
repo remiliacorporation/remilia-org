@@ -1,387 +1,947 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
-<head>
-<!-- @include _partials/head-common.html -->
-<title>Remilia Corporation — remilia.org</title>
-<meta name="description" content="Corporate website of Remilia Corporation. Press, literature, careers, and contact.">
-<link rel="canonical" href="https://remilia.org/">
-<link rel="home" href="https://remilia.org/">
-<link rel="preconnect" href="https://w.soundcloud.com">
-<link rel="preconnect" href="https://www.youtube-nocookie.com">
-<meta property="og:title" content="Remilia Corporation — remilia.org">
-<meta property="og:description" content="Corporate website of Remilia Corporation. Press, literature, careers, and contact.">
-<meta property="og:url" content="https://remilia.org/">
-<meta property="og:site_name" content="Remilia Corporation">
-<meta property="og:image:alt" content="Remilia Corporation">
-<meta name="twitter:url" content="https://remilia.org/">
-<meta name="twitter:title" content="Remilia Corporation — remilia.org">
-<meta name="twitter:description" content="Corporate website of Remilia Corporation. Press, literature, careers, and contact.">
-<meta name="twitter:image:alt" content="Remilia Corporation">
-<script type="application/ld+json">
-{
-"@context": "https://schema.org",
-"@graph": [
-{
-"@type": "Organization",
-"@id": "https://remilia.org/#organization",
-"name": "Remigumi-guchi Digital, LLC",
-"legalName": "Remigumi-guchi Digital, LLC",
-"url": "https://remilia.org/",
-"email": "corporate@remilia.org",
-"logo": {
-"@type": "ImageObject",
-"url": "https://remilia.org/assets/logo.png",
-"width": 2248,
-"height": 1448
-},
-"description": "Remigumi-guchi Digital, LLC is the parent organization of Remilia Corporation (remilia.com), a multidisciplinary art-industrial creative studio. Visit remilia.com for Remilia Corporation.",
-"sameAs": [
-"https://wiki.remilia.org/Remilia_Corporation",
-"https://remilia.com/",
-"https://www.remilia.net/",
-"https://x.com/remiliacorp333",
-"https://www.instagram.com/remilia.corporation/",
-"https://www.youtube.com/@remiliacorp",
-"https://www.tiktok.com/@remilia.corp",
-"https://soundcloud.com/remiliaco",
-"https://remiliacorporation.bandcamp.com/",
-"https://discord.gg/milady"
-],
-"contactPoint": {
-"@type": "ContactPoint",
-"email": "corporate@remilia.org",
-"contactType": "customer service",
-"availableLanguage": ["en"]
-},
-"subOrganization": [
-{"@type": "Organization", "name": "Remilia Corporation", "url": "https://remilia.com/"},
-{"@type": "Organization", "name": "Remilia Atelier", "url": "https://remilia.com/"},
-{"@type": "Organization", "name": "Remilia House", "url": "https://house.remilia.org/"},
-{"@type": "Organization", "name": "CULT, INC.", "url": "https://cult.inc/"},
-{"@type": "Organization", "name": "Remilia Records", "url": "https://remiliacorporation.bandcamp.com/"}
-]
-},
-{
-"@type": "WebSite",
-"@id": "https://remilia.org/#website",
-"name": "Remilia Corporation",
-"url": "https://remilia.org/",
-"inLanguage": "en",
-"description": "Public website of Remilia Corporation, published by Remigumi-guchi Digital, LLC.",
-"publisher": {"@id": "https://remilia.org/#organization"}
-},
-{
-"@type": "WebPage",
-"@id": "https://remilia.org/#webpage",
-"url": "https://remilia.org/",
-"name": "Welcome to Remilia Corporation!",
-"description": "Corporate website of Remilia Corporation. Press, literature, careers, and contact.",
-"inLanguage": "en",
-"isAccessibleForFree": true,
-"isPartOf": {"@id": "https://remilia.org/#website"},
-"about": {"@id": "https://remilia.org/#organization"},
-"primaryImageOfPage": {
-"@type": "ImageObject",
-"url": "https://remilia.org/assets/og.png",
-"width": 1200,
-"height": 630
-},
-"mainEntity": {"@id": "https://remilia.org/#organization"}
-},
-{
-"@type": "ItemList",
-"@id": "https://remilia.org/#directory",
-"name": "Remilia directory",
-"itemListOrder": "https://schema.org/ItemListOrderAscending",
-"numberOfItems": 10,
-"itemListElement": [
-{"@type": "ListItem", "position": 1, "name": "Remilia Corporation", "url": "https://remilia.com/"},
-{"@type": "ListItem", "position": 2, "name": "Remilia Atelier", "url": "https://remilia.com/"},
-{"@type": "ListItem", "position": 3, "name": "Milady Gift Shop", "url": "https://store.remilia.org/"},
-{"@type": "ListItem", "position": 4, "name": "Remilia House", "url": "https://house.remilia.org/"},
-{"@type": "ListItem", "position": 5, "name": "Remilia Records", "url": "https://remiliacorporation.bandcamp.com/"},
-{"@type": "ListItem", "position": 6, "name": "Milady Maker", "url": "https://miladymaker.net/"},
-{"@type": "ListItem", "position": 7, "name": "CULT, INC.", "url": "https://cult.inc/"},
-{"@type": "ListItem", "position": 8, "name": "Careers", "url": "https://remilia.org/careers"},
-{"@type": "ListItem", "position": 9, "name": "About", "url": "https://remilia.org/about"},
-{"@type": "ListItem", "position": 10, "name": "Contact", "url": "https://remilia.org/contact"}
-]
-}
-]
-}
-</script>
-</head>
-<body class="page-home">
-<a class="skip" href="#content">Skip to content</a>
+  <head>
+    <!-- @include _partials/head-common.html -->
+    <title>Remilia Corporation — remilia.org</title>
+    <meta
+      name="description"
+      content="Corporate website of Remilia Corporation. Press, literature, careers, and contact."
+    />
+    <link rel="canonical" href="https://remilia.org/" />
+    <link rel="home" href="https://remilia.org/" />
+    <link rel="preconnect" href="https://w.soundcloud.com" />
+    <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+    <meta property="og:title" content="Remilia Corporation — remilia.org" />
+    <meta
+      property="og:description"
+      content="Corporate website of Remilia Corporation. Press, literature, careers, and contact."
+    />
+    <meta property="og:url" content="https://remilia.org/" />
+    <meta property="og:site_name" content="Remilia Corporation" />
+    <meta property="og:image:alt" content="Remilia Corporation" />
+    <meta name="twitter:url" content="https://remilia.org/" />
+    <meta name="twitter:title" content="Remilia Corporation — remilia.org" />
+    <meta
+      name="twitter:description"
+      content="Corporate website of Remilia Corporation. Press, literature, careers, and contact."
+    />
+    <meta name="twitter:image:alt" content="Remilia Corporation" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://remilia.org/#organization",
+            "name": "Remigumi-guchi Digital, LLC",
+            "legalName": "Remigumi-guchi Digital, LLC",
+            "url": "https://remilia.org/",
+            "email": "corporate@remilia.org",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://remilia.org/assets/logo.png",
+              "width": 2248,
+              "height": 1448
+            },
+            "description": "Remigumi-guchi Digital, LLC is the parent organization of Remilia Corporation (remilia.com), a multidisciplinary art-industrial creative studio. Visit remilia.com for Remilia Corporation.",
+            "sameAs": [
+              "https://wiki.remilia.org/Remilia_Corporation",
+              "https://remilia.com/",
+              "https://www.remilia.net/",
+              "https://x.com/remiliacorp333",
+              "https://www.instagram.com/remilia.corporation/",
+              "https://www.youtube.com/@remiliacorp",
+              "https://www.tiktok.com/@remilia.corp",
+              "https://soundcloud.com/remiliaco",
+              "https://remiliacorporation.bandcamp.com/",
+              "https://discord.gg/milady"
+            ],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "email": "corporate@remilia.org",
+              "contactType": "customer service",
+              "availableLanguage": ["en"]
+            },
+            "subOrganization": [
+              {
+                "@type": "Organization",
+                "name": "Remilia Corporation",
+                "url": "https://remilia.com/"
+              },
+              {
+                "@type": "Organization",
+                "name": "Remilia Atelier",
+                "url": "https://remilia.com/"
+              },
+              {
+                "@type": "Organization",
+                "name": "Remilia House",
+                "url": "https://house.remilia.org/"
+              },
+              {
+                "@type": "Organization",
+                "name": "CULT, INC.",
+                "url": "https://cult.inc/"
+              },
+              {
+                "@type": "Organization",
+                "name": "Remilia Records",
+                "url": "https://remiliacorporation.bandcamp.com/"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://remilia.org/#website",
+            "name": "Remilia Corporation",
+            "url": "https://remilia.org/",
+            "inLanguage": "en",
+            "description": "Public website of Remilia Corporation, published by Remigumi-guchi Digital, LLC.",
+            "publisher": { "@id": "https://remilia.org/#organization" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://remilia.org/#webpage",
+            "url": "https://remilia.org/",
+            "name": "Welcome to Remilia Corporation!",
+            "description": "Corporate website of Remilia Corporation. Press, literature, careers, and contact.",
+            "inLanguage": "en",
+            "isAccessibleForFree": true,
+            "isPartOf": { "@id": "https://remilia.org/#website" },
+            "about": { "@id": "https://remilia.org/#organization" },
+            "primaryImageOfPage": {
+              "@type": "ImageObject",
+              "url": "https://remilia.org/assets/og.png",
+              "width": 1200,
+              "height": 630
+            },
+            "mainEntity": { "@id": "https://remilia.org/#organization" }
+          },
+          {
+            "@type": "ItemList",
+            "@id": "https://remilia.org/#directory",
+            "name": "Remilia directory",
+            "itemListOrder": "https://schema.org/ItemListOrderAscending",
+            "numberOfItems": 10,
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Remilia Corporation",
+                "url": "https://remilia.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Remilia Atelier",
+                "url": "https://remilia.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Milady Gift Shop",
+                "url": "https://store.remilia.org/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "Remilia House",
+                "url": "https://house.remilia.org/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "name": "Remilia Records",
+                "url": "https://remiliacorporation.bandcamp.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "name": "Milady Maker",
+                "url": "https://miladymaker.net/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "name": "CULT, INC.",
+                "url": "https://cult.inc/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 8,
+                "name": "Careers",
+                "url": "https://remilia.org/careers"
+              },
+              {
+                "@type": "ListItem",
+                "position": 9,
+                "name": "About",
+                "url": "https://remilia.org/about"
+              },
+              {
+                "@type": "ListItem",
+                "position": 10,
+                "name": "Contact",
+                "url": "https://remilia.org/contact"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body class="page-home">
+    <a class="skip" href="#content">Skip to content</a>
 
-<!-- @include _partials/fx-svg.html -->
+    <!-- @include _partials/fx-svg.html -->
 
+    <a class="wiki-float hot-wiki" href="https://wiki.remilia.org/">
+      <img
+        class="logo-wiki"
+        src="/assets/remilia-wiki.gif"
+        alt=""
+        width="135"
+        height="135"
+        decoding="async"
+        draggable="false"
+      />
+      <span class="logo-tag">Remilia Community Wiki</span>
+    </a>
 
-<a class="wiki-float hot-wiki" href="https://wiki.remilia.org/">
-  <img class="logo-wiki" src="/assets/remilia-wiki.gif" alt="" width="135" height="135" decoding="async" draggable="false">
-  <span class="logo-tag">Remilia Community Wiki</span>
-</a>
+    <div class="layer-wrap" id="layer-wrap">
+      <div class="layer-base">
+        <a
+          class="home-crest"
+          href="/assets/remilia-crest.png"
+          aria-label="Remilia crest, full color"
+        >
+          <span class="ht"
+            ><span class="ht-map"
+              ><img
+                src="/assets/remilia-crest.png"
+                alt=""
+                width="64"
+                height="64" /><span
+                class="ht-ink"
+                aria-hidden="true"
+              ></span></span
+          ></span>
+        </a>
+        <header>
+          <h1 id="top"><a href="#top">Welcome to Remilia Corporation!</a></h1>
+          <table role="presentation">
+            <tr>
+              <td class="text">
+                <em
+                  >You are standing at the virtual doorstep of the
+                  art-industrial planetary conglomerate corporation‑as‑artwork
+                  known as
+                  <a class="inline hot-corp" href="https://remilia.com/"
+                    >Remilia Corporation</a
+                  >, stewards of the New Internet —
+                  <a class="inline hot-net" href="https://remilia.net"
+                    >RemiliaNET</a
+                  >.</em
+                >
+              </td>
+            </tr>
+          </table>
+        </header>
 
-<div class="layer-wrap" id="layer-wrap">
+        <main id="content" tabindex="-1">
+          <p class="visually-hidden">
+            We are an embodiment - We're God's little warriors, We're network
+            kommandos. We're whitepilled. We're lawyered up, in the court of
+            clout. Nothing we can do can be cringe, except when it is and then
+            we don't care, we don't care. We're live laugh lovers, and we put
+            all our points into karma, charm and beauty. We're cDJs, we're
+            fashion models, we're microdosers, and supplement freaks, We're
+            lindy, we're Wired, we're Not in Employment Education or Training.
+            We're viral cryptoxillionaires. We don't have to try. We're the new
+            art. And so we self-organized into Remilia. Remilia is an
+            institution. Remilia, is a self-organization. Remilia is a lifestyle
+            brand. Remilia, is a master-planned community. Remilia is an
+            investment fund. Remilia is an artist's colony. Remilia is a
+            crowdfunded video game. Remilia is an autonomous smart contract.
+            Remilia is an independent record label. Remilia is a community
+            center for the digital village. Remilia is a manifesto. Remilia will
+            save the internet.
+          </p>
 
-<div class="layer-base">
+          <div class="logo-nav">
+            <div class="logo-row">
+              <a class="logo-link hot-corp" href="https://remilia.com/">
+                <img
+                  class="logo"
+                  src="/assets/logo.png"
+                  alt=""
+                  width="250"
+                  height="161"
+                  decoding="async"
+                  fetchpriority="high"
+                />
+                <span class="logo-tag logo-tag-l">Remilia Corporation</span>
+              </a>
+              <a class="logo-link hot-net" href="https://remilia.net">
+                <img
+                  class="logo-word"
+                  src="/assets/remilia-wordmark.png"
+                  alt=""
+                  width="704"
+                  height="391"
+                  decoding="async"
+                />
+                <span class="logo-tag logo-tag-r">RemiliaNET</span>
+              </a>
+            </div>
+          </div>
 
-<a class="home-crest" href="/assets/remilia-crest.png" aria-label="Remilia crest, full color">
-<span class="ht"><span class="ht-map"><img src="/assets/remilia-crest.png" alt="" width="64" height="64"><span class="ht-ink" aria-hidden="true"></span></span></span>
-</a>
-<header>
-<h1 id="top"><a href="#top">Welcome to Remilia Corporation!</a></h1>
-<table role="presentation">
-<tr><td class="text"><em>You are standing at the virtual doorstep of the art-industrial planetary conglomerate corporation‑as‑artwork known as <a class="inline hot-corp" href="https://remilia.com/">Remilia Corporation</a>, stewards of the New Internet — <a class="inline hot-net" href="https://remilia.net">RemiliaNET</a>.</em></td></tr>
-</table>
-</header>
+          <table role="presentation">
+            <tr>
+              <td class="marquee">
+                <a
+                  class="scroll-wrap"
+                  id="marquee-base"
+                  href="/about"
+                  aria-label="About us"
+                >
+                  <div class="marquee-cap">About us:</div>
+                  <div class="scroll-track" aria-hidden="true">
+                    <span class="scroll-copy"
+                      >We are an embodiment - We're God's little warriors, We're
+                      network kommandos. We're whitepilled. We're lawyered up,
+                      in the court of clout. Nothing we can do can be cringe,
+                      except when it is and then we don't care, we don't care.
+                      We're live laugh lovers, and we put all our points into
+                      karma, charm and beauty. We're cDJs, we're fashion models,
+                      we're microdosers, and supplement freaks, We're lindy,
+                      we're Wired, we're Not in Employment Education or
+                      Training. We're viral cryptoxillionaires. We don't have to
+                      try. We're the new art. And so we self-organized into
+                      Remilia. Remilia is an institution. Remilia, is a
+                      self-organization. Remilia is a lifestyle brand. Remilia,
+                      is a master-planned community. Remilia is an investment
+                      fund. Remilia is an artist's colony. Remilia is a
+                      crowdfunded video game. Remilia is an autonomous smart
+                      contract. Remilia is an independent record label. Remilia
+                      is a community center for the digital village. Remilia is
+                      a manifesto. Remilia will save the
+                      internet.&emsp;&emsp;&emsp;&emsp;</span
+                    ><span class="scroll-copy"
+                      >We are an embodiment - We're God's little warriors, We're
+                      network kommandos. We're whitepilled. We're lawyered up,
+                      in the court of clout. Nothing we can do can be cringe,
+                      except when it is and then we don't care, we don't care.
+                      We're live laugh lovers, and we put all our points into
+                      karma, charm and beauty. We're cDJs, we're fashion models,
+                      we're microdosers, and supplement freaks, We're lindy,
+                      we're Wired, we're Not in Employment Education or
+                      Training. We're viral cryptoxillionaires. We don't have to
+                      try. We're the new art. And so we self-organized into
+                      Remilia. Remilia is an institution. Remilia, is a
+                      self-organization. Remilia is a lifestyle brand. Remilia,
+                      is a master-planned community. Remilia is an investment
+                      fund. Remilia is an artist's colony. Remilia is a
+                      crowdfunded video game. Remilia is an autonomous smart
+                      contract. Remilia is an independent record label. Remilia
+                      is a community center for the digital village. Remilia is
+                      a manifesto. Remilia will save the
+                      internet.&emsp;&emsp;&emsp;&emsp;</span
+                    >
+                  </div>
+                </a>
+              </td>
+            </tr>
+          </table>
 
-<main id="content" tabindex="-1">
+          <hr />
 
-<p class="visually-hidden">We are an embodiment - We're God's little warriors, We're network kommandos. We're whitepilled. We're lawyered up, in the court of clout. Nothing we can do can be cringe, except when it is and then we don't care, we don't care. We're live laugh lovers, and we put all our points into karma, charm and beauty. We're cDJs, we're fashion models, we're microdosers, and supplement freaks, We're lindy, we're Wired, we're Not in Employment Education or Training. We're viral cryptoxillionaires. We don't have to try. We're the new art. And so we self-organized into Remilia. Remilia is an institution. Remilia, is a self-organization. Remilia is a lifestyle brand. Remilia, is a master-planned community. Remilia is an investment fund. Remilia is an artist's colony. Remilia is a crowdfunded video game. Remilia is an autonomous smart contract. Remilia is an independent record label. Remilia is a community center for the digital village. Remilia is a manifesto. Remilia will save the internet.</p>
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="mission">
+                    <a href="#mission">REMILIA CORPORATE MISSION</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="pad">
+                  Remilia’s corporate mission is saving the internet.<br /><br />We’re
+                  building RemiliaNET, a social platform inspired by the
+                  original vision of the internet pioneered in the 70’s that the
+                  world never got to experience.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-<div class="logo-nav">
-<div class="logo-row">
-  <a class="logo-link hot-corp" href="https://remilia.com/">
-    <img class="logo" src="/assets/logo.png" alt="" width="250" height="161" decoding="async" fetchpriority="high">
-    <span class="logo-tag logo-tag-l">Remilia Corporation</span>
-  </a>
-  <a class="logo-link hot-net" href="https://remilia.net">
-    <img class="logo-word" src="/assets/remilia-wordmark.png" alt="" width="704" height="391" decoding="async">
-    <span class="logo-tag logo-tag-r">RemiliaNET</span>
-  </a>
-</div>
-</div>
+          <section>
+            <table class="inspo-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="inspirations">
+                    <a href="#inspirations">INSPIRATIONS</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="inspo-cell">
+                  <a
+                    class="inspo-frame outlink"
+                    href="https://xanadu.com.au/ted/XU/xanastrux.html"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    aria-label="Ted Nelson’s Xanadu"
+                  >
+                    <span class="ht"
+                      ><span class="ht-map"
+                        ><img
+                          class="inspo-photo"
+                          src="/assets/inspo/xanadu.png"
+                          alt=""
+                          width="900"
+                          height="900" /><span
+                          class="ht-ink"
+                          aria-hidden="true"
+                        ></span></span
+                    ></span>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td class="inspo-row">
+                  <a
+                    class="inspo outlink is-on"
+                    data-inspo="xanadu"
+                    href="https://xanadu.com.au/ted/XU/xanastrux.html"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Ted Nelson’s <span class="inspo-work">Xanadu</span></a
+                  >
+                  /
+                  <a
+                    class="inspo outlink"
+                    data-inspo="semantic"
+                    href="http://cogweb.ucla.edu/crp/Media/2001-05-05_SemanticWeb.html"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Tim Berners-Lee’s
+                    <span class="inspo-work">Semantic Web</span></a
+                  >
+                  /
+                  <a
+                    class="inspo outlink"
+                    data-inspo="memex"
+                    href="https://www.w3.org/History/1945/vbush/vbush-all.shtml"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Vannevar Bush’s
+                    <span class="inspo-work">Exocortex</span></a
+                  >
+                  /
+                  <a
+                    class="inspo outlink"
+                    data-inspo="catalog"
+                    href="https://wholeearth.info/p/whole-earth-catalog-fall-1968"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Stewart Brand’s
+                    <span class="inspo-work">Whole Earth Catalog</span></a
+                  >
+                  /
+                  <a
+                    class="inspo outlink"
+                    data-inspo="webs"
+                    href="https://fifthestate.anarchistlibraries.net/library/366-fall-2004-learning-webs"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Ivan Illich’s
+                    <span class="inspo-work">Learning Webs</span></a
+                  >
+                  /
+                  <a
+                    class="inspo outlink"
+                    data-inspo="pattern"
+                    href="https://patternlanguage.cc/"
+                    target="_blank"
+                    rel="external noopener noreferrer"
+                    >Christopher Alexander’s
+                    <span class="inspo-work">Pattern Language</span></a
+                  >
+                </td>
+              </tr>
+            </table>
+          </section>
 
-<table role="presentation">
-<tr><td class="marquee">
-<a class="scroll-wrap" id="marquee-base" href="/about" aria-label="About us">
-<div class="marquee-cap">About us:</div>
-<div class="scroll-track" aria-hidden="true">
-<span class="scroll-copy">We are an embodiment - We're God's little warriors, We're network kommandos. We're whitepilled. We're lawyered up, in the court of clout. Nothing we can do can be cringe, except when it is and then we don't care, we don't care. We're live laugh lovers, and we put all our points into karma, charm and beauty. We're cDJs, we're fashion models, we're microdosers, and supplement freaks, We're lindy, we're Wired, we're Not in Employment Education or Training. We're viral cryptoxillionaires. We don't have to try. We're the new art. And so we self-organized into Remilia. Remilia is an institution. Remilia, is a self-organization. Remilia is a lifestyle brand. Remilia, is a master-planned community. Remilia is an investment fund. Remilia is an artist's colony. Remilia is a crowdfunded video game. Remilia is an autonomous smart contract. Remilia is an independent record label. Remilia is a community center for the digital village. Remilia is a manifesto. Remilia will save the internet.&emsp;&emsp;&emsp;&emsp;</span><span class="scroll-copy">We are an embodiment - We're God's little warriors, We're network kommandos. We're whitepilled. We're lawyered up, in the court of clout. Nothing we can do can be cringe, except when it is and then we don't care, we don't care. We're live laugh lovers, and we put all our points into karma, charm and beauty. We're cDJs, we're fashion models, we're microdosers, and supplement freaks, We're lindy, we're Wired, we're Not in Employment Education or Training. We're viral cryptoxillionaires. We don't have to try. We're the new art. And so we self-organized into Remilia. Remilia is an institution. Remilia, is a self-organization. Remilia is a lifestyle brand. Remilia, is a master-planned community. Remilia is an investment fund. Remilia is an artist's colony. Remilia is a crowdfunded video game. Remilia is an autonomous smart contract. Remilia is an independent record label. Remilia is a community center for the digital village. Remilia is a manifesto. Remilia will save the internet.&emsp;&emsp;&emsp;&emsp;</span>
-</div>
-</a>
-</td></tr>
-</table>
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="new-internet">
+                    <a href="#new-internet">THE NEW INTERNET</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="pad">
+                  Remilia’s new internet recognizes that the new city is the
+                  timeline and the chatroom is the contemporary third place.
+                  That curation is creative expression, and intellectualism is a
+                  group sport. That the future of the internet—of memory and
+                  communication—is realtime, multiplayer, hypertextual. That the
+                  next internet is not a new internet, but the oldest internet,
+                  an internet that was dreamed of but never delivered—yet.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-<hr>
+          <table class="apply-team" role="presentation">
+            <tr>
+              <td><a href="/careers">Apply to team</a></td>
+            </tr>
+          </table>
 
-<section>
-<table class="values-box" role="presentation">
-<tr><th><h2 id="mission"><a href="#mission">REMILIA CORPORATE MISSION</a></h2></th></tr>
-<tr><td class="pad">Remilia’s corporate mission is saving the internet.<br><br>We’re building RemiliaNET, a social platform inspired by the original vision of the internet pioneered in the 70’s that the world never got to experience.</td></tr>
-</table>
-</section>
+          <hr />
 
-<section>
-<table class="inspo-box" role="presentation">
-<tr><th><h2 id="inspirations"><a href="#inspirations">INSPIRATIONS</a></h2></th></tr>
-<tr><td class="inspo-cell">
-<a class="inspo-frame" href="https://xanadu.com.au/ted/XU/xanastrux.html" target="_blank" rel="noopener noreferrer" aria-label="Ted Nelson’s Xanadu">
-<span class="ht"><span class="ht-map"><img class="inspo-photo" src="/assets/inspo/xanadu.png" alt="" width="900" height="900"><span class="ht-ink" aria-hidden="true"></span></span></span>
-</a>
-</td></tr>
-<tr><td class="inspo-row"><a class="inspo is-on" data-inspo="xanadu" href="https://xanadu.com.au/ted/XU/xanastrux.html" target="_blank" rel="noopener noreferrer">Ted Nelson’s <span class="inspo-work">Xanadu</span></a> / <a class="inspo" data-inspo="semantic" href="http://cogweb.ucla.edu/crp/Media/2001-05-05_SemanticWeb.html" target="_blank" rel="noopener noreferrer">Tim Berners-Lee’s <span class="inspo-work">Semantic Web</span></a> / <a class="inspo" data-inspo="memex" href="https://www.w3.org/History/1945/vbush/vbush-all.shtml" target="_blank" rel="noopener noreferrer">Vannevar Bush’s <span class="inspo-work">Exocortex</span></a> / <a class="inspo" data-inspo="catalog" href="https://wholeearth.info/p/whole-earth-catalog-fall-1968" target="_blank" rel="noopener noreferrer">Stewart Brand’s <span class="inspo-work">Whole Earth Catalog</span></a> / <a class="inspo" data-inspo="webs" href="https://fifthestate.anarchistlibraries.net/library/366-fall-2004-learning-webs" target="_blank" rel="noopener noreferrer">Ivan Illich’s <span class="inspo-work">Learning Webs</span></a> / <a class="inspo" data-inspo="pattern" href="https://patternlanguage.cc/" target="_blank" rel="noopener noreferrer">Christopher Alexander’s <span class="inspo-work">Pattern Language</span></a></td></tr>
-</table>
-</section>
+          <nav aria-labelledby="network">
+            <table class="link-grid" role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="network">
+                    <a href="#network"
+                      ><span lang="ja">グローバルネットワーク</span><br />GLOBAL
+                      NETWORK</a
+                    >
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://x.com/remiliacorp333"
+                    >Twitter</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://www.instagram.com/remilia.corporation/"
+                    >Instagram</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://www.tiktok.com/@remilia.corp"
+                    >TikTok</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://soundcloud.com/remiliaco"
+                    >Soundcloud</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    href="https://discord.gg/milady"
+                    rel="external noopener noreferrer"
+                    >Discord</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://remiliacorporation.bandcamp.com/"
+                    >Records</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="me external noopener noreferrer"
+                    href="https://www.youtube.com/@remiliacorp"
+                    >YouTube</a
+                  >
+                </td>
+                <td class="empty"></td>
+                <td><a href="/press">Press</a></td>
+              </tr>
+            </table>
+          </nav>
 
-<section>
-<table class="values-box" role="presentation">
-<tr><th><h2 id="new-internet"><a href="#new-internet">THE NEW INTERNET</a></h2></th></tr>
-<tr><td class="pad">Remilia’s new internet recognizes that the new city is the timeline and the chatroom is the contemporary third place. That curation is creative expression, and intellectualism is a group sport. That the future of the internet—of memory and communication—is realtime, multiplayer, hypertextual. That the next internet is not a new internet, but the oldest internet, an internet that was dreamed of but never delivered—yet.</td></tr>
-</table>
-</section>
+          <section>
+            <table class="link-grid" role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="innovation">
+                    <a href="#innovation"
+                      ><span lang="ja">デジタルイノベーション</span
+                      ><br />DIGITAL INNOVATION</a
+                    >
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td><a href="https://miladymaker.net/">Milady Maker</a></td>
+                <td><a href="https://remilio.org/">Remilio Babies</a></td>
+                <td><a href="https://fruits.remilia.org/">FRUiTS MiLADY</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="external noopener noreferrer"
+                    href="https://x.com/KagamiAcademy"
+                    >Kagami Academy</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    href="https://opensea.io/collection/bonkler"
+                    rel="external noopener noreferrer"
+                    >Bonkler</a
+                  >
+                </td>
+                <td><a href="https://fumo.remilia.org/">Milady 3D Fumo</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    href="https://blur.io/collection/banners-nft"
+                    rel="external noopener noreferrer"
+                    >Banners</a
+                  >
+                </td>
+                <td class="empty"></td>
+                <td><a href="https://cult.inc/">CULT, INC.</a></td>
+              </tr>
+            </table>
+          </section>
 
-<table class="apply-team" role="presentation">
-<tr><td><a href="/careers">Apply to team</a></td></tr>
-</table>
+          <h2 class="pub-head">RECENT PUBLICATIONS</h2>
+          <div class="logo-books">
+            <a
+              class="logo-book"
+              href="https://remilia.com/pages/lookbook"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/assets/FW26.png"
+                alt="HIKKI PUNKS EXIT SOCIETY lookbook cover"
+                width="968"
+                height="1352"
+                decoding="async"
+              />
+              <div class="floater-label">
+                <span>HIKKI PUNKS EXIT SOCIETY (2026)</span>
+              </div>
+            </a>
+            <a
+              class="logo-book outlink"
+              href="https://archive.org/details/remilia-quarterly-vol-1/page/n1/mode/2up"
+              target="_blank"
+              rel="external noopener noreferrer"
+            >
+              <img
+                src="/assets/RQ.png"
+                alt="Remilia Quarterly cover"
+                width="590"
+                height="811"
+                decoding="async"
+              />
+              <div class="floater-label">
+                <span>REMILIA QUARTERLY (2024)</span>
+              </div>
+            </a>
+            <a
+              class="logo-book"
+              href="https://house.remilia.org/products/china-by-c-fang-et-al-2024"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/assets/china.png"
+                alt="CHINA! book cover"
+                width="734"
+                height="983"
+                decoding="async"
+              />
+              <div class="floater-label"><span>CHINA! (2024)</span></div>
+            </a>
+          </div>
 
-<hr>
+          <hr />
 
-<nav aria-labelledby="network">
-<table class="link-grid" role="presentation">
-<tr><th colspan="3"><h2 id="network"><a href="#network"><span lang="ja">グローバルネットワーク</span><br>GLOBAL NETWORK</a></h2></th></tr>
-<tr>
-<td><a rel="me noopener noreferrer" href="https://x.com/remiliacorp333">Twitter</a></td>
-<td><a rel="me noopener noreferrer" href="https://www.instagram.com/remilia.corporation/">Instagram</a></td>
-<td><a rel="me noopener noreferrer" href="https://www.tiktok.com/@remilia.corp">TikTok</a></td>
-</tr>
-<tr>
-<td><a rel="me noopener noreferrer" href="https://soundcloud.com/remiliaco">Soundcloud</a></td>
-<td><a href="https://discord.gg/milady" rel="noopener noreferrer">Discord</a></td>
-<td><a rel="me noopener noreferrer" href="https://remiliacorporation.bandcamp.com/">Records</a></td>
-</tr>
-<tr>
-<td><a rel="me noopener noreferrer" href="https://www.youtube.com/@remiliacorp">YouTube</a></td>
-<td class="empty"></td>
-<td><a href="/press">Press</a></td>
-</tr>
-</table>
-</nav>
+          <section>
+            <table role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="reisen">
+                    <a href="#reisen">☆ R.E.I.S.E.N. ☆ ~ LATEST MIX</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="embed" colspan="3">
+                  <iframe
+                    width="100%"
+                    height="166"
+                    loading="lazy"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="autoplay"
+                    title="KEROSENE — R.E.I.S.E.N. London 12.23"
+                    src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F1699132290&amp;color=%23ff0000&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=false"
+                  ></iframe>
+                </td>
+              </tr>
+            </table>
+          </section>
 
-<section>
-<table class="link-grid" role="presentation">
-<tr><th colspan="3"><h2 id="innovation"><a href="#innovation"><span lang="ja">デジタルイノベーション</span><br>DIGITAL INNOVATION</a></h2></th></tr>
-<tr>
-<td><a href="https://miladymaker.net/">Milady Maker</a></td>
-<td><a href="https://remilio.org/">Remilio Babies</a></td>
-<td><a href="https://fruits.remilia.org/">FRUiTS MiLADY</a></td>
-</tr>
-<tr>
-<td><a rel="noopener noreferrer" href="https://x.com/KagamiAcademy">Kagami Academy</a></td>
-<td><a href="https://opensea.io/collection/bonkler">Bonkler</a></td>
-<td><a href="https://fumo.remilia.org/">Milady 3D Fumo</a></td>
-</tr>
-<tr>
-<td><a href="https://blur.io/collection/banners-nft" rel="noopener noreferrer">Banners</a></td>
-<td class="empty"></td>
-<td><a href="https://cult.inc/">CULT, INC.</a></td>
-</tr>
-</table>
-</section>
+          <section>
+            <table role="presentation">
+              <tr>
+                <th colspan="2">
+                  <h2 id="literature">
+                    <a href="#literature">CORPORATE LITERATURE</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="half">
+                  <a
+                    rel="noopener noreferrer"
+                    href="https://ilongfornetworkspirituality.net/"
+                    >"I Long for Network Spirituality" (2021)</a
+                  >
+                </td>
+                <td class="half">
+                  <a
+                    class="outlink"
+                    rel="external noopener noreferrer"
+                    href="https://goldenlight.mirror.xyz/4SW-snEQ1fIwhdppbMWIPy771XJHrL-lkQNYupCtB1I"
+                    >"A New Net Art Manifesto" (2021)</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="external noopener noreferrer"
+                    href="https://goldenlight.mirror.xyz/pbzsxywRHXBdlzrNnrw5DfaFz84Kn8C_m5x1xM7_gSA"
+                    >"Things Desired: An Egoless Online" (2022)</a
+                  >
+                </td>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="external noopener noreferrer"
+                    href="https://goldenlight.mirror.xyz/JHeIf9ahizF3HXEL2XxIQfrqCyPdvtSp1P-AsWoHGr0"
+                    >"Network Spirituality: Collected Commentaries" (2022)</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    class="outlink"
+                    rel="external noopener noreferrer"
+                    href="https://goldenlight.mirror.xyz/E5DPdGl5uajPFYOJRXC6qjp4wXjpfx3hgafC9pB2KVo"
+                    >"The Cancelled Will Inherit The Earth" (2023)</a
+                  >
+                </td>
+                <td class="empty"></td>
+              </tr>
+            </table>
+          </section>
 
-<h2 class="pub-head">RECENT PUBLICATIONS</h2>
-<div class="logo-books">
-  <a class="logo-book" href="https://remilia.com/pages/lookbook" target="_blank" rel="noopener noreferrer">
-    <img src="/assets/FW26.png" alt="HIKKI PUNKS EXIT SOCIETY lookbook cover" width="968" height="1352" decoding="async">
-    <div class="floater-label"><span>HIKKI PUNKS EXIT SOCIETY (2026)</span></div>
-  </a>
-  <a class="logo-book" href="https://archive.org/details/remilia-quarterly-vol-1/page/n1/mode/2up" target="_blank" rel="noopener noreferrer">
-    <img src="/assets/RQ.png" alt="Remilia Quarterly cover" width="590" height="811" decoding="async">
-    <div class="floater-label"><span>REMILIA QUARTERLY (2024)</span></div>
-  </a>
-  <a class="logo-book" href="https://house.remilia.org/products/china-by-c-fang-et-al-2024" target="_blank" rel="noopener noreferrer">
-    <img src="/assets/china.png" alt="CHINA! book cover" width="734" height="983" decoding="async">
-    <div class="floater-label"><span>CHINA! (2024)</span></div>
-  </a>
-</div>
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="memo">
+                    <a href="#memo"
+                      >EXTERNAL MEMO: WHERE IS THE ART CRITICISM?</a
+                    >
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="embed">
+                  <button
+                    class="video-poster"
+                    type="button"
+                    data-video="LlaJ1CjT03k"
+                    aria-label="Play A Remilia Corporation External Memo: Where is the Art Criticism?"
+                  >
+                    <img
+                      src="/assets/art-criticism.jpg"
+                      alt=""
+                      width="852"
+                      height="480"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="video-play" aria-hidden="true">Play Memo</span>
+                  </button>
+                  <noscript
+                    ><a
+                      class="outlink"
+                      href="https://www.youtube.com/watch?v=LlaJ1CjT03k"
+                      rel="external noopener noreferrer"
+                      >Watch A Remilia Corporation External Memo: Where is the
+                      Art Criticism? on YouTube</a
+                    ></noscript
+                  >
+                </td>
+              </tr>
+            </table>
+          </section>
+        </main>
 
-<hr>
+        <footer>
+          <table class="link-grid" role="presentation">
+            <tr>
+              <th colspan="3">
+                <h2 id="contact"><a href="#contact">CONTACT OUR OFFICES</a></h2>
+              </th>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <span class="rj-contact"
+                  ><img
+                    class="rj-photo"
+                    src="/assets/remilia-jackson.jpg"
+                    alt="Portrait of Remilia Jackson"
+                    width="40"
+                    height="40"
+                    decoding="async"
+                  /><em
+                    >"I'm always online and ready to chat." ~Remilia Jackson</em
+                  ></span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <a href="mailto:corporate@remilia.org">corporate@remilia.org</a>
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/about">About</a></td>
+              <td><a href="/contact">Contact</a></td>
+              <td><a href="/careers">Careers</a></td>
+            </tr>
+          </table>
+        </footer>
+      </div>
+      <!-- /layer-base -->
+    </div>
+    <!-- /layer-wrap -->
 
-<section>
-<table role="presentation">
-<tr><th colspan="3"><h2 id="reisen"><a href="#reisen">☆ R.E.I.S.E.N. ☆ ~ LATEST MIX</a></h2></th></tr>
-<tr>
-<td class="embed" colspan="3">
-<iframe width="100%" height="166" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay" title="KEROSENE — R.E.I.S.E.N. London 12.23" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F1699132290&amp;color=%23ff0000&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=false"></iframe>
-</td>
-</tr>
-</table>
-</section>
-
-<section>
-<table role="presentation">
-<tr><th colspan="2"><h2 id="literature"><a href="#literature">CORPORATE LITERATURE</a></h2></th></tr>
-<tr>
-<td class="half"><a rel="noopener noreferrer" href="https://ilongfornetworkspirituality.net/">"I Long for Network Spirituality" (2021)</a></td>
-<td class="half"><a rel="noopener noreferrer" href="https://goldenlight.mirror.xyz/4SW-snEQ1fIwhdppbMWIPy771XJHrL-lkQNYupCtB1I">"A New Net Art Manifesto" (2021)</a></td>
-</tr>
-<tr>
-<td><a rel="noopener noreferrer" href="https://goldenlight.mirror.xyz/pbzsxywRHXBdlzrNnrw5DfaFz84Kn8C_m5x1xM7_gSA">"Things Desired: An Egoless Online" (2022)</a></td>
-<td><a rel="noopener noreferrer" href="https://goldenlight.mirror.xyz/JHeIf9ahizF3HXEL2XxIQfrqCyPdvtSp1P-AsWoHGr0">"Network Spirituality: Collected Commentaries" (2022)</a></td>
-</tr>
-<tr>
-<td><a rel="noopener noreferrer" href="https://goldenlight.mirror.xyz/E5DPdGl5uajPFYOJRXC6qjp4wXjpfx3hgafC9pB2KVo">"The Cancelled Will Inherit The Earth" (2023)</a></td>
-<td class="empty"></td>
-</tr>
-</table>
-</section>
-
-<section>
-<table role="presentation">
-<tr><th><h2 id="memo"><a href="#memo">EXTERNAL MEMO: WHERE IS THE ART CRITICISM?</a></h2></th></tr>
-<tr>
-<td class="embed">
-<button class="video-poster" type="button" data-video="LlaJ1CjT03k" aria-label="Play A Remilia Corporation External Memo: Where is the Art Criticism?">
-<img src="/assets/art-criticism.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
-<span class="video-play" aria-hidden="true">▶</span>
-</button>
-<noscript><a href="https://www.youtube.com/watch?v=LlaJ1CjT03k">Watch A Remilia Corporation External Memo: Where is the Art Criticism? on YouTube</a></noscript>
-</td>
-</tr>
-</table>
-</section>
-</main>
-
-<footer>
-<table class="link-grid" role="presentation">
-<tr><th colspan="3"><h2 id="contact"><a href="#contact">CONTACT OUR OFFICES</a></h2></th></tr>
-<tr><td colspan="3"><span class="rj-contact"><img class="rj-photo" src="/assets/remilia-jackson.jpg" alt="Portrait of Remilia Jackson" width="40" height="40" decoding="async"><em>"I'm always online and ready to chat." ~Remilia Jackson</em></span></td></tr>
-<tr><td colspan="3"><a href="mailto:corporate@remilia.org">corporate@remilia.org</a></td></tr>
-<tr>
-<td><a href="/about">About</a></td>
-<td><a href="/contact">Contact</a></td>
-<td><a href="/careers">Careers</a></td>
-</tr>
-</table>
-</footer>
-</div><!-- /layer-base -->
-
-</div><!-- /layer-wrap -->
-
-<script>
-(function () {
-  document.querySelectorAll('.layer-base [data-video]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      var frame = document.createElement('iframe');
-      frame.className = 'video-frame';
-      frame.title = button.getAttribute('aria-label').replace(/^Play /, '');
-      frame.src = 'https://www.youtube-nocookie.com/embed/' + button.dataset.video + '?autoplay=1&controls=0&cc_load_policy=0&iv_load_policy=3&rel=0&playsinline=1&modestbranding=1';
-      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      frame.referrerPolicy = 'strict-origin-when-cross-origin';
-      frame.allowFullscreen = true;
-      button.replaceWith(frame);
-    }, { once: true });
-  });
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var layers = [document.getElementById('marquee-base'), document.getElementById('marquee-fx')];
-  function marquee(hover) {
-    layers.forEach(function (el) {
-      if (!el) return;
-      el.classList.toggle('scroll-paused', reduce || hover);
-      el.classList.toggle('scroll-hovered', hover);
-    });
-  }
-  marquee(false);
-  if (layers[0]) {
-    layers[0].addEventListener('mouseenter', function () { marquee(true); });
-    layers[0].addEventListener('mouseleave', function () { marquee(false); });
-  }
-  if (reduce) return;
-  document.querySelectorAll('.wiki-float').forEach(function (el) {
-    var origin = null, moved = false;
-    function end() {
-      origin = null;
-      el.style.cursor = 'grab';
-    }
-    el.addEventListener('pointerdown', function (e) {
-      if (e.button !== 0) return;
-      var r = el.getBoundingClientRect();
-      origin = { x: e.clientX, y: e.clientY, l: r.left, t: r.top };
-      moved = false;
-      el.setPointerCapture(e.pointerId);
-      el.style.cursor = 'grabbing';
-      e.preventDefault();
-    });
-    el.addEventListener('pointermove', function (e) {
-      if (!origin) return;
-      var dx = e.clientX - origin.x, dy = e.clientY - origin.y;
-      if (dx * dx + dy * dy > 9) moved = true;
-      el.style.left = origin.l + dx + 'px';
-      el.style.top = origin.t + dy + 'px';
-      el.style.right = el.style.bottom = 'auto';
-    });
-    el.addEventListener('pointerup', end);
-    el.addEventListener('pointercancel', end);
-    el.addEventListener('click', function (e) {
-      if (moved) e.preventDefault();
-      moved = false;
-    });
-  });
-})();
-</script>
-<script src="/assets/js/inspo.js"></script>
-<script src="/assets/js/headings.js"></script>
-
-</body>
+    <script>
+      (function () {
+        document
+          .querySelectorAll(".layer-base [data-video]")
+          .forEach(function (button) {
+            button.addEventListener(
+              "click",
+              function () {
+                var frame = document.createElement("iframe");
+                frame.className = "video-frame";
+                frame.title = button
+                  .getAttribute("aria-label")
+                  .replace(/^Play /, "");
+                frame.src =
+                  "https://www.youtube-nocookie.com/embed/" +
+                  button.dataset.video +
+                  "?autoplay=1&controls=0&cc_load_policy=0&iv_load_policy=3&rel=0&playsinline=1&modestbranding=1";
+                frame.allow =
+                  "autoplay; encrypted-media; picture-in-picture; fullscreen";
+                frame.referrerPolicy = "strict-origin-when-cross-origin";
+                frame.allowFullscreen = true;
+                button.replaceWith(frame);
+              },
+              { once: true },
+            );
+          });
+        var reduce =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var layers = [
+          document.getElementById("marquee-base"),
+          document.getElementById("marquee-fx"),
+        ];
+        function marquee(hover) {
+          layers.forEach(function (el) {
+            if (!el) return;
+            el.classList.toggle("scroll-paused", reduce || hover);
+            el.classList.toggle("scroll-hovered", hover);
+          });
+        }
+        marquee(false);
+        if (layers[0]) {
+          layers[0].addEventListener("mouseenter", function () {
+            marquee(true);
+          });
+          layers[0].addEventListener("mouseleave", function () {
+            marquee(false);
+          });
+        }
+        if (reduce) return;
+        document.querySelectorAll(".wiki-float").forEach(function (el) {
+          var origin = null,
+            moved = false;
+          function end() {
+            origin = null;
+            el.style.cursor = "grab";
+          }
+          el.addEventListener("pointerdown", function (e) {
+            if (e.button !== 0) return;
+            var r = el.getBoundingClientRect();
+            origin = { x: e.clientX, y: e.clientY, l: r.left, t: r.top };
+            moved = false;
+            el.setPointerCapture(e.pointerId);
+            el.style.cursor = "grabbing";
+            e.preventDefault();
+          });
+          el.addEventListener("pointermove", function (e) {
+            if (!origin) return;
+            var dx = e.clientX - origin.x,
+              dy = e.clientY - origin.y;
+            if (dx * dx + dy * dy > 9) moved = true;
+            el.style.left = origin.l + dx + "px";
+            el.style.top = origin.t + dy + "px";
+            el.style.right = el.style.bottom = "auto";
+          });
+          el.addEventListener("pointerup", end);
+          el.addEventListener("pointercancel", end);
+          el.addEventListener("click", function (e) {
+            if (moved) e.preventDefault();
+            moved = false;
+          });
+        });
+      })();
+    </script>
+    <script src="/assets/js/inspo.js"></script>
+    <script src="/assets/js/headings.js"></script>
+  </body>
 </html>
