@@ -30,8 +30,9 @@ Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands hea
 `bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated
 literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
 
-Bake emits per post: HTML, `.md`, `.txt`, section indexes, `rss.xml`, `atom.xml`,
-`sitemap.xml`, `llms.txt`. Drafts (`drafts.*` in Sanity) are skipped at bake.
+Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
+`index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Drafts (`drafts.*`
+in Sanity) are skipped at bake.
 
 ## Netlify
 
