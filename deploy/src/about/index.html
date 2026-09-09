@@ -308,154 +308,117 @@
             <table class="values-box" role="presentation">
               <tr>
                 <th>
-                  <h2 id="how-blog-is-built">
-                    <a href="#how-blog-is-built">HOW THE BLOG IS BUILT</a>
+                  <h2 id="how-blog-is-designed">
+                    <a href="#how-blog-is-designed"
+                      >HOW THE BLOG IS DESIGNED</a
+                    >
                   </h2>
                 </th>
               </tr>
               <tr>
                 <td class="text">
-                  Literature is written in
+                  The blog is not a web application that happens to contain
+                  articles. It is a publishing system that resolves into
+                  documents.
                   <a
                     class="inline outlink"
                     href="https://remilia.sanity.studio/"
                     rel="external noopener noreferrer"
                     >Sanity Studio</a
-                  >. One
+                  >
+                  is the editorial source, not a production runtime. At build
+                  time, published records become complete HTML pages containing
+                  their text, navigation, citations, metadata, and links before
+                  the browser runs a script. CSS controls presentation and
+                  native interface state; JavaScript may enhance a document but
+                  never owns its route or its contents. Static here means
+                  resolved and addressable, not inert. <br /><br />
+                  One
                   <a
                     class="inline"
                     href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
                     rel="external noopener noreferrer"
                     >content graph</a
                   >
-                  feeds the three public hosts: every post carries a
-                  <code>channel</code> field that selects its section, host,
-                  path, metadata, and presentation. A published-only query runs
-                  at build time, so drafts never reach the host. <br /><br />
-                  The
+                  serves three hosts. A post's <code>channel</code> selects its
+                  section, origin, URL, metadata, and visual identity; the
                   <a
                     class="inline"
                     href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
                     rel="external noopener noreferrer"
                     >shared renderer</a
                   >
-                  turns Portable Text into HTML. Headings receive stable anchors
-                  and a table of contents, footnotes open in place through a
-                  checkbox toggle rather than script, internal links expand into
-                  link cards with title and cover, and images resolve through
-                  the Sanity CDN at the width each slot needs. Event posts add
-                  gallery albums with a lightbox. The only client script on a
-                  post is
-                  <a class="inline" href="/updates/nav.js"
-                    ><code>nav.js</code></a
-                  >
-                  for section filtering, so every post reads without JavaScript.
-                  <br /><br />
-                  Each post emits HTML plus Markdown and plain-text siblings.
-                  Each section emits a
-                  <a class="inline" href="/updates">section index</a> with the
-                  same renditions —
-                  <a class="inline" href="/updates/index.md"
-                    ><code>index.md</code></a
-                  >
+                  supplies the same document contract everywhere:
+                  <code>main</code>, <code>article</code>, one
+                  <code>h1</code>, machine-readable time, stable heading
+                  fragments, a table of contents, and canonical and alternate
+                  links. Tag and author archives, static pagination, and
+                  previous and next links make the archive traversable as
+                  hypertext rather than as an infinite feed. An interlink
+                  remains an ordinary <code>a</code> element, but exposes a
+                  card built from the target record's cover, title, and
+                  description. An outlink is visibly marked and declares
+                  <code>rel="external noopener"</code>. No private router or
+                  client cache stands between a reader and a URL. <br /><br />
+                  Interaction begins with browser primitives. Sidenote text is
+                  always present in the HTML: on a wide screen CSS places it in
+                  the margin beside its reference; on a narrow screen a
+                  checkbox, <code>:target</code>, and hover state open it over
+                  the text. Link cards work on hover and focus. The theme dial
+                  is a group of real inputs whose state CSS can read with
+                  <code>:has()</code>. Small deferred scripts add section
+                  filtering, rail search, current-heading indication, copy
+                  controls, touch behavior for link cards, and an event-gallery
+                  lightbox. Remove them and the documents still read, link,
+                  paginate, and expose every note. <br /><br />
+                  The interface is deliberately narrow and finite. An
+                  <a class="inline" href="/updates">index</a> is a set of
+                  paginated cards; an article is a 560-pixel reading measure
+                  flanked on large screens by a contents and citation rail and
+                  an adjacent-post rail. Those rails collapse rather than
+                  squeeze the prose. Color is one <code>--hue</code>: paper,
+                  ink, focus states, the fixed dot lattice, and the image
+                  dither are calculated in <code>oklch()</code>, with
+                  compensation where yellow and cyan would otherwise lose
+                  contrast. Remilia.org is baked red on light paper with a
+                  dense lattice; remilia.com red on dark with no lattice;
+                  remilia.net blue on light with a sparse lattice. Reader
+                  choices override those host defaults before first paint.
+                  Photographs are made to belong to the page — grayscale,
+                  ordered halftone, pixel ink, current hue — rather than sitting
+                  above it as untouched rectangles. <br /><br />
+                  Interoperability is an output, not a promise. Every post is
+                  emitted as HTML,
+                  <a class="inline" href="/updates/index.md">Markdown</a>, and
+                  <a class="inline" href="/updates/index.txt">plain text</a>.
+                  Every section publishes crawlable indexes and directories,
+                  <a class="inline" href="/updates/rss.xml">RSS</a>,
+                  <a class="inline" href="/updates/atom.xml">Atom</a>,
+                  <a class="inline" href="/updates/sitemap.xml">sitemaps</a>,
                   and
-                  <a class="inline" href="/updates/index.txt"
-                    ><code>index.txt</code></a
-                  >
-                  —
-                  <a class="inline" href="/updates/rss.xml"
-                    ><code>rss.xml</code></a
-                  >,
-                  <a class="inline" href="/updates/atom.xml"
-                    ><code>atom.xml</code></a
-                  >,
-                  <a class="inline" href="/updates/sitemap.xml"
-                    ><code>sitemap.xml</code></a
-                  >, and
                   <a class="inline" href="/updates/llms.txt"
                     ><code>llms.txt</code></a
-                  >. Root discovery maps cover the complete host, while section
-                  maps sit beside each index. External archive entries keep the
-                  original outlet URL as their HTML canonical, and retired
-                  <a class="inline" href="/press">press</a> paths keep resolving
-                  through generated redirects. <br /><br />
-                  Publishing in the Studio triggers a Netlify build hook that
-                  reruns the bake, so HTML, Markdown, plain text, feeds, maps,
-                  and metadata regenerate from the same record and stay
-                  synchronized. The host map and bake entry live in
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/hosts/org"
-                    rel="external noopener noreferrer"
-                    ><code>hosts/org/</code></a
-                  >. The source is at
+                  >. Discovery metadata and JSON-LD describe the same records;
+                  aliases become redirects; external archive entries retain
+                  their original canonical outlet. The bake fingerprints
+                  assets, refuses unreadable or unexpectedly empty source data
+                  before replacing a section, and checks internal links across
+                  the finished host. Publishing reruns that bake, so the human,
+                  feed, crawler, and machine-readable views are regenerated
+                  together. The
                   <a
                     class="inline outlink"
                     href="https://github.com/remiliacorporation/remilia-org"
                     rel="external noopener noreferrer"
-                    ><code>remiliacorporation/remilia-org</code></a
+                    >source</a
                   >
-                  under the
+                  is released under the
                   <a
                     class="inline"
                     href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
                     rel="external noopener noreferrer"
                     >Viral Public License</a
                   >.
-                </td>
-              </tr>
-            </table>
-          </section>
-
-          <section>
-            <table class="values-box" role="presentation">
-              <tr>
-                <th>
-                  <h2 id="how-blog-reads">
-                    <a href="#how-blog-reads">HOW THE BLOG READS</a>
-                  </h2>
-                </th>
-              </tr>
-              <tr>
-                <td class="text">
-                  A section shows two views. The
-                  <a class="inline" href="/updates">index</a> lists post cards —
-                  dithered thumbnail, date, byline, category, excerpt — above a
-                  filter bar that narrows by category and author. A post drops
-                  the cards for a single measure of prose with its table of
-                  contents and citation block in the left rail and the previous
-                  and next posts in the right rail. Both views are complete
-                  before any script runs; filtering, rail search, and the
-                  table-of-contents highlight are all a single script adds.
-                  <br /><br />
-                  Links carry their destination in their shape. A link to
-                  another Remilia post becomes an interlink: hovering or
-                  focusing it opens a card with that post's cover, title, and
-                  description, read from the same record the target page is
-                  built from, so it cannot drift out of date. A link that leaves
-                  the network is marked with an arrow and carries
-                  <code>rel="external noopener"</code>. Footnotes are sidenotes:
-                  above 1100px the note sits in the margin beside the paragraph
-                  that cites it; below that it opens over the text with a
-                  dismiss layer. Both states are a checkbox,
-                  <code>:hover</code> and <code>:target</code> — no JavaScript,
-                  and the note text is in the HTML whether or not it is open.
-                  <br /><br />
-                  Color is one number. A single <code>--hue</code> drives paper,
-                  ink, and the dither palette through
-                  <a class="inline" href="/updates/blog.css"
-                    ><code>oklch()</code></a
-                  >, with lightness and chroma tracking the hue so yellow and
-                  cyan do not blow out where red holds. The theme dial offers
-                  five hues, a light and dark scheme, and three wallpaper
-                  densities, each stored locally and applied before first paint.
-                  <br /><br />
-                  Images are printed rather than displayed. Each is reduced to
-                  grayscale, run through an ordered-dither filter, then overlaid
-                  with a pixel ink pattern and washed with the current hue, so
-                  photography resolves as halftone in the section's color. The
-                  page ground is a dot lattice on the same grid — off, fine, or
-                  coarse — that stays fixed while the text scrolls over it.
                 </td>
               </tr>
             </table>
