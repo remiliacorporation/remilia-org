@@ -16,11 +16,13 @@ export interface RedirectRule {
 export const blockBegin = (name: string): string => `# BEGIN bake:${name}`;
 export const blockEnd = (name: string): string => `# END bake:${name}`;
 
-
 /**
  * 301s for every path a post used to live at. A bare alias is a former slug
  * in the same section; one starting with `/` is a full former path, which is
  * how a move between sections keeps its old links alive.
+ *
+ * Each path also redirects its `.md` and `.txt` siblings, so a citation of a
+ * machine-readable rendition survives a rename exactly as the page does.
  */
 export function aliasRules(
   basePath: string,
@@ -36,7 +38,11 @@ export function aliasRules(
         ? trimmed.replace(/\/+$/, "")
         : `${basePath}/${trimmed}`;
       if (from === to) continue;
-      rules.push({ from, to });
+      rules.push(
+        { from, to },
+        { from: `${from}.md`, to: `${to}.md` },
+        { from: `${from}.txt`, to: `${to}.txt` },
+      );
     }
   }
   return rules;

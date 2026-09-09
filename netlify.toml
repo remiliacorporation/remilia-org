@@ -1,6 +1,7 @@
 [build]
   command = "pnpm --filter @remilia/hosts bake"
   publish = "deploy"
+  edge_functions = "netlify/edge-functions"
 
 [build.environment]
   NODE_VERSION = "22"
