@@ -47,6 +47,23 @@ test("mergeLegacyRedirects replaces a previous bake block", () => {
   assert.equal(twice.split(LEGACY_REDIRECTS_BEGIN).length - 1, 1);
 });
 
+test("a comment naming the markers does not swallow the catch-all", () => {
+  const withComment = `/about   /about/index.html   200
+# bake:org inserts Ghost→/press 301s here (see ${LEGACY_REDIRECTS_BEGIN})
+/*    /404.html    404
+`;
+  const out = mergeLegacyRedirects(withComment, [
+    { from: "https://blog.remilia.org/", to: "https://remilia.org/press/" },
+  ]);
+  assert.ok(out.includes("/*    /404.html    404"));
+  assert.ok(out.includes("(see # BEGIN bake:legacy-redirects)"));
+  const again = mergeLegacyRedirects(out, [
+    { from: "https://blog.remilia.org/", to: "https://remilia.org/press/" },
+  ]);
+  assert.ok(again.includes("/*    /404.html    404"));
+  assert.equal(again.split(`\n${LEGACY_REDIRECTS_BEGIN}`).length - 1, 1);
+});
+
 test("mergeLegacyRedirects dedupes by from", () => {
   const out = mergeLegacyRedirects(STATIC, [
     { from: "https://blog.remilia.org/a/", to: "https://remilia.org/press/a" },
