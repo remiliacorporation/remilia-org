@@ -1,8 +1,12 @@
 [build]
-  command = "pnpm --filter @remilia/hosts bake"
+  # Prune to production before baking: the Studio (sanity, react,
+  # styled-components) is a devDependency and the bake never imports it.
+  command = "pnpm install --prod --frozen-lockfile && pnpm --filter @remilia/hosts bake"
   publish = "deploy"
   edge_functions = "netlify/edge-functions"
   ignore = "bash netlify/ignore-build.sh"
 
 [build.environment]
   NODE_VERSION = "22"
+  # Keeps Netlify's own install from fetching the Studio in the first place.
+  NODE_ENV = "production"
