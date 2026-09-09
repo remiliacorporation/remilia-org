@@ -408,6 +408,60 @@
           </section>
 
           <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-blog-reads">
+                    <a href="#how-blog-reads">HOW THE BLOG READS</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  A section shows two views. The
+                  <a class="inline" href="/updates">index</a> lists post cards —
+                  dithered thumbnail, date, byline, category, excerpt — above a
+                  filter bar that narrows by category and author. A post drops
+                  the cards for a single measure of prose with its table of
+                  contents and citation block in the left rail and the previous
+                  and next posts in the right rail. Both views are complete
+                  before any script runs; filtering, rail search, and the
+                  table-of-contents highlight are all a single script adds.
+                  <br /><br />
+                  Links carry their destination in their shape. A link to
+                  another Remilia post becomes an interlink: hovering or
+                  focusing it opens a card with that post's cover, title, and
+                  description, read from the same record the target page is
+                  built from, so it cannot drift out of date. A link that leaves
+                  the network is marked with an arrow and carries
+                  <code>rel="external noopener"</code>. Footnotes are sidenotes:
+                  above 1100px the note sits in the margin beside the paragraph
+                  that cites it; below that it opens over the text with a
+                  dismiss layer. Both states are a checkbox,
+                  <code>:hover</code> and <code>:target</code> — no JavaScript,
+                  and the note text is in the HTML whether or not it is open.
+                  <br /><br />
+                  Color is one number. A single <code>--hue</code> drives paper,
+                  ink, and the dither palette through
+                  <a class="inline" href="/updates/blog.css"
+                    ><code>oklch()</code></a
+                  >, with lightness and chroma tracking the hue so yellow and
+                  cyan do not blow out where red holds. The theme dial offers
+                  five hues, a light and dark scheme, and three wallpaper
+                  densities, each stored locally and applied before first paint.
+                  <br /><br />
+                  Images are printed rather than displayed. Each is reduced to
+                  grayscale, run through an ordered-dither filter, then overlaid
+                  with a pixel ink pattern and washed with the current hue, so
+                  photography resolves as halftone in the section's color. The
+                  page ground is a dot lattice on the same grid — off, fine, or
+                  coarse — that stays fixed while the text scrolls over it.
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
             <table class="link-grid" role="presentation">
               <tr>
                 <th colspan="3">
