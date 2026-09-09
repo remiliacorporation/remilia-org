@@ -5,6 +5,7 @@ import {
   jsonLdScript,
   siteMetaFor,
   sitemapUrl,
+  type HostTheme,
 } from "@remilia/seo";
 import { esc } from "./html";
 
@@ -50,7 +51,9 @@ export interface PageInput {
   alternates?: { type: string; title: string; href: string }[];
 }
 
-function themeSelHtml(): string {
+const DEFAULT_THEME: HostTheme = { hue: 30, scheme: "system", dots: "large" };
+
+function themeSelHtml(theme: HostTheme): string {
   const hues: [number, string][] = [
     [30, "Red"],
     [95, "Yellow"],
@@ -60,7 +63,7 @@ function themeSelHtml(): string {
   ];
   const radios = hues
     .map(([h, name]) => {
-      const checked = h === 30 ? " checked" : "";
+      const checked = h === theme.hue ? " checked" : "";
       return `<input type="radio" name="theme-hue" id="theme-hue-${h}" value="${h}" aria-label="${name}"${checked}><label for="theme-hue-${h}"></label>`;
     })
     .join("");
@@ -70,10 +73,12 @@ function themeSelHtml(): string {
     ["large", "Large dots"],
   ]
     .map(([id, name]) => {
-      const checked = id === "large" ? " checked" : "";
+      const checked = id === theme.dots ? " checked" : "";
       return `<input type="radio" name="theme-dots" id="theme-dots-${id}" value="${id}" aria-label="${name}"${checked}><label for="theme-dots-${id}" class="theme-dot theme-dot-${id}"></label>`;
     })
     .join("");
+  // Checked drives the CSS-only path; the JS toggle keeps it in sync after.
+  const dark = theme.scheme === "dark" ? " checked" : "";
   return `<aside class="theme-sel">
 <input type="checkbox" id="theme-pop" class="disclosure">
 <label for="theme-pop" class="theme-label">Theme</label>
@@ -83,7 +88,7 @@ function themeSelHtml(): string {
 ${radios}
 </div>
 <span class="theme-div" aria-hidden="true"></span>
-<input type="checkbox" id="theme-dark" class="theme-dark">
+<input type="checkbox" id="theme-dark" class="theme-dark"${dark}>
 <label for="theme-dark" class="theme-mode" aria-label="Dark mode"></label>
 <span class="theme-div" aria-hidden="true"></span>
 <div class="theme-dots" role="radiogroup" aria-label="Wallpaper dots">
@@ -184,8 +189,16 @@ export function htmlPage(p: PageInput): string {
     : p.mainHtml.replace(/<label class="mast-toc"[^>]*>[\s\S]*?<\/label>/, "");
   const ogImage =
     p.ogImage ?? (p.channel ? siteMetaFor(p.channel).ogImage : undefined);
+  const theme = p.channel ? siteMetaFor(p.channel).theme : DEFAULT_THEME;
+  // `system` leaves data-scheme off, which is what the prefers-color-scheme
+  // rules key on; a pinned scheme overrides the reader's OS.
+  const themeAttrs = [
+    ` data-hue="${theme.hue}"`,
+    ` data-dots="${theme.dots}"`,
+    theme.scheme === "system" ? "" : ` data-scheme="${theme.scheme}"`,
+  ].join("");
   return `<!DOCTYPE html>
-<html lang="${esc(p.lang ?? "en")}" dir="ltr">
+<html lang="${esc(p.lang ?? "en")}" dir="ltr"${themeAttrs}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -285,7 +298,7 @@ ${p.citeHtml ?? ""}
 </div>
 </div>
 <div class="right-rail">
-${themeSelHtml()}
+${themeSelHtml(theme)}
 ${p.leftRail}
 </div>
 </div>`

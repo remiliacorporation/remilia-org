@@ -31,6 +31,11 @@ The Studio (`sanity`, `react`, `styled-components`) is a **devDependency**: `pnp
 production install is 30MB against 501MB for the full tree, so `netlify.toml` prunes
 before baking. Keep bake-time needs (`tsx`, `@sanity/client`) in `dependencies`.
 
+Each host serves its own default theme, baked onto `<html>` as `data-hue`/`data-dots`/
+`data-scheme` in `SITE_META` (`packages/seo/src/site.ts`): org red on paper with a coarse
+lattice following the reader's OS scheme, com dark red with no lattice, net light blue
+with a dense lattice. A stored reader preference still wins over the host default.
+
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
 `bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated
 literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.

@@ -20,9 +20,12 @@ export const THEME_JS = `(() => {
       var h = localStorage.getItem("remilia-hue");
       var t = localStorage.getItem("remilia-dots");
       if (dark) {
+        var baked = d.getAttribute("data-scheme");
         dark.checked = s
           ? s === "dark"
-          : matchMedia("(prefers-color-scheme: dark)").matches;
+          : baked
+            ? baked === "dark"
+            : matchMedia("(prefers-color-scheme: dark)").matches;
         dark.addEventListener("change", function () {
           var v = dark.checked ? "dark" : "light";
           d.setAttribute("data-scheme", v);

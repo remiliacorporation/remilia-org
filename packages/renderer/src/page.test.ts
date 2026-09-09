@@ -78,7 +78,12 @@ const POST = {
 };
 
 test("page shell emits the fixed semantic structure", () => {
-  assert.ok(PAGE.includes('<html lang="en" dir="ltr">'));
+  // The fixture is a dev-blog page, so it carries the net host's theme.
+  assert.ok(
+    PAGE.includes(
+      '<html lang="en" dir="ltr" data-hue="255" data-dots="small" data-scheme="light">',
+    ),
+  );
   assert.ok(
     PAGE.includes('<main id="content" tabindex="-1" class="article-wrap">'),
   );

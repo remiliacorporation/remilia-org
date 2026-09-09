@@ -28,6 +28,20 @@ export interface SiteMeta {
   };
   /** Host-wide plain-text maps, linked as alternates from every page. */
   textMaps?: { title: string; href: string }[];
+  /**
+   * Theme the host serves before a reader picks one. Baked onto `<html>`, so
+   * it holds without JavaScript and without a stored preference.
+   */
+  theme: HostTheme;
+}
+
+export interface HostTheme {
+  /** One of the five dial hues. */
+  hue: 30 | 95 | 145 | 255 | 330;
+  /** `system` follows the reader's OS; the others pin the scheme. */
+  scheme: "system" | "light" | "dark";
+  /** Wallpaper lattice density. */
+  dots: "none" | "small" | "large";
 }
 
 const SOCIAL = [
@@ -57,6 +71,9 @@ export const SITE_META: Record<HostId, SiteMeta> = {
       { title: "llms.txt", href: "https://remilia.org/llms.txt" },
       { title: "llms-full.txt", href: "https://remilia.org/llms-full.txt" },
     ],
+    // Corporate red on paper, coarse lattice, and it still follows a reader
+    // whose OS asks for dark.
+    theme: { hue: 30, scheme: "system", dots: "large" },
   },
   com: {
     name: "Remilia Corporation",
@@ -68,17 +85,19 @@ export const SITE_META: Record<HostId, SiteMeta> = {
     twitterSite: "@remiliacorp333",
     twitterCreator: "@remiliacorp333",
     me: SOCIAL,
+    theme: { hue: 30, scheme: "dark", dots: "none" },
   },
   net: {
     name: "RemiliaNET",
     author: "Remilia Corporation",
     locale: "en_US",
     origin: CHANNEL_ORIGIN["dev-blog"],
-    themeColor: "#ff0000",
+    themeColor: "#0033ff",
     ogImage: `${CHANNEL_ORIGIN["dev-blog"]}/assets/og.png`,
     twitterSite: "@remiliacorp333",
     twitterCreator: "@remiliacorp333",
     me: SOCIAL,
+    theme: { hue: 255, scheme: "light", dots: "small" },
   },
 };
 
