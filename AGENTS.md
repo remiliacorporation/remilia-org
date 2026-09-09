@@ -44,8 +44,8 @@ for them (nothing under `deploy-com/` can satisfy `/favicon.ico`). Each needs it
 Netlify site with `publish = deploy-com` / `deploy-net` and the matching bake command.
 
 Each host pins a default theme on `<html>` (`data-hue`/`data-dots`/`data-scheme`) from
-`SITE_META` in `packages/seo/src/site.ts`: org red, light, sparse lattice; com red, dark,
-no lattice; net blue, light, dense lattice. A stored reader preference still wins.
+`SITE_META` in `packages/seo/src/site.ts`: org red, light, dense lattice; com red, dark,
+no lattice; net blue, light, sparse lattice. A stored reader preference still wins.
 
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
 `bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated

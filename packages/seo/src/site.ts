@@ -71,8 +71,8 @@ export const SITE_META: Record<HostId, SiteMeta> = {
       { title: "llms.txt", href: "https://remilia.org/llms.txt" },
       { title: "llms-full.txt", href: "https://remilia.org/llms-full.txt" },
     ],
-    // Corporate red on paper, pinned light, sparse lattice.
-    theme: { hue: 30, scheme: "light", dots: "large" },
+    // Corporate red on paper, pinned light, dense lattice.
+    theme: { hue: 30, scheme: "light", dots: "small" },
   },
   com: {
     name: "Remilia Corporation",
@@ -96,7 +96,7 @@ export const SITE_META: Record<HostId, SiteMeta> = {
     twitterSite: "@remiliacorp333",
     twitterCreator: "@remiliacorp333",
     me: SOCIAL,
-    theme: { hue: 255, scheme: "light", dots: "small" },
+    theme: { hue: 255, scheme: "light", dots: "large" },
   },
 };
 

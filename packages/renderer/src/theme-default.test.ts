@@ -33,23 +33,23 @@ test("remilia.com serves dark red with no lattice", () => {
   assert.match(html, /id="theme-dots-none"[^>]*checked>/);
 });
 
-test("remilia.net serves light blue with a dense lattice", () => {
+test("remilia.net serves light blue with a sparse lattice", () => {
   const html = shell("dev-blog");
   assert.match(html, /<html[^>]*data-hue="255"/);
-  assert.match(html, /<html[^>]*data-dots="small"/);
+  assert.match(html, /<html[^>]*data-dots="large"/);
   assert.match(html, /<html[^>]*data-scheme="light"/);
   assert.match(html, /id="theme-dark" class="theme-dark">/);
   assert.match(html, /id="theme-hue-255"[^>]*checked>/);
-  assert.match(html, /id="theme-dots-small"[^>]*checked>/);
+  assert.match(html, /id="theme-dots-large"[^>]*checked>/);
 });
 
-test("remilia.org serves pinned light red with a sparse lattice", () => {
+test("remilia.org serves pinned light red with a dense lattice", () => {
   const html = shell("updates");
   assert.match(html, /<html[^>]*data-hue="30"/);
-  assert.match(html, /<html[^>]*data-dots="large"/);
+  assert.match(html, /<html[^>]*data-dots="small"/);
   assert.match(html, /<html[^>]*data-scheme="light"/);
   assert.match(html, /id="theme-hue-30"[^>]*checked>/);
-  assert.match(html, /id="theme-dots-large"[^>]*checked>/);
+  assert.match(html, /id="theme-dots-small"[^>]*checked>/);
   assert.match(html, /id="theme-dark" class="theme-dark">/);
 });
 
