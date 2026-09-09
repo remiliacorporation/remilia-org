@@ -89,13 +89,13 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
   }
 });
 
-test("net bakes only its blog sections, light blue with a dense lattice", async () => {
+test("net bakes only its blog sections, light blue with a sparse lattice", async () => {
   const { outDir, close } = await bakeSections(NET_SECTIONS);
   try {
     const devblog = await readFile(join(outDir, "blog/index.html"), "utf8");
     assert.match(devblog, /data-scheme="light"/);
     assert.match(devblog, /data-hue="255"/);
-    assert.match(devblog, /data-dots="small"/);
+    assert.match(devblog, /data-dots="large"/);
     assert.ok(devblog.includes("REMILIANET — DEVBLOG"));
     assert.ok(devblog.includes('href="https://www.remilia.net/"'));
     assert.ok(
@@ -116,7 +116,7 @@ test("org still wears its own brand and pinned light theme", async () => {
     const updates = await readFile(join(outDir, "updates/index.html"), "utf8");
     assert.match(updates, /data-scheme="light"/);
     assert.match(updates, /data-hue="30"/);
-    assert.match(updates, /data-dots="large"/);
+    assert.match(updates, /data-dots="small"/);
     assert.ok(updates.includes("REMILIA CORPORATION — UPDATES"));
     assert.ok(updates.includes('href="https://remilia.org/"'));
   } finally {

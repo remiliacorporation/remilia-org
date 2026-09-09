@@ -81,7 +81,7 @@ test("page shell emits the fixed semantic structure", () => {
   // The fixture is a dev-blog page, so it carries the net host's theme.
   assert.ok(
     PAGE.includes(
-      '<html lang="en" dir="ltr" data-hue="255" data-dots="small" data-scheme="light">',
+      '<html lang="en" dir="ltr" data-hue="255" data-dots="large" data-scheme="light">',
     ),
   );
   assert.ok(
