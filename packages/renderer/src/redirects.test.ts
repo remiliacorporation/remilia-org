@@ -99,22 +99,34 @@ test("an empty rule set removes the block and leaves the file usable", () => {
   assert.ok(cleared.includes("/*    /404.html    404"));
 });
 
-test("a renamed post keeps its old slug alive", () => {
+test("a renamed post keeps its old slug and its renditions alive", () => {
   assert.deepEqual(
     aliasRules("/updates", [{ slug: "level-2-notes", aliases: ["level2"] }]),
-    [{ from: "/updates/level2", to: "/updates/level-2-notes" }],
+    [
+      { from: "/updates/level2", to: "/updates/level-2-notes" },
+      { from: "/updates/level2.md", to: "/updates/level-2-notes.md" },
+      { from: "/updates/level2.txt", to: "/updates/level-2-notes.txt" },
+    ],
   );
 });
 
 test("a post moved between sections keeps its old full path", () => {
+  const rules = aliasRules("/thought", [
+    { slug: "art-criticism", aliases: ["/press/art-criticism/", "old-name"] },
+  ]);
   assert.deepEqual(
-    aliasRules("/thought", [
-      { slug: "art-criticism", aliases: ["/press/art-criticism/", "old-name"] },
-    ]),
+    rules.filter((r) => !r.from.includes(".")),
     [
       { from: "/press/art-criticism", to: "/thought/art-criticism" },
       { from: "/thought/old-name", to: "/thought/art-criticism" },
     ],
+  );
+  assert.ok(
+    rules.some(
+      (r) =>
+        r.from === "/press/art-criticism.txt" &&
+        r.to === "/thought/art-criticism.txt",
+    ),
   );
 });
 

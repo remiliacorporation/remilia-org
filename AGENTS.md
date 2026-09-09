@@ -50,6 +50,21 @@ Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webho
 Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`
 locally and push.
 
+## Fallbacks
+
+Renamed or moved posts: fill **Previous paths** on the post. Each entry becomes an
+unforced 301 (page plus `.md`/`.txt`) in that section's `bake:redirects:<section>` block
+in `_redirects`. Unforced, so a real page always wins.
+
+Each section ends its block with `<section>/*  <section>/404.html  404`, so a miss lands
+on that section's 404 (latest posts + index + maps) rather than the corporate one.
+
+`netlify/edge-functions/not-found.ts` covers what `_redirects` cannot express:
+mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), and a
+missing `.md`/`.txt`/`.xml`/`.json` answers in its own format instead of serving HTML
+under a machine-readable URL. `SECTION_PREFIXES` in `lib/paths.ts` is duplicated for the
+Deno runtime; a test in `packages/seo` fails if it drifts from `CHANNEL_BASEPATH`.
+
 ## Studio
 
 ```bash
