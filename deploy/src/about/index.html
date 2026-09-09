@@ -5,19 +5,19 @@
 <!-- @include _partials/head-common.html -->
 <title>About — remilia.org</title>
 <meta name="description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface. Shop on remilia.com; encyclopedia on the Remilia Wiki; network on remilia.net.">
+content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface. Shop on remilia.com; encyclopedia on the Remilia Wiki; network on remilia.net.">
 <link rel="canonical" href="https://remilia.org/about">
 <link rel="home" href="https://remilia.org/">
 <meta property="og:title" content="About — remilia.org">
 <meta property="og:description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.">
+content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.">
 <meta property="og:url" content="https://remilia.org/about">
 <meta property="og:site_name" content="Remigumi-guchi Digital, LLC">
 <meta property="og:image:alt" content="About — remilia.org">
 <meta name="twitter:url" content="https://remilia.org/about">
 <meta name="twitter:title" content="About — remilia.org">
 <meta name="twitter:description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.">
+content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.">
 <meta name="twitter:image:alt" content="About — remilia.org">
 <script type="application/ld+json">
 {
@@ -28,7 +28,7 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
 "@id": "https://remilia.org/about#webpage",
 "url": "https://remilia.org/about",
 "name": "About — remilia.org",
-"description": "How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and the dual-layer print surface.",
+"description": "How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.",
 "inLanguage": "en",
 "isAccessibleForFree": true,
 "isPartOf": {"@id": "https://remilia.org/#website"},
@@ -127,34 +127,31 @@ content="How remilia.org is built: static HTML, baked literature sections, multi
             </tr>
             <tr>
               <td class="text">Standards-compliant HTML5 and CSS — no framework. Markup uses one <code>H1</code>,
-                landmarks, a skip link, and <code>lang</code> on <code>&lt;html&gt;</code>. Discovery:
-                <code>rel=canonical</code>, Open Graph / Twitter Cards, RSS 2.0 + Atom (RFC 4287),
-                <code>sitemap.xml</code>, <code>robots.txt</code>, <code>llms.txt</code> /
-                <code>llms-full.txt</code>, and JSON-LD <a class="inline"
-                  href="https://schema.org/">schema.org</a>. Images carry <code>alt</code>.
-                <code>prefers-reduced-motion</code> and <code>prefers-contrast: more</code> are honored; print CSS drops
-                the FX layer. Pages are readable without JavaScript. JS is loaded only for in-page hash scrolling
-                (<code>headings.js</code>), the homepage inspirations rotator (<code>inspo.js</code>), and the careers
-                Ashby job board (<code>jobs.js</code>).</td>
-            </tr>
-            <tr>
-              <td class="text">One content graph feeds the three public hosts; section id selects host and path. On this
-                host, literature is baked to static files: each post emits HTML plus <code>.md</code> /
-                <code>.txt</code>, section indexes, <code>rss.xml</code>, <code>atom.xml</code>,
-                <code>sitemap.xml</code>, and <code>llms.txt</code>. External archive entries keep the outlet URL as
-                HTML canonical. Corporate sitemap and agent maps live at the root; section maps hang beside each index.</td>
-            </tr>
-            <tr>
-              <td class="text">Authors maintain one tree in <code>deploy/src/</code>: <code>layer-base</code>, the
-                readable document. Shared head tags live in <code>_partials/</code> and merge at
-                <code>bake:corp</code>. At <code>bake:fx</code>, a decorative <code>layer-fx</code> twin is cloned from
-                it — live type gets a second ink press via hard pink
-                <code>text-shadow</code> on <code>layer-base</code> (glyphs only; borders
-                stay single). The baked <code>layer-fx</code> twin remains in the tree for
-                the pipeline but is not painted. <code>pointer-events: none</code>,
-                <code>aria-hidden</code>, <code>inert</code>, <code>data-nosnippet</code>,
-                embeds blanked. Crest and photo cells use <code>dither-3</code> plus an ink
-                overlay. Agents and printers should ignore the FX layer.</td>
+                landmarks, a skip link, and <code>lang</code> on <code>&lt;html&gt;</code>. Discovery uses
+                <code>rel=canonical</code>, Open Graph / Twitter Cards, <a class="inline" href="/updates/rss.xml">RSS 2.0</a>,
+                <a class="inline" href="/updates/atom.xml">Atom 1.0</a>, <a class="inline" href="/sitemap.xml"><code>sitemap.xml</code></a>,
+                <a class="inline" href="/robots.txt"><code>robots.txt</code></a>, <a class="inline" href="/llms.txt"><code>llms.txt</code></a>,
+                <a class="inline" href="/llms-full.txt"><code>llms-full.txt</code></a>, and JSON-LD
+                <a class="inline" href="https://schema.org/">schema.org</a>. Images carry <code>alt</code>.
+                <code>prefers-reduced-motion</code> and <code>prefers-contrast: more</code> are honored. Pages are readable without
+                JavaScript. JS is limited to in-page hash scrolling (<a class="inline" href="/assets/js/headings.js"><code>headings.js</code></a>),
+                the homepage inspirations rotator (<a class="inline" href="/assets/js/inspo.js"><code>inspo.js</code></a>), and the careers
+                Ashby job board (<a class="inline" href="/assets/js/jobs.js"><code>jobs.js</code></a>).<br><br>
+                One content graph feeds the three public hosts; section id selects host and path. Literature is baked to static files:
+                each post emits HTML plus <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/packages/renderer/src/bake.ts"><code>.md</code></a>
+                and <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/packages/renderer/src/bake.ts"><code>.txt</code></a> siblings,
+                a <a class="inline" href="/updates">section index</a>, <a class="inline" href="/updates/rss.xml"><code>rss.xml</code></a>,
+                <a class="inline" href="/updates/atom.xml"><code>atom.xml</code></a>, <a class="inline" href="/updates/sitemap.xml"><code>sitemap.xml</code></a>,
+                and <a class="inline" href="/updates/llms.txt"><code>llms.txt</code></a>. External archive entries keep the outlet URL as
+                HTML canonical. Corporate maps live at the root; section maps sit beside each index.<br><br>
+                Authors maintain the readable document in <a class="inline" href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src"><code>deploy/src/</code></a>.
+                Shared head tags live in <a class="inline" href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src/_partials"><code>_partials/</code></a>
+                and merge during <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-corp.ts"><code>bake:corp</code></a>.
+                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-fx.ts"><code>bake:fx</code></a> keeps an inert
+                <code>layer-fx</code> copy in the output while CSS paints only <code>layer-base</code> through the
+                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"><code>print-fx</code></a> filter,
+                leaving type and borders single. Crest and photo cells use the
+                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"><code>dither-3</code></a> filter.</td>
             </tr>
           </table>
         </section>

@@ -104,6 +104,14 @@ td.nav-row a,td.nav-row span.lk{display:inline;padding:0;text-decoration:underli
 td.nav-row a:hover{background:var(--ink);color:#fff}
 td.embed{padding:0;line-height:0;width:100%}
 td.embed iframe{display:block;width:100%;border:none}
+.video-poster,.video-frame{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.video-poster{position:relative;overflow:hidden;cursor:pointer}
+.video-poster img{display:block;width:100%;height:100%;object-fit:cover}
+.video-play{
+  position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);
+  display:grid;place-items:center;width:44px;height:34px;border:1px solid var(--ink);
+  background:var(--paper);color:var(--ink);line-height:1
+}
 footer td > a[href^="mailto"],
 .fx-footer td > .lk{text-align:center}
 td a,td span.lk{display:block;padding:8px;text-decoration:underline}
@@ -116,24 +124,11 @@ body:not(.page-careers) td.text:hover{background:var(--ink);border-color:#fff}
 body:not(.page-careers) td.text:hover,
 body:not(.page-careers) td.text:hover em{color:#fff}
 body:not(.page-careers) td.text:hover a.inline{background:var(--paper);color:var(--ink)}
+.page-home header td.text:hover a.inline:hover{background:var(--paper);color:var(--ink)}
 td.text:hover a.inline:hover,
 a.inline:hover{background:var(--ink);color:#fff}
 body:not(.page-careers) td.text:hover a.inline ::selection{background:var(--ink);color:#fff}
 td.text:hover a.inline:hover ::selection,a.inline:hover ::selection{background:#fff;color:var(--ink)}
-header td.text:hover,
-header td.text:hover em{background:transparent;border-color:var(--ink);color:inherit}
-header td.text:hover a.inline{background:transparent;color:inherit}
-header td.text:hover a.inline.hot-corp,
-header td.text:hover a.inline.hot-net{background:var(--ink);color:#fff}
-body:not(.page-careers):has(.layer-base td.text:hover) .layer-fx td.text{background:var(--ink);color:#fff;border-color:#fff}
-body:not(.page-careers):has(.layer-base td.text:hover) .layer-fx td.text em{color:#fff}
-body:not(.page-careers):has(.layer-base td.text:hover) .layer-fx td.text span{background:var(--paper);color:var(--ink)}
-body:has(.layer-base header td.text:hover) .layer-fx .fx-header td.text,
-body:has(.layer-base header td.text:hover) .layer-fx .fx-header td.text em{background:transparent;border-color:var(--ink);color:inherit}
-body:has(.layer-base header td.text:hover) .layer-fx .fx-header .hot-corp,
-body:has(.layer-base header td.text:hover) .layer-fx .fx-header .hot-net{background:var(--ink);color:#fff}
-body:has(a.inline.hot-corp:hover) .layer-fx td.text .hot-corp,
-body:has(a.inline.hot-net:hover) .layer-fx td.text .hot-net{background:var(--ink);color:#fff}
 em{font-style:italic}
 hr{border:none;border-top:1px solid var(--ink);margin:0 0 20px}
 td.marquee{position:relative;padding:0;width:100%;max-width:0;overflow:hidden}
@@ -240,9 +235,9 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
   mask-mode:alpha;
   mask-size:100% 100%;mask-repeat:no-repeat;mask-position:center
 }
+.home-crest:hover::before,.home-crest:focus-visible::before{background-color:#000}
 .home-crest:hover .ht::after,.home-crest:focus-visible .ht::after{opacity:0}
-/* Jackson portrait sits above the hr, centered */
-.rj-block{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin:0 0 20px}
+.rj-contact{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px;text-align:center}
 .rj-photo{display:block;width:40px;height:40px;object-fit:cover;border:1px solid var(--ink)}
 .offices td.office{width:50%;padding:20px;vertical-align:top;text-align:center}
 .office-card{display:inline-block;width:100%;max-width:280px;cursor:pointer;text-align:center;margin:0 auto}
@@ -349,11 +344,11 @@ header > h1:focus-visible{outline-offset:4px}
 .page-careers .offices,
 .page-careers .jobs-board{width:100%;max-width:none}
 
-:is(.page-about, .page-home) :is(.values-box, .inspo-box) th:hover,
-:is(.page-about, .page-home) :is(.values-box, .inspo-box) th:hover *,
-:is(.page-about, .page-home) .values-box td.pad:hover{
-  background:transparent;color:inherit;border-color:var(--ink)
-}
+.page-home .inspo-box :is(.inspo-cell,.inspo-row):hover,
+.page-careers :is(th,.jobs-board caption,td.text,td.office):hover{background:var(--ink);color:#fff;border-color:#fff}
+.page-home .inspo-box :is(.inspo-cell,.inspo-row):hover *,
+.page-careers :is(th,.jobs-board caption,td.text,td.office):hover *{color:#fff}
+.page-careers td.text:hover a.inline{background:var(--paper);color:var(--ink)}
 .page-careers td a:hover,
 :is(.page-careers, .page-about) a.inline:hover{background:var(--ink);color:#fff}
 

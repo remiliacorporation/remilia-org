@@ -61,7 +61,9 @@ export function layerBounds(
 
 export function toFxInner(inner: string): string {
   let out = inner;
+  out = out.replace(/<(\/?)(main|nav|header|footer|aside)(\b[^>]*)>/gi, "<$1div$3>");
   out = out.replace(/\s+id="[^"]*"/gi, "");
+  out = out.replace(/\s+(?:aria-(?:labelledby|describedby|controls|owns)|for|form|headers|list)="[^"]*"/gi, "");
   out = out.replace(/<iframe\b([^>]*)>/gi, (_all, attrs: string) => {
     let a = String(attrs).replace(/\s+src="[^"]*"/i, "");
     a = a.replace(/\s+srcdoc="[^"]*"/i, "");
@@ -133,4 +135,3 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     process.exit(1);
   });
 }
-

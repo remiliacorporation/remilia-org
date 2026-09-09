@@ -292,23 +292,21 @@
 <tr><th><h2 id="memo"><a href="#memo">EXTERNAL MEMO: WHERE IS THE ART CRITICISM?</a></h2></th></tr>
 <tr>
 <td class="embed">
-<iframe width="100%" height="405" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/LlaJ1CjT03k" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen" title="A Remilia Corporation External Memo: Where is the Art Criticism?"></iframe>
+<button class="video-poster" type="button" data-video="LlaJ1CjT03k" aria-label="Play A Remilia Corporation External Memo: Where is the Art Criticism?">
+<img src="/assets/art-criticism.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+<span class="video-play" aria-hidden="true">▶</span>
+</button>
+<noscript><a href="https://www.youtube.com/watch?v=LlaJ1CjT03k">Watch A Remilia Corporation External Memo: Where is the Art Criticism? on YouTube</a></noscript>
 </td>
 </tr>
 </table>
 </section>
 </main>
 
-<div class="rj-block">
-<img class="rj-photo" src="/assets/remilia-jackson.jpg" alt="Portrait of Remilia Jackson" width="40" height="40" decoding="async">
-<em>"I'm always online and ready to chat." ~Remilia Jackson</em>
-</div>
-
-<hr>
-
 <footer>
 <table class="link-grid" role="presentation">
 <tr><th colspan="3"><h2 id="contact"><a href="#contact">CONTACT OUR OFFICES</a></h2></th></tr>
+<tr><td colspan="3"><span class="rj-contact"><img class="rj-photo" src="/assets/remilia-jackson.jpg" alt="Portrait of Remilia Jackson" width="40" height="40" decoding="async"><em>"I'm always online and ready to chat." ~Remilia Jackson</em></span></td></tr>
 <tr><td colspan="3"><a href="mailto:corporate@remilia.org">corporate@remilia.org</a></td></tr>
 <tr>
 <td><a href="/about">About</a></td>
@@ -323,6 +321,18 @@
 
 <script>
 (function () {
+  document.querySelectorAll('.layer-base [data-video]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var frame = document.createElement('iframe');
+      frame.className = 'video-frame';
+      frame.title = button.getAttribute('aria-label').replace(/^Play /, '');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + button.dataset.video + '?autoplay=1&controls=0&cc_load_policy=0&iv_load_policy=3&rel=0&playsinline=1&modestbranding=1';
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.allowFullscreen = true;
+      button.replaceWith(frame);
+    }, { once: true });
+  });
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var layers = [document.getElementById('marquee-base'), document.getElementById('marquee-fx')];
   function marquee(hover) {
