@@ -11,7 +11,7 @@ const partialsDir = join(fileURLToPath(new URL(".", import.meta.url)), "../deplo
 test("expandIncludes inlines partials", async () => {
   const html = `<head>\n<!-- @include _partials/head-common.html -->\n<title>T</title>\n</head>`;
   const out = await expandIncludes(html, partialsDir);
-  assert.match(out, /<meta charset="UTF-8">/);
+  assert.match(out, /<meta charset="UTF-8"\s*\/?>/);
   assert.match(out, /<title>T<\/title>/);
   assert.equal(out.includes("@include"), false);
 });

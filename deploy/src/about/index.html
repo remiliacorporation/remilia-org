@@ -1,203 +1,454 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
+  <head>
+    <!-- @include _partials/head-common.html -->
+    <title>How this site is built — remilia.org</title>
+    <meta
+      name="description"
+      content="How remilia.org and its blog are built: static HTML, baked literature, semantic web standards, and accessible progressive enhancement."
+    />
+    <link rel="canonical" href="https://remilia.org/about" />
+    <link rel="home" href="https://remilia.org/" />
+    <meta property="og:title" content="How this site is built — remilia.org" />
+    <meta
+      property="og:description"
+      content="How remilia.org and its blog are built: static HTML, baked literature, semantic web standards, and accessible progressive enhancement."
+    />
+    <meta property="og:url" content="https://remilia.org/about" />
+    <meta property="og:site_name" content="Remigumi-guchi Digital, LLC" />
+    <meta
+      property="og:image:alt"
+      content="How this site is built — remilia.org"
+    />
+    <meta name="twitter:url" content="https://remilia.org/about" />
+    <meta name="twitter:title" content="How this site is built — remilia.org" />
+    <meta
+      name="twitter:description"
+      content="How remilia.org and its blog are built: static HTML, baked literature, semantic web standards, and accessible progressive enhancement."
+    />
+    <meta
+      name="twitter:image:alt"
+      content="How this site is built — remilia.org"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AboutPage",
+            "@id": "https://remilia.org/about#webpage",
+            "url": "https://remilia.org/about",
+            "name": "How this site is built — remilia.org",
+            "description": "How remilia.org and its blog are built: static HTML, baked literature, semantic web standards, and accessible progressive enhancement.",
+            "inLanguage": "en",
+            "isAccessibleForFree": true,
+            "isPartOf": { "@id": "https://remilia.org/#website" },
+            "about": { "@id": "https://remilia.org/#organization" }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://remilia.org/about#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Remigumi-guchi Digital, LLC",
+                "item": "https://remilia.org/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "How this site is built",
+                "item": "https://remilia.org/about"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
 
-<head>
-<!-- @include _partials/head-common.html -->
-<title>About — remilia.org</title>
-<meta name="description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface. Shop on remilia.com; encyclopedia on the Remilia Wiki; network on remilia.net.">
-<link rel="canonical" href="https://remilia.org/about">
-<link rel="home" href="https://remilia.org/">
-<meta property="og:title" content="About — remilia.org">
-<meta property="og:description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.">
-<meta property="og:url" content="https://remilia.org/about">
-<meta property="og:site_name" content="Remigumi-guchi Digital, LLC">
-<meta property="og:image:alt" content="About — remilia.org">
-<meta name="twitter:url" content="https://remilia.org/about">
-<meta name="twitter:title" content="About — remilia.org">
-<meta name="twitter:description"
-content="How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.">
-<meta name="twitter:image:alt" content="About — remilia.org">
-<script type="application/ld+json">
-{
-"@context": "https://schema.org",
-"@graph": [
-{
-"@type": "AboutPage",
-"@id": "https://remilia.org/about#webpage",
-"url": "https://remilia.org/about",
-"name": "About — remilia.org",
-"description": "How remilia.org is built: static HTML, baked literature sections, multi-host map, semantic web standards, and a filtered print surface.",
-"inLanguage": "en",
-"isAccessibleForFree": true,
-"isPartOf": {"@id": "https://remilia.org/#website"},
-"about": {"@id": "https://remilia.org/#organization"}
-},
-{
-"@type": "BreadcrumbList",
-"@id": "https://remilia.org/about#breadcrumb",
-"itemListElement": [
-{"@type": "ListItem", "position": 1, "name": "Remigumi-guchi Digital, LLC", "item": "https://remilia.org/"},
-{"@type": "ListItem", "position": 2, "name": "About", "item": "https://remilia.org/about"}
-]
-}
-]
-}
-</script>
-</head>
+  <body class="page-about">
+    <a class="skip" href="#content">Skip to content</a>
 
-<body class="page-about">
-  <a class="skip" href="#content">Skip to content</a>
+    <!-- @include _partials/fx-svg.html -->
 
-  <!-- @include _partials/fx-svg.html -->
+    <div class="layer-wrap">
+      <div class="layer-base">
+        <a class="home-crest" href="/" aria-label="Home">
+          <span class="ht"
+            ><span class="ht-map"
+              ><img
+                src="/assets/remilia-crest.png"
+                alt=""
+                width="64"
+                height="64" /><span
+                class="ht-ink"
+                aria-hidden="true"
+              ></span></span
+          ></span>
+        </a>
 
+        <header>
+          <h1 id="top"><a href="#top">How this site is built</a></h1>
+          <table role="presentation">
+            <tr>
+              <td class="nav-row">
+                <nav class="nav-inner" aria-label="Primary">
+                  <a href="/">← Home</a><a href="/careers">Careers</a
+                  ><a href="/contact">Contact</a>
+                </nav>
+              </td>
+            </tr>
+          </table>
+        </header>
 
-  <div class="layer-wrap">
+        <main id="content" tabindex="-1">
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="this-host"><a href="#this-host">THIS HOST</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/">remilia.org</a>
+                  is the corporate and literature host of Remilia Corporation
+                  (Remigumi-guchi Digital, LLC). Corporate pages are
+                  hand-authored static <a class="inline" href="/">HTML</a>.
+                  <a class="inline" href="/updates">Updates</a>,
+                  <a class="inline" href="/press">Press</a>,
+                  <a class="inline" href="/thought">Thought</a>, and
+                  <a class="inline" href="/archive">Archive</a> are structured
+                  posts compiled to HTML with Markdown and plain-text siblings,
+                  <a class="inline" href="/updates/rss.xml">RSS 2.0</a>,
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>,
+                  <a class="inline" href="/sitemap.xml">sitemaps</a>, and
+                  <a class="inline" href="/llms.txt">llms.txt maps</a>. The
+                  canonical host is
+                  <a class="inline" href="https://remilia.org/"
+                    >https://remilia.org/</a
+                  >
+                  (non-www). The digital storefront is
+                  <a class="inline" href="https://remilia.com/">remilia.com</a>,
+                  the community encyclopedia is
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    >wiki.remilia.org</a
+                  >, and the software network is
+                  <a class="inline" href="https://remilia.net/">remilia.net</a>.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-    
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="where-to-go">
+                    <a href="#where-to-go">WHERE TO GO</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/"
+                    ><em>remilia.org</em></a
+                  >
+                  — corporate pages and literature (<a
+                    class="inline"
+                    href="/updates"
+                    >/updates</a
+                  >, <a class="inline" href="/press">/press</a>,
+                  <a class="inline" href="/thought">/thought</a>,
+                  <a class="inline" href="/archive">/archive</a>).
+                  <a class="inline" href="https://remilia.com/"
+                    ><em>remilia.com</em></a
+                  >
+                  — fashion, brand, shop, and culture; news and events live
+                  under
+                  <a class="inline" href="https://remilia.com/a/news"
+                    >/a/news</a
+                  >
+                  and
+                  <a class="inline" href="https://remilia.com/a/events"
+                    >/a/events</a
+                  >.
+                  <a class="inline" href="https://remilia.net/"
+                    ><em>remilia.net</em></a
+                  >
+                  — Remilia software products and engineering blog.
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    ><em>wiki.remilia.org</em></a
+                  >
+                  — encyclopedia; cite
+                  <a
+                    class="inline"
+                    href="https://wiki.remilia.org/Remilia_Corporation"
+                    >Remilia Corporation</a
+                  >
+                  for facts. Hiring:
+                  <a class="inline" href="/careers">/careers</a>.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-<div class="layer-base">
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-site-is-built">
+                    <a href="#how-site-is-built">HOW THIS SITE IS BUILT</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  The corporate pages use standards-compliant
+                  <a class="inline" href="/">HTML5</a> and
+                  <a class="inline" href="/assets/css/site.css">CSS</a> without
+                  a client framework. Markup has one <code>H1</code>, semantic
+                  landmarks, a skip link, and a declared document language.
+                  Discovery uses <code>rel=canonical</code>, Open Graph, Twitter
+                  Cards, <a class="inline" href="/updates/rss.xml">RSS 2.0</a>,
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>,
+                  <a class="inline" href="/sitemap.xml"
+                    ><code>sitemap.xml</code></a
+                  >,
+                  <a class="inline" href="/robots.txt"
+                    ><code>robots.txt</code></a
+                  >, <a class="inline" href="/llms.txt"><code>llms.txt</code></a
+                  >,
+                  <a class="inline" href="/llms-full.txt"
+                    ><code>llms-full.txt</code></a
+                  >, and JSON-LD using the
+                  <a
+                    class="inline outlink"
+                    href="https://schema.org/AboutPage"
+                    rel="external noopener noreferrer"
+                    ><code>AboutPage</code> schema</a
+                  >. Images carry alternative text where they convey content.
+                  The site honors <code>prefers-reduced-motion</code> and
+                  <code>prefers-contrast: more</code>. Every page remains
+                  readable without JavaScript. JavaScript is limited to in-page
+                  hash scrolling in
+                  <a class="inline" href="/assets/js/headings.js"
+                    ><code>headings.js</code></a
+                  >, the homepage inspirations rotator in
+                  <a class="inline" href="/assets/js/inspo.js"
+                    ><code>inspo.js</code></a
+                  >, and the careers job board in
+                  <a class="inline" href="/assets/js/jobs.js"
+                    ><code>jobs.js</code></a
+                  >. <br /><br />
+                  Authors maintain the readable HTML in
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src"
+                    rel="external noopener noreferrer"
+                    ><code>deploy/src/</code></a
+                  >. Shared head tags live in
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src/_partials"
+                    rel="external noopener noreferrer"
+                    ><code>_partials/</code></a
+                  >, then merge during
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-corp.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:corp</code></a
+                  >.
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-fx.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:fx</code></a
+                  >
+                  creates an inert <code>layer-fx</code> copy while CSS paints
+                  only <code>layer-base</code> through the
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>print-fx</code></a
+                  >
+                  filter, leaving type and borders single. Crest and photo cells
+                  use the
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>dither-3</code></a
+                  >
+                  filter. <br /><br />
+                  The source code is hosted on
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    >GitHub</a
+                  >
+                  and licensed under the
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-      <a class="home-crest" href="/" aria-label="Home">
-        <span class="ht"><span class="ht-map"><img src="/assets/remilia-crest.png" alt="" width="64" height="64"><span
-              class="ht-ink" aria-hidden="true"></span></span></span>
-      </a>
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-blog-is-built">
+                    <a href="#how-blog-is-built">HOW THE BLOG IS BUILT</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  Literature is written in
+                  <a
+                    class="inline outlink"
+                    href="https://remilia.sanity.studio/"
+                    rel="external noopener noreferrer"
+                    >Sanity Studio</a
+                  >. One
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
+                    rel="external noopener noreferrer"
+                    >content graph</a
+                  >
+                  feeds the three public hosts: every post carries a
+                  <code>channel</code> field that selects its section, host,
+                  path, metadata, and presentation. A published-only query runs
+                  at build time, so drafts never reach the host. <br /><br />
+                  The
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
+                    rel="external noopener noreferrer"
+                    >shared renderer</a
+                  >
+                  turns Portable Text into HTML. Headings receive stable
+                  anchors and a table of contents, footnotes open in place
+                  through a checkbox toggle rather than script, internal links
+                  expand into link cards with title and cover, and images
+                  resolve through the Sanity CDN at the width each slot needs.
+                  Event posts add gallery albums with a lightbox. The only
+                  client script on a post is
+                  <a class="inline" href="/updates/nav.js"
+                    ><code>nav.js</code></a
+                  >
+                  for section filtering, so every post reads without
+                  JavaScript. <br /><br />
+                  Each post emits HTML plus Markdown and plain-text siblings.
+                  Each section emits a
+                  <a class="inline" href="/updates">section index</a> with the
+                  same renditions —
+                  <a class="inline" href="/updates/index.md"
+                    ><code>index.md</code></a
+                  >
+                  and
+                  <a class="inline" href="/updates/index.txt"
+                    ><code>index.txt</code></a
+                  >
+                  —
+                  <a class="inline" href="/updates/rss.xml"
+                    ><code>rss.xml</code></a
+                  >,
+                  <a class="inline" href="/updates/atom.xml"
+                    ><code>atom.xml</code></a
+                  >,
+                  <a class="inline" href="/updates/sitemap.xml"
+                    ><code>sitemap.xml</code></a
+                  >, and
+                  <a class="inline" href="/updates/llms.txt"
+                    ><code>llms.txt</code></a
+                  >. Root discovery maps cover the complete host, while section
+                  maps sit beside each index. External archive entries keep the
+                  original outlet URL as their HTML canonical, and retired
+                  <a class="inline" href="/press">press</a> paths keep
+                  resolving through generated redirects. <br /><br />
+                  Publishing in the Studio triggers a Netlify build hook that
+                  reruns the bake, so HTML, Markdown, plain text, feeds, maps,
+                  and metadata regenerate from the same record and stay
+                  synchronized. The host map and bake entry live in
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/hosts/org"
+                    rel="external noopener noreferrer"
+                    ><code>hosts/org/</code></a
+                  >. The source is on
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    >GitHub</a
+                  >
+                  under the
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >.
+                </td>
+              </tr>
+            </table>
+          </section>
 
-      <header>
-        <h1 id="top"><a href="#top">About — remilia.org</a></h1>
-        <table role="presentation">
-          <tr>
-            <td class="nav-row">
-              <nav class="nav-inner" aria-label="Primary"><a href="/">← Home</a><a href="/careers">Careers</a><a
-                  href="/contact">Contact</a></nav>
-            </td>
-          </tr>
-        </table>
-      </header>
+          <section>
+            <table class="link-grid" role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="directory"><a href="#directory">DIRECTORY</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td><a href="https://remilia.com/">Remilia Corporation</a></td>
+                <td><a href="https://remilia.com/">Remilia Atelier</a></td>
+                <td><a href="https://house.remilia.org/">Remilia House</a></td>
+              </tr>
+              <tr>
+                <td><a href="https://miladymaker.net/">Milady Maker</a></td>
+                <td><a href="https://cult.inc/">CULT, INC.</a></td>
+                <td><a href="https://miladycraft.net/">Miladycraft</a></td>
+              </tr>
+            </table>
+          </section>
+        </main>
 
-      <main id="content" tabindex="-1">
-        <section>
+        <footer>
           <table role="presentation">
             <tr>
               <th>
-                <h2 id="this-host"><a href="#this-host">THIS HOST</a></h2>
+                <h2 id="contact"><a href="#contact">CONTACT</a></h2>
               </th>
             </tr>
             <tr>
-              <td class="text">remilia.org is the corporate / literature host of Remilia Corporation (Remigumi-guchi
-                Digital, LLC). Corporate pages are hand-authored static HTML. Updates, Press, Thought, and Archive are
-                structured posts compiled to HTML with Markdown and plain-text siblings, RSS 2.0, Atom 1.0, sitemaps,
-                and llms.txt maps. Canonical host is <a class="inline"
-                  href="https://remilia.org/">https://remilia.org/</a> (non-www). This host is not the digital
-                storefront, community encyclopedia, or RemiliaNET.</td>
+              <td>
+                <a href="mailto:corporate@remilia.org">corporate@remilia.org</a>
+              </td>
             </tr>
           </table>
-        </section>
+        </footer>
+      </div>
+    </div>
 
-        <section>
-          <table role="presentation">
-            <tr>
-              <th>
-                <h2 id="where-to-go"><a href="#where-to-go">WHERE TO GO</a></h2>
-              </th>
-            </tr>
-            <tr>
-              <td class="text"><a class="inline" href="https://remilia.org/"><em>remilia.org</em></a> — corporate
-                pages + literature (<a class="inline" href="/updates">/updates</a>, <a class="inline"
-                  href="/press">/press</a>, <a class="inline" href="/thought">/thought</a>, <a class="inline"
-                  href="/archive">/archive</a>). <a class="inline" href="https://remilia.com/"><em>remilia.com</em></a>
-                — fashion / brand / shop / culture; news and events under <a class="inline"
-                  href="https://remilia.com/a/news">/a/news</a> and <a class="inline"
-                  href="https://remilia.com/a/events">/a/events</a>. <a class="inline"
-                  href="https://remilia.net/"><em>remilia.net</em></a> — Remilia software products and engineering blog.
-                <a class="inline" href="https://wiki.remilia.org/"><em>wiki.remilia.org</em></a> — encyclopedia; cite
-                <a class="inline" href="https://wiki.remilia.org/Remilia_Corporation">Remilia Corporation</a> for facts.
-                Hiring: <a class="inline" href="/careers">/careers</a>.</td>
-            </tr>
-          </table>
-        </section>
-
-        <section>
-          <table role="presentation">
-            <tr>
-              <th>
-                <h2 id="how-it-is-built"><a href="#how-it-is-built">HOW IT IS BUILT</a></h2>
-              </th>
-            </tr>
-            <tr>
-              <td class="text">Standards-compliant HTML5 and CSS — no framework. Markup uses one <code>H1</code>,
-                landmarks, a skip link, and <code>lang</code> on <code>&lt;html&gt;</code>. Discovery uses
-                <code>rel=canonical</code>, Open Graph / Twitter Cards, <a class="inline" href="/updates/rss.xml">RSS 2.0</a>,
-                <a class="inline" href="/updates/atom.xml">Atom 1.0</a>, <a class="inline" href="/sitemap.xml"><code>sitemap.xml</code></a>,
-                <a class="inline" href="/robots.txt"><code>robots.txt</code></a>, <a class="inline" href="/llms.txt"><code>llms.txt</code></a>,
-                <a class="inline" href="/llms-full.txt"><code>llms-full.txt</code></a>, and JSON-LD
-                <a class="inline" href="https://schema.org/">schema.org</a>. Images carry <code>alt</code>.
-                <code>prefers-reduced-motion</code> and <code>prefers-contrast: more</code> are honored. Pages are readable without
-                JavaScript. JS is limited to in-page hash scrolling (<a class="inline" href="/assets/js/headings.js"><code>headings.js</code></a>),
-                the homepage inspirations rotator (<a class="inline" href="/assets/js/inspo.js"><code>inspo.js</code></a>), and the careers
-                Ashby job board (<a class="inline" href="/assets/js/jobs.js"><code>jobs.js</code></a>).<br><br>
-                One content graph feeds the three public hosts; section id selects host and path. Literature is baked to static files:
-                each post emits HTML plus <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/packages/renderer/src/bake.ts"><code>.md</code></a>
-                and <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/packages/renderer/src/bake.ts"><code>.txt</code></a> siblings,
-                a <a class="inline" href="/updates">section index</a>, <a class="inline" href="/updates/rss.xml"><code>rss.xml</code></a>,
-                <a class="inline" href="/updates/atom.xml"><code>atom.xml</code></a>, <a class="inline" href="/updates/sitemap.xml"><code>sitemap.xml</code></a>,
-                and <a class="inline" href="/updates/llms.txt"><code>llms.txt</code></a>. External archive entries keep the outlet URL as
-                HTML canonical. Corporate maps live at the root; section maps sit beside each index.<br><br>
-                Authors maintain the readable document in <a class="inline" href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src"><code>deploy/src/</code></a>.
-                Shared head tags live in <a class="inline" href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src/_partials"><code>_partials/</code></a>
-                and merge during <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-corp.ts"><code>bake:corp</code></a>.
-                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-fx.ts"><code>bake:fx</code></a> keeps an inert
-                <code>layer-fx</code> copy in the output while CSS paints only <code>layer-base</code> through the
-                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"><code>print-fx</code></a> filter,
-                leaving type and borders single. Crest and photo cells use the
-                <a class="inline" href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"><code>dither-3</code></a> filter.</td>
-            </tr>
-          </table>
-        </section>
-
-        <section>
-          <table class="link-grid" role="presentation">
-            <tr>
-              <th colspan="3">
-                <h2 id="directory"><a href="#directory">DIRECTORY</a></h2>
-              </th>
-            </tr>
-            <tr>
-              <td><a href="https://remilia.com/">Remilia Corporation</a></td>
-              <td><a href="https://remilia.com/">Remilia Atelier</a></td>
-              <td><a href="https://house.remilia.org/">Remilia House</a></td>
-            </tr>
-            <tr>
-              <td><a href="https://miladymaker.net/">Milady Maker</a></td>
-              <td><a href="https://cult.inc/">CULT, INC.</a></td>
-              <td><a href="https://miladycraft.net/">Miladycraft</a></td>
-            </tr>
-          </table>
-        </section>
-      </main>
-
-      <footer>
-        <table role="presentation">
-          <tr>
-            <th>
-              <h2 id="contact"><a href="#contact">CONTACT</a></h2>
-            </th>
-          </tr>
-          <tr>
-            <td><a href="mailto:corporate@remilia.org">corporate@remilia.org</a></td>
-          </tr>
-        </table>
-      </footer>
-
-    </div><!-- /layer-base -->
-
-  </div><!-- /layer-wrap -->
-
-  <script>
-    if (/^#(mission|new-internet|inspirations)$/.test(location.hash)) location.replace('/' + location.hash);
-  </script>
-  <script src="/assets/js/headings.js"></script>
-</body>
-
+    <script>
+      if (/^#(mission|new-internet|inspirations)$/.test(location.hash))
+        location.replace("/" + location.hash);
+    </script>
+    <script src="/assets/js/headings.js"></script>
+  </body>
 </html>
