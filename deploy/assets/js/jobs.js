@@ -59,7 +59,7 @@
   }
   function ashbyA(label) {
     return (
-      '<a class="inline outlink" rel="external noopener noreferrer" href="' +
+      '<a class="inline" rel="external noopener noreferrer" href="' +
       ASHBY +
       '">' +
       label +
@@ -237,7 +237,7 @@
       })
       .forEach(function (j) {
         var go =
-          '<a class="job-go outlink" rel="external noopener noreferrer" href="' +
+          '<a class="job-go" rel="external noopener noreferrer" href="' +
           esc(j.url) +
           '">';
         var cells = [
