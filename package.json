@@ -13,7 +13,9 @@
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit",
     "test": "pnpm -r test",
-    "check": "pnpm typecheck && pnpm test"
+    "check": "pnpm typecheck && pnpm test",
+    "bake:com": "pnpm --filter @remilia/hosts bake:com",
+    "bake:net": "pnpm --filter @remilia/hosts bake:net"
   },
   "devDependencies": {
     "@sanity/icons": "^5.2.1",

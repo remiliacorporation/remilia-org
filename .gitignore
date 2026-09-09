@@ -22,3 +22,7 @@ substack-posts.ndjson
 
 # Local Netlify folder
 .netlify
+
+# Baked blog output for the sibling hosts
+deploy-com/
+deploy-net/

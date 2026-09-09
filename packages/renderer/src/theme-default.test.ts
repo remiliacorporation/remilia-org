@@ -43,15 +43,23 @@ test("remilia.net serves light blue with a dense lattice", () => {
   assert.match(html, /id="theme-dots-small"[^>]*checked>/);
 });
 
-test("remilia.org keeps red on paper and still follows the reader's OS", () => {
+test("remilia.org serves pinned light red with a sparse lattice", () => {
   const html = shell("updates");
   assert.match(html, /<html[^>]*data-hue="30"/);
   assert.match(html, /<html[^>]*data-dots="large"/);
-  assert.ok(
-    !/data-scheme=/.test(html),
-    "a pinned scheme would defeat prefers-color-scheme",
-  );
+  assert.match(html, /<html[^>]*data-scheme="light"/);
+  assert.match(html, /id="theme-hue-30"[^>]*checked>/);
   assert.match(html, /id="theme-dots-large"[^>]*checked>/);
+  assert.match(html, /id="theme-dark" class="theme-dark">/);
+});
+
+test("no host is left following the reader's OS by accident", () => {
+  for (const channel of CHANNELS)
+    assert.match(
+      shell(channel),
+      /<html[^>]*data-scheme="(light|dark)"/,
+      `${channel} has no pinned scheme`,
+    );
 });
 
 test("exactly one hue and one density are pre-checked per host", () => {
