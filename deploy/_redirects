@@ -8,10 +8,25 @@
 /contact/ /contact/index.html   200
 /careers /careers/index.html   200
 /careers/ /careers/index.html   200
-# bake:org inserts Ghost→/press 301s here (see # BEGIN bake:legacy-redirects)
+# bake:org writes one "bake:redirects:<section>" block per section below:
+# 301s for renamed or moved posts, the Ghost host rules for /press, and a
+# section-scoped 404. None are forced, so a real page always wins.
 
-# BEGIN bake:legacy-redirects
+# BEGIN bake:redirects:updates
+/updates/*  /updates/404.html  404
+# END bake:redirects:updates
+
+# BEGIN bake:redirects:press
 https://blog.remilia.org/  https://remilia.org/press/  301!
 https://blog.remilia.org  https://remilia.org/press/  301!
-# END bake:legacy-redirects
+/press/*  /press/404.html  404
+# END bake:redirects:press
+
+# BEGIN bake:redirects:thought
+/thought/*  /thought/404.html  404
+# END bake:redirects:thought
+
+# BEGIN bake:redirects:archive
+/archive/*  /archive/404.html  404
+# END bake:redirects:archive
 /*    /404.html    404

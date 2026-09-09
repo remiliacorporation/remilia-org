@@ -53,6 +53,24 @@ export const post = defineType({
         }),
     }),
     defineField({
+      name: "aliases",
+      title: "Previous paths",
+      type: "array",
+      of: [{ type: "string" }],
+      description:
+        "Old slugs or paths this post used to live at. Each becomes a 301 to the current URL, so renaming a post or moving it between sections never leaves a dead link. Enter a bare slug (old-name) for the same section, or a full path (/press/old-name) after a move.",
+      validation: (r) =>
+        r.custom((aliases) => {
+          for (const alias of aliases ?? []) {
+            if (typeof alias !== "string" || !alias.trim())
+              return "Aliases cannot be blank";
+            if (!/^\/?[a-z0-9\-/]+$/.test(alias))
+              return `"${alias}": lowercase letters, numbers, hyphens and slashes only`;
+          }
+          return true;
+        }),
+    }),
+    defineField({
       name: "publishedAt",
       title: "Published at",
       type: "datetime",
