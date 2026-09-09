@@ -29,6 +29,7 @@ for (const channel of ORG_SECTIONS) {
     dataset: "production",
     token: process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN,
     stylesheets,
+    allowEmpty: process.env.ALLOW_EMPTY_BAKE === "1",
 
     extraSitemapUrls: channel === "press" ? extraSitemapUrls : undefined,
   });
