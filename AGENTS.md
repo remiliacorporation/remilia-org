@@ -74,6 +74,17 @@ per page (`<section>/page/2/`) with `rel=prev`/`rel=next`.
 `ALLOW_BROKEN_LINKS=1`. Future-dated posts stay out until a bake runs after their date,
 so scheduling needs a periodic or webhook-driven build.
 
+## Build spend
+
+Every push to `main` is a production build, and each one reinstalls a ~500MB dependency
+tree to run a 2-second bake. `netlify/ignore-build.sh` (wired as `[build] ignore`) cancels
+builds whose commit range touches only tests or docs. Studio webhooks, scheduled builds
+and manual retries always build, since content changes arrive without a commit.
+
+Land related work in one merge rather than a merge per change, and keep deploy previews
+off for branches nobody reviews in the browser — previews cost the same minutes as
+production builds.
+
 ## Studio
 
 ```bash
