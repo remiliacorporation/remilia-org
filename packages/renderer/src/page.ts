@@ -486,15 +486,31 @@ ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 </main>`;
 }
 
-export function simpleMain(innerHtml: string): string {
-  return `<main id="content" tabindex="-1" class="article-wrap simple">
-<article class="article-body">
-${innerHtml}
-</article>
-</main>`;
-}
-
-export function notFoundHtml(chrome: Chrome, basePath: string): string {
+/**
+ * Section-scoped 404. Lands the reader in the section they aimed at, with the
+ * latest posts and the machine-readable maps, rather than a bare apology.
+ */
+export function notFoundHtml(
+  chrome: Chrome,
+  basePath: string,
+  input: {
+    sectionTitle?: string;
+    recent?: { title: string; url: string; date: string }[];
+  } = {},
+): string {
+  const section = input.sectionTitle ?? "this section";
+  const recent = (input.recent ?? []).slice(0, 5);
+  const recentHtml = recent.length
+    ? `<h2>Latest in ${esc(section)}</h2>
+<ul>
+${recent
+  .map(
+    (p) =>
+      `<li><a href="${esc(p.url)}">${esc(p.title)}</a> <time datetime="${esc(p.date)}">${esc(p.date.slice(0, 10))}</time></li>`,
+  )
+  .join("\n")}
+</ul>`
+    : "";
   return htmlPage({
     title: "404 — Not found",
     description: "This page does not exist.",
@@ -502,12 +518,30 @@ export function notFoundHtml(chrome: Chrome, basePath: string): string {
     jsonld: [],
     noindex: true,
     chrome,
-    mainHtml: simpleMain(`<h1>404 — Not found</h1>
-<p>This page does not exist. Useful indexes:</p>
+    mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
+<article class="article-body">
+<div class="sec mast">
+<header>
+<h1>404 — Not found</h1>
+</header>
+</div>
+<div class="article-rest">
+<div class="sec">
+<div class="prose">
+<p>That URL is not here. It may have moved, or it never existed.</p>
+${recentHtml}
+<h2>Where to go</h2>
 <ul>
-<li><a href="${esc(basePath)}/sitemap.xml">sitemap.xml</a></li>
-<li><a href="/llms.txt">llms.txt</a></li>
-<li><a href="${esc(basePath)}">index</a></li>
-</ul>`),
+<li><a href="${esc(basePath)}">${esc(section)} index</a></li>
+<li><a href="${esc(basePath)}/rss.xml"><code>rss.xml</code></a></li>
+<li><a href="${esc(basePath)}/sitemap.xml"><code>sitemap.xml</code></a></li>
+<li><a href="${esc(basePath)}/llms.txt"><code>llms.txt</code></a></li>
+<li><a href="/">remilia.org</a></li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+</main>`,
   });
 }

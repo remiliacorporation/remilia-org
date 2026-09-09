@@ -1,61 +1,109 @@
 /**
- * Merge bake-generated Ghost→press redirects into Netlify `_redirects`.
- * Hand-authored rules stay; the marker block is replaced each bake.
- * The catch-all `/* … 404` rule always stays last.
+ * Merge bake-generated rules into Netlify `_redirects`. Hand-authored rules
+ * stay; each named block is replaced whole on every bake, and the catch-all
+ * `/* … 404` rule always stays last so narrower rules win.
  */
-
-export const LEGACY_REDIRECTS_BEGIN = "# BEGIN bake:legacy-redirects";
-export const LEGACY_REDIRECTS_END = "# END bake:legacy-redirects";
 
 export interface RedirectRule {
   from: string;
   to: string;
+  /** Netlify status; 301 unless given. */
+  status?: number;
+  /** Append `!` so the rule wins over an existing file at `from`. */
+  force?: boolean;
 }
 
-/** Netlify `_redirects` line; force (`!`) so it wins over existing files. */
+export const blockBegin = (name: string): string => `# BEGIN bake:${name}`;
+export const blockEnd = (name: string): string => `# END bake:${name}`;
+
+
+/**
+ * 301s for every path a post used to live at. A bare alias is a former slug
+ * in the same section; one starting with `/` is a full former path, which is
+ * how a move between sections keeps its old links alive.
+ */
+export function aliasRules(
+  basePath: string,
+  posts: { slug: string; aliases?: string[] }[],
+): RedirectRule[] {
+  const rules: RedirectRule[] = [];
+  for (const post of posts) {
+    const to = `${basePath}/${post.slug}`;
+    for (const alias of post.aliases ?? []) {
+      const trimmed = alias.trim();
+      if (!trimmed) continue;
+      const from = trimmed.startsWith("/")
+        ? trimmed.replace(/\/+$/, "")
+        : `${basePath}/${trimmed}`;
+      if (from === to) continue;
+      rules.push({ from, to });
+    }
+  }
+  return rules;
+}
+
 export function netlifyRedirectLine(rule: RedirectRule): string {
-  return `${rule.from}  ${rule.to}  301!`;
+  const status = rule.status ?? 301;
+  return `${rule.from}  ${rule.to}  ${status}${rule.force ? "!" : ""}`;
 }
 
-export function stripLegacyRedirectBlock(existing: string): string {
+/**
+ * Removes a named block. Markers must be whole lines, so a hand-authored
+ * comment that mentions a marker cannot swallow the rules that follow it.
+ */
+export function stripRedirectBlock(existing: string, name: string): string {
   const re = new RegExp(
-    `^${escapeRegExp(LEGACY_REDIRECTS_BEGIN)}$[\\s\\S]*?^${escapeRegExp(LEGACY_REDIRECTS_END)}$\\n?`,
+    `^${escapeRegExp(blockBegin(name))}$[\\s\\S]*?^${escapeRegExp(blockEnd(name))}$\\n?`,
     "m",
   );
   return existing.replace(re, "");
 }
 
-export function formatLegacyRedirectBlock(rules: RedirectRule[]): string {
+export function formatRedirectBlock(
+  name: string,
+  rules: RedirectRule[],
+): string {
   if (rules.length === 0) return "";
   const body = rules.map(netlifyRedirectLine).join("\n");
-  return `${LEGACY_REDIRECTS_BEGIN}\n${body}\n${LEGACY_REDIRECTS_END}\n`;
+  return `${blockBegin(name)}\n${body}\n${blockEnd(name)}\n`;
 }
 
 /**
- * Insert or replace the bake legacy-redirect block before the catch-all 404.
- * Dedupes by `from`, keeps first occurrence order.
+ * Inserts or replaces one named block before the catch-all 404. Dedupes by
+ * `from`, keeping first occurrence order. Idempotent: baking twice with the
+ * same rules yields the same file.
  */
-export function mergeLegacyRedirects(existing: string, rules: RedirectRule[]): string {
+export function mergeRedirectBlock(
+  existing: string,
+  name: string,
+  rules: RedirectRule[],
+): string {
   const seen = new Set<string>();
   const unique: RedirectRule[] = [];
-  for (const r of rules) {
-    if (seen.has(r.from)) continue;
-    seen.add(r.from);
-    unique.push(r);
+  for (const rule of rules) {
+    if (seen.has(rule.from)) continue;
+    seen.add(rule.from);
+    unique.push(rule);
   }
 
-  const without = stripLegacyRedirectBlock(existing).replace(/\s+$/, "\n");
-  const block = formatLegacyRedirectBlock(unique);
-  if (!block) return without.endsWith("\n") ? without : `${without}\n`;
+  const without = stripRedirectBlock(existing, name).replace(/\s+$/, "\n");
+  const block = formatRedirectBlock(name, unique);
+  // Removing a block leaves the blank lines that surrounded it, so collapse
+  // runs before returning: every bake re-merges each block, and the file has
+  // to converge instead of growing a blank line per run.
+  const tidy = (text: string): string => text.replace(/\n{3,}/g, "\n\n");
+  if (!block) return tidy(without.endsWith("\n") ? without : `${without}\n`);
 
   const catchAll = /^(\/\*[\t ]+\/404\.html[\t ]+404)\s*$/m;
-  const m = catchAll.exec(without);
-  if (m && m.index !== undefined) {
-    const before = without.slice(0, m.index).replace(/\s+$/, "\n");
-    const after = without.slice(m.index);
-    return `${before}\n${block}${after.startsWith("\n") ? after.slice(1) : after}`;
+  const match = catchAll.exec(without);
+  if (match) {
+    const before = without.slice(0, match.index).replace(/\s+$/, "\n");
+    const after = without.slice(match.index);
+    return tidy(
+      `${before}\n${block}${after.startsWith("\n") ? after.slice(1) : after}`,
+    );
   }
-  return `${without}${without.endsWith("\n") ? "" : "\n"}\n${block}`;
+  return tidy(`${without}${without.endsWith("\n") ? "" : "\n"}\n${block}`);
 }
 
 function escapeRegExp(s: string): string {

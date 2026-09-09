@@ -134,11 +134,28 @@ test("a page without a channel keeps the minimal head", () => {
   assert.ok(bare.includes('<meta name="robots" content="index, follow">'));
 });
 
-test("404 page is noindex and points at sitemap and llms.txt", () => {
-  const nf = notFoundHtml(CHROME, "/blog");
+test("section 404 is noindex and offers a way back into the section", () => {
+  const nf = notFoundHtml(CHROME, "/blog", {
+    sectionTitle: "Devblog",
+    recent: [
+      { title: "Vaults", url: "/blog/vaults", date: "2026-08-01T00:00:00Z" },
+      { title: "Rails", url: "/blog/rails", date: "2026-07-01T00:00:00Z" },
+    ],
+  });
   assert.ok(nf.includes('content="noindex"'));
+  assert.ok(nf.includes('<a href="/blog/vaults">Vaults</a>'));
+  assert.ok(nf.includes('<time datetime="2026-08-01T00:00:00Z">2026-08-01</time>'));
+  assert.ok(nf.includes('<a href="/blog">Devblog index</a>'));
+  assert.ok(nf.includes("/blog/rss.xml"));
   assert.ok(nf.includes("/blog/sitemap.xml"));
-  assert.ok(nf.includes("/llms.txt"));
+  assert.ok(nf.includes("/blog/llms.txt"));
+});
+
+test("section 404 without posts still routes somewhere useful", () => {
+  const nf = notFoundHtml(CHROME, "/blog");
+  assert.ok(!nf.includes("Latest in"));
+  assert.ok(nf.includes('<a href="/blog">this section index</a>'));
+  assert.ok(nf.includes("/blog/sitemap.xml"));
 });
 
 test("article rails put ToC then cite on the left and post-nav on the right", () => {

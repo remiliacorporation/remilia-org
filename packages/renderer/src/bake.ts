@@ -43,7 +43,11 @@ import {
 import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
-import { mergeLegacyRedirects, type RedirectRule } from "./redirects";
+import {
+  aliasRules,
+  mergeRedirectBlock,
+  type RedirectRule,
+} from "./redirects";
 import {
   BakeRefused,
   EMPTY_BAKE_ESCAPE,
@@ -104,6 +108,7 @@ interface FetchedPost {
   albums?: FetchedAlbum[];
   legacyUrl?: string;
   migrationSource?: string;
+  aliases?: string[];
 }
 
 interface FetchedImage {
@@ -144,6 +149,7 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
   origin, externalUrl, outlet, commentary,
   startsAt, endsAt, locationName,
   "legacyUrl": migration.legacyUrl,
+  aliases,
   "migrationSource": migration.source,
   "albums": albums[]->{ title, "slug": slug.current, date, description,
     "images": images[]{ "ref": asset._ref, alt, caption, credit } }
@@ -576,7 +582,17 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   await writeFile(join(dir, "rss.xml"), rss(meta, feedPosts));
   await writeFile(join(dir, "atom.xml"), atom(meta, feedPosts));
   await writeFile(join(dir, "sitemap.xml"), sitemap(sitemapEntries));
-  await writeFile(join(dir, "404.html"), notFoundHtml(chrome, basePath));
+  await writeFile(
+    join(dir, "404.html"),
+    notFoundHtml(chrome, basePath, {
+      sectionTitle: host.title,
+      recent: navPosts.map((p) => ({
+        title: p.title,
+        url: p.url,
+        date: p.date,
+      })),
+    }),
+  );
   await writeFile(
     join(dir, "llms.txt"),
     llmsTxt({
@@ -590,9 +606,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  if (channel === "press") {
-    await writePressLegacyRedirects(outDir, posts);
-  }
+  await writeChannelRedirects(outDir, channel, basePath, posts);
+
 
   return { pages: posts.length + 1 };
 }
@@ -607,22 +622,48 @@ function ghostFromUrl(url: string): string {
   return `${u.origin}${path}`;
 }
 
-async function writePressLegacyRedirects(outDir: string, posts: FetchedPost[]): Promise<void> {
-  const rules: RedirectRule[] = [
-    { from: "https://blog.remilia.org/", to: `${indexUrl("press")}/` },
-    { from: "https://blog.remilia.org", to: `${indexUrl("press")}/` },
-  ];
-  for (const p of posts) {
-    const fallback = legacyRedirect("press", p.slug);
-    const from =
-      p.legacyUrl && /^https?:\/\/blog\.remilia\.org\//i.test(p.legacyUrl)
-        ? ghostFromUrl(p.legacyUrl)
-        : p.migrationSource === "ghost"
-          ? fallback.from
-          : null;
-    if (!from) continue;
-    rules.push({ from, to: fallback.to });
+/**
+ * One `_redirects` block per section: 301s for every path a post used to live
+ * at, the Ghost host rules for press, and a section-scoped 404 so a bad URL
+ * under `/updates` lands on the Updates 404 rather than the corporate one.
+ */
+async function writeChannelRedirects(
+  outDir: string,
+  channel: Channel,
+  basePath: string,
+  posts: FetchedPost[],
+): Promise<void> {
+  const rules: RedirectRule[] = [];
+
+  if (channel === "press") {
+    rules.push(
+      {
+        from: "https://blog.remilia.org/",
+        to: `${indexUrl("press")}/`,
+        force: true,
+      },
+      {
+        from: "https://blog.remilia.org",
+        to: `${indexUrl("press")}/`,
+        force: true,
+      },
+    );
+    for (const p of posts) {
+      const fallback = legacyRedirect("press", p.slug);
+      const from =
+        p.legacyUrl && /^https?:\/\/blog\.remilia\.org\//i.test(p.legacyUrl)
+          ? ghostFromUrl(p.legacyUrl)
+          : p.migrationSource === "ghost"
+            ? fallback.from
+            : null;
+      if (!from) continue;
+      rules.push({ from, to: fallback.to, force: true });
+    }
   }
+
+  rules.push(...aliasRules(basePath, posts));
+
+  rules.push({ from: `${basePath}/*`, to: `${basePath}/404.html`, status: 404 });
 
   const redirectsPath = join(outDir, "_redirects");
   let existing = "";
@@ -631,5 +672,8 @@ async function writePressLegacyRedirects(outDir: string, posts: FetchedPost[]): 
   } catch {
     existing = "/*    /404.html    404\n";
   }
-  await writeFile(redirectsPath, mergeLegacyRedirects(existing, rules));
+  await writeFile(
+    redirectsPath,
+    mergeRedirectBlock(existing, `redirects:${channel}`, rules),
+  );
 }
