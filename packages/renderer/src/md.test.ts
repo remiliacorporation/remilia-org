@@ -49,6 +49,7 @@ test("frontmatter and Obsidian marks become Portable Text", () => {
   assert.ok(html.includes("<h2"));
   assert.ok(html.includes("<h3"));
   assert.ok(html.includes('href="/press/credentials"'));
+  assert.ok(html.includes('class="outlink"'));
   assert.ok(html.includes('rel="external noopener"'));
   assert.ok(html.includes("<ul><li>"));
   assert.ok(html.includes("HIKKI PUNKS"));

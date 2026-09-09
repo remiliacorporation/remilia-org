@@ -36,7 +36,7 @@ test("styles, marks, and links serialize with escaping", () => {
   assert.ok(html.includes(" &amp; "));
   assert.ok(
     html.includes(
-      '<a href="https://example.com/a" rel="external noopener">site</a>',
+      '<a class="outlink" href="https://example.com/a" rel="external noopener">site</a>',
     ),
   );
   assert.ok(html.includes("<blockquote><p>quoted</p></blockquote>"));
@@ -149,14 +149,21 @@ test("tocItems renders levels and respects the minimum", () => {
   assert.equal(tocItems(extractHeadings(blocks.slice(0, 2))), "");
 });
 
-test("external links marked rel=external; internal links get hover cards", () => {
+test("external links get outlink metadata; Remilia links stay internal", () => {
   const blocks: PTBlock[] = [
     {
       _type: "block",
-      children: [span("ext", ["e"]), span(" and "), span("int", ["i"])],
+      children: [
+        span("ext", ["e"]),
+        span(" and "),
+        span("int", ["i"]),
+        span(" and "),
+        span("wiki", ["w"]),
+      ],
       markDefs: [
         { _key: "e", _type: "link", href: "https://example.com/x" },
         { _key: "i", _type: "link", href: "https://remilia.org/press/launch" },
+        { _key: "w", _type: "link", href: "https://wiki.remilia.org/" },
       ],
     },
   ];
@@ -171,12 +178,16 @@ test("external links marked rel=external; internal links get hover cards", () =>
           }
         : undefined,
   });
-  assert.ok(html.includes('rel="external noopener">ext</a>'));
+  assert.ok(
+    html.includes('class="outlink"') &&
+      html.includes('rel="external noopener">ext</a>'),
+  );
   assert.ok(
     html.includes(
       '<a class="interlink" href="https://remilia.org/press/launch">',
     ),
   );
+  assert.ok(html.includes('<a href="https://wiki.remilia.org/">wiki</a>'));
   assert.ok(
     html.includes('<span class="link-card" role="tooltip"><span class="ht">'),
   );

@@ -41,8 +41,7 @@ export interface PTOptions {
   linkCard?: (href: string) => LinkCard | undefined;
 }
 
-const INTERNAL_HOSTS =
-  /^https?:\/\/(www\.)?(remilia\.(org|com|net)|blog\.remilia\.org)\b/;
+const INTERNAL_HOSTS = /^https?:\/\/(?:[\w-]+\.)*remilia\.(?:org|com|net)\b/;
 
 export function slugify(text: string): string {
   return (
@@ -130,7 +129,7 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
   const href = safeHref(def.href ?? "");
   const external = /^https?:/.test(href) && !INTERNAL_HOSTS.test(href);
   if (external)
-    return `<a href="${esc(href)}" rel="external noopener">${inner}</a>`;
+    return `<a class="outlink" href="${esc(href)}" rel="external noopener">${inner}</a>`;
   const card = state.opts.linkCard?.(href);
   if (!card) return `<a href="${esc(href)}">${inner}</a>`;
   const img = card.imageUrl
