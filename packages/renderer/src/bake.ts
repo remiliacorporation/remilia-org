@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { createClient, type SanityClient } from "@sanity/client";
 import {
@@ -137,7 +138,9 @@ export function cdnUrl(
   return `https://cdn.sanity.io/images/${projectId}/${dataset}/${m[1]}-${m[2]}.${m[3]}?${params}`;
 }
 
-const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && !(_id in path("drafts.**"))] | order(publishedAt desc) {
+// `publishedAt <= now()` keeps future-dated posts out of the build: a post can
+// be finished and dated ahead, and appears at the first bake after its date.
+const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && publishedAt <= now() && !(_id in path("drafts.**"))] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "ogImageRef": coalesce(seo.ogImage.asset._ref, coverImage.asset._ref),
@@ -167,6 +170,17 @@ function postPlain(blocks: PTBlock[]): string {
       s && typeof s === "object" && "text" in s ? String(s.text) : "",
     )
     .join("");
+}
+
+/**
+ * Whole minutes at 200 words per minute, the figure most reading-time
+ * estimates use. Returns undefined under a minute, where a label would say
+ * less than the words it occupies.
+ */
+export function readingMinutes(plain: string): number | undefined {
+  const words = plain.trim().split(/\s+/).filter(Boolean).length;
+  if (words < 200) return undefined;
+  return Math.round(words / 200);
 }
 
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
@@ -302,6 +316,18 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const dir = join(outDir, ...basePath.split("/").filter(Boolean));
   await mkdir(dir, { recursive: true });
 
+  // Assets carry a content fingerprint, so a stylesheet or script change
+  // reaches readers holding a cached copy instead of waiting for expiry.
+  const css = (
+    await Promise.all(opts.stylesheets.map((f) => readFile(f, "utf8")))
+  ).join("\n");
+  const stamp = (path: string, content: string): string =>
+    `${path}?v=${createHash("sha256").update(content).digest("hex").slice(0, 8)}`;
+  const chromeStamped: Chrome = {
+    ...chrome,
+    stylesheet: stamp(chrome.stylesheet, css),
+  };
+
   const cards = new Map<string, LinkCard>();
   for (const p of posts) {
     const card: LinkCard = {
@@ -323,13 +349,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     author: p.authors?.map((a) => a.name).join(", "),
   }));
   const rail = leftRail(navPosts, host.title, basePath);
-  const navScript = `<script src="${basePath}/nav.js" defer></script>`;
+  const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
   const needsLightbox =
     channel === "events" && posts.some((p) => (p.albums?.length ?? 0) > 0);
   const galleryScript = needsLightbox
-    ? `\n<script src="${basePath}/gallery.js" defer></script>`
+    ? `\n<script src="${stamp(`${basePath}/gallery.js`, LIGHTBOX_JS)}" defer></script>`
     : "";
 
   const imgUrl = (b: {
@@ -338,12 +364,27 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     (b.asset?._ref ? img(b.asset._ref, "w=1600&auto=format") : undefined) ??
     b.asset?.url;
 
+  // Prose is 560px, so a phone should not download a 1600px original.
+  const IMAGE_WIDTHS = [640, 960, 1280, 1600];
+  const imgSrcSet = (b: {
+    asset?: { _ref?: string; url?: string };
+  }): string | undefined => {
+    const ref = b.asset?._ref;
+    if (!ref) return undefined;
+    const candidates = IMAGE_WIDTHS.flatMap((w) => {
+      const url = img(ref, `w=${w}&auto=format`);
+      return url ? [`${url} ${w}w`] : [];
+    });
+    return candidates.length ? candidates.join(", ") : undefined;
+  };
+
   for (const p of posts) {
     const pageUrl = canonicalFor(channel, p.slug);
     const canonical = postCanonical(p, channel);
     const body = postBody(p, channel);
     const bodyHtml = portableTextToHtml(body, {
       imageUrl: imgUrl,
+      imageSrcSet: imgSrcSet,
       linkCard,
     });
     const galleries =
@@ -452,7 +493,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ...galleryLd,
       ],
       headExtra: `${feedLinks(meta)}${galleryScript}`,
-      chrome,
+      chrome: chromeStamped,
       leftRail: rail,
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
@@ -478,6 +519,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
+        readingMinutes: readingMinutes(postPlain(body)),
       }),
     });
     await mkdir(join(dir, p.slug), { recursive: true });
@@ -535,7 +577,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ]),
       ],
       headExtra: feedLinks(meta),
-      chrome,
+      chrome: chromeStamped,
       layoutClass: "is-index",
       leftRail: emptyRail(),
       bodyEnd: navScript,
@@ -572,10 +614,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     indexText(host.title, host.description, indexUrl(channel), indexEntries),
   );
 
-  const css = await Promise.all(
-    opts.stylesheets.map((f) => readFile(f, "utf8")),
-  );
-  await writeFile(join(dir, "blog.css"), css.join("\n"));
+  await writeFile(join(dir, "blog.css"), css);
   await writeFile(join(dir, "nav.js"), NAV_JS);
   if (needsLightbox) await writeFile(join(dir, "gallery.js"), LIGHTBOX_JS);
 
@@ -584,7 +623,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   await writeFile(join(dir, "sitemap.xml"), sitemap(sitemapEntries));
   await writeFile(
     join(dir, "404.html"),
-    notFoundHtml(chrome, basePath, {
+    notFoundHtml(chromeStamped, basePath, {
       sectionTitle: host.title,
       recent: navPosts.map((p) => ({
         title: p.title,

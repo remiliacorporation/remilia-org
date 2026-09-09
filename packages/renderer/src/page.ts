@@ -380,6 +380,8 @@ export function articleHtml(input: {
   metaHtml?: string;
   mdHref?: string;
   txtHref?: string;
+  /** Whole minutes at 200 words per minute; omitted for short notes. */
+  readingMinutes?: number;
 }): string {
   const date = new Date(input.publishedAt);
   const cat = input.category
@@ -407,6 +409,9 @@ export function articleHtml(input: {
     md && txt
       ? `<span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} <span class="nav-sep" aria-hidden="true">|</span> ${txt}`
       : "";
+  const read = input.readingMinutes
+    ? `<span class="mast-read">${input.readingMinutes} min read</span><span class="nav-sep" aria-hidden="true">|</span> `
+    : "";
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
@@ -415,7 +420,7 @@ export function articleHtml(input: {
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
-<p class="mast-tools"><label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
+<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
 </header>
 </div>
 <div class="article-rest">

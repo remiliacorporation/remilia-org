@@ -38,6 +38,10 @@ export interface LinkCard {
 
 export interface PTOptions {
   imageUrl: (img: ImageBlock) => string | undefined;
+  /** Candidate widths for the same image, as a ready `srcset` value. */
+  imageSrcSet?: (img: ImageBlock) => string | undefined;
+  /** Overrides the prose-measure `sizes` hint. */
+  imageSizes?: string;
   linkCard?: (href: string) => LinkCard | undefined;
 }
 
@@ -238,8 +242,12 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       const caption = block.caption
         ? `<figcaption><a href="${esc(src)}">${esc(block.caption)}</a></figcaption>`
         : "";
+      const srcset = opts.imageSrcSet?.(block);
+      const responsive = srcset
+        ? ` srcset="${esc(srcset)}" sizes="${esc(opts.imageSizes ?? "(min-width: 1100px) 560px, 100vw")}"`
+        : "";
       out.push(
-        `<figure><a href="${esc(src)}" aria-label="${esc(block.alt || block.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(src)}" alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
+        `<figure><a href="${esc(src)}" aria-label="${esc(block.alt || block.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(src)}"${responsive} alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
       );
     }
   }
