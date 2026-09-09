@@ -8,5 +8,9 @@
 /contact/ /contact/index.html   200
 /careers /careers/index.html   200
 /careers/ /careers/index.html   200
-# bake:org inserts Ghost→/press 301s here (see # BEGIN bake:legacy-redirects)
-/*    /404.html    404
+# bake:org inserts Ghost→/press 301s here (see /*    /404.html    404
+
+# BEGIN bake:legacy-redirects
+https://blog.remilia.org/  https://remilia.org/press/  301!
+https://blog.remilia.org  https://remilia.org/press/  301!
+# END bake:legacy-redirects
