@@ -2052,11 +2052,15 @@ article.post-card > header {
   text-decoration: none;
 }
 
-.prose a[rel~="external"]::after {
-  content: "\2197";
+.prose a.outlink::after {
+  content: "\2197" / "";
   margin-left: var(--grid);
+  min-width: 1.5em;
+  border: var(--border-w) solid currentColor;
+  line-height: 1.1;
   text-decoration: none;
-  display: inline-block;
+  display: inline-grid;
+  place-items: center;
 }
 
 .fn {
