@@ -19,7 +19,7 @@ export function netlifyRedirectLine(rule: RedirectRule): string {
 
 export function stripLegacyRedirectBlock(existing: string): string {
   const re = new RegExp(
-    `${escapeRegExp(LEGACY_REDIRECTS_BEGIN)}[\\s\\S]*?${escapeRegExp(LEGACY_REDIRECTS_END)}\\n?`,
+    `^${escapeRegExp(LEGACY_REDIRECTS_BEGIN)}$[\\s\\S]*?^${escapeRegExp(LEGACY_REDIRECTS_END)}$\\n?`,
     "m",
   );
   return existing.replace(re, "");
