@@ -192,6 +192,43 @@ function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
   return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
 }
 
+export interface IndexEntry {
+  title: string;
+  url: string;
+  date: string;
+  excerpt: string;
+}
+
+export function indexMarkdown(
+  title: string,
+  description: string,
+  url: string,
+  entries: IndexEntry[],
+): string {
+  const head = `# ${title}\n\n> ${description}\n\n${url}\n`;
+  if (!entries.length) return head;
+  const lines = entries.map(
+    (e) =>
+      `- ${e.date.slice(0, 10)} — [${e.title}](${e.url})${e.excerpt ? `: ${e.excerpt}` : ""}`,
+  );
+  return `${head}\n## Posts\n\n${lines.join("\n")}\n`;
+}
+
+export function indexText(
+  title: string,
+  description: string,
+  url: string,
+  entries: IndexEntry[],
+): string {
+  const head = `${title}\n\n${description}\n\n${url}\n`;
+  if (!entries.length) return head;
+  const lines = entries.map(
+    (e) =>
+      `${e.date.slice(0, 10)} — ${e.title}\n${e.url}${e.excerpt ? `\n${e.excerpt}` : ""}`,
+  );
+  return `${head}\n${lines.join("\n\n")}\n`;
+}
+
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const { channel, chrome, outDir, host } = opts;
   const basePath = CHANNEL_BASEPATH[channel];
@@ -444,6 +481,23 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         host.title,
       ),
     }),
+  );
+
+  const indexEntries: IndexEntry[] = posts
+    .filter((p) => !p.noIndex)
+    .map((p) => ({
+      title: p.title,
+      url: postCanonical(p, channel),
+      date: p.publishedAt,
+      excerpt: p.excerpt ?? "",
+    }));
+  await writeFile(
+    join(dir, "index.md"),
+    indexMarkdown(host.title, host.description, indexUrl(channel), indexEntries),
+  );
+  await writeFile(
+    join(dir, "index.txt"),
+    indexText(host.title, host.description, indexUrl(channel), indexEntries),
   );
 
   const css = await Promise.all(
