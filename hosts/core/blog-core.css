@@ -470,6 +470,11 @@ html[data-scheme="dark"] .theme-mode::after {
   padding: 0;
   text-decoration: none;
 }
+.mast-tools .mast-read {
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .mast-tools .mast-toc:hover,
 .mast-tools button:hover {
   background: var(--ink);
