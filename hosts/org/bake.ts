@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { ORG_SECTIONS } from "@remilia/seo";
-import { bake } from "@remilia/renderer";
+import { assertDatasetReadable, bake } from "@remilia/renderer";
 import { chromeFor, hostFor } from "./chrome";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -17,7 +17,21 @@ const extraSitemapUrls = [
   { loc: "https://remilia.org/careers" },
 ];
 
+const projectId = "8x9419lh";
+const dataset = "production";
+const token = process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
+const allowEmpty = process.env.ALLOW_EMPTY_BAKE === "1";
+
 async function main() {
+// Credentials are proven before the first file is written, so an expired
+// token cannot leave the host half-rewritten.
+const known = await assertDatasetReadable({
+  projectId,
+  dataset,
+  token,
+  allowEmpty,
+});
+if (known) console.log(`dataset holds ${known} published posts`);
 let total = 0;
 for (const channel of ORG_SECTIONS) {
   const result = await bake({
@@ -25,11 +39,11 @@ for (const channel of ORG_SECTIONS) {
     chrome: chromeFor(channel),
     host: hostFor(channel),
     outDir,
-    projectId: "8x9419lh",
-    dataset: "production",
-    token: process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN,
+    projectId,
+    dataset,
+    token,
     stylesheets,
-    allowEmpty: process.env.ALLOW_EMPTY_BAKE === "1",
+    allowEmpty,
 
     extraSitemapUrls: channel === "press" ? extraSitemapUrls : undefined,
   });

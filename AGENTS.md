@@ -39,8 +39,12 @@ in Sanity) are skipped at bake.
 `netlify.toml`: `publish = deploy`, `command = "pnpm bake"`.
 
 Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access for `bake:org`).
-Without it the query returns nothing, so `bake:org` **fails** rather than publishing empty
-sections over the live posts. Bake a genuinely empty section with `ALLOW_EMPTY_BAKE=1`.
+
+`bake:org` proves the credential before writing a file, and refuses to publish an empty
+section. A missing token (tokenless reads answer empty, not an error), an expired or
+forbidden token (401/403), and a zero-post dataset all abort the build, so the previous
+deploy stays live with its posts intact. Only `ALLOW_EMPTY_BAKE=1` can publish an empty
+section — never set it in the Netlify env.
 
 Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webhook to a
 Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`

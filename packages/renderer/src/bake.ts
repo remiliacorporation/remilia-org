@@ -44,6 +44,12 @@ import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 import { mergeLegacyRedirects, type RedirectRule } from "./redirects";
+import {
+  BakeRefused,
+  EMPTY_BAKE_ESCAPE,
+  readFailureMessage,
+  refusalFor,
+} from "./guard";
 
 export interface BakeOptions {
   channel: Channel;
@@ -252,15 +258,16 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     perspective: "published",
   });
 
-  const posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, { channel });
-  if (posts.length === 0 && !opts.allowEmpty) {
-    throw new Error(
-      `refusing to bake ${channel}: the query returned no posts. ` +
-        `Baking would replace the published index, feeds and sitemap with an ` +
-        `empty section. Set SANITY_TOKEN (or SANITY_AUTH_TOKEN) for read ` +
-        `access, or set ALLOW_EMPTY_BAKE=1 if the section is genuinely empty.`,
-    );
+  let posts: FetchedPost[];
+  try {
+    posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, { channel });
+  } catch (err) {
+    throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }
+  const refusal = opts.allowEmpty
+    ? undefined
+    : refusalFor({ token: opts.token, postCount: posts.length, what: channel });
+  if (refusal) throw new BakeRefused(`${refusal}, or set ${EMPTY_BAKE_ESCAPE}`);
   const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(
     ORG_QUERY,
   );
