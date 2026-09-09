@@ -12,10 +12,8 @@
     "bake": "pnpm --filter @remilia/hosts bake",
     "validate": "sanity schema validate",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"deploy/src/**/*.html\"",
-    "format:check": "prettier --check \"deploy/src/**/*.html\"",
     "test": "pnpm -r test",
-    "check": "pnpm format:check && pnpm typecheck && pnpm test"
+    "check": "pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@sanity/icons": "^5.2.1",
@@ -27,7 +25,6 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
-    "prettier": "3.9.6",
     "typescript": "^5.8.2"
   },
   "packageManager": "pnpm@10.27.0",
