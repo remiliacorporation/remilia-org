@@ -138,5 +138,26 @@ export function imageGallery(album: AlbumInput) {
   };
 }
 
+/**
+ * Trail for a section index or a post, matching the corporate pages'
+ * BreadcrumbList. Positions are 1-based in listed order.
+ */
+export function breadcrumbs(
+  pageUrl: string,
+  trail: { name: string; url: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: trail.map((step, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: step.name,
+      item: step.url,
+    })),
+  };
+}
+
 export const jsonLdScript = (data: object): string =>
   JSON.stringify(data).replaceAll("<", "\\u003c");

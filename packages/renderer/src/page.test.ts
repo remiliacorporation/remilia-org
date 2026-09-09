@@ -11,10 +11,12 @@ import {
   type Chrome,
 } from "./page";
 import { filterBar, leftRail } from "./nav";
+import { breadcrumbs } from "@remilia/seo";
 
 import {
   auditPage,
   auditArticleSemantics,
+  auditDiscovery,
   auditIndexability,
 } from "../../conformance/src/audit";
 import { galleryHtml } from "./gallery";
@@ -29,12 +31,32 @@ const PAGE = htmlPage({
   title: "Vaults — Devblog",
   description: "How vaults work.",
   canonical: "https://www.remilia.net/blog/vaults",
+  channel: "dev-blog",
+  publishedTime: "2026-08-01T00:00:00Z",
+  modifiedTime: "2026-08-02T00:00:00Z",
+  alternates: [
+    {
+      type: "text/markdown",
+      title: "Vaults (Markdown)",
+      href: "/blog/vaults.md",
+    },
+    {
+      type: "text/plain",
+      title: "Vaults (plain text)",
+      href: "/blog/vaults.txt",
+    },
+  ],
   jsonld: [
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       headline: "Vaults",
     },
+    breadcrumbs("https://www.remilia.net/blog/vaults", [
+      { name: "RemiliaNET", url: "https://www.remilia.net/" },
+      { name: "Devblog", url: "https://www.remilia.net/blog" },
+      { name: "Vaults", url: "https://www.remilia.net/blog/vaults" },
+    ]),
   ],
   chrome: CHROME,
   mainHtml: articleHtml({
@@ -56,7 +78,7 @@ const POST = {
 };
 
 test("page shell emits the fixed semantic structure", () => {
-  assert.ok(PAGE.includes('<html lang="en">'));
+  assert.ok(PAGE.includes('<html lang="en" dir="ltr">'));
   assert.ok(
     PAGE.includes('<main id="content" tabindex="-1" class="article-wrap">'),
   );
@@ -72,6 +94,44 @@ test("baked page passes the conformance page auditor", () => {
   assert.deepEqual(auditPage(PAGE, "https://www.remilia.net/blog/vaults"), []);
   assert.deepEqual(auditArticleSemantics(PAGE), []);
   assert.deepEqual(auditIndexability(PAGE, true), []);
+  assert.deepEqual(auditDiscovery(PAGE, "dev-blog"), []);
+});
+
+test("post head carries article times and its own renditions", () => {
+  assert.ok(
+    PAGE.includes(
+      '<meta property="article:published_time" content="2026-08-01T00:00:00Z">',
+    ),
+  );
+  assert.ok(
+    PAGE.includes(
+      '<meta property="article:modified_time" content="2026-08-02T00:00:00Z">',
+    ),
+  );
+  assert.ok(
+    PAGE.includes(
+      '<link rel="alternate" type="text/markdown" title="Vaults (Markdown)" href="/blog/vaults.md">',
+    ),
+  );
+  assert.ok(
+    PAGE.includes(
+      '<link rel="alternate" type="text/plain" title="Vaults (plain text)" href="/blog/vaults.txt">',
+    ),
+  );
+});
+
+test("a page without a channel keeps the minimal head", () => {
+  const bare = htmlPage({
+    title: "Bare",
+    description: "No host identity.",
+    canonical: "https://www.remilia.net/blog/bare",
+    jsonld: [],
+    chrome: CHROME,
+    mainHtml: "<main id=\"content\"><h1>Bare</h1></main>",
+  });
+  assert.ok(!bare.includes("og:site_name"));
+  assert.ok(!bare.includes('rel="me"'));
+  assert.ok(bare.includes('<meta name="robots" content="index, follow">'));
 });
 
 test("404 page is noindex and points at sitemap and llms.txt", () => {

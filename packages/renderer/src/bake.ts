@@ -6,6 +6,7 @@ import {
   CHANNEL_BASEPATH,
   atom,
   blogPosting,
+  breadcrumbs,
   canonicalFor,
   event as eventJsonLd,
   feedLinks,
@@ -16,6 +17,7 @@ import {
   organization,
   rss,
   sitemap,
+  siteMetaFor,
   type SitemapEntry,
   type OrgInput,
 } from "@remilia/seo";
@@ -232,6 +234,7 @@ export function indexText(
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const { channel, chrome, outDir, host } = opts;
   const basePath = CHANNEL_BASEPATH[channel];
+  const site = siteMetaFor(channel);
   const client: SanityClient = createClient({
     projectId: opts.projectId,
     dataset: opts.dataset,
@@ -384,6 +387,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         img(p.ogImageRef, "w=1200&h=630&fit=crop&auto=format") ??
         img(p.coverRef, "w=1200&auto=format"),
       noindex: p.noIndex === true,
+      channel,
+      publishedTime: p.publishedAt,
+      modifiedTime: p.updatedAt ?? p.publishedAt,
+      alternates: [
+        {
+          type: "text/markdown",
+          title: `${p.title} (Markdown)`,
+          href: `${basePath}/${p.slug}.md`,
+        },
+        {
+          type: "text/plain",
+          title: `${p.title} (plain text)`,
+          href: `${basePath}/${p.slug}.txt`,
+        },
+      ],
       jsonld: [
         ...withOrg(
           blogPosting({
@@ -396,6 +414,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               img(p.coverRef, "w=1200&auto=format"),
           }),
         ),
+        breadcrumbs(pageUrl, [
+          { name: site.name, url: `${site.origin}/` },
+          { name: host.title, url: indexUrl(channel) },
+          { name: p.title, url: pageUrl },
+        ]),
         ...eventLd,
         ...galleryLd,
       ],
@@ -455,13 +478,33 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       title: host.title,
       description: host.description,
       canonical: indexUrl(channel),
-      jsonld: withOrg({
-        "@context": "https://schema.org",
-        "@type": "Blog",
-        "@id": `${indexUrl(channel)}#blog`,
-        name: host.title,
-        description: host.description,
-      }),
+      channel,
+      alternates: [
+        {
+          type: "text/markdown",
+          title: `${host.title} (Markdown)`,
+          href: `${basePath}/index.md`,
+        },
+        {
+          type: "text/plain",
+          title: `${host.title} (plain text)`,
+          href: `${basePath}/index.txt`,
+        },
+      ],
+      jsonld: [
+        ...withOrg({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "@id": `${indexUrl(channel)}#blog`,
+          name: host.title,
+          description: host.description,
+          url: indexUrl(channel),
+        }),
+        breadcrumbs(indexUrl(channel), [
+          { name: site.name, url: `${site.origin}/` },
+          { name: host.title, url: indexUrl(channel) },
+        ]),
+      ],
       headExtra: feedLinks(meta),
       chrome,
       layoutClass: "is-index",

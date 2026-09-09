@@ -1,5 +1,11 @@
 import { THEME_JS } from "./theme";
-import { jsonLdScript } from "@remilia/seo";
+import {
+  type Channel,
+  CHANNEL_BASEPATH,
+  jsonLdScript,
+  siteMetaFor,
+  sitemapUrl,
+} from "@remilia/seo";
 import { esc } from "./html";
 
 export interface Chrome {
@@ -32,6 +38,16 @@ export interface PageInput {
   chrome: Chrome;
   noindex?: boolean;
   lang?: string;
+
+  /** Drives host identity, icons, social profiles and alternate formats. */
+  channel?: Channel;
+
+  /** Article timestamps; emitted as Open Graph article metadata. */
+  publishedTime?: string;
+  modifiedTime?: string;
+
+  /** Per-page alternate renditions, e.g. the `.md` and `.txt` siblings. */
+  alternates?: { type: string; title: string; href: string }[];
 }
 
 function themeSelHtml(): string {
@@ -77,6 +93,83 @@ ${dots}
 </aside>`;
 }
 
+/**
+ * Host identity, icons, social profiles and alternate renditions — the same
+ * set the hand-authored corporate pages declare.
+ */
+function discoveryHead(p: PageInput): string {
+  if (!p.channel) return "";
+  const site = siteMetaFor(p.channel);
+  const base = CHANNEL_BASEPATH[p.channel];
+  const lines: string[] = [
+    `<meta name="author" content="${esc(site.author)}">`,
+    `<meta name="color-scheme" content="light dark">`,
+    `<meta name="theme-color" content="${esc(site.themeColor)}">`,
+  ];
+  const icons = site.icons ?? {};
+  if (icons.favicon)
+    lines.push(`<link rel="icon" href="${esc(icons.favicon)}" sizes="any">`);
+  if (icons.png)
+    lines.push(
+      `<link rel="icon" href="${esc(icons.png)}" type="image/png">`,
+    );
+  if (icons.appleTouch)
+    lines.push(
+      `<link rel="apple-touch-icon" href="${esc(icons.appleTouch)}" sizes="180x180">`,
+    );
+  if (icons.manifest)
+    lines.push(`<link rel="manifest" href="${esc(icons.manifest)}">`);
+  lines.push(`<link rel="home" href="${esc(site.origin)}/">`);
+
+  for (const map of site.textMaps ?? [])
+    lines.push(
+      `<link rel="alternate" type="text/plain" title="${esc(map.title)}" href="${esc(map.href)}">`,
+    );
+  lines.push(
+    `<link rel="alternate" type="text/plain" title="Section llms.txt" href="${base}/llms.txt">`,
+  );
+  for (const alt of p.alternates ?? [])
+    lines.push(
+      `<link rel="alternate" type="${esc(alt.type)}" title="${esc(alt.title)}" href="${esc(alt.href)}">`,
+    );
+  lines.push(
+    `<link rel="sitemap" type="application/xml" title="Sitemap" href="${sitemapUrl(p.channel)}">`,
+  );
+  for (const profile of site.me)
+    lines.push(`<link rel="me" href="${esc(profile)}">`);
+
+  lines.push(
+    `<meta property="og:site_name" content="${esc(site.name)}">`,
+    `<meta property="og:locale" content="${esc(site.locale)}">`,
+  );
+  if (p.publishedTime)
+    lines.push(
+      `<meta property="article:published_time" content="${esc(p.publishedTime)}">`,
+    );
+  if (p.modifiedTime)
+    lines.push(
+      `<meta property="article:modified_time" content="${esc(p.modifiedTime)}">`,
+    );
+  lines.push(
+    `<meta name="twitter:url" content="${esc(p.canonical)}">`,
+    `<meta name="twitter:title" content="${esc(p.title)}">`,
+    `<meta name="twitter:description" content="${esc(p.description)}">`,
+  );
+  if (site.twitterSite)
+    lines.push(`<meta name="twitter:site" content="${esc(site.twitterSite)}">`);
+  if (site.twitterCreator)
+    lines.push(
+      `<meta name="twitter:creator" content="${esc(site.twitterCreator)}">`,
+    );
+  const image = p.ogImage ?? site.ogImage;
+  if (image)
+    lines.push(
+      `<meta property="og:image:alt" content="${esc(p.title)}">`,
+      `<meta name="twitter:image:alt" content="${esc(p.title)}">`,
+    );
+  return `${lines.join("\n")}\n`;
+}
+
 export function htmlPage(p: PageInput): string {
   const ld = p.jsonld
     .map(
@@ -89,26 +182,29 @@ export function htmlPage(p: PageInput): string {
   const main = p.tocHtml
     ? p.mainHtml
     : p.mainHtml.replace(/<label class="mast-toc"[^>]*>[\s\S]*?<\/label>/, "");
+  const ogImage =
+    p.ogImage ?? (p.channel ? siteMetaFor(p.channel).ogImage : undefined);
   return `<!DOCTYPE html>
-<html lang="${esc(p.lang ?? "en")}">
+<html lang="${esc(p.lang ?? "en")}" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.description)}">
+<meta name="robots" content="${p.noindex ? "noindex" : "index, follow"}">
 <link rel="canonical" href="${esc(p.canonical)}">
 <meta property="og:title" content="${esc(p.title)}">
 <meta property="og:description" content="${esc(p.description)}">
 <meta property="og:url" content="${esc(p.canonical)}">
 <meta property="og:type" content="${p.ogType ?? (p.jsonld.some((item) => "@type" in item && item["@type"] === "BlogPosting") ? "article" : "website")}">
 ${
-  p.ogImage
-    ? `<meta property="og:image" content="${esc(p.ogImage)}">
+  ogImage
+    ? `<meta property="og:image" content="${esc(ogImage)}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${esc(p.ogImage)}">`
+<meta name="twitter:image" content="${esc(ogImage)}">`
     : `<meta name="twitter:card" content="summary">`
 }
-${p.noindex ? '<meta name="robots" content="noindex">\n' : ""}<link rel="stylesheet" href="${esc(p.chrome.stylesheet)}">
+${discoveryHead(p)}<link rel="stylesheet" href="${esc(p.chrome.stylesheet)}">
 <script>${THEME_JS}</script>
 ${p.headExtra ?? ""}
 ${ld}

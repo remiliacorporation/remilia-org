@@ -5,6 +5,7 @@ import {
   CHANNEL_ORIGIN,
   indexUrl,
   rssUrl,
+  siteMetaFor,
   sitemapUrl,
 } from "@remilia/seo";
 
@@ -206,6 +207,100 @@ export function auditFeedDiscovery(html: string, channel: Channel): string[] {
     errors.push(`no RSS autodiscovery <link> for ${rssUrl(channel)}`);
   if (!html.includes("application/atom+xml"))
     errors.push(`no Atom autodiscovery <link> for ${atomUrl(channel)}`);
+  return errors;
+}
+
+/**
+ * Host identity, icons, social profiles, alternate renditions and breadcrumbs
+ * — the discovery set the hand-authored corporate pages declare. Baked
+ * literature is held to the same bar.
+ */
+export function auditDiscovery(html: string, channel: Channel): string[] {
+  const errors: string[] = [];
+  const site = siteMetaFor(channel);
+  const base = CHANNEL_BASEPATH[channel];
+  const has = (re: RegExp, what: string): void => {
+    if (!re.test(html)) errors.push(what);
+  };
+
+  has(/<html\b[^>]*\bdir=["'][^"']+["']/i, "html element has no dir attribute");
+  has(
+    /<meta\s+name=["']author["']\s+content=["'][^"']+["']/i,
+    "no meta author",
+  );
+  has(
+    /<meta\s+name=["']robots["']\s+content=["'][^"']+["']/i,
+    "no meta robots directive",
+  );
+  has(
+    /<meta\s+name=["']theme-color["']\s+content=["'][^"']+["']/i,
+    "no theme-color",
+  );
+  has(
+    /<meta\s+name=["']color-scheme["']\s+content=["'][^"']+["']/i,
+    "no color-scheme",
+  );
+  has(
+    /<meta\s+property=["']og:site_name["']\s+content=["'][^"']+["']/i,
+    "no og:site_name",
+  );
+  has(
+    /<meta\s+property=["']og:locale["']\s+content=["'][^"']+["']/i,
+    "no og:locale",
+  );
+  for (const name of ["twitter:title", "twitter:description", "twitter:url"])
+    has(
+      new RegExp(`<meta\\s+name=["']${name}["']\\s+content=["'][^"']+["']`, "i"),
+      `no ${name}`,
+    );
+  if (site.twitterSite)
+    has(/<meta\s+name=["']twitter:site["']/i, "no twitter:site");
+
+  for (const [rel, href] of Object.entries({
+    icon: site.icons?.favicon,
+    "apple-touch-icon": site.icons?.appleTouch,
+    manifest: site.icons?.manifest,
+  })) {
+    if (!href) continue;
+    has(
+      new RegExp(`<link\\s+rel=["']${rel}["'][^>]*href=["']${href}["']`, "i"),
+      `no ${rel} link for ${href}`,
+    );
+  }
+
+  has(
+    new RegExp(
+      `<link\\s+rel=["']sitemap["'][^>]*href=["']${sitemapUrl(channel)}["']`,
+      "i",
+    ),
+    `no sitemap link for ${sitemapUrl(channel)}`,
+  );
+  has(
+    new RegExp(`<link\\s+rel=["']alternate["'][^>]*href=["']${base}/llms.txt["']`, "i"),
+    `no llms.txt alternate for ${base}/llms.txt`,
+  );
+  if (site.me.length && !/<link\s+rel=["']me["']/i.test(html))
+    errors.push("no rel=me profile links");
+
+  const ldBlocks = matchAll(
+    html,
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+  );
+  const crumbs = ldBlocks.some((block) => {
+    try {
+      const parsed: unknown = JSON.parse(block);
+      if (typeof parsed !== "object" || parsed === null) return false;
+      if (!("@type" in parsed) || parsed["@type"] !== "BreadcrumbList")
+        return false;
+      if (!("itemListElement" in parsed)) return false;
+      const trail = parsed.itemListElement;
+      return Array.isArray(trail) && trail.length >= 2;
+    } catch {
+      return false;
+    }
+  });
+  if (!crumbs) errors.push("no BreadcrumbList JSON-LD with a trail");
+
   return errors;
 }
 

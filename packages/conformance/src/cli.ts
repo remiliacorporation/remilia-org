@@ -10,6 +10,7 @@ import {
 import {
   audit404,
   auditArticleSemantics,
+  auditDiscovery,
   auditAtom,
   auditFeedDiscovery,
   auditLlmsTxt,
@@ -93,6 +94,7 @@ try {
     ...auditMarkup(indexHtml),
     ...auditIndexability(indexHtml, true),
     ...auditFeedDiscovery(indexHtml, channel),
+    ...auditDiscovery(indexHtml, channel),
   ]);
 
   const sample = Array.from(
@@ -113,6 +115,7 @@ try {
       ...auditMarkup(postHtml),
       ...auditIndexability(postHtml, true),
       ...auditArticleSemantics(postHtml),
+      ...auditDiscovery(postHtml, channel),
     ]);
   } else {
     console.warn("no post URL in sitemap yet — page-level post audit skipped");
