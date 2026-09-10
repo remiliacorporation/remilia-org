@@ -54,9 +54,8 @@ import {
 } from "./redirects";
 import {
   BakeRefused,
-  EMPTY_BAKE_ESCAPE,
   readFailureMessage,
-  refusalFor,
+  type ContentPerspective,
 } from "./guard";
 
 export interface BakeOptions {
@@ -82,13 +81,8 @@ export interface BakeOptions {
    */
   apiHost?: string;
 
-  /**
-   * Publish a section that fetched zero posts. Off by default: an empty
-   * result is almost always a missing `SANITY_TOKEN` or a broken query, and
-   * baking it would replace every published post, feed and sitemap entry
-   * with an empty index.
-   */
-  allowEmpty?: boolean;
+  /** Sanity view to bake. Production uses `published`; protected previews use `drafts`. */
+  perspective?: ContentPerspective;
 
   stylesheets: string[];
 }
@@ -147,9 +141,9 @@ export function cdnUrl(
   return `https://cdn.sanity.io/images/${projectId}/${dataset}/${m[1]}-${m[2]}.${m[3]}?${params}`;
 }
 
-// `publishedAt <= now()` keeps future-dated posts out of the build: a post can
-// be finished and dated ahead, and appears at the first bake after its date.
-const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && publishedAt <= now() && !(_id in path("drafts.**"))] | order(publishedAt desc) {
+// Production omits future posts. Draft previews include them so editors can
+// review scheduled content before its publication time.
+const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "ogImageRef": coalesce(seo.ogImage.asset._ref, coverImage.asset._ref),
@@ -278,13 +272,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const { channel, chrome, outDir, host } = opts;
   const basePath = CHANNEL_BASEPATH[channel];
   const site = siteMetaFor(channel);
+  const perspective = opts.perspective ?? "published";
   const client: SanityClient = createClient({
     projectId: opts.projectId,
     dataset: opts.dataset,
     apiVersion: "2026-02-01",
-    useCdn: !opts.token && !opts.apiHost,
+    useCdn: perspective === "published" && !opts.token && !opts.apiHost,
     token: opts.token,
-    perspective: "published",
+    perspective,
     ...(opts.apiHost
       ? { apiHost: opts.apiHost, useProjectHostname: false }
       : {}),
@@ -292,14 +287,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   let posts: FetchedPost[];
   try {
-    posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, { channel });
+    posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, {
+      channel,
+      includeFuture: perspective === "drafts",
+    });
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }
-  const refusal = opts.allowEmpty
-    ? undefined
-    : refusalFor({ token: opts.token, postCount: posts.length, what: channel });
-  if (refusal) throw new BakeRefused(`${refusal}, or set ${EMPTY_BAKE_ESCAPE}`);
   const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(
     ORG_QUERY,
   );

@@ -52,8 +52,9 @@ Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands hea
 literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
 
 Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
-`index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Drafts (`drafts.*`
-in Sanity) are skipped at bake.
+`index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Production bakes
+use Sanity's published perspective; protected Netlify Deploy Previews use the
+drafts perspective and include scheduled posts.
 
 ## Netlify
 
@@ -61,11 +62,17 @@ in Sanity) are skipped at bake.
 
 Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access for `bake:org`).
 
-`bake:org` proves the credential before writing a file, and refuses to publish an empty
-section. A missing token (tokenless reads answer empty, not an error), an expired or
-forbidden token (401/403), and a zero-post dataset all abort the build, so the previous
-deploy stays live with its posts intact. Only `ALLOW_EMPTY_BAKE=1` can publish an empty
-section — never set it in the Netlify env.
+`bake:org` proves the credential and requires at least one post in the selected
+dataset perspective before writing files; individual sections may be intentionally
+empty. A missing token (tokenless reads answer empty, not an error), an expired or
+forbidden token (401/403), and a zero-post dataset abort the build, so the previous
+deploy stays live. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
+never be set in the Netlify environment.
+
+Netlify Deploy Previews bake Sanity's `drafts` perspective via
+`SANITY_PERSPECTIVE=drafts`. Keep preview visibility private to the Netlify team;
+production remains public. Draft content must never be exposed on an unprotected
+preview URL.
 
 Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webhook to a
 Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`

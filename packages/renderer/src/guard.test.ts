@@ -8,11 +8,15 @@ test("a tokenless read is refused before it can look empty", () => {
   assert.match(refusal, /SANITY_TOKEN/);
 });
 
-test("zero posts with a valid token is refused, naming the section", () => {
-  const refusal = refusalFor({ token: "sk-real", postCount: 0, what: "archive" });
+test("zero posts with a valid token is refused as an empty dataset", () => {
+  const refusal = refusalFor({
+    token: "sk-real",
+    postCount: 0,
+    what: "production",
+  });
   assert.ok(refusal);
-  assert.match(refusal, /archive/);
-  assert.match(refusal, /empty section/);
+  assert.match(refusal, /production/);
+  assert.match(refusal, /empty dataset/);
 });
 
 test("posts present with a token is publishable", () => {

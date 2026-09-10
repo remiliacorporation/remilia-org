@@ -10,3 +10,8 @@
   NODE_VERSION = "22"
   # Keeps Netlify's own install from fetching the Studio in the first place.
   NODE_ENV = "production"
+
+# Pull-request deploys render Sanity drafts. Project visibility must keep
+# previews private while production remains public.
+[context.deploy-preview.environment]
+  SANITY_PERSPECTIVE = "drafts"

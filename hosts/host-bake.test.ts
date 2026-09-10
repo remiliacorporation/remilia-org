@@ -30,14 +30,16 @@ const post = (i: number) => ({
   tags: ["Theory"],
 });
 
-async function fixture(): Promise<{ url: string; close: () => void }> {
+async function fixture(
+  posts = [post(1), post(2)],
+): Promise<{ url: string; close: () => void }> {
   const server: Server = createServer((req, res) => {
     const q = decodeURIComponent(new URL(req.url ?? "/", "http://x").search);
     const body = q.includes('_id == "org"')
       ? { result: { name: "Remilia Corporation" } }
       : q.includes("count(")
-        ? { result: 2 }
-        : { result: [post(1), post(2)] };
+        ? { result: posts.length }
+        : { result: posts };
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(body));
   });
@@ -121,5 +123,28 @@ test("org still wears its own brand and pinned light theme", async () => {
     assert.ok(updates.includes('href="https://remilia.org/"'));
   } finally {
     close();
+  }
+});
+
+test("an intentionally empty section still publishes its index", async () => {
+  const f = await fixture([]);
+  const outDir = await mkdtemp(join(tmpdir(), "empty-section-bake-"));
+  try {
+    await bake({
+      channel: "archive",
+      chrome: chromeFor("archive"),
+      host: hostFor("archive"),
+      outDir,
+      projectId: "test",
+      dataset: "production",
+      token: "sk-test",
+      apiHost: f.url,
+      stylesheets: [],
+    });
+    const index = await readFile(join(outDir, "archive/index.html"), "utf8");
+    assert.match(index, /REMILIA CORPORATION — ARCHIVE/);
+    assert.ok(!index.includes("Post 1"));
+  } finally {
+    f.close();
   }
 });

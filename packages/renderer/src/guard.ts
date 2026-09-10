@@ -2,14 +2,15 @@ import { createClient } from "@sanity/client";
 
 /**
  * A tokenless read of a private dataset answers `0` documents with no error,
- * and an expired token answers 401. Either way the bake would write an empty
- * index, feed and sitemap over live posts, and Netlify would publish it. Every
- * path that can produce an empty section is refused unless the caller opts in
- * explicitly.
+ * and an expired token answers 401. Either way the bake would overwrite live
+ * output with an empty dataset, so the host proves credentials and requires
+ * at least one post before writing any section.
  */
 export const EMPTY_BAKE_ESCAPE = "ALLOW_EMPTY_BAKE=1";
 
 export class BakeRefused extends Error {}
+
+export type ContentPerspective = "published" | "drafts";
 
 /** Reason a Sanity read cannot be trusted, or `undefined` when it can. */
 export function refusalFor(input: {
@@ -24,8 +25,8 @@ export function refusalFor(input: {
     );
   if (input.postCount === 0)
     return (
-      `the query returned no posts for ${input.what}. Publishing that would ` +
-      `replace the live index, feeds and sitemap with an empty section`
+      `the query returned no posts for ${input.what}. Publishing from an empty ` +
+      `dataset would replace live output`
     );
   return undefined;
 }
@@ -51,6 +52,7 @@ export async function assertDatasetReadable(opts: {
   dataset: string;
   token?: string;
   allowEmpty?: boolean;
+  perspective?: ContentPerspective;
 }): Promise<number> {
   if (opts.allowEmpty) return 0;
   const refusal = refusalFor({
@@ -60,19 +62,18 @@ export async function assertDatasetReadable(opts: {
   });
   if (refusal) throw new BakeRefused(`${refusal}, or set ${EMPTY_BAKE_ESCAPE}`);
 
+  const perspective = opts.perspective ?? "published";
   const client = createClient({
     projectId: opts.projectId,
     dataset: opts.dataset,
     apiVersion: "2026-02-01",
     useCdn: false,
     token: opts.token,
-    perspective: "published",
+    perspective,
   });
   let total: number;
   try {
-    total = await client.fetch<number>(
-      'count(*[_type == "post" && !(_id in path("drafts.**"))])',
-    );
+    total = await client.fetch<number>('count(*[_type == "post"])');
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }

@@ -40,16 +40,19 @@ export async function bakeHost(spec: HostBake): Promise<void> {
   const stylesheets = [join(here, "blog-core.css"), join(here, "theme.css")];
   const token = process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
   const allowEmpty = process.env.ALLOW_EMPTY_BAKE === "1";
+  const perspective =
+    process.env.SANITY_PERSPECTIVE === "drafts" ? "drafts" : "published";
 
-  // Credentials are proven before the first file is written, so an expired
-  // token cannot leave the host half-rewritten.
+  // Credentials and the selected dataset view are proven before the first file
+  // is written. Individual sections may be intentionally empty.
   const known = await assertDatasetReadable({
     projectId,
     dataset,
     token,
     allowEmpty,
+    perspective,
   });
-  if (known) console.log(`dataset holds ${known} published posts`);
+  if (known) console.log(`dataset holds ${known} ${perspective} posts`);
 
   let total = 0;
   for (const channel of spec.sections) {
@@ -61,8 +64,8 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       projectId,
       dataset,
       token,
+      perspective,
       stylesheets,
-      allowEmpty,
       extraSitemapUrls:
         spec.extraSitemapUrls?.channel === channel
           ? spec.extraSitemapUrls.urls
