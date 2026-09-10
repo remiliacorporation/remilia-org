@@ -28,6 +28,44 @@ test("a mixed-case section URL is redirected before the origin is asked", async 
   assert.equal(asked, false, "no origin request needed for a case fix");
 });
 
+test("a corporate page redirects from IP country before the origin is asked", async () => {
+  let asked = false;
+  const response = await notFound(
+    new Request("https://remilia.org/about?ref=x"),
+    {
+      next: () => {
+        asked = true;
+        return Promise.resolve(served(200));
+      },
+      geo: { country: { code: "KR" } },
+    },
+  );
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "https://remilia.org/kr/about?ref=x");
+  assert.equal(asked, false);
+});
+
+test("a selector choice cleans the URL and saves the override", async () => {
+  let cookie: { name: string; value: string } | undefined;
+  const response = await notFound(
+    new Request("https://remilia.org/cn/contact?lang=en&ref=x"),
+    {
+      next: () => Promise.resolve(served(200)),
+      geo: { country: { code: "CN" } },
+      cookies: {
+        get: () => undefined,
+        set: (options) => {
+          cookie = options;
+        },
+      },
+    },
+  );
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "https://remilia.org/contact?ref=x");
+  assert.equal(cookie?.name, "remilia_locale");
+  assert.equal(cookie?.value, "en");
+});
+
 test("a served page passes through untouched", async () => {
   const page = served(200);
   const response = await notFound(

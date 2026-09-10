@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { layerBounds } from "./bake-fx";
+import { localizeCorpChrome } from "./corp-locales";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const defaultSrc = join(here, "../deploy/src");
@@ -61,7 +62,7 @@ export async function bakeCorp(srcDir = defaultSrc, outDir = defaultOut): Promis
     const rel = relative(srcDir, file);
     const dest = join(outDir, rel);
     const raw = await readFile(file, "utf8");
-    const html = await expandIncludes(raw, partialsDir);
+    const html = localizeCorpChrome(await expandIncludes(raw, partialsDir), rel);
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, html);
     n += 1;

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   caseRedirect,
+  localeRedirect,
   machineNotFound,
   SECTION_PREFIXES,
 } from "../../../netlify/edge-functions/lib/paths";
@@ -31,6 +32,64 @@ test("case-sensitive paths outside the sections are untouched", () => {
   assert.equal(caseRedirect("/assets/RQ.png"), undefined);
   assert.equal(caseRedirect("/assets/css/site.css"), undefined);
   assert.equal(caseRedirect("/About"), undefined);
+});
+
+test("corporate locale routing honors explicit, saved, browser, then country choices", () => {
+  assert.deepEqual(
+    localeRedirect({
+      pathname: "/about",
+      requested: "jp",
+      preference: "kr",
+      acceptLanguage: "ko",
+      country: "KR",
+    }),
+    { pathname: "/jp/about", locale: "jp", remember: true },
+  );
+  assert.deepEqual(
+    localeRedirect({
+      pathname: "/careers",
+      preference: "kr",
+      acceptLanguage: "ja",
+      country: "CN",
+    }),
+    { pathname: "/kr/careers", locale: "kr", remember: false },
+  );
+  assert.deepEqual(
+    localeRedirect({
+      pathname: "/contact",
+      acceptLanguage: "en-US;q=0.8, ja-JP;q=0.9",
+      country: "CN",
+    }),
+    { pathname: "/jp/contact", locale: "jp", remember: false },
+  );
+  assert.equal(
+    localeRedirect({
+      pathname: "/contact",
+      acceptLanguage: "en-US, ja-JP;q=0.9",
+      country: "JP",
+    }),
+    undefined,
+  );
+  assert.deepEqual(
+    localeRedirect({ pathname: "/", country: "CN" }),
+    { pathname: "/cn/", locale: "cn", remember: false },
+  );
+});
+
+test("locale routing never captures blogs, assets, or an existing locale URL", () => {
+  assert.equal(localeRedirect({ pathname: "/press", country: "KR" }), undefined);
+  assert.equal(
+    localeRedirect({ pathname: "/assets/logo.png", country: "JP" }),
+    undefined,
+  );
+  assert.equal(localeRedirect({ pathname: "/kr/about", country: "JP" }), undefined);
+});
+
+test("selecting English cleans the URL and records the preference", () => {
+  assert.deepEqual(
+    localeRedirect({ pathname: "/cn/contact", requested: "en" }),
+    { pathname: "/contact", locale: "en", remember: true },
+  );
 });
 
 test("a missing markdown rendition answers as markdown", () => {

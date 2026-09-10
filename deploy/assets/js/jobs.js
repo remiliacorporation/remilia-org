@@ -7,6 +7,30 @@
   var root = document.querySelector(".layer-base");
   if (!table || !root) return;
 
+  var COPY = {
+    en: {
+      empty: "No open positions right now. Check ",
+      failed: "Could not load openings. ",
+      view: "View on Ashby",
+    },
+    ko: {
+      empty: "현재 채용 중인 포지션이 없습니다. 다음을 확인하세요: ",
+      failed: "채용 공고를 불러오지 못했습니다. ",
+      view: "Ashby에서 보기",
+    },
+    ja: {
+      empty: "現在募集中のポジションはありません。こちらをご確認ください：",
+      failed: "募集ポジションを読み込めませんでした。",
+      view: "Ashbyで見る",
+    },
+    "zh-Hans": {
+      empty: "目前没有开放职位。请查看：",
+      failed: "无法加载开放职位。",
+      view: "在 Ashby 上查看",
+    },
+  };
+  var copy = COPY[document.documentElement.lang] || COPY.en;
+
   var COLS = [
     {
       key: "office",
@@ -225,7 +249,8 @@
     if (!rows.length) {
       return (
         out +
-        '<tr><td class="text" colspan="4">No open positions right now. Check ' +
+        '<tr><td class="text" colspan="4">' +
+        copy.empty +
         ashbyA("jobs.ashbyhq.com/remilia") +
         ".</td></tr>"
       );
@@ -366,8 +391,9 @@
     })
     .catch(function () {
       var body =
-        '<tr><td class="text" colspan="4">Could not load openings. ' +
-        ashbyA("View on Ashby") +
+        '<tr><td class="text" colspan="4">' +
+        copy.failed +
+        ashbyA(copy.view) +
         ".</td></tr>";
       table.innerHTML = caption(false) + body;
       if (fxTable) fxTable.innerHTML = caption(true) + body;

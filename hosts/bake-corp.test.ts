@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { expandIncludes, stripFxLayer } from "./bake-corp";
 import { injectFx, layerBounds } from "./bake-fx";
+import { localizeCorpChrome } from "./corp-locales";
 
 const partialsDir = join(fileURLToPath(new URL(".", import.meta.url)), "../deploy/src/_partials");
 
@@ -38,4 +39,20 @@ test("corp bake pipeline: partials then fx", async () => {
   assert.equal(layerBounds(html, "base") !== null, true);
   assert.match(html, /id="h"/);
   assert.equal(/id=/.test(layerBounds(html, "fx")!.inner), false);
+});
+
+test("corporate locale chrome maps SEO and selectors to equivalent pages", () => {
+  const html = localizeCorpChrome(
+    "<html><head></head><body><main>안녕하세요</main></body></html>",
+    "kr/about/index.html",
+  );
+  assert.match(html, /property="og:locale" content="ko_KR"/);
+  assert.match(
+    html,
+    /hreflang="ja" href="https:\/\/remilia\.org\/jp\/about"/,
+  );
+  assert.match(html, /hreflang="x-default" href="https:\/\/remilia\.org\/about"/);
+  assert.match(html, /href="\/about\?lang=en"/);
+  assert.match(html, /data-locale="cn" href="\/cn\/about\?lang=cn"/);
+  assert.match(html, /<span lang="ko" aria-current="page">한국어<\/span>/);
 });

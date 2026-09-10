@@ -28,6 +28,9 @@
 }
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:var(--ink);font-weight:bold}
+:lang(ko){font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+:lang(ja){font-family:'Hiragino Sans','Yu Gothic','Noto Sans JP',sans-serif}
+:lang(zh-Hans){font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif}
 ::selection{background:var(--ink);color:#fff}
 th:hover ::selection,
 td:hover:not(.empty, .embed, .nav-row, .text, .office, .marquee) ::selection,
@@ -186,6 +189,13 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .wiki-float:hover .logo-tag,.wiki-float:focus-visible .logo-tag{
   background:var(--ink);color:#fff;text-decoration:underline
 }
+.language-switcher{
+  position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));z-index:20;
+  border:1px solid var(--ink);background:var(--paper);padding:4px 6px;white-space:nowrap
+}
+.language-switcher :is(a,span){display:inline;padding:0;color:var(--ink);font:inherit}
+.language-switcher a:hover,.language-switcher a:focus-visible,
+.language-switcher [aria-current="page"]{background:var(--ink);color:#fff}
 .logo-books{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;width:100%;margin:0 0 36px}
 .logo-book{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;position:relative;text-decoration:none}
 .logo-book:nth-child(odd){margin-top:20px}
@@ -373,11 +383,18 @@ header > h1:focus-visible{outline-offset:4px}
   .link-grid td span{text-align:center}
 }
 
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:page-out 70ms ease-out both}
+::view-transition-new(root){animation:page-in 100ms ease-in both}
+@keyframes page-out{to{opacity:0}}
+@keyframes page-in{from{opacity:0}}
+
 @media (prefers-reduced-motion: reduce){
   .scroll-track{animation:none}
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
+  ::view-transition-old(root),::view-transition-new(root){animation:none}
 }
 @media (prefers-contrast: more){
   :root{--paper:#fff;--ink:#b00000;--focus:#000;--skip-bg:#b00000}
@@ -388,7 +405,7 @@ header > h1:focus-visible{outline-offset:4px}
 
 @media print{
   body{overflow:visible;height:auto;background:#fff;color:#000}
-  .skip,.layer-fx,.wiki-float,iframe{display:none !important}
+  .skip,.layer-fx,.wiki-float,.language-switcher,iframe{display:none !important}
   .layer-wrap,.layer-base{position:static;height:auto;overflow:visible;max-width:none}
   a[href^="http"]::after{content:" (" attr(href) ")";font-size:10px;font-weight:normal}
 }

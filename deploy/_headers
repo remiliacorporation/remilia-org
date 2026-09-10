@@ -4,7 +4,15 @@
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin-allow-popups
-  Content-Language: en
+
+/kr/*
+  Content-Language: ko
+
+/jp/*
+  Content-Language: ja
+
+/cn/*
+  Content-Language: zh-Hans
 
 /assets/*
   Cache-Control: public, max-age=86400

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-Hans" dir="ltr">
+  <head>
+    <!-- @include _partials/head-common.html -->
+    <title>本站如何构建 — remilia.org</title>
+    <meta
+      name="description"
+      content="remilia.org 及其博客的构建方式：静态 HTML、构建生成的文献、语义 Web 标准，以及支持无障碍访问的渐进增强。"
+    />
+    <link rel="canonical" href="https://remilia.org/cn/about" />
+    <link rel="home" href="https://remilia.org/cn/" />
+    <meta property="og:title" content="本站如何构建 — remilia.org" />
+    <meta
+      property="og:description"
+      content="remilia.org 及其博客的构建方式：静态 HTML、构建生成的文献、语义 Web 标准，以及支持无障碍访问的渐进增强。"
+    />
+    <meta property="og:url" content="https://remilia.org/cn/about" />
+    <meta property="og:site_name" content="Remigumi-guchi Digital, LLC" />
+    <meta
+      property="og:image:alt"
+      content="本站如何构建 — remilia.org"
+    />
+    <meta name="twitter:url" content="https://remilia.org/cn/about" />
+    <meta name="twitter:title" content="本站如何构建 — remilia.org" />
+    <meta
+      name="twitter:description"
+      content="remilia.org 及其博客的构建方式：静态 HTML、构建生成的文献、语义 Web 标准，以及支持无障碍访问的渐进增强。"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="本站如何构建 — remilia.org"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AboutPage",
+            "@id": "https://remilia.org/cn/about#webpage",
+            "url": "https://remilia.org/cn/about",
+            "name": "本站如何构建 — remilia.org",
+            "description": "remilia.org 及其博客的构建方式：静态 HTML、构建生成的文献、语义 Web 标准，以及支持无障碍访问的渐进增强。",
+            "inLanguage": "zh-Hans",
+            "isAccessibleForFree": true,
+            "isPartOf": { "@id": "https://remilia.org/cn/#website" },
+            "about": { "@id": "https://remilia.org/#organization" }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://remilia.org/cn/about#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Remigumi-guchi Digital, LLC",
+                "item": "https://remilia.org/cn/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "本站如何构建",
+                "item": "https://remilia.org/cn/about"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body class="page-about">
+    <a class="skip" href="#content">跳至内容</a>
+
+    <!-- @include _partials/fx-svg.html -->
+
+    <div class="layer-wrap">
+      <div class="layer-base">
+        <a class="home-crest" href="/cn" aria-label="首页">
+          <span class="ht"
+            ><span class="ht-map"
+              ><img
+                src="/assets/remilia-crest.png"
+                alt=""
+                width="64"
+                height="64" /><span
+                class="ht-ink"
+                aria-hidden="true"
+              ></span></span
+          ></span>
+        </a>
+
+        <header>
+          <h1 id="top"><a href="#top">How this site is built</a></h1>
+          <table role="presentation">
+            <tr>
+              <td class="nav-row">
+                <nav class="nav-inner" aria-label="主导航">
+                  <a href="/cn">← 首页</a><a href="/cn/careers">招聘</a
+                  ><a href="/cn/contact">联系</a>
+                </nav>
+              </td>
+            </tr>
+          </table>
+        </header>
+
+        <main id="content" tabindex="-1">
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="this-host"><a href="#this-host">THIS HOST</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/">remilia.org</a>
+                  是 Remilia Corporation（Remigumi-guchi Digital, LLC）的企业信息与文献站点。企业页面为
+                  手工编写的静态 <a class="inline" href="/cn">HTML</a>。
+                  <a class="inline" href="/updates">更新</a>、
+                  <a class="inline" href="/press">新闻</a>、
+                  <a class="inline" href="/thought">思想</a> 和
+                  <a class="inline" href="/archive">归档</a> 是结构化
+                  文章，编译为 HTML，并配有 Markdown 与纯文本副本、
+                  <a class="inline" href="/updates/rss.xml">RSS 2.0</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>、
+                  <a class="inline" href="/sitemap.xml">站点地图</a> 和
+                  <a class="inline" href="/llms.txt">llms.txt 映射</a>。
+                  规范站点地址为
+                  <a class="inline" href="https://remilia.org/"
+                    >https://remilia.org/</a
+                  >
+                  （不带 www）。数字店面为
+                  <a class="inline" href="https://remilia.com/">remilia.com</a>，
+                  社区百科为
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    >wiki.remilia.org</a
+                  >，软件网络为
+                  <a class="inline" href="https://remilia.net/">remilia.net</a>。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="where-to-go">
+                    <a href="#where-to-go">WHERE TO GO</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/"
+                    ><em>remilia.org</em></a
+                  >
+                  ——企业页面与文献（<a
+                    class="inline"
+                    href="/updates"
+                    >/updates</a
+                  >、<a class="inline" href="/press">/press</a>、
+                  <a class="inline" href="/thought">/thought</a>、
+                  <a class="inline" href="/archive">/archive</a>）。
+                  <a class="inline" href="https://remilia.com/"
+                    ><em>remilia.com</em></a
+                  >
+                  ——时尚、品牌、商店与文化；新闻与活动位于
+                  <a class="inline" href="https://remilia.com/a/news"
+                    >/a/news</a
+                  >
+                  和
+                  <a class="inline" href="https://remilia.com/a/events"
+                    >/a/events</a
+                  >。
+                  <a class="inline" href="https://remilia.net/"
+                    ><em>remilia.net</em></a
+                  >
+                  ——Remilia 软件产品与工程博客。
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    ><em>wiki.remilia.org</em></a
+                  >
+                  ——百科全书；事实请引用
+                  <a
+                    class="inline"
+                    href="https://wiki.remilia.org/Remilia_Corporation"
+                    >Remilia Corporation</a
+                  >。招聘：
+                  <a class="inline" href="/cn/careers">/cn/careers</a>。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-site-is-built">
+                    <a href="#how-site-is-built">HOW THIS SITE IS BUILT</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  企业页面使用符合标准的
+                  <a class="inline" href="/cn">HTML5</a> 和
+                  <a class="inline" href="/assets/css/site.css">CSS</a>，不使用
+                  客户端框架。标记包含一个 <code>H1</code>、语义
+                  地标、跳过链接，以及已声明的文档语言。
+                  发现机制使用 <code>rel=canonical</code>、Open Graph、Twitter
+                  Cards、<a class="inline" href="/updates/rss.xml">RSS 2.0</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>、
+                  <a class="inline" href="/sitemap.xml"
+                    ><code>sitemap.xml</code></a
+                  >、
+                  <a class="inline" href="/robots.txt"
+                    ><code>robots.txt</code></a
+                  >、<a class="inline" href="/llms.txt"><code>llms.txt</code></a
+                  >、
+                  <a class="inline" href="/llms-full.txt"
+                    ><code>llms-full.txt</code></a
+                  >，以及采用
+                  <a
+                    class="inline outlink"
+                    href="https://schema.org/AboutPage"
+                    rel="external noopener noreferrer"
+                    ><code>AboutPage</code> 模式</a
+                  >的 JSON-LD。图像在传达内容时带有替代文本。
+                  本站遵循 <code>prefers-reduced-motion</code> 和
+                  <code>prefers-contrast: more</code>。每一页在没有
+                  JavaScript 的情况下仍可阅读。JavaScript 仅限于
+                  <a class="inline" href="/assets/js/headings.js"
+                    ><code>headings.js</code></a
+                  >中的页内锚点滚动与语言选择设置、
+                  <a class="inline" href="/assets/js/inspo.js"
+                    ><code>inspo.js</code></a
+                  >
+                  中的首页灵感轮播，以及
+                  <a class="inline" href="/assets/js/jobs.js"
+                    ><code>jobs.js</code></a
+                  >
+                  中的招聘职位列表。 <br /><br />
+                  作者在
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src"
+                    rel="external noopener noreferrer"
+                    ><code>deploy/src/</code></a
+                  >
+                  中维护可读的 HTML。共享的 head 标签位于
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src/_partials"
+                    rel="external noopener noreferrer"
+                    ><code>_partials/</code></a
+                  >，随后在
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-corp.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:corp</code></a
+                  >
+                  期间合并。
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-fx.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:fx</code></a
+                  >
+                  创建非交互的 <code>layer-fx</code> 副本，而 CSS 仅通过
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>print-fx</code></a
+                  >
+                  滤镜绘制 <code>layer-base</code>，使文字与边框保持单层。纹章与照片单元格
+                  使用
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>dither-3</code></a
+                  >
+                  滤镜。 <br /><br />
+                  源代码托管于
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    ><code>remiliacorporation/remilia-org</code></a
+                  >，并依据
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >
+                  授权。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-blog-is-designed">
+                    <a href="#how-blog-is-designed"
+                      >HOW THE BLOG IS DESIGNED</a
+                    >
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  博客并非一个碰巧容纳了文章的 Web 应用程序，而是一个最终生成文档的发布系统。
+                  <a
+                    class="inline outlink"
+                    href="https://remilia.sanity.studio/"
+                    rel="external noopener noreferrer"
+                    >Sanity Studio</a
+                  >
+                  是编辑源，而非生产运行时。在构建
+                  时，已发布的记录成为完整的 HTML 页面，在浏览器运行脚本之前即包含
+                  其文本、导航、引用、元数据与链接。CSS 控制呈现与
+                  原生界面状态；JavaScript 可以增强文档，但
+                  从不拥有其路由或其内容。此处的静态意味着
+                  已完成解析且可通过地址访问，而非静止不变。 <br /><br />
+                  一份
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
+                    rel="external noopener noreferrer"
+                    >内容图</a
+                  >
+                  服务于三个主机。文章的 <code>channel</code> 选择其
+                  栏目、源站、URL、元数据与视觉身份；
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
+                    rel="external noopener noreferrer"
+                    >共享渲染器</a
+                  >
+                  在各处提供相同的文档契约：
+                  <code>main</code>、<code>article</code>、一个
+                  <code>h1</code>、机器可读时间、稳定的标题
+                  片段标识符、目录，以及规范链接与备用
+                  链接。标签与作者归档、静态分页，以及
+                  上一篇与下一篇链接，使归档可作为
+                  超文本遍历，而非无限信息流。内部链接
+                  仍是普通的 <code>a</code> 元素，但会展示
+                  由目标记录的封面、标题与
+                  描述构成的卡片。外部链接有可见标记，并声明
+                  <code>rel="external noopener"</code>。没有私有路由器或
+                  客户端缓存横亘在读者与 URL 之间。 <br /><br />
+                  交互始于浏览器原语。边注文本
+                  始终存在于 HTML 中：在宽屏上 CSS 将其置于
+                  引用旁的页边；在窄屏上，则通过复选框、<code>:target</code> 和悬停状态将其展开并覆盖在正文上方。链接卡片可通过悬停或聚焦触发。主题旋钮
+                  是一组真实的输入控件，CSS 可通过
+                  <code>:has()</code> 读取其状态。小型延迟脚本添加栏目
+                  筛选、侧栏搜索、当前标题指示、复制
+                  控件、链接卡片的触摸行为，以及活动图库
+                  灯箱。移除它们后，文档仍然可读，链接仍然可用，分页仍可浏览，而且每一条注释仍会显示。 <br /><br />
+                  界面有意狭窄而有限。
+                  <a class="inline" href="/updates">索引</a> 是一组
+                  分页卡片；文章正文采用 560 像素宽的阅读栏，在
+                  大屏幕上两侧分别是目录与引文栏以及
+                  相邻文章栏。这些侧栏会折叠，而不是
+                  挤压正文。颜色是单一的 <code>--hue</code>：纸张、
+                  墨水、焦点状态、固定点阵与图像
+                  抖动均在 <code>oklch()</code> 中计算，并在
+                  黄色与青色本会失去
+                  对比度之处予以补偿。Remilia.org 构建后呈现为浅色纸面上的红色，并带有
+                  密点阵；remilia.com 为深色底上的红色且无点阵；
+                  remilia.net 为浅色底上的蓝色并带疏点阵。读者
+                  的选择在首次绘制之前覆盖这些主机默认值。
+                  照片经过处理，与页面融为一体——灰度、
+                  有序半色调、像素墨水、当前色相——而非以未经处理的矩形悬置在页面之上。 <br /><br />
+                  互操作性是一种输出，而非一项承诺。每篇文章
+                  均输出为 HTML、
+                  <a class="inline" href="/updates/index.md">Markdown</a> 和
+                  <a class="inline" href="/updates/index.txt">纯文本</a>。
+                  每个栏目发布可抓取的索引与目录、
+                  <a class="inline" href="/updates/rss.xml">RSS</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom</a>、
+                  <a class="inline" href="/updates/sitemap.xml">站点地图</a>
+                  和
+                  <a class="inline" href="/updates/llms.txt"
+                    ><code>llms.txt</code></a
+                  >。发现元数据与 JSON-LD 描述相同的记录；
+                  别名成为重定向；外部归档条目保留
+                  其原始的规范发布站点。烘焙过程为资源生成指纹，
+                  在替换栏目之前拒绝不可读或意外为空的源数据，
+                  并检查成品主机上的内部链接。发布会重新运行该
+                  烘焙，因此，供读者阅读、供订阅源和爬虫获取以及供机器读取的视图会一并重新生成。
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    >源码</a
+                  >
+                  依据
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >
+                  发布。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="link-grid" role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="directory"><a href="#directory">DIRECTORY</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td><a href="https://remilia.com/">Remilia Corporation</a></td>
+                <td><a href="https://remilia.com/">Remilia Atelier</a></td>
+                <td><a href="https://house.remilia.org/">Remilia House</a></td>
+              </tr>
+              <tr>
+                <td><a href="https://miladymaker.net/">Milady Maker</a></td>
+                <td><a href="https://cult.inc/">CULT, INC.</a></td>
+                <td><a href="https://miladycraft.net/">Miladycraft</a></td>
+              </tr>
+            </table>
+          </section>
+        </main>
+
+        <footer>
+          <table role="presentation">
+            <tr>
+              <th>
+                <h2 id="contact"><a href="#contact">CONTACT</a></h2>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <a href="mailto:corporate@remilia.org">corporate@remilia.org</a>
+              </td>
+            </tr>
+          </table>
+        </footer>
+      </div>
+    </div>
+
+    <script>
+      if (/^#(mission|new-internet|inspirations)$/.test(location.hash))
+        location.replace("/cn/" + location.hash);
+    </script>
+    <script src="/assets/js/headings.js"></script>
+  </body>
+</html>

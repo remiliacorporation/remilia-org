@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ja" dir="ltr">
+  <head>
+    <!-- @include _partials/head-common.html -->
+    <title>このサイトの構築方法 — remilia.org</title>
+    <meta
+      name="description"
+      content="remilia.orgとそのブログの構築方法：静的HTML、ベイクされた文学、セマンティックウェブ標準、アクセシブルなプログレッシブエンハンスメント。"
+    />
+    <link rel="canonical" href="https://remilia.org/jp/about" />
+    <link rel="home" href="https://remilia.org/jp/" />
+    <meta property="og:title" content="このサイトの構築方法 — remilia.org" />
+    <meta
+      property="og:description"
+      content="remilia.orgとそのブログの構築方法：静的HTML、ベイクされた文学、セマンティックウェブ標準、アクセシブルなプログレッシブエンハンスメント。"
+    />
+    <meta property="og:url" content="https://remilia.org/jp/about" />
+    <meta property="og:site_name" content="Remigumi-guchi Digital, LLC" />
+    <meta
+      property="og:image:alt"
+      content="このサイトの構築方法 — remilia.org"
+    />
+    <meta name="twitter:url" content="https://remilia.org/jp/about" />
+    <meta name="twitter:title" content="このサイトの構築方法 — remilia.org" />
+    <meta
+      name="twitter:description"
+      content="remilia.orgとそのブログの構築方法：静的HTML、ベイクされた文学、セマンティックウェブ標準、アクセシブルなプログレッシブエンハンスメント。"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="このサイトの構築方法 — remilia.org"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AboutPage",
+            "@id": "https://remilia.org/jp/about#webpage",
+            "url": "https://remilia.org/jp/about",
+            "name": "このサイトの構築方法 — remilia.org",
+            "description": "remilia.orgとそのブログの構築方法：静的HTML、ベイクされた文学、セマンティックウェブ標準、アクセシブルなプログレッシブエンハンスメント。",
+            "inLanguage": "ja",
+            "isAccessibleForFree": true,
+            "isPartOf": { "@id": "https://remilia.org/jp/#website" },
+            "about": { "@id": "https://remilia.org/#organization" }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://remilia.org/jp/about#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Remigumi-guchi Digital, LLC",
+                "item": "https://remilia.org/jp/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "このサイトの構築方法",
+                "item": "https://remilia.org/jp/about"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body class="page-about">
+    <a class="skip" href="#content">コンテンツへスキップ</a>
+
+    <!-- @include _partials/fx-svg.html -->
+
+    <div class="layer-wrap">
+      <div class="layer-base">
+        <a class="home-crest" href="/jp/" aria-label="ホーム">
+          <span class="ht"
+            ><span class="ht-map"
+              ><img
+                src="/assets/remilia-crest.png"
+                alt=""
+                width="64"
+                height="64" /><span
+                class="ht-ink"
+                aria-hidden="true"
+              ></span></span
+          ></span>
+        </a>
+
+        <header>
+          <h1 id="top"><a href="#top">How this site is built</a></h1>
+          <table role="presentation">
+            <tr>
+              <td class="nav-row">
+                <nav class="nav-inner" aria-label="メイン">
+                  <a href="/jp/">← ホーム</a><a href="/jp/careers">採用情報</a
+                  ><a href="/jp/contact">お問い合わせ</a>
+                </nav>
+              </td>
+            </tr>
+          </table>
+        </header>
+
+        <main id="content" tabindex="-1">
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="this-host"><a href="#this-host">THIS HOST</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/">remilia.org</a>
+                  はRemilia Corporation（Remigumi-guchi Digital, LLC）のコーポレートおよび文学のホストです。コーポレートページは
+                  手書きの静的<a class="inline" href="/jp/">HTML</a>です。
+                  <a class="inline" href="/updates">アップデート</a>、
+                  <a class="inline" href="/press">プレス</a>、
+                  <a class="inline" href="/thought">思想</a>、
+                  <a class="inline" href="/archive">アーカイブ</a>は、Markdownとプレーンテキストの兄弟ファイル、
+                  <a class="inline" href="/updates/rss.xml">RSS 2.0</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>、
+                  <a class="inline" href="/sitemap.xml">サイトマップ</a>、
+                  <a class="inline" href="/llms.txt">llms.txtマップ</a>とともにHTMLへコンパイルされる構造化投稿です。
+                  正規ホストは
+                  <a class="inline" href="https://remilia.org/"
+                    >https://remilia.org/</a
+                  >
+                  （non-www）です。デジタルストアフロントは
+                  <a class="inline" href="https://remilia.com/">remilia.com</a>、
+                  コミュニティ百科事典は
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    >wiki.remilia.org</a
+                  >、ソフトウェアネットワークは
+                  <a class="inline" href="https://remilia.net/">remilia.net</a>です。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table role="presentation">
+              <tr>
+                <th>
+                  <h2 id="where-to-go">
+                    <a href="#where-to-go">WHERE TO GO</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  <a class="inline" href="https://remilia.org/"
+                    ><em>remilia.org</em></a
+                  >
+                  — コーポレートページと文学（<a
+                    class="inline"
+                    href="/updates"
+                    >/updates</a
+                  >、<a class="inline" href="/press">/press</a>、
+                  <a class="inline" href="/thought">/thought</a>、
+                  <a class="inline" href="/archive">/archive</a>）。
+                  <a class="inline" href="https://remilia.com/"
+                    ><em>remilia.com</em></a
+                  >
+                  — ファッション、ブランド、ショップ、カルチャー。ニュースとイベントは
+                  <a class="inline" href="https://remilia.com/a/news"
+                    >/a/news</a
+                  >
+                  および
+                  <a class="inline" href="https://remilia.com/a/events"
+                    >/a/events</a
+                  >
+                  にあります。
+                  <a class="inline" href="https://remilia.net/"
+                    ><em>remilia.net</em></a
+                  >
+                  — Remiliaのソフトウェア製品とエンジニアリングブログ。
+                  <a class="inline" href="https://wiki.remilia.org/"
+                    ><em>wiki.remilia.org</em></a
+                  >
+                  — 百科事典。事実については
+                  <a
+                    class="inline"
+                    href="https://wiki.remilia.org/Remilia_Corporation"
+                    >Remilia Corporation</a
+                  >
+                  を引用してください。採用：
+                  <a class="inline" href="/jp/careers">/careers</a>。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-site-is-built">
+                    <a href="#how-site-is-built">HOW THIS SITE IS BUILT</a>
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  コーポレートページは、クライアントフレームワークなしで、標準に準拠した
+                  <a class="inline" href="/jp/">HTML5</a>と
+                  <a class="inline" href="/assets/css/site.css">CSS</a>を使用しています。マークアップには<code>H1</code>が1つ、セマンティックな
+                  ランドマーク、スキップリンク、宣言された文書言語があります。
+                  ディスカバリーには<code>rel=canonical</code>、Open Graph、Twitter
+                  Cards、<a class="inline" href="/updates/rss.xml">RSS 2.0</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom 1.0</a>、
+                  <a class="inline" href="/sitemap.xml"
+                    ><code>sitemap.xml</code></a
+                  >、
+                  <a class="inline" href="/robots.txt"
+                    ><code>robots.txt</code></a
+                  >、<a class="inline" href="/llms.txt"><code>llms.txt</code></a
+                  >、
+                  <a class="inline" href="/llms-full.txt"
+                    ><code>llms-full.txt</code></a
+                  >、および
+                  <a
+                    class="inline outlink"
+                    href="https://schema.org/AboutPage"
+                    rel="external noopener noreferrer"
+                    ><code>AboutPage</code>スキーマ</a
+                  >を用いたJSON-LDを使用しています。画像は内容を伝える場合に代替テキストを伴います。
+                  サイトは<code>prefers-reduced-motion</code>と
+                  <code>prefers-contrast: more</code>を尊重します。すべてのページは
+                  JavaScriptなしでも読めます。JavaScriptは、
+                  <a class="inline" href="/assets/js/headings.js"
+                    ><code>headings.js</code></a
+                  >におけるページ内ハッシュスクロールと言語選択設定、
+                  <a class="inline" href="/assets/js/inspo.js"
+                    ><code>inspo.js</code></a
+                  >におけるホームページのインスピレーションローテーター、
+                  <a class="inline" href="/assets/js/jobs.js"
+                    ><code>jobs.js</code></a
+                  >における採用のジョブボードに限られています。<br /><br />
+                  著者は読みやすいHTMLを
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src"
+                    rel="external noopener noreferrer"
+                    ><code>deploy/src/</code></a
+                  >で維持しています。共有のheadタグは
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/deploy/src/_partials"
+                    rel="external noopener noreferrer"
+                    ><code>_partials/</code></a
+                  >にあり、
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-corp.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:corp</code></a
+                  >の際にマージされます。
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/hosts/bake-fx.ts"
+                    rel="external noopener noreferrer"
+                    ><code>bake:fx</code></a
+                  >
+                  は不活性な<code>layer-fx</code>コピーを作成し、CSSは
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>print-fx</code></a
+                  >
+                  フィルターを通して<code>layer-base</code>のみを描画し、書体とボーダーを一重のままにします。クレストと写真のセルは
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/deploy/src/_partials/fx-svg.html"
+                    rel="external noopener noreferrer"
+                    ><code>dither-3</code></a
+                  >
+                  フィルターを使用します。<br /><br />
+                  ソースコードは
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    ><code>remiliacorporation/remilia-org</code></a
+                  >
+                  でホストされ、
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >の下でライセンスされています。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="values-box" role="presentation">
+              <tr>
+                <th>
+                  <h2 id="how-blog-is-designed">
+                    <a href="#how-blog-is-designed"
+                      >HOW THE BLOG IS DESIGNED</a
+                    >
+                  </h2>
+                </th>
+              </tr>
+              <tr>
+                <td class="text">
+                  ブログは、たまたま記事を含む
+                  ウェブアプリケーションではありません。文書へと解決される出版システムです。
+                  <a
+                    class="inline outlink"
+                    href="https://remilia.sanity.studio/"
+                    rel="external noopener noreferrer"
+                    >Sanity Studio</a
+                  >
+                  は編集ソースであり、本番ランタイムではありません。ビルド時に、公開済みレコードは、ブラウザがスクリプトを実行する前に、テキスト、ナビゲーション、引用、メタデータ、リンクを含む完全なHTMLページになります。CSSがプレゼンテーションとネイティブなインターフェース状態を制御します。JavaScriptは文書を向上させることはあっても、そのルートや内容を所有することはありません。ここでの静的とは、解決済みでアドレス可能であることであり、不活性であることではありません。<br /><br />
+                  1つの
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
+                    rel="external noopener noreferrer"
+                    >コンテンツグラフ</a
+                  >
+                  が3つのホストに提供されます。投稿の<code>channel</code>がそのセクション、オリジン、URL、メタデータ、視覚的アイデンティティを選び、
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
+                    rel="external noopener noreferrer"
+                    >共有レンダラー</a
+                  >
+                  がどこでも同じ文書契約を提供します：
+                  <code>main</code>、<code>article</code>、1つの
+                  <code>h1</code>、機械可読な時刻、安定した見出し
+                  フラグメント、目次、正規リンクと代替
+                  リンク。タグと著者のアーカイブ、静的ページネーション、前後のリンクにより、アーカイブは無限フィードではなくハイパーテキストとして辿れます。インターリンクは普通の<code>a</code>要素のままですが、対象レコードのカバー、タイトル、説明から構築されたカードを表示します。アウトリンクは視覚的にマークされ、
+                  <code>rel="external noopener"</code>を宣言します。読者とURLの間にプライベートなルーターやクライアントキャッシュは介在しません。<br /><br />
+                  インタラクションはブラウザのプリミティブから始まります。サイドノートのテキストは常にHTMLに存在します。広い画面ではCSSが参照の横のマージンに配置し、狭い画面ではチェックボックス、<code>:target</code>、ホバー状態がテキストの上に開きます。リンクカードはホバーとフォーカスで機能します。テーマダイヤルは、CSSが<code>:has()</code>で状態を読める実際の入力のグループです。小さな遅延スクリプトが、セクションのフィルタリング、レール検索、現在の見出しの表示、コピーコントロール、リンクカードのタッチ動作、イベントギャラリーのライトボックスを追加します。それらを取り除いても、文書は読め、リンクし、ページ送りし、すべての注を示します。<br /><br />
+                  インターフェースは意図的に狭く、有限です。
+                  <a class="inline" href="/updates">インデックス</a>はページネーションされたカードの集合です。記事は560ピクセルの読み幅で、大画面では目次と引用のレールと隣接投稿のレールが両脇にあります。それらのレールは散文を押しつぶすのではなく折りたたまれます。色は1つの<code>--hue</code>です。紙、インク、フォーカス状態、固定ドット格子、画像ディザーは<code>oklch()</code>で計算され、黄とシアンがコントラストを失うところでは補正されます。Remilia.orgは明るい紙の上に密な格子でベイクされた赤、remilia.comは格子なしの暗い紙の上の赤、remilia.netは明るい紙の上に疎な格子の青です。読者の選択は初回ペイント前にそれらのホスト既定を上書きします。写真はページに属するように作られます — グレースケール、秩序だったハーフトーン、ピクセルインク、現在の色相 — 手つかずの矩形としてその上に載るのではありません。<br /><br />
+                  相互運用性は出力であり、約束ではありません。すべての投稿はHTML、
+                  <a class="inline" href="/updates/index.md">Markdown</a>、
+                  <a class="inline" href="/updates/index.txt">プレーンテキスト</a>として出力されます。
+                  すべてのセクションはクロール可能なインデックスとディレクトリ、
+                  <a class="inline" href="/updates/rss.xml">RSS</a>、
+                  <a class="inline" href="/updates/atom.xml">Atom</a>、
+                  <a class="inline" href="/updates/sitemap.xml">サイトマップ</a>、
+                  <a class="inline" href="/updates/llms.txt"
+                    ><code>llms.txt</code></a
+                  >を公開します。ディスカバリーメタデータとJSON-LDは同じレコードを記述します。エイリアスはリダイレクトになり、外部アーカイブのエントリは元の正規の掲載元を保持します。ベイクはアセットにフィンガープリントを付け、セクションを置き換える前に読めない、または予期せず空のソースデータを拒否し、完成したホスト全体の内部リンクを検査します。公開はそのベイクを再実行するため、人間、フィード、クローラー、機械可読なビューが一緒に再生成されます。
+                  <a
+                    class="inline outlink"
+                    href="https://github.com/remiliacorporation/remilia-org"
+                    rel="external noopener noreferrer"
+                    >ソース</a
+                  >
+                  は
+                  <a
+                    class="inline"
+                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
+                    rel="external noopener noreferrer"
+                    >Viral Public License</a
+                  >の下で公開されています。
+                </td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <table class="link-grid" role="presentation">
+              <tr>
+                <th colspan="3">
+                  <h2 id="directory"><a href="#directory">DIRECTORY</a></h2>
+                </th>
+              </tr>
+              <tr>
+                <td><a href="https://remilia.com/">Remilia Corporation</a></td>
+                <td><a href="https://remilia.com/">Remilia Atelier</a></td>
+                <td><a href="https://house.remilia.org/">Remilia House</a></td>
+              </tr>
+              <tr>
+                <td><a href="https://miladymaker.net/">Milady Maker</a></td>
+                <td><a href="https://cult.inc/">CULT, INC.</a></td>
+                <td><a href="https://miladycraft.net/">Miladycraft</a></td>
+              </tr>
+            </table>
+          </section>
+        </main>
+
+        <footer>
+          <table role="presentation">
+            <tr>
+              <th>
+                <h2 id="contact"><a href="#contact">CONTACT</a></h2>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <a href="mailto:corporate@remilia.org">corporate@remilia.org</a>
+              </td>
+            </tr>
+          </table>
+        </footer>
+      </div>
+    </div>
+
+    <script>
+      if (/^#(mission|new-internet|inspirations)$/.test(location.hash))
+        location.replace("/jp/" + location.hash);
+    </script>
+    <script src="/assets/js/headings.js"></script>
+  </body>
+</html>

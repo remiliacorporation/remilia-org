@@ -8,6 +8,24 @@
 /contact/ /contact/index.html   200
 /careers /careers/index.html   200
 /careers/ /careers/index.html   200
+/kr/about   /kr/about/index.html   200
+/kr/about/  /kr/about/index.html   200
+/kr/contact /kr/contact/index.html 200
+/kr/contact/ /kr/contact/index.html 200
+/kr/careers /kr/careers/index.html 200
+/kr/careers/ /kr/careers/index.html 200
+/jp/about   /jp/about/index.html   200
+/jp/about/  /jp/about/index.html   200
+/jp/contact /jp/contact/index.html 200
+/jp/contact/ /jp/contact/index.html 200
+/jp/careers /jp/careers/index.html 200
+/jp/careers/ /jp/careers/index.html 200
+/cn/about   /cn/about/index.html   200
+/cn/about/  /cn/about/index.html   200
+/cn/contact /cn/contact/index.html 200
+/cn/contact/ /cn/contact/index.html 200
+/cn/careers /cn/careers/index.html 200
+/cn/careers/ /cn/careers/index.html 200
 # bake:org writes one "bake:redirects:<section>" block per section below:
 # 301s for renamed or moved posts, the Ghost host rules for /press, and a
 # section-scoped 404. None are forced, so a real page always wins.
