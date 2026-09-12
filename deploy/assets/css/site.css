@@ -371,9 +371,9 @@ header > h1:focus-visible{outline-offset:4px}
 
 .page-careers .apply-box,
 .page-about .values-box,
-.page-home .values-box{width:70ch;max-width:100%;margin-left:auto;margin-right:auto}
+.page-home .values-box{width:min(70ch,100%);margin-left:auto;margin-right:auto}
 .page-home .inspo-box,
-.page-home .apply-team{width:50ch;max-width:100%;margin-left:auto;margin-right:auto;table-layout:fixed}
+.page-home .apply-team{width:min(50ch,100%);margin-left:auto;margin-right:auto;table-layout:fixed}
 .page-home .apply-team td a,
 .page-home .apply-team td span{text-align:center}
 .page-careers .offices,
