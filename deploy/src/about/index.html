@@ -316,109 +316,32 @@
                 </th>
               </tr>
               <tr>
-                <td class="text">
-                  The blog is not a web application that happens to contain
-                  articles. It is a publishing system that resolves into
-                  documents.
-                  <a
-                    class="inline outlink"
-                    href="https://remilia.sanity.studio/"
-                    rel="external noopener noreferrer"
-                    >Sanity Studio</a
-                  >
-                  is the editorial source, not a production runtime. At build
-                  time, published records become complete HTML pages containing
-                  their text, navigation, citations, metadata, and links before
-                  the browser runs a script. CSS controls presentation and
-                  native interface state; JavaScript may enhance a document but
-                  never owns its route or its contents. Static here means
-                  resolved and addressable, not inert. <br /><br />
-                  One
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
-                    rel="external noopener noreferrer"
-                    >content graph</a
-                  >
-                  serves three hosts. A post's <code>channel</code> selects its
-                  section, origin, URL, metadata, and visual identity; the
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
-                    rel="external noopener noreferrer"
-                    >shared renderer</a
-                  >
-                  supplies the same document contract everywhere:
-                  <code>main</code>, <code>article</code>, one
-                  <code>h1</code>, machine-readable time, stable heading
-                  fragments, a table of contents, and canonical and alternate
-                  links. Tag and author archives, static pagination, and
-                  previous and next links make the archive traversable as
-                  hypertext rather than as an infinite feed. An interlink
-                  remains an ordinary <code>a</code> element, but exposes a
-                  card built from the target record's cover, title, and
-                  description. An outlink is visibly marked and declares
-                  <code>rel="external noopener"</code>. No private router or
-                  client cache stands between a reader and a URL. <br /><br />
-                  Interaction begins with browser primitives. Sidenote text is
-                  always present in the HTML: on a wide screen CSS places it in
-                  the margin beside its reference; on a narrow screen a
-                  checkbox, <code>:target</code>, and hover state open it over
-                  the text. Link cards work on hover and focus. The theme dial
-                  is a group of real inputs whose state CSS can read with
-                  <code>:has()</code>. Small deferred scripts add section
-                  filtering, rail search, current-heading indication, copy
-                  controls, touch behavior for link cards, and an event-gallery
-                  lightbox. Remove them and the documents still read, link,
-                  paginate, and expose every note. <br /><br />
-                  The interface is deliberately narrow and finite. An
-                  <a class="inline" href="/updates">index</a> is a set of
-                  paginated cards; an article is a 560-pixel reading measure
-                  flanked on large screens by a contents and citation rail and
-                  an adjacent-post rail. Those rails collapse rather than
-                  squeeze the prose. Color is one <code>--hue</code>: paper,
-                  ink, focus states, the fixed dot lattice, and the image
-                  dither are calculated in <code>oklch()</code>, with
-                  compensation where yellow and cyan would otherwise lose
-                  contrast. Remilia.org is baked red on light paper with a
-                  dense lattice; remilia.com red on dark with no lattice;
-                  remilia.net blue on light with a sparse lattice. Reader
-                  choices override those host defaults before first paint.
-                  Photographs are made to belong to the page — grayscale,
-                  ordered halftone, pixel ink, current hue — rather than sitting
-                  above it as untouched rectangles. <br /><br />
-                  Interoperability is an output, not a promise. Every post is
-                  emitted as HTML,
+                                <td class="text">
+                  Posts are baked from Markdown, emitted as HTML,
                   <a class="inline" href="/updates/index.md">Markdown</a>, and
-                  <a class="inline" href="/updates/index.txt">plain text</a>.
-                  Every section publishes crawlable indexes and directories,
+                  <a class="inline" href="/updates/index.txt">plain text</a>
+                  with crawlable indexes and directories,
                   <a class="inline" href="/updates/rss.xml">RSS</a>,
                   <a class="inline" href="/updates/atom.xml">Atom</a>,
                   <a class="inline" href="/updates/sitemap.xml">sitemaps</a>,
                   and
                   <a class="inline" href="/updates/llms.txt"
                     ><code>llms.txt</code></a
-                  >. Discovery metadata and JSON-LD describe the same records;
-                  aliases become redirects; external archive entries retain
-                  their original canonical outlet. The bake fingerprints
-                  assets, refuses unreadable or unexpectedly empty source data
-                  before replacing a section, and checks internal links across
-                  the finished host. Publishing reruns that bake, so the human,
-                  feed, crawler, and machine-readable views are regenerated
-                  together. The
-                  <a
-                    class="inline outlink"
-                    href="https://github.com/remiliacorporation/remilia-org"
-                    rel="external noopener noreferrer"
-                    >source</a
-                  >
-                  is released under the
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
-                    rel="external noopener noreferrer"
-                    >Viral Public License</a
-                  >.
+                  >, discovery metadata and JSON-LD. <br /><br />
+                  An article is a 560-pixel reading measure flanked on large
+                  screens by a contents and citation rail and an adjacent-post
+                  rail. Footnotes are rendered as sidenotes where space
+                  permits and as a tooltip hover card in pure CSS, as a
+                  checkbox <code>:target</code>. Interlinks preview as tooltip
+                  hover cards. <br /><br />
+                  Theme is changed with <code>:has()</code>.
+                  <code>--hue</code> computes paper, ink, focus states, the
+                  fixed dot lattice, and each photograph's ordered halftone in
+                  <code>oklch()</code>, compensating where yellow and cyan
+                  would otherwise lose contrast. <br /><br />
+                  Small deferred scripts add section filtering, rail search,
+                  current-heading indication, copy controls, touch behavior
+                  for link cards, and an event-gallery lightbox.
                 </td>
               </tr>
             </table>

@@ -309,87 +309,29 @@
                 </th>
               </tr>
               <tr>
-                <td class="text">
-                  블로그는 우연히 글을 담게 된 웹 애플리케이션이 아닙니다. 문서로 변환되는 출판 시스템입니다.
-                  <a
-                    class="inline outlink"
-                    href="https://remilia.sanity.studio/"
-                    rel="external noopener noreferrer"
-                    >Sanity Studio</a
-                  >는 편집 원본이지 프로덕션 런타임이 아닙니다. 빌드
-                  시점에 게시된 레코드는 브라우저가 스크립트를 실행하기 전에 텍스트, 탐색, 인용, 메타데이터, 링크를 담은 완전한 HTML 페이지가 됩니다. CSS가 표현과
-                  네이티브 인터페이스 상태를 제어합니다. JavaScript는 문서를 향상시킬 수 있으나 경로나 내용을 소유하지 않습니다. 여기서 정적이라는 말은
-                  이미 결정되어 주소 지정 가능하다는 뜻이지, 비활성이라는 뜻이 아닙니다. <br /><br />
-                  하나의
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
-                    rel="external noopener noreferrer"
-                    >콘텐츠 그래프</a
-                  >가 세 호스트를 담당합니다. 게시물의 <code>channel</code>이
-                  섹션, 출처, URL, 메타데이터, 시각적 정체성을 선택하고,
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
-                    rel="external noopener noreferrer"
-                    >공유 렌더러</a
-                  >가 어디서나 동일한 문서 계약을 제공합니다:
-                  <code>main</code>, <code>article</code>,
-                  <code>h1</code> 하나, 기계 판독 가능 시간, 안정적인 제목
-                  프래그먼트, 목차, 정규 링크와 대체
-                  링크. 태그와 저자 아카이브, 정적 페이지네이션, 이전 및
-                  다음 링크는 아카이브를 무한 피드가 아닌 하이퍼텍스트로 탐색할 수 있게 합니다. 인터링크는
-                  평범한 <code>a</code> 요소로 남지만, 대상 레코드의 커버, 제목,
-                  설명으로 만든 카드를 노출합니다. 아웃링크는 눈에 띄게 표시되며
-                  <code>rel="external noopener"</code>를 선언합니다. 독자와 URL 사이에 비공개 라우터나
-                  클라이언트 캐시는 서지 않습니다. <br /><br />
-                  상호작용은 브라우저 원시 기능에서 시작됩니다. 사이드노트 텍스트는
-                  항상 HTML에 존재합니다. 넓은 화면에서는 CSS가 참조 옆 여백에 배치하고, 좁은 화면에서는
-                  체크박스, <code>:target</code>, 호버 상태가 텍스트 위에 엽니다. 링크 카드는 호버와 포커스에서 작동합니다. 테마 다이얼은 CSS가
-                  <code>:has()</code>로 상태를 읽을 수 있는 실제 입력 요소의 그룹입니다. 작은 지연 스크립트가 섹션
-                  필터링, 레일 검색, 현재 제목 표시, 복사
-                  컨트롤, 링크 카드의 터치 동작, 이벤트 갤러리
-                  라이트박스를 추가합니다. 이를 제거해도 문서는 여전히 읽히고, 링크되고,
-                  페이지가 나뉘며, 모든 노트를 노출합니다. <br /><br />
-                  인터페이스는 의도적으로 좁고 유한합니다.
-                  <a class="inline" href="/updates">인덱스</a>는
-                  페이지네이션된 카드의 집합이고, 기사는 560픽셀 읽기 폭이며 큰 화면에서는 목차·인용 레일과
-                  인접 게시물 레일이 양옆에 있습니다. 그 레일은 산문을 압박하지 않고 접힙니다. 색은
-                  <code>--hue</code> 하나입니다. 종이,
-                  잉크, 포커스 상태, 고정 점 격자, 이미지
-                  디더는 <code>oklch()</code>로 계산되며, 노랑과 시안이 대비를 잃을 곳에는 보정이 적용됩니다. remilia.org는 밝은 종이에 촘촘한 격자와 함께 베이크된 빨강이고, remilia.com은 격자 없는 어두운 빨강이며,
-                  remilia.net은 성긴 격자의 밝은 파랑입니다. 독자
-                  선택은 첫 페인트 전에 그 호스트 기본값을 덮어씁니다.
-                  사진은 손대지 않은 사각형으로 페이지 위에 얹히지 않고 — 그레이스케일,
-                  질서 있는 하프톤, 픽셀 잉크, 현재 색조 — 페이지에 속하도록
-                  만들어집니다. <br /><br />
-                  상호운용성은 약속이 아니라 산출물입니다. 모든 게시물은
-                  HTML,
+                                <td class="text">
+                  모든 게시물은 Markdown에서 베이크되어 HTML,
                   <a class="inline" href="/updates/index.md">Markdown</a>,
-                  <a class="inline" href="/updates/index.txt">일반 텍스트</a>로 출력됩니다.
-                  모든 섹션은 크롤링 가능한 인덱스와 디렉터리,
+                  <a class="inline" href="/updates/index.txt">일반 텍스트</a>로 출력되고 크롤링 가능한 인덱스와 디렉터리,
                   <a class="inline" href="/updates/rss.xml">RSS</a>,
                   <a class="inline" href="/updates/atom.xml">Atom</a>,
                   <a class="inline" href="/updates/sitemap.xml">사이트맵</a>,
                   <a class="inline" href="/updates/llms.txt"
                     ><code>llms.txt</code></a
-                  >를 발행합니다. 디스커버리 메타데이터와 JSON-LD는 동일한 레코드를 기술하고, 별칭은 리다이렉트가 되며, 외부 아카이브 항목은
-                  원래의 정규 발행처를 유지합니다. 베이크는
-                  자산에 핑거프린트를 부여하고, 섹션을 교체하기 전에 읽을 수 없거나 예기치 않게 비어 있는 소스 데이터를 거부하며, 완성된 호스트 전역의 내부 링크를 검사합니다. 발행은 그 베이크를 다시 실행하므로 인간,
-                  피드, 크롤러, 기계 판독 가능 뷰가 함께
-                  재생성됩니다.
-                  <a
-                    class="inline outlink"
-                    href="https://github.com/remiliacorporation/remilia-org"
-                    rel="external noopener noreferrer"
-                    >소스</a
-                  >는
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
-                    rel="external noopener noreferrer"
-                    >Viral Public License</a
-                  > 하에 공개됩니다.
+                  >, 디스커버리 메타데이터와 JSON-LD를 발행합니다. <br /><br />
+                  기사는 560픽셀 읽기 폭이며 큰 화면에서는 목차·인용 레일과
+                  인접 게시물 레일이 양옆에 있습니다. 각주는 공간이 허락되는
+                  곳에서는 사이드노트로, 그렇지 않은 곳에서는 순수 CSS의 툴팁
+                  호버 카드(체크박스 <code>:target</code>)로 렌더링됩니다.
+                  인터링크는 툴팁 호버 카드로 미리 보기됩니다. <br /><br />
+                  테마는 <code>:has()</code>로 바뀝니다. 색은
+                  <code>--hue</code> 하나입니다. 종이, 잉크, 포커스 상태, 고정 점
+                  격자, 각 사진의 질서 있는 하프톤은 <code>oklch()</code>로
+                  계산되며, 노랑과 시안이 대비를 잃을 곳에는 보정이
+                  적용됩니다. <br /><br />
+                  작은 지연 스크립트가 섹션 필터링, 레일 검색, 현재 제목 표시,
+                  복사 컨트롤, 링크 카드의 터치 동작, 이벤트 갤러리
+                  라이트박스를 추가합니다.
                 </td>
               </tr>
             </table>

@@ -112,12 +112,11 @@ td.embed iframe{display:block;width:100%;border:none}
 .video-poster img{display:block;width:100%;height:100%;object-fit:cover}
 .video-play{
   position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);
-  display:inline-block;padding:6px 10px;border:1px solid var(--ink);
-  background:var(--paper);color:var(--ink);line-height:1;white-space:nowrap;
-  text-decoration:underline
+  display:inline-block;padding:12px 16px 12px 22px;border:1px solid var(--ink);
+  background:var(--ink);color:#fff;font-size:32px;line-height:1
 }
 .video-poster:hover .video-play,
-.video-poster:focus-visible .video-play{background:var(--ink);color:#fff;border-color:#fff}
+.video-poster:focus-visible .video-play{background:var(--paper);color:var(--ink)}
 footer td > a[href^="mailto"],
 .fx-footer td > .lk{text-align:center}
 td a,td span.lk{display:block;padding:8px;text-decoration:underline}
@@ -189,13 +188,32 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .wiki-float:hover .logo-tag,.wiki-float:focus-visible .logo-tag{
   background:var(--ink);color:#fff;text-decoration:underline
 }
+.wiki-under{display:none}
+.wiki-under:hover .logo-tag,.wiki-under:focus-visible .logo-tag{
+  background:var(--ink);color:#fff;text-decoration:underline
+}
 .language-switcher{
   position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));z-index:20;
-  border:1px solid var(--ink);background:var(--paper);padding:4px 6px;white-space:nowrap
+  border:1px solid transparent;padding:4px 6px;white-space:nowrap;
+  transition:border-color .12s ease-out,background-color .12s ease-out
 }
-.language-switcher :is(a,span){display:inline;padding:0;color:var(--ink);font:inherit}
-.language-switcher a:hover,.language-switcher a:focus-visible,
-.language-switcher [aria-current="page"]{background:var(--ink);color:#fff}
+.language-switcher:hover,.language-switcher:focus-within{
+  border-color:var(--ink);background:var(--paper)
+}
+.language-switcher :is(a,span){
+  display:inline-block;padding:0;color:var(--ink);font:inherit;text-decoration:none;
+  max-width:0;opacity:0;overflow:hidden;
+  transition:max-width .12s ease-out,opacity .12s ease-out
+}
+.language-switcher > [aria-current],
+.language-switcher:hover :is(a,span),
+.language-switcher:focus-within :is(a,span){max-width:5em;opacity:1}
+.language-switcher :lang(ko),.language-switcher :lang(ja),
+.language-switcher :lang(zh-Hans){font-size:11px}
+.language-switcher a:hover,
+.language-switcher a:focus-visible{background:var(--ink);color:#fff}
+.language-switcher:hover [aria-current="page"],
+.language-switcher:focus-within [aria-current="page"]{text-decoration:underline}
 .logo-books{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;width:100%;margin:0 0 36px}
 .logo-book{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;position:relative;text-decoration:none}
 .logo-book:nth-child(odd){margin-top:20px}
@@ -381,20 +399,28 @@ header > h1:focus-visible{outline-offset:4px}
 @media(max-width:700px){
   .link-grid td a,
   .link-grid td span{text-align:center}
+  .logo-link,.logo-row>span{flex:0 1 auto;min-width:0}
+  .logo,.logo-wiki,.logo-word{width:auto;height:auto;max-width:100%}
+  .logo{max-height:148px}
+  .logo-wiki{max-height:129px}
+  .logo-word{max-height:113px}
+  .logo-book .floater-label{white-space:normal}
+  .jobs-board :is(.jobs-cols th,td):not(:nth-child(3)){white-space:normal}
+  .jobs-board .jobs-cols th{padding-left:4px;padding-right:4px}
+  .jobs-board td a{padding-left:4px;padding-right:4px}
+  .jobs-chips{flex-wrap:wrap}
+  .wiki-float{display:none}
+  .wiki-under{display:flex;flex-direction:column;align-items:center;margin-top:4px;text-decoration:none}
+  .wiki-under .logo-wiki{height:90px}
+  .wiki-under .logo-tag{position:static;transform:none;margin-top:8px}
 }
 
-@view-transition{navigation:auto}
-::view-transition-old(root){animation:page-out 70ms ease-out both}
-::view-transition-new(root){animation:page-in 100ms ease-in both}
-@keyframes page-out{to{opacity:0}}
-@keyframes page-in{from{opacity:0}}
-
 @media (prefers-reduced-motion: reduce){
+  .language-switcher,.language-switcher :is(a,span){transition:none}
   .scroll-track{animation:none}
   .ht-ink,.ht::after{display:none}
   .ht,.ht-map,.ht img{filter:none}
   html,.layer-wrap{scroll-behavior:auto}
-  ::view-transition-old(root),::view-transition-new(root){animation:none}
 }
 @media (prefers-contrast: more){
   :root{--paper:#fff;--ink:#b00000;--focus:#000;--skip-bg:#b00000}

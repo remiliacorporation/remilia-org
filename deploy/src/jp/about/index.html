@@ -310,62 +310,30 @@
                 </th>
               </tr>
               <tr>
-                <td class="text">
-                  ブログは、たまたま記事を含む
-                  ウェブアプリケーションではありません。文書へと解決される出版システムです。
-                  <a
-                    class="inline outlink"
-                    href="https://remilia.sanity.studio/"
-                    rel="external noopener noreferrer"
-                    >Sanity Studio</a
-                  >
-                  は編集ソースであり、本番ランタイムではありません。ビルド時に、公開済みレコードは、ブラウザがスクリプトを実行する前に、テキスト、ナビゲーション、引用、メタデータ、リンクを含む完全なHTMLページになります。CSSがプレゼンテーションとネイティブなインターフェース状態を制御します。JavaScriptは文書を向上させることはあっても、そのルートや内容を所有することはありません。ここでの静的とは、解決済みでアドレス可能であることであり、不活性であることではありません。<br /><br />
-                  1つの
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
-                    rel="external noopener noreferrer"
-                    >コンテンツグラフ</a
-                  >
-                  が3つのホストに提供されます。投稿の<code>channel</code>がそのセクション、オリジン、URL、メタデータ、視覚的アイデンティティを選び、
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
-                    rel="external noopener noreferrer"
-                    >共有レンダラー</a
-                  >
-                  がどこでも同じ文書契約を提供します：
-                  <code>main</code>、<code>article</code>、1つの
-                  <code>h1</code>、機械可読な時刻、安定した見出し
-                  フラグメント、目次、正規リンクと代替
-                  リンク。タグと著者のアーカイブ、静的ページネーション、前後のリンクにより、アーカイブは無限フィードではなくハイパーテキストとして辿れます。インターリンクは普通の<code>a</code>要素のままですが、対象レコードのカバー、タイトル、説明から構築されたカードを表示します。アウトリンクは視覚的にマークされ、
-                  <code>rel="external noopener"</code>を宣言します。読者とURLの間にプライベートなルーターやクライアントキャッシュは介在しません。<br /><br />
-                  インタラクションはブラウザのプリミティブから始まります。サイドノートのテキストは常にHTMLに存在します。広い画面ではCSSが参照の横のマージンに配置し、狭い画面ではチェックボックス、<code>:target</code>、ホバー状態がテキストの上に開きます。リンクカードはホバーとフォーカスで機能します。テーマダイヤルは、CSSが<code>:has()</code>で状態を読める実際の入力のグループです。小さな遅延スクリプトが、セクションのフィルタリング、レール検索、現在の見出しの表示、コピーコントロール、リンクカードのタッチ動作、イベントギャラリーのライトボックスを追加します。それらを取り除いても、文書は読め、リンクし、ページ送りし、すべての注を示します。<br /><br />
-                  インターフェースは意図的に狭く、有限です。
-                  <a class="inline" href="/updates">インデックス</a>はページネーションされたカードの集合です。記事は560ピクセルの読み幅で、大画面では目次と引用のレールと隣接投稿のレールが両脇にあります。それらのレールは散文を押しつぶすのではなく折りたたまれます。色は1つの<code>--hue</code>です。紙、インク、フォーカス状態、固定ドット格子、画像ディザーは<code>oklch()</code>で計算され、黄とシアンがコントラストを失うところでは補正されます。Remilia.orgは明るい紙の上に密な格子でベイクされた赤、remilia.comは格子なしの暗い紙の上の赤、remilia.netは明るい紙の上に疎な格子の青です。読者の選択は初回ペイント前にそれらのホスト既定を上書きします。写真はページに属するように作られます — グレースケール、秩序だったハーフトーン、ピクセルインク、現在の色相 — 手つかずの矩形としてその上に載るのではありません。<br /><br />
-                  相互運用性は出力であり、約束ではありません。すべての投稿はHTML、
+                                <td class="text">
+                  すべての投稿はMarkdownからベイクされ、HTML、
                   <a class="inline" href="/updates/index.md">Markdown</a>、
-                  <a class="inline" href="/updates/index.txt">プレーンテキスト</a>として出力されます。
-                  すべてのセクションはクロール可能なインデックスとディレクトリ、
+                  <a class="inline" href="/updates/index.txt">プレーンテキスト</a>として出力され、
+                  クロール可能なインデックスとディレクトリ、
                   <a class="inline" href="/updates/rss.xml">RSS</a>、
                   <a class="inline" href="/updates/atom.xml">Atom</a>、
                   <a class="inline" href="/updates/sitemap.xml">サイトマップ</a>、
                   <a class="inline" href="/updates/llms.txt"
                     ><code>llms.txt</code></a
-                  >を公開します。ディスカバリーメタデータとJSON-LDは同じレコードを記述します。エイリアスはリダイレクトになり、外部アーカイブのエントリは元の正規の掲載元を保持します。ベイクはアセットにフィンガープリントを付け、セクションを置き換える前に読めない、または予期せず空のソースデータを拒否し、完成したホスト全体の内部リンクを検査します。公開はそのベイクを再実行するため、人間、フィード、クローラー、機械可読なビューが一緒に再生成されます。
-                  <a
-                    class="inline outlink"
-                    href="https://github.com/remiliacorporation/remilia-org"
-                    rel="external noopener noreferrer"
-                    >ソース</a
-                  >
-                  は
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
-                    rel="external noopener noreferrer"
-                    >Viral Public License</a
-                  >の下で公開されています。
+                  >、ディスカバリーメタデータとJSON-LDを公開します。 <br /><br />
+                  記事は560ピクセルの読み幅で、大画面では目次と引用のレールと
+                  隣接投稿のレールが両脇にあります。脚注は余裕がある場所では
+                  サイドノートとして表示され、そうでない場所では純粋なCSSによる
+                  ツールチップのホバーカード（チェックボックス
+                  <code>:target</code>）として表示されます。インターリンクは
+                  ツールチップのホバーカードでプレビューされます。 <br /><br />
+                  テーマは<code>:has()</code>で切り替わります。1つの
+                  <code>--hue</code>が紙、インク、フォーカス状態、固定ドット格子、
+                  各写真の秩序だったハーフトーンを<code>oklch()</code>で計算し、
+                  黄とシアンがコントラストを失うところでは補正されます。 <br /><br />
+                  小さな遅延スクリプトが、セクションのフィルタリング、レール検索、
+                  現在の見出しの表示、コピーコントロール、リンクカードの
+                  タッチ動作、イベントギャラリーのライトボックスを追加します。
                 </td>
               </tr>
             </table>

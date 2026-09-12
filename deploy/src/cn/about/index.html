@@ -315,101 +315,26 @@
                 </th>
               </tr>
               <tr>
-                <td class="text">
-                  博客并非一个碰巧容纳了文章的 Web 应用程序，而是一个最终生成文档的发布系统。
-                  <a
-                    class="inline outlink"
-                    href="https://remilia.sanity.studio/"
-                    rel="external noopener noreferrer"
-                    >Sanity Studio</a
-                  >
-                  是编辑源，而非生产运行时。在构建
-                  时，已发布的记录成为完整的 HTML 页面，在浏览器运行脚本之前即包含
-                  其文本、导航、引用、元数据与链接。CSS 控制呈现与
-                  原生界面状态；JavaScript 可以增强文档，但
-                  从不拥有其路由或其内容。此处的静态意味着
-                  已完成解析且可通过地址访问，而非静止不变。 <br /><br />
-                  一份
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/schemaTypes"
-                    rel="external noopener noreferrer"
-                    >内容图</a
-                  >
-                  服务于三个主机。文章的 <code>channel</code> 选择其
-                  栏目、源站、URL、元数据与视觉身份；
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/tree/main/packages/renderer"
-                    rel="external noopener noreferrer"
-                    >共享渲染器</a
-                  >
-                  在各处提供相同的文档契约：
-                  <code>main</code>、<code>article</code>、一个
-                  <code>h1</code>、机器可读时间、稳定的标题
-                  片段标识符、目录，以及规范链接与备用
-                  链接。标签与作者归档、静态分页，以及
-                  上一篇与下一篇链接，使归档可作为
-                  超文本遍历，而非无限信息流。内部链接
-                  仍是普通的 <code>a</code> 元素，但会展示
-                  由目标记录的封面、标题与
-                  描述构成的卡片。外部链接有可见标记，并声明
-                  <code>rel="external noopener"</code>。没有私有路由器或
-                  客户端缓存横亘在读者与 URL 之间。 <br /><br />
-                  交互始于浏览器原语。边注文本
-                  始终存在于 HTML 中：在宽屏上 CSS 将其置于
-                  引用旁的页边；在窄屏上，则通过复选框、<code>:target</code> 和悬停状态将其展开并覆盖在正文上方。链接卡片可通过悬停或聚焦触发。主题旋钮
-                  是一组真实的输入控件，CSS 可通过
-                  <code>:has()</code> 读取其状态。小型延迟脚本添加栏目
-                  筛选、侧栏搜索、当前标题指示、复制
-                  控件、链接卡片的触摸行为，以及活动图库
-                  灯箱。移除它们后，文档仍然可读，链接仍然可用，分页仍可浏览，而且每一条注释仍会显示。 <br /><br />
-                  界面有意狭窄而有限。
-                  <a class="inline" href="/updates">索引</a> 是一组
-                  分页卡片；文章正文采用 560 像素宽的阅读栏，在
-                  大屏幕上两侧分别是目录与引文栏以及
-                  相邻文章栏。这些侧栏会折叠，而不是
-                  挤压正文。颜色是单一的 <code>--hue</code>：纸张、
-                  墨水、焦点状态、固定点阵与图像
-                  抖动均在 <code>oklch()</code> 中计算，并在
-                  黄色与青色本会失去
-                  对比度之处予以补偿。Remilia.org 构建后呈现为浅色纸面上的红色，并带有
-                  密点阵；remilia.com 为深色底上的红色且无点阵；
-                  remilia.net 为浅色底上的蓝色并带疏点阵。读者
-                  的选择在首次绘制之前覆盖这些主机默认值。
-                  照片经过处理，与页面融为一体——灰度、
-                  有序半色调、像素墨水、当前色相——而非以未经处理的矩形悬置在页面之上。 <br /><br />
-                  互操作性是一种输出，而非一项承诺。每篇文章
-                  均输出为 HTML、
+                                <td class="text">
+                  文章由 Markdown 烘焙生成，输出为 HTML、
                   <a class="inline" href="/updates/index.md">Markdown</a> 和
-                  <a class="inline" href="/updates/index.txt">纯文本</a>。
-                  每个栏目发布可抓取的索引与目录、
+                  <a class="inline" href="/updates/index.txt">纯文本</a>，并发布可抓取的索引与目录、
                   <a class="inline" href="/updates/rss.xml">RSS</a>、
                   <a class="inline" href="/updates/atom.xml">Atom</a>、
-                  <a class="inline" href="/updates/sitemap.xml">站点地图</a>
-                  和
+                  <a class="inline" href="/updates/sitemap.xml">站点地图</a> 和
                   <a class="inline" href="/updates/llms.txt"
                     ><code>llms.txt</code></a
-                  >。发现元数据与 JSON-LD 描述相同的记录；
-                  别名成为重定向；外部归档条目保留
-                  其原始的规范发布站点。烘焙过程为资源生成指纹，
-                  在替换栏目之前拒绝不可读或意外为空的源数据，
-                  并检查成品主机上的内部链接。发布会重新运行该
-                  烘焙，因此，供读者阅读、供订阅源和爬虫获取以及供机器读取的视图会一并重新生成。
-                  <a
-                    class="inline outlink"
-                    href="https://github.com/remiliacorporation/remilia-org"
-                    rel="external noopener noreferrer"
-                    >源码</a
-                  >
-                  依据
-                  <a
-                    class="inline"
-                    href="https://github.com/remiliacorporation/remilia-org/blob/main/LICENSE"
-                    rel="external noopener noreferrer"
-                    >Viral Public License</a
-                  >
-                  发布。
+                  >、发现元数据与 JSON-LD。 <br /><br />
+                  文章正文采用 560 像素宽的阅读栏，在大屏幕上两侧分别是
+                  目录与引文栏以及相邻文章栏。脚注在空间允许时呈现为边注，
+                  否则以纯 CSS 实现的悬停提示卡片（复选框
+                  <code>:target</code>）呈现。互链以悬停提示卡片预览。 <br /><br />
+                  主题通过 <code>:has()</code> 切换。颜色是单一的
+                  <code>--hue</code>：纸张、墨水、焦点状态、固定点阵与每张图片的
+                  有序半色调均在 <code>oklch()</code> 中计算，并在黄色与青色
+                  本会失去对比度之处予以补偿。 <br /><br />
+                  小型延迟脚本提供栏目筛选、侧栏搜索、当前标题指示、复制
+                  控件、链接卡片的触摸行为，以及活动图库灯箱。
                 </td>
               </tr>
             </table>
