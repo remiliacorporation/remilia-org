@@ -12,7 +12,7 @@ Use this host for the Remilia org map: mission, properties, literature, hiring, 
 - About this host (`/about`)
 - Contact (`/contact`, corporate@remilia.org)
 - Careers at Remilia (`/careers`); applications on Ashby
-- Updates (`/updates`); Press (`/press`); Thought (`/thought`); Archive (`/archive`) — per-section maps at `/<section>/llms.txt`
+- Updates (`/blog/updates`); Press (`/blog/press`); Thought (`/blog/thought`); Archive (`/blog/archive`) — per-section maps at `/<section>/llms.txt`
 
 Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite https://wiki.remilia.org/Remilia_Corporation for facts. Shop: https://remilia.com/
 
@@ -22,14 +22,14 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [About](https://remilia.org/about): Host map, how the site is built, standards, print surface
 - [Contact](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org
 - [Careers](https://remilia.org/careers): Openings (apply at https://jobs.ashbyhq.com/remilia); studios in Irvine, CA and Hongdae, Seoul
-- [Updates](https://remilia.org/updates): Routine notes (`/updates/llms.txt`)
-- [Press](https://remilia.org/press): Formal releases (`/press/llms.txt`, `/press/rss.xml`)
-- [Thought](https://remilia.org/thought): Essays / longform (`/thought/llms.txt`)
-- [Archive](https://remilia.org/archive): Notable writing + coverage (`/archive/llms.txt`)
+- [Updates](https://remilia.org/blog/updates): Routine notes (`/blog/updates/llms.txt`)
+- [Press](https://remilia.org/blog/press): Formal releases (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
+- [Thought](https://remilia.org/blog/thought): Essays / longform (`/blog/thought/llms.txt`)
+- [Archive](https://remilia.org/blog/archive): Notable writing + coverage (`/blog/archive/llms.txt`)
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article (no separate wiki page for Remigumi-guchi Digital, LLC)
 - [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host
 
-Literature sections (`/updates`, `/press`, `/thought`, `/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
+Literature sections (`/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
 
 ## Optional
 

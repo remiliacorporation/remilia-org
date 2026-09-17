@@ -48,7 +48,7 @@ test("frontmatter and Obsidian marks become Portable Text", () => {
   });
   assert.ok(html.includes("<h2"));
   assert.ok(html.includes("<h3"));
-  assert.ok(html.includes('href="/press/credentials"'));
+  assert.ok(html.includes('href="/blog/press/credentials"'));
   assert.ok(html.includes('class="outlink"'));
   assert.ok(html.includes('rel="external noopener"'));
   assert.ok(html.includes("<ul><li>"));
@@ -68,11 +68,41 @@ test("markdown export keeps headings, wikilinks, and footnotes", () => {
     channel: "press",
     publishedAt: "2026-08-10T00:00:00Z",
     excerpt: "Public API.",
-    canonical: "https://remilia.org/press/remilianet-alpha-v0-8-1",
+    canonical: "https://remilia.org/blog/press/remilianet-alpha-v0-8-1",
     author: "Remilia Jackson",
     tags: ["Feature"],
     body,
   });
   assert.ok(file.startsWith("---\n"));
   assert.ok(file.includes("channel: press"));
+});
+
+test("media blocks emit real asset URLs, not raw refs", () => {
+  const blocks = [
+    {
+      _type: "image" as const,
+      alt: "Poster",
+      asset: { _ref: "image-abc123-100x100-png" },
+    },
+    {
+      _type: "video" as const,
+      caption: "Clip",
+      file: { asset: { _ref: "file-def456-mp4" } },
+    },
+  ];
+  const md = portableTextToMarkdown(
+    blocks,
+    (a) => `https://cdn.sanity.io/x/${a._ref}`,
+  );
+  assert.ok(md.includes("![Poster](https://cdn.sanity.io/x/image-abc123-100x100-png)"));
+  assert.ok(md.includes("[Video: Clip](https://cdn.sanity.io/x/file-def456-mp4)"));
+
+  const html = portableTextToHtml(blocks, {
+    imageUrl: (img) =>
+      img.asset?._ref ? `https://cdn.sanity.io/img/${img.asset._ref}` : img.asset?.url,
+    videoUrl: (v) =>
+      v.file?.asset?._ref ? `https://cdn.sanity.io/files/${v.file.asset._ref}` : undefined,
+  });
+  assert.ok(html.includes('<video controls playsinline preload="metadata" src="https://cdn.sanity.io/files/file-def456-mp4"'));
+  assert.ok(html.includes("<figcaption>Clip</figcaption>"));
 });

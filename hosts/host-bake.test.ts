@@ -84,8 +84,12 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
     await readFile(join(outDir, "a/events/index.html"), "utf8");
     await readFile(join(outDir, "a/news/rss.xml"), "utf8");
     // Nothing from another host leaked in.
-    await assert.rejects(() => readFile(join(outDir, "updates/index.html")));
-    await assert.rejects(() => readFile(join(outDir, "press/index.html")));
+    await assert.rejects(() =>
+      readFile(join(outDir, "blog/updates/index.html"))
+    );
+    await assert.rejects(() =>
+      readFile(join(outDir, "blog/press/index.html"))
+    );
   } finally {
     close();
   }
@@ -115,7 +119,10 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
 test("org still wears its own brand and pinned light theme", async () => {
   const { outDir, close } = await bakeSections([ORG_SECTIONS[0]]);
   try {
-    const updates = await readFile(join(outDir, "updates/index.html"), "utf8");
+    const updates = await readFile(
+      join(outDir, "blog/updates/index.html"),
+      "utf8",
+    );
     assert.match(updates, /data-scheme="light"/);
     assert.match(updates, /data-hue="30"/);
     assert.match(updates, /data-dots="small"/);
@@ -141,7 +148,10 @@ test("an intentionally empty section still publishes its index", async () => {
       apiHost: f.url,
       stylesheets: [],
     });
-    const index = await readFile(join(outDir, "archive/index.html"), "utf8");
+    const index = await readFile(
+      join(outDir, "blog/archive/index.html"),
+      "utf8",
+    );
     assert.match(index, /REMILIA CORPORATION — ARCHIVE/);
     assert.ok(!index.includes("Post 1"));
   } finally {

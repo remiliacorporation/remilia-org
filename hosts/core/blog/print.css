@@ -1,0 +1,41 @@
+/* blog/print — print normalization (absolute colors, no dither) */
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .post-nav,
+  .toc,
+  .wm,
+  .theme-sel,
+  .left-rail,
+  .right-rail {
+    display: none;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-weight: var(--weight-body);
+  }
+  .fn-note {
+    display: block;
+    position: static;
+    width: auto;
+    margin: var(--space-xs) 0;
+  }
+  .fn-on,
+  .fn-scrim {
+    display: none;
+  }
+  .dither-fx,
+  .ht-ink {
+    display: none;
+  }
+  .ht,
+  .ht-map,
+  .ht img {
+    filter: none;
+    mix-blend-mode: normal;
+    background: transparent;
+  }
+}

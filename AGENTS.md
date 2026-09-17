@@ -35,8 +35,18 @@ before baking. Keep bake-time needs (`tsx`, `@sanity/client`) in `dependencies`.
 
 Every host bakes from `hosts/core/bake-host.ts` — same credentials, guards and
 stylesheets — differing only in sections and output directory. `hosts/{org,com,net}/bake.ts`
-are those three declarations. Section copy and chrome live in `hosts/core/sections.ts`;
-the theme layer is `hosts/core/theme.css`, shared by all three.
+are those three declarations. Section copy and chrome live in `hosts/core/sections.ts`.
+
+Two surfaces, kept separate:
+
+- **Blog** (generated, themed): `packages/renderer` markup + `hosts/core/theme.css`
+  (the skin: tokens, hue/scheme/lattice/dither) + `hosts/core/blog/*.css` (the
+  component system: base, chrome, controls, index, nav, prose, media, notes,
+  layout, print — concatenated in that order). `packages/conformance`'s
+  `auditDesignSystem` lints the concatenated sheet: colors/spacing/weights/borders
+  must be tokens, no transitions, each token defined once.
+- **Corporate** (hand-authored, fixed palette): `deploy/src/**` pages +
+  `deploy/assets/css/site.css` — its own system; it does not consume theme.css.
 
 com and net bake **blog sections only** — their storefront and product pages are not built
 here — so their output is a fragment of a larger site and the internal-link check is off

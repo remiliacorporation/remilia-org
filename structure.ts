@@ -48,10 +48,35 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title("Org — remilia.org")
             .items([
-              sectionList(S, "Updates", "updates", "Org"),
-              sectionList(S, "Press", "press", "Org"),
-              sectionList(S, "Thought", "thought", "Org"),
-              sectionList(S, "Archive", "archive", "Org"),
+              S.listItem()
+                .title("Blog — remilia.org/blog")
+                .icon(DocumentTextIcon)
+                .child(
+                  S.list()
+                    .title("Blog — remilia.org/blog")
+                    .items([
+                      S.listItem()
+                        .title("All posts")
+                        .id("blogAllOrg")
+                        .icon(DocumentTextIcon)
+                        .child(
+                          S.documentList()
+                            .id("blogAllOrgList")
+                            .title("Blog — all sections")
+                            .schemaType("post")
+                            .filter(
+                              '_type == "post" && channel in ["updates", "press", "thought", "archive"]',
+                            )
+                            .defaultOrdering([
+                              { field: "publishedAt", direction: "desc" },
+                            ]),
+                        ),
+                      sectionList(S, "Updates", "updates", "Org"),
+                      sectionList(S, "Press", "press", "Org"),
+                      sectionList(S, "Thought", "thought", "Org"),
+                      sectionList(S, "Archive", "archive", "Org"),
+                    ]),
+                ),
             ]),
         ),
       S.listItem()

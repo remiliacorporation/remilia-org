@@ -1,0 +1,201 @@
+/* blog/controls — the theme selector: hues, lattice, dark mode, invert, tooltips */
+
+.theme-sel {
+  max-width: var(--rail);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-xs);
+  text-align: center;
+  border: var(--border);
+  background: var(--surface);
+  display: grid;
+  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
+  row-gap: var(--space-xs);
+}
+.theme-label {
+  margin: 0;
+  height: var(--mast-line);
+  line-height: var(--mast-line);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.theme-sel .nav-rule {
+  margin: 0;
+  height: 0;
+  align-self: center;
+}
+.theme-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--grid);
+  height: var(--mast-title);
+  min-width: 0;
+}
+.theme-hues {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: var(--mast-title);
+  flex: 0 0 auto;
+}
+.theme-hues input,
+.theme-dots input,
+.theme-dark {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.theme-hues label,
+.theme-dots label,
+.theme-mode {
+  flex: none;
+  width: var(--mast-line);
+  height: var(--mast-line);
+  border: var(--border);
+  cursor: pointer;
+  position: relative;
+  background: var(--surface);
+}
+.theme-dots {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: var(--mast-title);
+  flex: 0 0 auto;
+}
+.theme-hues label[for="theme-hue-30"] {
+  background: var(--swatch-30);
+}
+.theme-hues label[for="theme-hue-95"] {
+  background: var(--swatch-95);
+}
+.theme-hues label[for="theme-hue-145"] {
+  background: var(--swatch-145);
+}
+.theme-hues label[for="theme-hue-255"] {
+  background: var(--swatch-255);
+}
+.theme-hues label[for="theme-hue-330"] {
+  background: var(--swatch-330);
+}
+.theme-hues input:checked + label,
+.theme-dots input:checked + label {
+  box-shadow:
+    0 0 0 1px var(--surface),
+    0 0 0 2px var(--ink);
+}
+.theme-hues input:focus-visible + label,
+.theme-dots input:focus-visible + label,
+.theme-dark:focus-visible + .theme-mode {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.theme-dot-none {
+  background: var(--surface);
+}
+.theme-dot-none::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 7px;
+  height: 1px;
+  background: var(--ink);
+  transform: rotate(-45deg);
+}
+.theme-dot-small {
+  background-color: color-mix(in oklch, var(--ink) 10%, var(--paper));
+  background-image: radial-gradient(
+    circle at 0.5px 0.5px,
+    var(--paper) 0.5px,
+    transparent 0.51px
+  );
+  background-size: 4px 4px;
+}
+.theme-dot-large {
+  background-color: color-mix(in oklch, var(--ink) 10%, var(--paper));
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--paper) 1px,
+    transparent 1.1px
+  );
+  background-size: 8px 8px;
+}
+.theme-div {
+  flex: none;
+  width: var(--border-w);
+  height: var(--mast-line);
+  background: var(--ink);
+}
+.theme-mode::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--ink);
+}
+html:has(#theme-dark:checked) .theme-mode,
+html[data-scheme="dark"] .theme-mode {
+  background: var(--ink);
+}
+html:has(#theme-dark:checked) .theme-mode::after,
+html[data-scheme="dark"] .theme-mode::after {
+  background: var(--ink-contrast);
+}
+.theme-controls [data-tip]::before {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + var(--grid));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0 var(--grid);
+  background: var(--ink);
+  color: var(--ink-contrast);
+  line-height: var(--mast-line);
+  white-space: nowrap;
+  pointer-events: none;
+  display: none;
+}
+.theme-controls [data-tip]:hover::before,
+.theme-controls [data-tip]:focus-visible::before {
+  display: block;
+}
+@supports (anchor-name: --x) {
+  .theme-controls [data-tip]:hover {
+    anchor-name: --tip;
+  }
+  .theme-controls [data-tip]::before {
+    position: fixed;
+    position-anchor: --tip;
+    top: calc(anchor(bottom) + var(--grid));
+    left: anchor(center);
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-scheme="light"]) .theme-mode {
+    background: var(--ink);
+  }
+  html:not([data-scheme="light"]) .theme-mode::after {
+    background: var(--ink-contrast);
+  }
+}
+.left-rail .site-head,
+.left-rail .toc,
+.left-rail .cite-box,
+.right-rail .theme-sel,
+.right-rail .post-nav,
+.article-wrap {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+.right-rail .theme-sel {
+  order: 2;
+}
+

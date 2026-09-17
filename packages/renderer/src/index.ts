@@ -6,5 +6,6 @@ export * from "./gallery";
 export * from "./bake";
 export * from "./guard";
 export * from "./links";
+export * from "./redirects";
 export { smartExcerpt, plainFromBlocks } from "./excerpt";
 export { polishBody, parseFootnoteDump, splitSuperscripts } from "./polish";

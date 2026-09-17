@@ -18,8 +18,8 @@ User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://remilia.org/sitemap.xml
-Sitemap: https://remilia.org/press/sitemap.xml
-
-Sitemap: https://remilia.org/updates/sitemap.xml
-Sitemap: https://remilia.org/thought/sitemap.xml
-Sitemap: https://remilia.org/archive/sitemap.xml
+Sitemap: https://remilia.org/blog/sitemap.xml
+Sitemap: https://remilia.org/blog/press/sitemap.xml
+Sitemap: https://remilia.org/blog/updates/sitemap.xml
+Sitemap: https://remilia.org/blog/thought/sitemap.xml
+Sitemap: https://remilia.org/blog/archive/sitemap.xml

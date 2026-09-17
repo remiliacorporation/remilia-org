@@ -6,6 +6,8 @@ export interface GalleryImage {
   alt: string;
   caption?: string;
   credit?: string;
+  width?: number;
+  height?: number;
 }
 
 export function galleryHtml(title: string, images: GalleryImage[]): string {
@@ -17,8 +19,12 @@ export function galleryHtml(title: string, images: GalleryImage[]): string {
       const caption = capParts.length
         ? `<figcaption>${capParts.join(" — ")}</figcaption>`
         : "";
+      const dims =
+        img.width && img.height
+          ? ` width="${img.width}" height="${img.height}"`
+          : "";
       return `<figure>
-<a href="${esc(img.fullUrl)}" data-lightbox="${i}" aria-label="${esc(img.alt || img.caption || `View image ${i + 1}`)}"><span class="ht"><span class="ht-map"><img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>
+<a href="${esc(img.fullUrl)}" data-lightbox="${i}" aria-label="${esc(img.alt || img.caption || `View image ${i + 1}`)}"><span class="ht"><span class="ht-map"><img src="${esc(img.url)}"${dims} alt="${esc(img.alt)}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>
 ${caption}
 </figure>`;
     })

@@ -1,0 +1,52 @@
+{
+  "generated": "2026-09-15",
+  "scope": "5 dead scontent*.cdninstagram.com URLs, all located in archiveSnapshot of drafts.post-press-cultural-coverage-dazed-explores-nu-spiritualism-and-london-rave-scene-2023.json (Firecrawl markdown of the Dazed article https://www.dazeddigital.com/life-culture/article/58467/1/god-in-the-machine-the-emergence-of-nu-spiritualism-online-spring-2023). All five come from ONE embedded Instagram post card: https://www.instagram.com/p/CiVCf2pOMKc/ (captioned embed incl. avatar, carousel images, and a recent-posts profile strip). NOTE: drafts.post-press-substack-party.json contains ZERO scontent/cdninstagram/instagram URLs — the premise that the same 5 appear there as markDef hrefs is wrong (its markDefs are all *.substack.com + one twitter.com link).",
+  "caveat": "Fresh URLs are signed CDN links that expire (~1 week, oe= param). Download now and re-host on Sanity CDN for permanence. All five verified downloaded as JPEG >5KB on 2026-09-15.",
+  "images": {
+    "https://scontent-lax3-1.cdninstagram.com/v/t51.82787-15/655269043_18121728838719364_5755605587497399611_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ig_cache_key=MjkyNDI1NDUxMDExNDg4MDk3Nw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTIyNS5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=1QY2iURM_v0Q7kNvwGkmSay&_nc_oc=AdpzcapOIZbtAjbG3c_882KeHmfLfWxKph_8UtT7AkBX9y4qBVr9TdSZV4DeRD_pbCQ&_nc_zt=23&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_gid=9yxv7j0CSt4ZWh4NkmIcWg&_nc_ss=7b689&oh=00_AQKy-nsM3uWxaqdDf9T3AfNKG1EbaaGjcogFGh4H7OH9rQ&oe=6A9A8D45": {
+      "fresh": "https://scontent-lax3-1.cdninstagram.com/v/t51.82787-15/655269043_18121728838719364_5755605587497399611_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gG2QQ_N07shpo3syc63QUEN0A5jEoVlmB1x7iSyujX6xxxCNmoh4BAk_kR8zhd9rKA&_nc_ohc=HDqrj9pYHgwQ7kNvwHzNKYN&_nc_gid=YbwFp6o9KztNDc4FvvBErw&edm=AGenrX8BAAAA&ccb=7-5&oh=00_AQJfxL4NoeZY_eBGY5bD04DKgXxtlP5MNO5Lg8-UqqBy9A&oe=6AAF34C5&_nc_sid=ed990e",
+      "verified": "JPEG 91345 bytes",
+      "identity": "carousel item 1 of IG post https://www.instagram.com/p/CiVCf2pOMKc/ (media pk 2924254510114880977, child code CiVCfvMOz3R)",
+      "depicts": "Slide 1 of a 2-image carousel by @samanthaquick_ (Sam), posted Sep 10 2022, 823 likes. Caption: \"Upcoming project w/ @samanthaquick_ : THE BANOPTICON. have you been banned from uber? Are you not allowed back on tinder? Did your payment processor shut you out of your funds? We wanna know\" — a call-for-submissions image for the Banopticon project; embedded in the Dazed article as an example of fringe/nu-spiritual IG content.",
+      "via": "https://www.instagram.com/p/CiVCf2pOMKc/media/?size=l (302 -> signed CDN)"
+    },
+    "https://scontent-lax3-1.cdninstagram.com/v/t51.82787-15/684985282_17970295602047887_5497019538711867898_n.jpg?stp=dst-jpg_e35_s320x320_tt6&_nc_cat=110&ig_cache_key=Mzg4OTA0MjE3MzUwOTgzMTY4NQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=igKbyMazlF4Q7kNvwEvSXeZ&_nc_oc=AdpR2rylo57oOKi41zjB23-g8HhJdmWATxNHs0y_MRU7WJdYc4lszSAqSKjOrJ0r-TQ&_nc_zt=23&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_gid=9yxv7j0CSt4ZWh4NkmIcWg&_nc_ss=7b689&oh=00_AQJXqiwA78UknXLu1bBZWrtpA2VKZpd8OxMh-ELjX2kWVw&oe=6A9A66F9": {
+      "fresh": "https://scontent-lax3-2.cdninstagram.com/v/t51.82787-15/684985282_17970295602047887_5497019538711867898_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gGGFkkGE9VFE_PQX9ZL7HdFHX9d4fTYYnQvnswAkQ1DIH5dszgHel2OdyW_dWlbOY0&_nc_ohc=hWa0eK_7FLEQ7kNvwGu5pKB&_nc_gid=F3V-F7O4wplKdgDsHptVPA&edm=AGenrX8BAAAA&ccb=7-5&oh=00_AQJfsKZwL9F53-SJ4UVTo5uMPKgGHWEhS2S3CKEJxndzcA&oe=6AAF46B9&_nc_sid=ed990e",
+      "verified": "JPEG 100302 bytes",
+      "identity": "recent-posts grid thumbnail in the embed profile strip; source post https://www.instagram.com/p/DX4qFIJkdDP/ (media pk 3889042173509831685, collab @coexist.inc x @samanthaquick_)",
+      "depicts": "@coexist.inc x @samanthaquick_ collab photo post of May 3 2026 (~3.9K likes) announcing their \"THE BANOPTICON\" project — appeared in her profile-grid strip because she is a co-author. Widget chrome, not article content.",
+      "via": "https://www.instagram.com/p/DX4p0B0kQwF/media/?size=l (302 -> signed CDN; canonical code /p/DX4qFIJkdDP/ is public — pk-derived code reports \"Private media\" on oembed, cosmetic)"
+    },
+    "https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/447281763_257424834098011_4945540413059133550_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=107&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41NzkuQzMifQ%3D%3D&_nc_ohc=oWe9CmCXx0gQ7kNvwH3WeQd&_nc_oc=AdoLzQWDlTQys7BVjZAkLhZAhi_ANdGJdKx3jRWC9bydVX2hhUzGUXlWNcAd2GJ6HFE&_nc_zt=24&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_ss=7b689&oh=00_AQLbJknGekVVVgseaFBaAN3RYwmcbtrO__hmCQxVZMxVzQ&oe=6A9A6BFB": {
+      "fresh": "https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/447281763_257424834098011_4945540413059133550_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby41NzkuYzIifQ&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gHl4TR9PkeSuUR3GknKg6L00X2Qn3kdNNgW3wLv5KnE41h3lV6Iv7LZfIT19DbfeMI&_nc_ohc=ehzAD07PtSwQ7kNvwEMnzW2&_nc_gid=CeEtFQYEPBuP9DMFhdhY7Q&edm=AEF8tYYBAAAA&ccb=7-5&oh=00_AQIfD1p9t7EkYmePGDBbrF3Kw8B_xby6QBQcHVYTXvxdMA&oe=6AAF4BBB&_nc_sid=1e20d2",
+      "verified": "JPEG 5995 bytes",
+      "identity": "profile picture of @samanthaquick_ (IG user id 10732362), shown in the embed header + profile strip",
+      "depicts": "Avatar of Sam (@samanthaquick_) — widget chrome of the embed card, not article content. Same media file still current on her profile.",
+      "via": "https://i.instagram.com/api/v1/users/10732362/info/ profile_pic_url (mobile API, no auth)"
+    },
+    "https://scontent-lax3-2.cdninstagram.com/v/t51.82787-15/648782510_18036606098770946_393154671302439784_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ig_cache_key=MjkyNDI1NDUxMDEyMzE1MDY4OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=GT62HwmG2DoQ7kNvwEO5_jE&_nc_oc=Adoia2ZI5lisQhAXQmAJebSPsth8nDOBxV4yRWMhXA5UFQrqSzB2TQDLPTShhePIDOg&_nc_zt=23&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_gid=9yxv7j0CSt4ZWh4NkmIcWg&_nc_ss=7b689&oh=00_AQIK-f46vzWWAylhbc9Ebh_R55EGWRlgjNOkHmOAIdNw5g&oe=6A9A754E": {
+      "fresh": "https://scontent-lax3-1.cdninstagram.com/v/t51.82787-15/648782510_18036606098770946_393154671302439784_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gE8eBoSx3sk12_WJxWrkfhAESNmjfbfQD-Fuc7pEasvTz0MkEQpO8EBD0ruC4uNGck&_nc_ohc=VsVekQobChwQ7kNvwF__Q6g&_nc_gid=442ZcsnzEiN1ubcK_0VqxA&edm=AGenrX8BAAAA&ccb=7-5&oh=00_AQI-wq5ilchML8OY03_5ecjUeyuZF86z_KbP_hLyRWpGUA&oe=6AAF550E&_nc_sid=ed990e",
+      "verified": "JPEG 45699 bytes",
+      "identity": "carousel item 2 of same post https://www.instagram.com/p/CiVCf2pOMKc/ (media pk 2924254510123150689, child code CiVCfvMuW1h)",
+      "depicts": "Slide 2 of the same @samanthaquick_ Banopticon carousel (Sep 10 2022).",
+      "via": "https://www.instagram.com/p/CiVCfvMuW1h/media/?size=l (302 -> signed CDN; child code redirects to parent post)"
+    },
+    "https://scontent-lax7-1.cdninstagram.com/v/t51.82787-15/762466278_18608815543044363_8510279765346414054_n.jpg?stp=dst-jpg_e35_s320x320_tt6&_nc_cat=105&ig_cache_key=Mzk1NDQxNTg1NjQzOTE5MDUwNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTEwNS5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=X4R7CpFI9SkQ7kNvwHfDVeg&_nc_oc=AdqFYOdqumAplmsO1Vcs3U2PG10PPTvl5lqS0NlOwiacsY5q5fVg0FZXDepm1W70cKg&_nc_zt=23&_nc_ht=scontent-lax7-1.cdninstagram.com&_nc_gid=9yxv7j0CSt4ZWh4NkmIcWg&_nc_ss=7b689&oh=00_AQJNqVBrAXBJs3_sq9ls7zqJ6Mr5rKKzelz6IfQ-NJdVUA&oe=6A9A8F8C": {
+      "fresh": "https://scontent-lax3-2.cdninstagram.com/v/t51.82787-15/762466278_18608815543044363_8510279765346414054_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gH-kiIOvsXr9DTFd3QDKDudmftam982hrTtTZWigfUe-OLSOEF9MZdbarTVu_1EeGo&_nc_ohc=BN4XcugPjVYQ7kNvwFFhiXW&_nc_gid=W8eUK0xFfswue6Q78td2Eg&edm=AGenrX8BAAAA&ccb=7-5&oh=00_AQLROqLZI6zmvRZVlqVed1VSsNiTI68mXbt9TVMDUGKt0Q&oe=6AAF370C&_nc_sid=ed990e",
+      "verified": "JPEG 100031 bytes",
+      "identity": "recent-posts grid thumbnail in the embed profile strip; source post https://www.instagram.com/p/Dbg6JXyjkNt/ (media pk 3954415856439190506)",
+      "depicts": "@samanthaquick_ photo post of Aug 1 2026 (788 likes) — Vogue World: Hollywood, fashion shot of V (Kim Taehyung) in the crowd, per the post caption. Widget chrome (profile-grid thumb), not article content.",
+      "via": "https://www.instagram.com/p/Dbg6EUhOuPq/media/?size=l -> canonical post /p/Dbg6JXyjkNt/"
+    }
+  },
+  "myriad": {
+    "url": "https://myriad.markets/profilePicture/smartAccount?smartAccount=0x74B6fbDA145524369b37d29688D6Ad8D2B466987",
+    "verdict": "drop it",
+    "status_now": "HTTP 200 with empty body (0 bytes) — endpoint alive but serves nothing for this account",
+    "evidence": "In archiveSnapshot of drafts.post-press-feature-decrypt-remilia-launching-milady-social-media-network-2025.json the image sits inside a Myriad prediction-market embed card (\"### TROLL next move: Pump to $0.30 or Dump to $0.10? [Resolved $0.10](https://myriad.markets/markets/troll-next-move-pump-to-0-30-or-dump-to-0-10)\"), rendered as ![profile] in an avatar stack next to \"+172\" and \"$70K Vol.\" — an auto-generated avatar for anonymous smart account 0x74B6fbDA145524369b37d29688D6Ad8D2B466987 shown as market-participant chrome, followed by the widget's own \"Log in or Sign up / Welcome to Myriad / Continue with Google\" modal. The sibling avatar in the same stack was already mirrored to Sanity (cdn.sanity.io ...a5a0ee3a...-150x150.jpg). Decorative widget chrome, zero editorial value."
+  },
+  "tco": {
+    "https://t.co/0DPuZtn4Ni": "https://twitter.com/tedthe4th/status/1865891875850219880/photo/1 (tweet status page now 404 — deleted; found in archiveSnapshot of drafts.post-press-feature-decrypt-milady-cult-coin-launch-2024.json as pic.twitter.com link under \"Twitter Embed / Not found\")",
+    "https://t.co/lbkSbo5xFl": "https://981.jp/ (live, HTTP 200; found as markDef href in drafts.post-press-auction-core-gp.json)"
+  }
+}

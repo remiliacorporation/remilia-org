@@ -20,7 +20,9 @@ import {
   auditRss,
   auditSitemap,
   auditMarkup,
+  auditComponents,
   auditStylesheet,
+  auditDesignSystem,
 } from "./audit";
 
 const args = process.argv.slice(2);
@@ -57,14 +59,27 @@ try {
 
   const sitemapXml = await get(`${origin}${basePath}/sitemap.xml`);
   record("sitemap.xml", auditSitemap(sitemapXml, channel));
+  const sitemapLocs = Array.from(
+    sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/gi),
+    (m) => m[1],
+  );
+  const empty = !sitemapLocs.some(
+    (loc) =>
+      loc.startsWith(`${CHANNEL_ORIGIN[channel]}${basePath}/`) &&
+      !loc.endsWith(basePath),
+  );
 
   record(
     "rss.xml",
-    auditRss(await get(`${origin}${basePath}/rss.xml`), channel),
+    auditRss(await get(`${origin}${basePath}/rss.xml`), channel).filter(
+      (e) => !(empty && e === "rss has no items"),
+    ),
   );
   record(
     "atom.xml",
-    auditAtom(await get(`${origin}${basePath}/atom.xml`), channel),
+    auditAtom(await get(`${origin}${basePath}/atom.xml`), channel).filter(
+      (e) => !(empty && e === "atom has no entries"),
+    ),
   );
   record(
     "llms.txt",
@@ -77,7 +92,11 @@ try {
       redirect: "follow",
     },
   );
-  record("404 behavior", audit404(missing.status, await missing.text()));
+  const missingBody = await missing.text();
+  record("404 behavior", [
+    ...audit404(missing.status, missingBody),
+    ...auditComponents(missingBody),
+  ]);
 
   const md = await fetch(`${origin}${basePath}`, {
     headers: { accept: "text/markdown" },
@@ -90,8 +109,9 @@ try {
 
   const indexHtml = await get(`${origin}${basePath}`);
   record("index page", [
-    ...auditPage(indexHtml, indexUrl(channel)),
+    ...auditPage(indexHtml, indexUrl(channel), empty ? 120 : 500),
     ...auditMarkup(indexHtml),
+    ...auditComponents(indexHtml),
     ...auditIndexability(indexHtml, true),
     ...auditFeedDiscovery(indexHtml, channel),
     ...auditDiscovery(indexHtml, channel),
@@ -113,6 +133,7 @@ try {
     record(`post ${sample}`, [
       ...auditPage(postHtml, sample),
       ...auditMarkup(postHtml),
+      ...auditComponents(postHtml),
       ...auditIndexability(postHtml, true),
       ...auditArticleSemantics(postHtml),
       ...auditDiscovery(postHtml, channel),
@@ -121,8 +142,35 @@ try {
     console.warn("no post URL in sitemap yet — page-level post audit skipped");
   }
 
+  const surface = (re: RegExp): string | undefined =>
+    sitemapLocs.find((l) => re.test(l));
+  const surfaces: [string, string | undefined][] = [
+    ["tag directory", surface(new RegExp(`${basePath}/tags/?$`))],
+    ["author directory", surface(new RegExp(`${basePath}/authors/?$`))],
+    ["tag archive", surface(new RegExp(`${basePath}/tags/[^/]+/?$`))],
+    ["author archive", surface(new RegExp(`${basePath}/authors/[^/]+/?$`))],
+    ["pagination", surface(new RegExp(`${basePath}/page/\\d+/?$`))],
+  ];
+  for (const [what, loc] of surfaces) {
+    if (!loc) {
+      console.warn(`no ${what} URL in sitemap — surface audit skipped`);
+      continue;
+    }
+    const url = base ? loc.replace(CHANNEL_ORIGIN[channel], origin) : loc;
+    const html = await get(url);
+    record(`${what} ${loc}`, [
+      ...auditPage(html, loc, 200),
+      ...auditMarkup(html),
+      ...auditComponents(html),
+      ...auditIndexability(html, true),
+    ]);
+  }
+
   const stylesheet = Array.from(indexHtml.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi), (m) => m[1])[0];
-  if (stylesheet) record("stylesheet", auditStylesheet(await get(new URL(stylesheet, origin).href)));
+  if (stylesheet) {
+    const css = await get(new URL(stylesheet, origin).href);
+    record("stylesheet", [...auditStylesheet(css), ...auditDesignSystem(css)]);
+  }
 } catch (err) {
   failures.push({ where: "fetch", errors: [String(err)] });
 }

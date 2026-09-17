@@ -13,7 +13,9 @@ import {
   auditRss,
   auditSitemap,
   auditMarkup,
+  auditComponents,
   auditStylesheet,
+  auditDesignSystem,
 } from "./audit";
 
 const BODY_TEXT =
@@ -160,7 +162,9 @@ test("feed discovery and article semantics catch omissions", () => {
 });
 
 test("audits reject cross-host leaks", () => {
-  const leakySitemap = sitemap([{ loc: "https://remilia.org/press/launch" }]);
+  const leakySitemap = sitemap([
+    { loc: "https://remilia.org/blog/press/launch" },
+  ]);
   assert.ok(
     auditSitemap(leakySitemap, "dev-blog").some((e) =>
       e.includes("foreign host"),
@@ -168,7 +172,7 @@ test("audits reject cross-host leaks", () => {
   );
 
   const leakyLlms =
-    "# X\nwiki.remilia.org\n- [post](https://remilia.org/press/launch)";
+    "# X\nwiki.remilia.org\n- [post](https://remilia.org/blog/press/launch)";
   assert.ok(
     auditLlmsTxt(leakyLlms, "dev-blog").some((e) => e.includes("foreign-host")),
   );
@@ -208,4 +212,41 @@ test("markup and stylesheet audits catch structural defects", () => {
   assert.ok(auditMarkup('<html><main><img src="x"><label for="missing">x</label></main></html>').length >= 3);
   assert.deepEqual(auditStylesheet(".ok { color: red; }"), []);
   assert.ok(auditStylesheet(".broken { color: red;").length > 0);
+});
+
+test("design system audit enforces tokens on every visual element", () => {
+  const clean = `:root { --ink: #000; --space-xs: 8px; --border: 1px solid var(--ink); }
+  .sec { border: var(--border); padding: var(--space-xs); color: var(--ink); }
+  .sec:hover { background: var(--ink); color: var(--ink-contrast); }
+  .map { background: url("data:image/svg+xml,%23abc"); }
+  @media (min-width: 824px) { .sel { margin: calc(-1 * var(--border-w)); } }`;
+  assert.deepEqual(auditDesignSystem(clean), []);
+
+  const offSystem = [
+    ".card { color: #c00; }",
+    ".card { background: red; }",
+    ".card { padding: 12px; }",
+    ".card { margin: calc(100% - 24px); }",
+    ".card { font-weight: bold; }",
+    ".card { font-family: Helvetica; }",
+    ".card { border: 2px solid black; }",
+    ".card { border-radius: 4px; }",
+    ".card { letter-spacing: 0.05em; }",
+    ".card { transition: color 200ms; }",
+    ":root { --ink: #000; } html { --ink: #111; }",
+  ];
+  for (const css of offSystem)
+    assert.ok(
+      auditDesignSystem(css).length > 0,
+      `expected a design-system violation: ${css}`,
+    );
+});
+
+test("component audit rejects bare rules, inline styles and untyped controls", () => {
+  const clean = `<p>x</p><hr class="nav-rule"><button type="button">[MD]</button><input id="a"><label for="a">L</label>`;
+  assert.deepEqual(auditComponents(clean), []);
+  assert.ok(auditComponents("<hr>").length > 0);
+  assert.ok(auditComponents('<div style="color:red">x</div>').length > 0);
+  assert.ok(auditComponents("<button>x</button>").length > 0);
+  assert.ok(auditComponents("<input>").length > 0);
 });

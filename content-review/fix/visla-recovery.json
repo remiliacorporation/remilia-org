@@ -1,0 +1,308 @@
+{
+  "_note": "visla.kr dead-image recovery map. 'recovered' URLs are web.archive.org .../<ts>im_/... URLs that return raw image bytes (all curl-verified: real JPEG/PNG, >5KB). Original site returns HTML error pages.",
+  "map": {
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_001.jpg": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_001.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_002.jpg": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_002.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_003.jpg": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_003.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_004.jpg": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_004.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_005.jpg": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_005.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_006.jpg": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_006.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_007.jpg": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_007.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_010.jpg": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_010.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_011.jpg": "https://web.archive.org/web/20240131101144im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_011.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_012.jpeg": "https://web.archive.org/web/20240131101146im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_012.jpeg",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_013.png": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_013.png",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_019.png": "https://web.archive.org/web/20240131101140im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_019.png",
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_01.jpg": "https://web.archive.org/web/20240131101153im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_01.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2022/02/Screen-Shot-2022-02-10-at-2.12.02-AM.png": "https://web.archive.org/web/20241109073813im_/https://visla.kr/wp/wp-content/uploads/2022/02/Screen-Shot-2022-02-10-at-2.12.02-AM.png",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_20-1067x1600.jpg": "https://web.archive.org/web/20240416030452im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_20-1067x1600.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_21-1067x1600.jpg": "https://web.archive.org/web/20240415154230im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_21-1067x1600.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_22.jpg": "https://web.archive.org/web/20240415120243im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_22.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_23.jpg": "https://web.archive.org/web/20240415120647im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_23.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_24.jpg": "https://web.archive.org/web/20240416144000im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_24.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_25.jpg": "https://web.archive.org/web/20240415231120im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_25.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_26.jpg": "https://web.archive.org/web/20240415130838im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_26.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_27.jpg": "https://web.archive.org/web/20240415151815im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_27.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_28.jpg": "https://web.archive.org/web/20240415134200im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_28.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_30.jpg": "https://web.archive.org/web/20240415163037im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_30.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_31.jpg": "https://web.archive.org/web/20240416073949im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_31.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_33.jpg": "https://web.archive.org/web/20240415160057im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_33.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_34.jpg": "https://web.archive.org/web/20240415115853im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_34.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_35.jpg": "https://web.archive.org/web/20240415134124im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_35.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_36-1600x1067.jpg": "https://web.archive.org/web/20240415121717im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_36-1600x1067.jpg",
+    "https://visla.kr/wp/wp-content/uploads/2018/12/visla_profile.jpg": "https://web.archive.org/web/20190719135018im_/https://visla.kr/wp/wp-content/uploads/2018/12/visla_profile.jpg"
+  },
+  "detail": {
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_001.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_001.jpg",
+      "waybackTimestamp": "20240131101142",
+      "verified": {
+        "bytes": 567993,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 3 of 6 in the collab gallery — hoodies/tote/cap/stickers with dual FRUiTS+Remilia logos and big-eyed-eared Milady-style character)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_002.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_002.jpg",
+      "waybackTimestamp": "20240131101141",
+      "verified": {
+        "bytes": 481045,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 4 of 6)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_003.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_003.jpg",
+      "waybackTimestamp": "20240131101139",
+      "verified": {
+        "bytes": 468459,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 5 of 6)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_004.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_004.jpg",
+      "waybackTimestamp": "20240131101142",
+      "verified": {
+        "bytes": 475822,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 6 of 6)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_005.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101142im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_005.jpg",
+      "waybackTimestamp": "20240131101142",
+      "verified": {
+        "bytes": 582375,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 1 of 6 — lead image under the 'Kagami Academy' pixel-character NFT paragraph)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_006.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_006.jpg",
+      "waybackTimestamp": "20240131101141",
+      "verified": {
+        "bytes": 574090,
+        "type": "JPEG image data"
+      },
+      "depicts": "FRUiTS x Remilia capsule collection lookbook/product shot (slider image 2 of 6)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_007.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_007.jpg",
+      "waybackTimestamp": "20240131101139",
+      "verified": {
+        "bytes": 130654,
+        "type": "JPEG image data"
+      },
+      "depicts": "Screenshot/illustration placed right before the Elon Musk paragraph — almost certainly the Milady meme Elon Musk tweeted (May 2023 tweet that pumped MILADY ~57% and LADYS ~5,250%); portrait 585x741"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_010.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101141im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_010.jpg",
+      "waybackTimestamp": "20240131101141",
+      "verified": {
+        "bytes": 222039,
+        "type": "JPEG image data"
+      },
+      "depicts": "Milady Maker NFT PFP portrait — generated anime avatar in Y2K style (gyaru/lolita/Harajuku/hypebeast/preppy); tall 1440x1798, likely a grid of several Milady PFPs"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_011.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101144im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_011.jpg",
+      "waybackTimestamp": "20240131101144",
+      "verified": {
+        "bytes": 48843,
+        "type": "JPEG image data"
+      },
+      "depicts": "Milady Maker NFT PFP — anime avatar portrait (476x595), from the 'Milady revealed to the world Aug 2021' slider"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_012.jpeg": {
+      "recovered": "https://web.archive.org/web/20240131101146im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_012.jpeg",
+      "waybackTimestamp": "20240131101146",
+      "verified": {
+        "bytes": 8425,
+        "type": "JPEG image data"
+      },
+      "depicts": "Milady Maker NFT PFP — small anime avatar portrait (201x251), same slider"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_013.png": {
+      "recovered": "https://web.archive.org/web/20240131101139im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_013.png",
+      "waybackTimestamp": "20240131101139",
+      "verified": {
+        "bytes": 275102,
+        "type": "PNG image data"
+      },
+      "depicts": "Milady Maker NFT PFP — anime avatar (400x500 PNG), same slider"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_019.png": {
+      "recovered": "https://web.archive.org/web/20240131101140im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_019.png",
+      "waybackTimestamp": "20240131101140",
+      "verified": {
+        "bytes": 304573,
+        "type": "PNG image data"
+      },
+      "depicts": "Milady Maker NFT PFP — anime avatar (400x500 PNG), same slider"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/01/20240131_01.jpg": {
+      "recovered": "https://web.archive.org/web/20240131101153im_/https://visla.kr/wp/wp-content/uploads/2024/01/20240131_01.jpg",
+      "waybackTimestamp": "20240131101153",
+      "verified": {
+        "bytes": 188818,
+        "type": "JPEG image data"
+      },
+      "depicts": "Square 1024x1024 image at end of article after the Elon Musk / LADYS paragraph — Milady-related closing visual (likely a Milady PFP or FRUiTS x Remilia promo tile)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2022/02/Screen-Shot-2022-02-10-at-2.12.02-AM.png": {
+      "recovered": "https://web.archive.org/web/20241109073813im_/https://visla.kr/wp/wp-content/uploads/2022/02/Screen-Shot-2022-02-10-at-2.12.02-AM.png",
+      "waybackTimestamp": "20241109073813",
+      "verified": {
+        "bytes": 199840,
+        "type": "PNG image data"
+      },
+      "depicts": "Author avatar photo of 장재혁 (Jang Jae-hyuk, 'engineer', VISLA staff author @tontojang) — small square portrait used in the byline, not article content"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_20-1067x1600.jpg": {
+      "recovered": "https://web.archive.org/web/20240416030452im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_20-1067x1600.jpg",
+      "waybackTimestamp": "20240416030452",
+      "verified": {
+        "bytes": 453904,
+        "type": "JPEG image data"
+      },
+      "depicts": "Portrait photo by 정해원 (Haewon Jeong) from the 'Gyaru-Lolita Breakcore Night' Seoul rave/33reisen launch party, Euljiro Sindosi, Apr 5 2024 — inline image near K-pop goods discussion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_21-1067x1600.jpg": {
+      "recovered": "https://web.archive.org/web/20240415154230im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_21-1067x1600.jpg",
+      "waybackTimestamp": "20240415154230",
+      "verified": {
+        "bytes": 456534,
+        "type": "JPEG image data"
+      },
+      "depicts": "Portrait photo by 정해원 from the same Seoul rave — inline image near the 'Cool Kids / Harajuku' paragraph"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_22.jpg": {
+      "recovered": "https://web.archive.org/web/20240415120243im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_22.jpg",
+      "waybackTimestamp": "20240415120243",
+      "verified": {
+        "bytes": 579897,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid (images 22-28): Seoul 'gyaru girls' / attendees in J-core gyaru-lolita fashion at the party (vertical 1200x1800)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_23.jpg": {
+      "recovered": "https://web.archive.org/web/20240415120647im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_23.jpg",
+      "waybackTimestamp": "20240415120647",
+      "verified": {
+        "bytes": 315412,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_24.jpg": {
+      "recovered": "https://web.archive.org/web/20240416144000im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_24.jpg",
+      "waybackTimestamp": "20240416144000",
+      "verified": {
+        "bytes": 446035,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_25.jpg": {
+      "recovered": "https://web.archive.org/web/20240415231120im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_25.jpg",
+      "waybackTimestamp": "20240415231120",
+      "verified": {
+        "bytes": 461356,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_26.jpg": {
+      "recovered": "https://web.archive.org/web/20240415130838im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_26.jpg",
+      "waybackTimestamp": "20240415130838",
+      "verified": {
+        "bytes": 390882,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_27.jpg": {
+      "recovered": "https://web.archive.org/web/20240415151815im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_27.jpg",
+      "waybackTimestamp": "20240415151815",
+      "verified": {
+        "bytes": 578011,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_28.jpg": {
+      "recovered": "https://web.archive.org/web/20240415134200im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_28.jpg",
+      "waybackTimestamp": "20240415134200",
+      "verified": {
+        "bytes": 404250,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — second photo grid, party attendee(s) in gyaru-lolita fashion"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_30.jpg": {
+      "recovered": "https://web.archive.org/web/20240415163037im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_30.jpg",
+      "waybackTimestamp": "20240415163037",
+      "verified": {
+        "bytes": 384782,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — first photo grid (images 30-35): venue/crowd/DJ/pop-up booths (Why Not Us, Pepe, Shushu Cherry) at the Euljiro party (vertical 1200x1800)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_31.jpg": {
+      "recovered": "https://web.archive.org/web/20240416073949im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_31.jpg",
+      "waybackTimestamp": "20240416073949",
+      "verified": {
+        "bytes": 483401,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — first photo grid, party scene"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_33.jpg": {
+      "recovered": "https://web.archive.org/web/20240415160057im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_33.jpg",
+      "waybackTimestamp": "20240415160057",
+      "verified": {
+        "bytes": 463539,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — first photo grid, party scene"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_34.jpg": {
+      "recovered": "https://web.archive.org/web/20240415115853im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_34.jpg",
+      "waybackTimestamp": "20240415115853",
+      "verified": {
+        "bytes": 423455,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — first photo grid, party scene"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_35.jpg": {
+      "recovered": "https://web.archive.org/web/20240415134124im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_35.jpg",
+      "waybackTimestamp": "20240415134124",
+      "verified": {
+        "bytes": 283076,
+        "type": "JPEG image data"
+      },
+      "depicts": "Rave photo by 정해원 — first photo grid, party scene"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2024/04/20240415_36-1600x1067.jpg": {
+      "recovered": "https://web.archive.org/web/20240415121717im_/https://visla.kr/wp/wp-content/uploads/2024/04/20240415_36-1600x1067.jpg",
+      "waybackTimestamp": "20240415121717",
+      "verified": {
+        "bytes": 432427,
+        "type": "JPEG image data"
+      },
+      "depicts": "Wide 1600x1067 photo by 정해원 from the Seoul rave — standalone 'bigger' wp-block image (crowd/DJ/venue wide shot)"
+    },
+    "https://visla.kr/wp/wp-content/uploads/2018/12/visla_profile.jpg": {
+      "recovered": "https://web.archive.org/web/20190719135018im_/https://visla.kr/wp/wp-content/uploads/2018/12/visla_profile.jpg",
+      "waybackTimestamp": "20190719135018",
+      "verified": {
+        "bytes": 91528,
+        "type": "JPEG image data"
+      },
+      "depicts": "VISLA Magazine outlet avatar/logo — square image shown in the 'VISLA Magazine visla.kr' author/outlet bio box at the end of the article, not article content"
+    }
+  },
+  "unrecoverable": []
+}

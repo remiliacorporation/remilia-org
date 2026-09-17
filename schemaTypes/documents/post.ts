@@ -201,6 +201,8 @@ export const post = defineType({
       title: "Tags",
       type: "array",
       of: [defineArrayMember({ type: "reference", to: [{ type: "tag" }] })],
+      description:
+        "Topical keywords (Essay, Milady, Coverage…) — they drive the /tags/ archives. The category chip on the index is the Section, not a tag.",
       validation: (r) => r.unique(),
     }),
     defineField({

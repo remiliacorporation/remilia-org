@@ -7,14 +7,22 @@
  * still matches `CHANNEL_BASEPATH`, so the two cannot drift apart silently.
  */
 
+/** Top-level org paths the sections used to live at. Kept so a mixed-case
+ *  citation still lowercases, after which `_redirects` 301s to /blog/*. */
+export const MOVED_PREFIXES = ["/updates", "/press", "/thought", "/archive"];
+
 export const SECTION_PREFIXES = [
+  "/blog/updates",
+  "/blog/press",
+  "/blog/thought",
+  "/blog/archive",
+  "/a/news",
+  "/a/events",
   "/updates",
+  "/blog",
   "/press",
   "/thought",
   "/archive",
-  "/a/news",
-  "/a/events",
-  "/blog",
 ];
 
 export type CorpLocale = "en" | "kr" | "jp" | "cn";

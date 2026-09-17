@@ -13,11 +13,14 @@ deploy/press
 deploy/updates
 deploy/thought
 deploy/archive
+deploy/blog
 ghost-posts.ndjson
 paragraph-posts.ndjson
 substack-posts.ndjson
 .ghost-extract/
 .paper-review/
+content-review/posts/
+content-review/posts.before/
 .env
 .env.*
 !.env.example

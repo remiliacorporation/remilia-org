@@ -9,8 +9,8 @@ import { checkInternalLinks } from "./links";
 import type { Chrome } from "./page";
 
 const CHROME: Chrome = {
-  stylesheet: "/updates/blog.css",
-  header: `<header class="site-head"><a class="site-title" href="/updates">Updates</a></header>`,
+  stylesheet: "/blog/updates/blog.css",
+  header: `<header class="site-head"><a class="site-title" href="/blog/updates">Updates</a></header>`,
   footer: `<footer><p>Remilia Corporation</p></footer>`,
 };
 
@@ -90,69 +90,72 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       apiHost: fixture.url,
       stylesheets: [],
     });
-    const page1 = await readFile(join(outDir, "updates/index.html"), "utf8");
+    const page1 = await readFile(join(outDir, "blog/updates/index.html"), "utf8");
     const page2 = await readFile(
-      join(outDir, "updates/page/2/index.html"),
+      join(outDir, "blog/updates/page/2/index.html"),
       "utf8",
     );
 
     // 25 posts at 20 per page: two pages, 20 then 5.
     assert.equal((page1.match(/class="sec post-card"/g) ?? []).length, 20);
     assert.equal((page2.match(/class="sec post-card"/g) ?? []).length, 5);
-    assert.ok(page1.includes('rel="next" href="/updates/page/2"'));
+    assert.ok(page1.includes('rel="next" href="/blog/updates/page/2"'));
     assert.ok(page1.includes("Page 1 of 2"));
-    assert.ok(page2.includes('rel="prev" href="/updates"'));
+    assert.ok(page2.includes('rel="prev" href="/blog/updates"'));
     assert.ok(
       page2.includes(
-        '<link rel="canonical" href="https://remilia.org/updates/page/2">',
+        '<link rel="canonical" href="https://remilia.org/blog/updates/page/2">',
       ),
     );
     assert.ok(
-      page1.includes('<link rel="next" href="https://remilia.org/updates/page/2">'),
+      page1.includes('<link rel="next" href="https://remilia.org/blog/updates/page/2">'),
       "page 1 must declare rel=next in the head",
     );
 
     // Tag archives: Theory holds every third post, Notes the rest.
     const theory = await readFile(
-      join(outDir, "updates/tags/theory/index.html"),
+      join(outDir, "blog/updates/tags/theory/index.html"),
       "utf8",
     );
     assert.equal((theory.match(/class="sec post-card"/g) ?? []).length, 9);
     assert.ok(theory.includes("Theory — Remilia Corporation — Updates"));
     const tagFeed = await readFile(
-      join(outDir, "updates/tags/theory/rss.xml"),
+      join(outDir, "blog/updates/tags/theory/rss.xml"),
       "utf8",
     );
     assert.equal((tagFeed.match(/<item>/g) ?? []).length, 9);
 
-    const tagDir = await readFile(join(outDir, "updates/tags/index.html"), "utf8");
-    assert.ok(tagDir.includes('href="/updates/tags/theory"'));
+    const tagDir = await readFile(join(outDir, "blog/updates/tags/index.html"), "utf8");
+    assert.ok(tagDir.includes('href="/blog/updates/tags/theory"'));
     assert.ok(tagDir.includes('<span class="term-count">9</span>'));
 
     // Author archives split the same posts by byline.
     const author = await readFile(
-      join(outDir, "updates/authors/remilia-jackson/index.html"),
+      join(outDir, "blog/updates/authors/remilia-jackson/index.html"),
       "utf8",
     );
     assert.equal((author.match(/class="sec post-card"/g) ?? []).length, 13);
     const authorDir = await readFile(
-      join(outDir, "updates/authors/index.html"),
+      join(outDir, "blog/updates/authors/index.html"),
       "utf8",
     );
-    assert.ok(authorDir.includes('href="/updates/authors/charlotte-fang"'));
+    assert.ok(authorDir.includes('href="/blog/updates/authors/charlotte-fang"'));
 
-    // A post's byline points at the archives, not a query filter.
-    const post = await readFile(join(outDir, "updates/post-1/index.html"), "utf8");
-    assert.ok(post.includes('href="/updates/tags/theory"'));
-    assert.ok(post.includes('href="/updates/authors/remilia-jackson"'));
+    // A post's byline points at its section index and author archive.
+    const post = await readFile(
+      join(outDir, "blog/updates/post-1/index.html"),
+      "utf8",
+    );
+    assert.ok(post.includes('class="byline-cat" href="/blog/updates"'));
+    assert.ok(post.includes('href="/blog/updates/authors/remilia-jackson"'));
 
     // Every listing is in the sitemap.
-    const sitemap = await readFile(join(outDir, "updates/sitemap.xml"), "utf8");
+    const sitemap = await readFile(join(outDir, "blog/updates/sitemap.xml"), "utf8");
     for (const loc of [
-      "https://remilia.org/updates/page/2",
-      "https://remilia.org/updates/tags/theory",
-      "https://remilia.org/updates/tags",
-      "https://remilia.org/updates/authors/charlotte-fang",
+      "https://remilia.org/blog/updates/page/2",
+      "https://remilia.org/blog/updates/tags/theory",
+      "https://remilia.org/blog/updates/tags",
+      "https://remilia.org/blog/updates/authors/charlotte-fang",
     ])
       assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
 
@@ -160,7 +163,7 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     const broken = await checkInternalLinks(outDir, ["https://remilia.org"]);
     assert.deepEqual(broken, []);
 
-    const written = await readdir(join(outDir, "updates"));
+    const written = await readdir(join(outDir, "blog", "updates"));
     assert.ok(written.includes("tags"));
     assert.ok(written.includes("authors"));
     assert.ok(written.includes("page"));

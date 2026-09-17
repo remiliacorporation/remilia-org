@@ -5,28 +5,16 @@ runHostBake({
   name: "org",
   sections: ORG_SECTIONS,
   outDir: "deploy",
+  // The four sections are one shared blog surface — it gets an aggregate
+  // index at /blog and the old top-level section paths 301 to it.
+  aggregate: ORG_SECTIONS,
+  movedFrom: {
+    updates: "/updates",
+    press: "/press",
+    thought: "/thought",
+    archive: "/archive",
+  },
   // The corporate pages ship from this repo too, so every internal link
   // should resolve inside the published tree.
   linkOrigin: "https://remilia.org",
-  extraSitemapUrls: {
-    channel: "press",
-    urls: [
-      { loc: "https://remilia.org/" },
-      { loc: "https://remilia.org/about" },
-      { loc: "https://remilia.org/contact" },
-      { loc: "https://remilia.org/careers" },
-      { loc: "https://remilia.org/kr/" },
-      { loc: "https://remilia.org/kr/about" },
-      { loc: "https://remilia.org/kr/contact" },
-      { loc: "https://remilia.org/kr/careers" },
-      { loc: "https://remilia.org/jp/" },
-      { loc: "https://remilia.org/jp/about" },
-      { loc: "https://remilia.org/jp/contact" },
-      { loc: "https://remilia.org/jp/careers" },
-      { loc: "https://remilia.org/cn/" },
-      { loc: "https://remilia.org/cn/about" },
-      { loc: "https://remilia.org/cn/contact" },
-      { loc: "https://remilia.org/cn/careers" },
-    ],
-  },
 });

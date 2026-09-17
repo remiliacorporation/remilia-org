@@ -3,6 +3,7 @@ import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
   CHANNEL_PATH_LABEL,
+  indexUrl,
   type Channel,
   type HostId,
 } from "@remilia/seo";
@@ -95,6 +96,17 @@ const SECTION_META: Record<
       "Cite RemiliaNET Alpha, wiki, or miladychan engineering posts.",
     ],
   },
+  blog: {
+    short: "BLOG",
+    title: "Remilia Corporation — Blog",
+    description:
+      "Every Remilia Corporation post across Updates, Press, Thought and Archive.",
+    lead: "The whole corporate blog surface: updates, press, thought and archive pooled.",
+    whenToUse: [
+      "Scan everything Remilia Corporation has published in one feed.",
+      "Per-section feeds and archives live under /blog/<section>.",
+    ],
+  },
 };
 
 /** Wordmark and root link per host, so a section wears its own brand. */
@@ -126,7 +138,7 @@ export function chromeFor(channel: Channel): Chrome {
 </nav>
 </header>`,
     footer: `<footer>
-<hr>
+<hr class="nav-rule">
 <p>© Remilia Corporation · <a href="${brand.rootUrl}">${brand.root}</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
 </footer>`,
   };
@@ -146,7 +158,7 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
       },
       { label: "RemiliaNET blog", url: "https://www.remilia.net/blog" },
       { label: "News", url: "https://remilia.com/a/news" },
-      { label: CHANNEL_PATH_LABEL.press, url: "https://remilia.org/press" },
+      { label: CHANNEL_PATH_LABEL.press, url: indexUrl("press") },
     ],
   };
 }

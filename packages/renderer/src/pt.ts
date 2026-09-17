@@ -11,6 +11,10 @@ interface MarkDef {
   _type: string;
   href?: string;
   text?: string;
+  /** Source-document note number — pins the rendered ref/id when set. */
+  n?: number;
+  /** Image-bodied notes — rendered inside the note. */
+  image?: { asset?: { _ref?: string; url?: string }; alt?: string; caption?: string };
 }
 
 interface TextBlock {
@@ -28,7 +32,14 @@ interface ImageBlock {
   asset?: { _ref?: string; url?: string };
 }
 
-export type PTBlock = TextBlock | ImageBlock | { _type: string };
+interface VideoBlock {
+  _type: "video";
+  caption?: string;
+  file?: { asset?: { _ref?: string; url?: string } };
+  poster?: { asset?: { _ref?: string; url?: string } };
+}
+
+export type PTBlock = TextBlock | ImageBlock | VideoBlock | { _type: string };
 
 export interface LinkCard {
   title: string;
@@ -42,6 +53,8 @@ export interface PTOptions {
   imageSrcSet?: (img: ImageBlock) => string | undefined;
   /** Overrides the prose-measure `sizes` hint. */
   imageSizes?: string;
+  /** Self-hosted video/file asset URL for `video` blocks. */
+  videoUrl?: (v: VideoBlock) => string | undefined;
   linkCard?: (href: string) => LinkCard | undefined;
 }
 
@@ -69,6 +82,10 @@ function isTextBlock(b: PTBlock): b is TextBlock {
 
 function isImageBlock(b: PTBlock): b is ImageBlock {
   return b._type === "image";
+}
+
+function isVideoBlock(b: PTBlock): b is VideoBlock {
+  return b._type === "video";
 }
 
 const HEADING_LEVEL: Record<string, 2 | 3 | 4> = { h2: 2, h3: 3, h4: 4 };
@@ -127,6 +144,30 @@ export function footnoteCount(blocks: PTBlock[]): number {
 interface RenderState {
   count: number;
   opts: PTOptions;
+  /** fn ids already emitted — later defs sharing a source number get suffixed. */
+  emitted: Set<string>;
+  /** every fn-N id this document will render — lets in-note refs resolve. */
+  fnTargets: Set<number>;
+  /** pooled endnote entries — every note also lists at the end of the article. */
+  endnotes: string[];
+}
+
+const FN_GLYPH: Record<string, number> = { "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁰": 0 };
+const fnGlyphNum = (g: string) => parseInt([...g].map((c) => FN_GLYPH[c]).join(""), 10);
+
+// in-note references: ⁽²³⁾ / [6] / \[6\] → link to that note's own element
+function fnTextHtml(text: string, state: RenderState): string {
+  return esc(text)
+    .replace(/\n/g, "<br>")
+    .replace(
+    /⁽([¹²³⁴⁵⁶⁷⁸⁹⁰]+)⁾?|\\\[(\d+)\\\]|\[(\d+)\]/g,
+    (m, g, b, u) => {
+      const t = g != null ? fnGlyphNum(g) : parseInt(b ?? u, 10);
+      return state.fnTargets.has(t)
+        ? `<a class="fn-xref" href="#fn-${t}">${esc(m)}</a>`
+        : m;
+    },
+  );
 }
 
 function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
@@ -142,14 +183,30 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
   return `<a class="interlink" href="${esc(href)}">${inner}<span class="link-card" role="tooltip">${img}<strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span></a>`;
 }
 
+function fnImgHtml(def: MarkDef, state: RenderState): string {
+  if (!def.image?.asset) return "";
+  const dims = imageDims(def.image.asset._ref);
+  return `<img class="fn-img" src="${esc(state.opts.imageUrl({ _type: "image", asset: def.image.asset }) ?? "")}"${dims ? ` width="${dims.w}" height="${dims.h}"` : ""} alt="${esc(def.image.alt ?? def.image.caption ?? "")}" loading="lazy">`;
+}
+
 function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   state.count += 1;
-  const n = state.count;
-  return `${inner}<span class="fn" id="fn-${n}"><input type="checkbox" class="fn-on" id="fn-${n}-on" aria-label="Show note ${n}"><a class="fn-ref" href="#fn-${n}">[${n}]</a><label class="fn-scrim" for="fn-${n}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${esc(def.text ?? "")}</span></span></span>`;
+  const n = def.n ?? state.count;
+  let id = `fn-${n}`;
+  for (let k = 2; state.emitted.has(id); k++) id = `fn-${n}-${k}`;
+  state.emitted.add(id);
+  const img = fnImgHtml(def, state);
+  const txt = (def.text ?? "").trim();
+  // the note also lands in the endnotes pool — its entry id is fndef-N so
+  // in-note xrefs to #fn-N still resolve to the in-text anchor.
+  state.endnotes.push(
+    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span><a class="fn-back" href="#${id}" aria-label="Back to reference ${n}">↩</a></div>`,
+  );
+  return `${inner}<span class="fn" id="${id}"><input type="checkbox" class="fn-on" id="${id}-on" aria-label="Show note ${n}"><a class="fn-ref" href="#fndef-${id.slice(3)}">[${n}]</a><label class="fn-scrim" for="${id}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span></span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
-  let html = esc(span.text);
+  let html = esc(span.text).replace(/\n/g, "<br>");
   for (const mark of span.marks ?? []) {
     if (mark === "strong") html = `<strong>${html}</strong>`;
     else if (mark === "em") html = `<em>${html}</em>`;
@@ -163,8 +220,47 @@ function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
   return html;
 }
 
+/** Sanity asset refs end in `-<W>x<H>-<fmt>` — intrinsic size for img attrs. */
+export function imageDims(
+  ref?: string,
+): { w: number; h: number } | undefined {
+  const m = ref?.match(/-(\d+)x(\d+)-[a-z0-9]+$/i);
+  return m ? { w: +m[1], h: +m[2] } : undefined;
+}
+
+export function figureHtml(input: {
+  src: string;
+  srcset?: string;
+  sizes?: string;
+  alt?: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+}): string {
+  const caption = input.caption
+    ? `<figcaption><a href="${esc(input.src)}">${esc(input.caption)}</a></figcaption>`
+    : "";
+  const responsive = input.srcset
+    ? ` srcset="${esc(input.srcset)}" sizes="${esc(input.sizes ?? "(min-width: 1100px) 560px, 100vw")}"`
+    : "";
+  const dims =
+    input.width && input.height
+      ? ` width="${input.width}" height="${input.height}"`
+      : "";
+  return `<figure><a href="${esc(input.src)}" aria-label="${esc(input.alt || input.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(input.src)}"${responsive}${dims} alt="${esc(input.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`;
+}
+
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
-  const state: RenderState = { count: 0, opts };
+  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), endnotes: [] };
+  {
+    let pos = 0;
+    for (const b of blocks) {
+      if (!isTextBlock(b)) continue;
+      for (const d of b.markDefs ?? []) {
+        if (d._type === "footnote") state.fnTargets.add(d.n ?? ++pos);
+      }
+    }
+  }
   const headingIds = new Map<TextBlock, string>();
   const headingList = headingBlocks(blocks);
   extractHeadings(blocks).forEach((h, i) =>
@@ -210,7 +306,57 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
     }
     flushList();
 
+    if (block._type === "divider") {
+      out.push("<hr>");
+      continue;
+    }
+
     if (isTextBlock(block)) {
+      // a lone run of rule characters is an imported <hr>
+      if (
+        !block.listItem &&
+        !block.markDefs?.length &&
+        /^[-–—=_*]{3,}$/.test(plainText(block).trim())
+      ) {
+        out.push("<hr>");
+        continue;
+      }
+      // notes-list block: children are only empty fn-marked spans (+ whitespace)
+      // — trailing/orphan notes render as a static list, not margin popovers.
+      const fnKeys = new Set(
+        (block.markDefs ?? []).filter((d) => d._type === "footnote").map((d) => d._key),
+      );
+      const onlyNotes =
+        fnKeys.size > 0 &&
+        block.children.length > 0 &&
+        block.children.every((s) => {
+          if ((s.text ?? "").trim()) return false;
+          const m = s.marks ?? [];
+          return m.length === 0 || m.some((k) => fnKeys.has(k));
+        });
+      if (onlyNotes) {
+        // orphan notes have no in-text ref — their endnote entry keeps the
+        // fn-N id so xrefs resolve; no backlink (nothing to jump back to).
+        const ordered: MarkDef[] = [];
+        for (const s of block.children) {
+          for (const m of s.marks ?? []) {
+            const d = (block.markDefs ?? []).find((x) => x._key === m && x._type === "footnote");
+            if (d) ordered.push(d);
+          }
+        }
+        for (const d of ordered) {
+          state.count += 1;
+          const n = d.n ?? state.count;
+          let id = `fn-${n}`;
+          for (let k = 2; state.emitted.has(id); k++) id = `fn-${n}-${k}`;
+          state.emitted.add(id);
+          const img = fnImgHtml(d, state);
+          state.endnotes.push(
+            `<div class="fn-end" id="${id}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(d.text ?? "", state)}${img}</span></div>`,
+          );
+        }
+        continue;
+      }
       const inner = block.children
         .map((s) => spanHtml(s, block.markDefs ?? [], state))
         .join("");
@@ -232,26 +378,56 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       } else if (id && block.style === "h4") {
         out.push(`<h4 id="${id}">${inner}</h4>`);
       } else if (block.style === "blockquote") {
-        out.push(`<blockquote><p>${inner}</p></blockquote>`);
-      } else {
+        let quote = inner;
+        const br = quote.lastIndexOf("<br>");
+        if (br >= 0) {
+          const tail = quote.slice(br + 4);
+          const tailText = tail.replace(/<[^>]+>/g, "");
+          if (tailText.trim() && /^\s*[—–-]/.test(tailText))
+            quote = `${quote.slice(0, br)}<br><span class="bq-by">${tail}</span>`;
+        }
+        out.push(`<blockquote><p>${quote}</p></blockquote>`);
+      } else if (
+        plainText(block).trim() ||
+        block.markDefs?.some((d) => d._type === "footnote")
+      ) {
         out.push(`<p>${inner}</p>`);
       }
     } else if (isImageBlock(block)) {
       const src = opts.imageUrl(block);
       if (!src) continue;
+      const dims = imageDims(block.asset?._ref);
+      out.push(
+        figureHtml({
+          src,
+          srcset: opts.imageSrcSet?.(block),
+          sizes: opts.imageSizes,
+          alt: block.alt,
+          caption: block.caption,
+          width: dims?.w,
+          height: dims?.h,
+        }),
+      );
+    } else if (isVideoBlock(block)) {
+      const src = opts.videoUrl?.(block);
+      if (!src) continue;
+      const posterSrc = block.poster?.asset
+        ? opts.imageUrl({ _type: "image", asset: block.poster.asset })
+        : undefined;
       const caption = block.caption
-        ? `<figcaption><a href="${esc(src)}">${esc(block.caption)}</a></figcaption>`
-        : "";
-      const srcset = opts.imageSrcSet?.(block);
-      const responsive = srcset
-        ? ` srcset="${esc(srcset)}" sizes="${esc(opts.imageSizes ?? "(min-width: 1100px) 560px, 100vw")}"`
+        ? `<figcaption>${esc(block.caption)}</figcaption>`
         : "";
       out.push(
-        `<figure><a href="${esc(src)}" aria-label="${esc(block.alt || block.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(src)}"${responsive} alt="${esc(block.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`,
+        `<figure class="video"><video controls playsinline preload="metadata" src="${esc(src)}"${posterSrc ? ` poster="${esc(posterSrc)}"` : ""}></video>${caption}</figure>`,
       );
     }
   }
   flushList();
+  if (state.endnotes.length) {
+    out.push(
+      `<div class="fn-endnotes" role="doc-endnotes">${state.endnotes.join("")}</div>`,
+    );
+  }
   closeH2();
 
   return out.join("\n");

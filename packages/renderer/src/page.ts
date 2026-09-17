@@ -1,4 +1,5 @@
 import { THEME_JS } from "./theme";
+import { NAV_SEARCH } from "./nav";
 import {
   type Channel,
   CHANNEL_BASEPATH,
@@ -64,17 +65,17 @@ function themeSelHtml(theme: HostTheme): string {
   const radios = hues
     .map(([h, name]) => {
       const checked = h === theme.hue ? " checked" : "";
-      return `<input type="radio" name="theme-hue" id="theme-hue-${h}" value="${h}" aria-label="${name}"${checked}><label for="theme-hue-${h}"></label>`;
+      return `<input type="radio" name="theme-hue" id="theme-hue-${h}" value="${h}" aria-label="${name}"${checked}><label for="theme-hue-${h}" data-tip="${name}"></label>`;
     })
     .join("");
   const dots = [
-    ["none", "No dots"],
-    ["small", "Small dots"],
-    ["large", "Large dots"],
+    ["none", "No lattice"],
+    ["small", "Dense lattice"],
+    ["large", "Sparse lattice"],
   ]
     .map(([id, name]) => {
       const checked = id === theme.dots ? " checked" : "";
-      return `<input type="radio" name="theme-dots" id="theme-dots-${id}" value="${id}" aria-label="${name}"${checked}><label for="theme-dots-${id}" class="theme-dot theme-dot-${id}"></label>`;
+      return `<input type="radio" name="theme-dots" id="theme-dots-${id}" value="${id}" aria-label="${name}"${checked}><label for="theme-dots-${id}" class="theme-dot theme-dot-${id}" data-tip="${name}"></label>`;
     })
     .join("");
   // Checked drives the CSS-only path; the JS toggle keeps it in sync after.
@@ -89,9 +90,9 @@ ${radios}
 </div>
 <span class="theme-div" aria-hidden="true"></span>
 <input type="checkbox" id="theme-dark" class="theme-dark"${dark}>
-<label for="theme-dark" class="theme-mode" aria-label="Dark mode"></label>
+<label for="theme-dark" class="theme-mode" data-tip="Dark mode" aria-label="Dark mode"></label>
 <span class="theme-div" aria-hidden="true"></span>
-<div class="theme-dots" role="radiogroup" aria-label="Wallpaper dots">
+<div class="theme-dots" role="radiogroup" aria-label="Wallpaper lattice">
 ${dots}
 </div>
 </div>
@@ -313,6 +314,10 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
+function mastCopy(basePath: string): string {
+  return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> <span class="nav-sep" aria-hidden="true">|</span> <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
+}
+
 function bylineDate(iso: string): string {
   const d = new Date(iso);
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -348,12 +353,20 @@ export function citeBox(input: {
   canonical: string;
   mdHref: string;
   txtHref: string;
+  minutes?: number;
+  words?: number;
 }): string {
+  const stats = [
+    input.minutes ? `${input.minutes} min read` : "",
+    input.words ? `${input.words.toLocaleString("en-US")} words` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
   return `<aside class="cite-box">
 <div class="nav-box">
-<p class="cite-url">Permalink: <a class="permalink" href="${esc(input.canonical)}">${esc(input.canonical)}</a></p>
+<p class="cite-url">${stats}</p>
 <hr class="nav-rule">
-<p class="cite-copy">Copy: <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
+<p class="cite-copy">Copy: <button type="button" class="copy-url" data-url="${esc(input.canonical)}">[URL]</button> — <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
 </div>
 </aside>`;
 }
@@ -420,10 +433,10 @@ export function articleHtml(input: {
     : "";
   const copy =
     md && txt
-      ? `<span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} <span class="nav-sep" aria-hidden="true">|</span> ${txt}`
+      ? `<span class="mast-copy"><span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} — ${txt}</span>`
       : "";
   const read = input.readingMinutes
-    ? `<span class="mast-read">${input.readingMinutes} min read</span><span class="nav-sep" aria-hidden="true">|</span> `
+    ? `<span class="mast-read">${input.readingMinutes} min read</span>`
     : "";
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
@@ -433,7 +446,7 @@ export function articleHtml(input: {
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
-<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle">Table of Contents</label>${copy}</p>
+<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">|</span> Table of Contents</label>${copy}</p>
 </header>
 </div>
 <div class="article-rest">
@@ -487,7 +500,6 @@ ${next}
 export function indexMain(
   posts: IndexCard[],
   toolsHtml: string,
-  title = "Posts",
   pager?: Pager,
 ): string {
   const cards = posts
@@ -509,12 +521,12 @@ export function indexMain(
           ? `<div class="card-row">
 ${img}
 ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
-</div>
-<hr class="nav-rule">`
+</div>`
           : "";
       return `<article class="sec post-card" data-title="${esc(p.title)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
 <header>
 <p class="card-meta"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time>${author}</p>
+<hr class="nav-rule">
 <h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
 </header>
 ${row}
@@ -526,12 +538,13 @@ ${row}
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
-<h1>${esc(title)}</h1>
-${toolsHtml}
+<h1>Showing all posts</h1>
+<hr class="nav-rule mast-tools-rule">
+<div class="mast-tools">${NAV_SEARCH}</div>
 </header>
 </div>
 <div class="article-rest">
-${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
+${toolsHtml ? `<div class="sec index-tools">\n${toolsHtml}\n</div>\n` : ""}${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>
 </article>
@@ -540,9 +553,9 @@ ${pagerHtml(pager)}
 
 /** Directory of taxonomy terms with post counts. */
 export function termIndexMain(
-  title: string,
   noun: string,
   terms: { label: string; href: string; count: number }[],
+  basePath = "",
 ): string {
   const rows = terms
     .map(
@@ -554,7 +567,9 @@ export function termIndexMain(
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
-<h1>${esc(title)}</h1>
+<h1>Showing all ${esc(noun.toLowerCase())}s</h1>
+<hr class="nav-rule mast-tools-rule">
+<p class="mast-tools">${mastCopy(basePath)}</p>
 </header>
 </div>
 <div class="article-rest">

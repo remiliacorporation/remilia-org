@@ -176,6 +176,8 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
       canonical: "https://www.remilia.net/blog/vaults",
       mdHref: "/blog/vaults.md",
       txtHref: "/blog/vaults.txt",
+      minutes: 3,
+      words: 612,
     }),
     mainHtml: articleHtml({
       title: "Vaults",
@@ -194,9 +196,10 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
   assert.ok(
     left >= 0 && toc > left && cite > toc && cite < right && nav > right,
   );
-  assert.ok(html.includes("Permalink:"));
+  assert.ok(html.includes("3 min read | 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
   assert.ok(html.includes("Copy:"));
+  assert.ok(html.includes("[URL]"));
   assert.ok(html.includes(">[MD]</button>"));
   assert.ok(html.includes(">[TXT]</button>"));
 });
@@ -233,7 +236,8 @@ test("toc notes are a labeled row, not bold-only chips", () => {
 });
 
 test("index filter bar includes category and author dropdowns", () => {
-  const html = filterBar([POST]);
+  const other = { ...POST, title: "Memo", url: "/press/memo", category: "News" };
+  const html = filterBar([POST, other]);
   assert.ok(html.includes('id="post-cat"'));
   assert.ok(html.includes(">All posts</button>"));
   assert.ok(html.includes('id="post-author"'));

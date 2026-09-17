@@ -23,10 +23,10 @@ import {
 
 test("canonical URLs follow the ratified section map", () => {
   for (const [channel, slug, expected] of [
-    ["updates", "note", "https://remilia.org/updates/note"],
-    ["press", "launch", "https://remilia.org/press/launch"],
-    ["thought", "essay", "https://remilia.org/thought/essay"],
-    ["archive", "interview", "https://remilia.org/archive/interview"],
+    ["updates", "note", "https://remilia.org/blog/updates/note"],
+    ["press", "launch", "https://remilia.org/blog/press/launch"],
+    ["thought", "essay", "https://remilia.org/blog/thought/essay"],
+    ["archive", "interview", "https://remilia.org/blog/archive/interview"],
     ["news", "fw26", "https://remilia.com/a/news/fw26"],
     ["events", "party", "https://remilia.com/a/events/party"],
     ["dev-updates", "ship", "https://www.remilia.net/updates/ship"],
@@ -47,7 +47,7 @@ test("canonical URLs follow the ratified section map", () => {
 test("legacy Ghost redirect maps slug to the channel host", () => {
   for (const [channel, to] of [
     ["dev-blog", "https://www.remilia.net/blog/vault-notes"],
-    ["press", "https://remilia.org/press/vault-notes"],
+    ["press", "https://remilia.org/blog/press/vault-notes"],
   ] as const)
     assert.deepEqual(legacyRedirect(channel, "vault-notes"), {
       from: "https://blog.remilia.org/vault-notes/",
@@ -65,7 +65,7 @@ test("blogPosting JSON-LD carries required Article fields", () => {
     authors: [{ name: "Remilia" }],
   });
   assert.equal(ld["@type"], "BlogPosting");
-  assert.equal(ld.url, "https://remilia.org/press/launch");
+  assert.equal(ld.url, "https://remilia.org/blog/press/launch");
   assert.equal(ld.mainEntityOfPage, ld.url);
   assert.equal(ld.datePublished, "2026-08-01T00:00:00Z");
   assert.equal(ld.dateModified, ld.datePublished);
@@ -168,11 +168,13 @@ test("rss escapes entities and uses canonical permalinks", () => {
 test("sitemap renders loc + date-only lastmod", () => {
   const xml = sitemap([
     {
-      loc: "https://remilia.org/press/launch",
+      loc: "https://remilia.org/blog/press/launch",
       lastmod: "2026-08-01T12:30:00Z",
     },
   ]);
-  assert.ok(xml.includes("<loc>https://remilia.org/press/launch</loc>"));
+  assert.ok(
+    xml.includes("<loc>https://remilia.org/blog/press/launch</loc>"),
+  );
   assert.ok(xml.includes("<lastmod>2026-08-01</lastmod>"));
 });
 

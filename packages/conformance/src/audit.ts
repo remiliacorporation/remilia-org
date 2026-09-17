@@ -128,6 +128,127 @@ export function auditStylesheet(css: string): string[] {
   return errors;
 }
 
+const CSS_LENGTH =
+  /-?\d*\.?\d+\s*(?:px|em|rem|ch|ex|cap|ic|lh|rlh|vi|vb|vh|vw|vmin|vmax|cm|mm|q|in|pt|pc)\b/gi;
+const hasLength = (value: string): boolean =>
+  Array.from(value.matchAll(CSS_LENGTH)).some((m) => parseFloat(m[0]) !== 0);
+const CSS_COLOR =
+  /#[0-9a-f]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|hwb|oklch|oklab|lab|lch|color|light-dark)\s*\(/i;
+const CSS_NAMED_COLOR =
+  /\b(?:red|blue|green|black|white|gray|grey|maroon|purple|fuchsia|olive|lime|navy|teal|aqua|yellow|orange|pink|cyan|magenta|brown|coral|crimson|gold|indigo|violet|salmon|tan|beige|ivory|khaki|lavender)\b/i;
+const CSS_RHYTHM =
+  /^(?:margin|padding|gap|row-gap|column-gap|letter-spacing|font-size|line-height|font-weight|border-radius)(?:-[a-z]+)?$/;
+const CSS_BORDER =
+  /^border(?:-(?:top|right|bottom|left|block|inline)(?:-(?:start|end))?|-width|-top-width|-right-width|-bottom-width|-left-width)?$/;
+
+function* styleRules(
+  css: string,
+): Generator<{ selector: string; body: string; at: string[] }> {
+  let i = 0;
+  let selStart = 0;
+  const stack: string[] = [];
+  while (i < css.length) {
+    const ch = css[i];
+    if (ch === "{") {
+      stack.push(css.slice(selStart, i).trim());
+      selStart = i + 1;
+      i++;
+    } else if (ch === "}") {
+      const sel = stack.pop() ?? "";
+      const body = css.slice(selStart, i);
+      if (sel && !sel.startsWith("@"))
+        yield {
+          selector: sel,
+          body,
+          at: stack.filter((s) => s.startsWith("@")),
+        };
+      selStart = i + 1;
+      i++;
+    } else {
+      i++;
+    }
+  }
+}
+
+/**
+ * The component system, enforced: spacing, type scale, weights and border
+ * radii come from tokens; colors come from the skin; borders use
+ * var(--border)/var(--border-w); interactions are instant; every token has
+ * exactly one owner (a second :root/html definition of the same token is a
+ * silent override). At-rule blocks (@font-face, @media preludes) are exempt.
+ */
+export function auditDesignSystem(css: string): string[] {
+  const errors: string[] = [];
+  const cleaned = css
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/url\(\s*[^)]*\)/gi, "url()")
+    .replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""');
+
+  const tokenLayer = new Map<string, number>();
+  for (const { selector, body, at } of styleRules(cleaned)) {
+    // Conditional layers (@media/@supports) may override tokens and print
+    // normalization may use absolute colors — only unconditional rules count.
+    const conditional = at.length > 0;
+    const print = at.some((a) => /^@media\b[^({]*\bprint\b/.test(a));
+    for (const m of body.matchAll(
+      /(--[a-z0-9-]+|[a-z-]+)\s*:\s*([^;]+?)(?:;|$)/gi,
+    )) {
+      const prop = m[1].toLowerCase();
+      const value = m[2].trim();
+      if (prop.startsWith("--")) {
+        if (!conditional && /^(?::root|html)$/.test(selector))
+          tokenLayer.set(prop, (tokenLayer.get(prop) ?? 0) + 1);
+        continue;
+      }
+      if (print) continue;
+      const at2 = `${selector} { ${prop}: ${value} }`;
+      if (CSS_COLOR.test(value) || CSS_NAMED_COLOR.test(value))
+        errors.push(`${at2} — colors come from theme tokens`);
+      if (CSS_RHYTHM.test(prop) && hasLength(value))
+        errors.push(`${at2} — rhythm uses spacing/type tokens`);
+      if (prop === "font-weight" && !/^var\(/.test(value))
+        errors.push(`${at2} — weights are var(--weight-*)`);
+      if (prop === "font-family" && !/^var\(/.test(value))
+        errors.push(`${at2} — fonts are var(--font-*)`);
+      if (
+        CSS_BORDER.test(prop) &&
+        !/var\(--border/.test(value) &&
+        !/^(?:0|none)\b/.test(value)
+      )
+        errors.push(`${at2} — borders are var(--border)/var(--border-w)`);
+      if (/^(?:transition|animation)(?:-[a-z]+)?$/.test(prop) && !/^(?:none|0)/.test(value))
+        errors.push(`${at2} — interactions are instant, no motion`);
+    }
+  }
+  for (const [name, count] of tokenLayer)
+    if (count > 1)
+      errors.push(`token ${name} defined ${count}× at :root/html — one owner only`);
+  return errors;
+}
+
+/**
+ * Markup side of the component system: separators are .nav-rule, nothing is
+ * styled inline, buttons are typed, inputs carry a label hook.
+ */
+export function auditComponents(html: string): string[] {
+  const errors: string[] = [];
+  const body = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "");
+  for (const hr of body.matchAll(/<hr\b([^>]*)>/gi))
+    if (!/class=["'][^"']*\bnav-rule\b/.test(hr[1]))
+      errors.push(`<hr${hr[1].trim()}> — separators are .nav-rule`);
+  for (const m of body.matchAll(/\bstyle=["']([^"']*)["']/gi))
+    errors.push(`inline style="${m[1].slice(0, 60)}" — styles come from the stylesheet`);
+  for (const b of body.matchAll(/<button\b([^>]*)>/gi))
+    if (!/\btype=/.test(b[1]))
+      errors.push(`<button${b[1].trim().slice(0, 60)}> — missing type`);
+  for (const i of body.matchAll(/<input\b([^>]*)>/gi))
+    if (!/\baria-label=|\bid=/.test(i[1]))
+      errors.push(`<input${i[1].trim().slice(0, 60)}> — no aria-label or id for a label`);
+  return errors;
+}
+
 export function auditIndexability(
   html: string,
   expectIndexable: boolean,
@@ -340,7 +461,9 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     "dev-blog",
   ];
   const foreign = channels
-    .filter((c) => c !== channel)
+    .filter(
+      (c) => c !== channel && CHANNEL_ORIGIN[c] !== CHANNEL_ORIGIN[channel],
+    )
     .map((c) => `${CHANNEL_ORIGIN[c]}${CHANNEL_BASEPATH[c]}/`);
 
   const seen = new Set<string>();

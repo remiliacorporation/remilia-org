@@ -106,7 +106,7 @@ const BODY: PTBlock[] = [
       {
         _key: "l3",
         _type: "link",
-        href: "https://remilia.org/press/remilianet-alpha-v0-8-1",
+        href: "https://remilia.org/blog/press/remilianet-alpha-v0-8-1",
       },
     ],
   },
@@ -208,7 +208,7 @@ const navPosts: NavPost[] = [
   },
   {
     title: "Remilia Q3 Company Update",
-    url: "/press/q3-update",
+    url: "/blog/press/q3-update",
     date: "2026-07-02T00:00:00Z",
     category: "Company",
     excerpt: "Quarterly notes from the studio.",
@@ -216,7 +216,7 @@ const navPosts: NavPost[] = [
   },
   {
     title: "Milady Maker Featured in Press",
-    url: "/press/milady-press",
+    url: "/blog/press/milady-press",
     date: "2026-06-18T00:00:00Z",
     category: "Press",
     excerpt: "Coverage roundup.",
@@ -224,7 +224,7 @@ const navPosts: NavPost[] = [
   },
   {
     title: "RemiliaNET Public Beta Opens",
-    url: "/press/net-beta",
+    url: "/blog/press/net-beta",
     date: "2026-05-30T00:00:00Z",
     category: "Feature",
     excerpt: "The network opens to the public.",
@@ -232,7 +232,7 @@ const navPosts: NavPost[] = [
   },
   {
     title: "New Studio Partnership",
-    url: "/press/studio-partnership",
+    url: "/blog/press/studio-partnership",
     date: "2026-04-11T00:00:00Z",
     category: "Company",
     excerpt: "A new collaboration.",
@@ -246,7 +246,7 @@ const meta = {
   title: host.title,
   description: host.description,
 };
-const rail = leftRail(navPosts, host.title, "/press");
+const rail = leftRail(navPosts, host.title, "/blog/press", `/press/${post.slug}`);
 const bodyHtml = portableTextToHtml(BODY, {
   imageUrl: (img) =>
     (
@@ -265,7 +265,7 @@ const bodyHtml = portableTextToHtml(BODY, {
     )[img.asset?._ref ?? ""] ??
     "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
   linkCard: (href) =>
-    href.includes("/press/remilianet-alpha-v0-8-1")
+    href.includes("/blog/press/remilianet-alpha-v0-8-1")
       ? {
           title: post.title,
           description: post.excerpt,
@@ -276,17 +276,20 @@ const bodyHtml = portableTextToHtml(BODY, {
 });
 
 await cp(join(here, "../deploy"), outDir, { recursive: true });
-await mkdir(join(outDir, "press", post.slug), { recursive: true });
+await mkdir(join(outDir, "blog", "press", post.slug), { recursive: true });
 const css = await Promise.all(
-  [join(here, "core/blog-core.css"), join(here, "core/theme.css")].map((f) =>
-    readFile(f, "utf8"),
-  ),
+  [
+    join(here, "core/theme.css"),
+    ...["base", "chrome", "controls", "index", "nav", "prose", "media", "notes", "layout", "print"].map(
+      (n) => join(here, "core/blog", `${n}.css`),
+    ),
+  ].map((f) => readFile(f, "utf8")),
 );
-await writeFile(join(outDir, "press", "blog.css"), css.join("\n"));
-await writeFile(join(outDir, "press", "nav.js"), NAV_JS);
+await writeFile(join(outDir, "blog", "press", "blog.css"), css.join("\n"));
+await writeFile(join(outDir, "blog", "press", "nav.js"), NAV_JS);
 
 await writeFile(
-  join(outDir, "press", post.slug, "index.html"),
+  join(outDir, "blog", "press", post.slug, "index.html"),
   htmlPage({
     title: `${post.title} — ${host.title}`,
     description: post.excerpt,
@@ -303,16 +306,16 @@ await writeFile(
       mdHref: `/press/${post.slug}.md`,
       txtHref: `/press/${post.slug}.txt`,
     }),
-    bodyEnd: `<script src="/press/nav.js" defer></script>`,
+    bodyEnd: `<script src="/blog/press/nav.js" defer></script>`,
     mainHtml: articleHtml({
       title: post.title,
       publishedAt: post.publishedAt,
       byline: "Remilia Jackson",
-      authorHref: "/press/?author=Remilia%20Jackson",
+      authorHref: "/blog/press/?author=Remilia%20Jackson",
       canonical,
       category: "Feature",
-      categoryHref: "/press/?cat=Feature",
-      monthHref: "/press/?month=2026-08",
+      categoryHref: "/blog/press/?cat=Feature",
+      monthHref: "/blog/press/?month=2026-08",
       bodyHtml,
       metaHtml: adjacentHtml(navPosts, `/press/${post.slug}`),
       mdHref: `/press/${post.slug}.md`,
@@ -326,16 +329,16 @@ const fixturePlain = BODY.flatMap((b) =>
   .map((s) => (s && typeof s === "object" && "text" in s ? String(s.text) : ""))
   .join("");
 await writeFile(
-  join(outDir, "press", `${post.slug}.md`),
+  join(outDir, "blog", "press", `${post.slug}.md`),
   `# ${post.title}\n\n${post.publishedAt.slice(0, 10)} — ${canonical}\n\n> ${post.excerpt}\n\n${fixturePlain}\n`,
 );
 await writeFile(
-  join(outDir, "press", `${post.slug}.txt`),
+  join(outDir, "blog", "press", `${post.slug}.txt`),
   `${post.title}\n\n${post.publishedAt.slice(0, 10)} — ${canonical}\n\n${post.excerpt}\n\n${fixturePlain}\n`,
 );
 
 await writeFile(
-  join(outDir, "press", "index.html"),
+  join(outDir, "blog", "press", "index.html"),
   htmlPage({
     title: host.title,
     description: host.description,
@@ -347,7 +350,7 @@ await writeFile(
     chrome,
     layoutClass: "is-index",
     leftRail: emptyRail(),
-    bodyEnd: `<script src="/press/nav.js" defer></script>`,
+    bodyEnd: `<script src="/blog/press/nav.js" defer></script>`,
     mainHtml: indexMain(
       navPosts.map((n) => ({
         title: n.title,
@@ -359,7 +362,6 @@ await writeFile(
         author: n.author,
       })),
       filterBar(navPosts),
-      host.title,
     ),
   }),
 );

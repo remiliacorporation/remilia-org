@@ -4,21 +4,27 @@ import {
   caseRedirect,
   localeRedirect,
   machineNotFound,
+  MOVED_PREFIXES,
   SECTION_PREFIXES,
 } from "../../../netlify/edge-functions/lib/paths";
 import { CHANNELS, CHANNEL_BASEPATH } from "./urls";
 
 test("the edge function knows every section the bake publishes", () => {
-  const baked = [...new Set(CHANNELS.map((c) => CHANNEL_BASEPATH[c]))].sort();
+  const baked = [...new Set(CHANNELS.map((c) => CHANNEL_BASEPATH[c]))];
+  const known = [...new Set([...baked, ...MOVED_PREFIXES])].sort();
   assert.deepEqual(
     [...SECTION_PREFIXES].sort(),
-    baked,
-    "SECTION_PREFIXES drifted from CHANNEL_BASEPATH",
+    known,
+    "SECTION_PREFIXES drifted from CHANNEL_BASEPATH + MOVED_PREFIXES",
   );
 });
 
 test("a mixed-case section URL redirects to the canonical lowercase path", () => {
-  assert.equal(caseRedirect("/Updates/Level-2-Notes"), "/updates/level-2-notes");
+  assert.equal(
+    caseRedirect("/Blog/Updates/Level-2-Notes"),
+    "/blog/updates/level-2-notes",
+  );
+  // Old top-level paths lowercase too — `_redirects` then 301s to /blog/*.
   assert.equal(caseRedirect("/PRESS"), "/press");
   assert.equal(caseRedirect("/A/News/Drop"), "/a/news/drop");
 });

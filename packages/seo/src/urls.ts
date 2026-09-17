@@ -6,7 +6,8 @@ export type Channel =
   | "news"
   | "events"
   | "dev-updates"
-  | "dev-blog";
+  | "dev-blog"
+  | "blog";
 
 export type HostId = "org" | "com" | "net";
 
@@ -19,7 +20,9 @@ export const CHANNELS: Channel[] = [
   "events",
   "dev-updates",
   "dev-blog",
+  "blog",
 ];
+
 
 export const isChannel = (v: string | undefined): v is Channel =>
   !!v && (CHANNELS as string[]).includes(v);
@@ -33,17 +36,19 @@ export const CHANNEL_ORIGIN: Record<Channel, string> = {
   events: "https://remilia.com",
   "dev-updates": "https://www.remilia.net",
   "dev-blog": "https://www.remilia.net",
+  blog: "https://remilia.org",
 };
 
 export const CHANNEL_BASEPATH: Record<Channel, string> = {
-  updates: "/updates",
-  press: "/press",
-  thought: "/thought",
-  archive: "/archive",
+  updates: "/blog/updates",
+  press: "/blog/press",
+  thought: "/blog/thought",
+  archive: "/blog/archive",
   news: "/a/news",
   events: "/a/events",
   "dev-updates": "/updates",
   "dev-blog": "/blog",
+  blog: "/blog",
 };
 
 export const CHANNEL_HOST: Record<Channel, HostId> = {
@@ -55,6 +60,7 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   events: "com",
   "dev-updates": "net",
   "dev-blog": "net",
+  blog: "org",
 };
 
 export const ORG_SECTIONS: Channel[] = [
@@ -72,14 +78,28 @@ export type ComSection = (typeof COM_SECTIONS)[number];
 export const NET_SECTIONS: Channel[] = ["dev-updates", "dev-blog"];
 
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
-  updates: "remilia.org/updates",
-  press: "remilia.org/press",
-  thought: "remilia.org/thought",
-  archive: "remilia.org/archive",
+  updates: "remilia.org/blog/updates",
+  press: "remilia.org/blog/press",
+  thought: "remilia.org/blog/thought",
+  archive: "remilia.org/blog/archive",
   news: "remilia.com/a/news",
   events: "remilia.com/a/events",
   "dev-updates": "remilia.net/updates",
   "dev-blog": "remilia.net/blog",
+  blog: "remilia.org/blog",
+};
+
+/** Short display name — the index card and byline category. */
+export const CHANNEL_LABEL: Record<Channel, string> = {
+  updates: "Updates",
+  press: "Press",
+  thought: "Thought",
+  archive: "Archive",
+  news: "News",
+  events: "Events",
+  "dev-updates": "Updates",
+  "dev-blog": "Dev blog",
+  blog: "Blog",
 };
 
 export const EVENTS_PATH_LABEL = "remilia.com/a/events";

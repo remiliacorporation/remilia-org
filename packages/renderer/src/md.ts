@@ -337,7 +337,7 @@ function spanToMd(
   if (m.em) t = `*${t}*`;
   if (m.href) {
     const path = m.href.match(
-      /^\/(?:updates|press|thought|archive|a\/news|a\/events|a\/studio|blog)\/([^/?#]+)/,
+      /^\/(?:(?:blog\/)?(?:updates|press|thought|archive)|a\/news|a\/events|a\/studio|blog)\/([^/?#]+)/,
     );
     t = path ? `[[${path[1]}|${span.text}]]` : `[${span.text}](${m.href})`;
   }
@@ -348,7 +348,10 @@ function spanToMd(
   return t;
 }
 
-export function portableTextToMarkdown(blocks: PTBlock[]): string {
+export function portableTextToMarkdown(
+  blocks: PTBlock[],
+  assetUrl?: (asset: { url?: string; _ref?: string }) => string | undefined,
+): string {
   const fns: string[] = [];
   const lines: string[] = [];
   let list: "bullet" | "number" | null = null;
@@ -360,6 +363,8 @@ export function portableTextToMarkdown(blocks: PTBlock[]): string {
       n = 0;
     }
   };
+  const resolve = (a?: { url?: string; _ref?: string }) =>
+    a ? (a.url ?? (a._ref && assetUrl ? (assetUrl(a) ?? a._ref) : a._ref)) : "";
   for (const b of blocks) {
     if (b._type === "image") {
       flushList();
@@ -368,9 +373,19 @@ export function portableTextToMarkdown(blocks: PTBlock[]): string {
         caption?: string;
         asset?: { url?: string; _ref?: string };
       };
-      const src = img.asset?.url ?? img.asset?._ref ?? "";
+      const src = resolve(img.asset);
       const cap = img.caption ? ` "${img.caption}"` : "";
       lines.push(`![${img.alt ?? ""}](${src}${cap})`, "");
+      continue;
+    }
+    if (b._type === "video") {
+      flushList();
+      const v = b as {
+        caption?: string;
+        file?: { asset?: { url?: string; _ref?: string } };
+      };
+      const src = resolve(v.file?.asset);
+      if (src) lines.push(`[Video${v.caption ? `: ${v.caption}` : ""}](${src})`, "");
       continue;
     }
     if (b._type !== "block") continue;
@@ -422,6 +437,7 @@ export function postToMarkdownFile(input: {
   author?: string;
   tags?: string[];
   body: PTBlock[];
+  assetUrl?: (asset: { url?: string; _ref?: string }) => string | undefined;
 }): string {
   const tags = (input.tags ?? []).map((t) => `  - ${t}`).join("\n");
   const fm = [
@@ -437,7 +453,7 @@ export function postToMarkdownFile(input: {
     "---",
     "",
   ].join("\n");
-  return `${fm}\n${portableTextToMarkdown(input.body)}`;
+  return `${fm}\n${portableTextToMarkdown(input.body, input.assetUrl)}`;
 }
 
 export function slugFromPath(file: string): string {

@@ -207,7 +207,12 @@ test("footnotes render as one .fn with nested note", () => {
   ];
   const html = portableTextToHtml(blocks, OPTS);
   assert.ok(html.includes('<span class="fn" id="fn-1">'));
-  assert.ok(html.includes('<a class="fn-ref" href="#fn-1">[1]</a>'));
+  assert.ok(html.includes('<a class="fn-ref" href="#fndef-1">[1]</a>'));
+  assert.ok(
+    html.includes(
+      '<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text">First source.</span><a class="fn-back" href="#fn-1"',
+    ),
+  );
   assert.ok(
     html.includes(
       '<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text">First source.</span></span>',
@@ -216,6 +221,27 @@ test("footnotes render as one .fn with nested note", () => {
   assert.ok(!html.includes('class="sidenote"'));
   assert.ok(html.includes("Second &lt;source&gt;."));
   assert.ok(!html.includes("sn-toggle"));
+});
+
+test("text-less paragraphs (bare embed links) leave no blank gap", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("", ["e"])],
+      markDefs: [{ _key: "e", _type: "link", href: "https://example.com/x" }],
+    },
+    { _type: "block", children: [span("after")] },
+    {
+      _type: "block",
+      children: [span("", ["f"])],
+      markDefs: [{ _key: "f", _type: "footnote", text: "note" }],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  assert.ok(!html.includes("example.com"));
+  assert.ok(html.includes("<p>after</p>"));
+  // a block holding only a bare footnote ref is a notes-list entry, not a popover
+  assert.ok(html.includes('class="fn-end" id="fn-1"'));
 });
 
 test("link marks reject executable URL schemes", () => {

@@ -5,6 +5,7 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
+  CHANNEL_LABEL,
   CHANNEL_ORIGIN,
   atom,
   blogPosting,
@@ -25,6 +26,8 @@ import {
 } from "@remilia/seo";
 import {
   extractHeadings,
+  figureHtml,
+  imageDims,
   portableTextToHtml,
   tocItems,
   footnoteCount,
@@ -73,8 +76,6 @@ export interface BakeOptions {
     citeElsewhere: { label: string; url: string }[];
   };
 
-  extraSitemapUrls?: SitemapEntry[];
-
   /**
    * Content API origin. Defaults to Sanity; point it at a fixture server to
    * bake known content without the network.
@@ -85,9 +86,12 @@ export interface BakeOptions {
   perspective?: ContentPerspective;
 
   stylesheets: string[];
+  /** Pool posts across these channels — the listing-only aggregate surface. */
+  aggregateOf?: Channel[];
 }
 
 interface FetchedPost {
+  channel?: Channel;
   title: string;
   slug: string;
   excerpt: string;
@@ -96,6 +100,7 @@ interface FetchedPost {
   body: PTBlock[];
   markdown?: string;
   coverRef?: string;
+  coverAlt?: string;
   ogImageRef?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -141,11 +146,23 @@ export function cdnUrl(
   return `https://cdn.sanity.io/images/${projectId}/${dataset}/${m[1]}-${m[2]}.${m[3]}?${params}`;
 }
 
+/** `file-<sha>-<ext>` ref → CDN file URL (videos, attachments). */
+function fileUrl(
+  projectId: string,
+  dataset: string,
+  ref: string,
+): string | undefined {
+  const m = /^file-([a-f0-9]+)-(\w+)$/.exec(ref);
+  if (!m) return undefined;
+  return `https://cdn.sanity.io/files/${projectId}/${dataset}/${m[1]}.${m[2]}`;
+}
+
 // Production omits future posts. Draft previews include them so editors can
 // review scheduled content before its publication time.
 const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
+  "coverAlt": coverImage.alt,
   "ogImageRef": coalesce(seo.ogImage.asset._ref, coverImage.asset._ref),
   "seoTitle": seo.metaTitle,
   "seoDescription": seo.metaDescription,
@@ -285,12 +302,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       : {}),
   });
 
+  const aggregated = !!opts.aggregateOf;
+  const postChannel = (p: FetchedPost): Channel => p.channel ?? channel;
+  const postBase = (p: FetchedPost): string => CHANNEL_BASEPATH[postChannel(p)];
+
   let posts: FetchedPost[];
   try {
-    posts = await client.fetch<FetchedPost[]>(POSTS_QUERY, {
-      channel,
-      includeFuture: perspective === "drafts",
-    });
+    const fetches = (opts.aggregateOf ?? [channel]).map(async (c) =>
+      (await client.fetch<FetchedPost[]>(POSTS_QUERY, {
+        channel: c,
+        includeFuture: perspective === "drafts",
+      })).map((p) => ({ ...p, channel: c })),
+    );
+    posts = (await Promise.all(fetches)).flat();
+    if (aggregated)
+      posts.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }
@@ -306,17 +332,19 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   const meta = { channel, title: host.title, description: host.description };
   const feedPosts = posts
-    .filter((p) => !p.noIndex && !isExternalArchive(p, channel))
-    .map((p) => ({ ...p, channel }));
+    .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+    .map((p) => ({ ...p, channel: postChannel(p) }));
   const sitemapEntries: SitemapEntry[] = [
-    ...(opts.extraSitemapUrls ?? []),
     { loc: indexUrl(channel) },
-    ...posts
-      .filter((p) => !p.noIndex && !isExternalArchive(p, channel))
-      .map((p) => ({
-        loc: canonicalFor(channel, p.slug),
-        lastmod: p.updatedAt ?? p.publishedAt,
-      })),
+    // Aggregates only list their own pages — posts live in section sitemaps.
+    ...(aggregated
+      ? []
+      : posts
+          .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+          .map((p) => ({
+            loc: canonicalFor(postChannel(p), p.slug),
+            lastmod: p.updatedAt ?? p.publishedAt,
+          }))),
   ];
 
   const dir = join(outDir, ...basePath.split("/").filter(Boolean));
@@ -341,20 +369,25 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       description: p.excerpt,
       imageUrl: img(p.coverRef, "w=640&auto=format"),
     };
-    cards.set(canonicalFor(channel, p.slug), card);
-    cards.set(`${basePath}/${p.slug}`, card);
+    cards.set(canonicalFor(postChannel(p), p.slug), card);
+    cards.set(`${postBase(p)}/${p.slug}`, card);
   }
 
+  // The card's category is the section it lives under — the index is shared
+  // between channels, so the filter dropdown groups by section, not tag.
   const navPosts: NavPost[] = posts.map((p) => ({
     title: p.title,
-    url: `${basePath}/${p.slug}`,
+    url: `${postBase(p)}/${p.slug}`,
     date: p.publishedAt,
-    category: p.tags?.[0] ?? "Uncategorized",
+    category: CHANNEL_LABEL[postChannel(p)],
+    categoryHref: indexUrl(postChannel(p)),
+    authorHref: p.authors?.[0]
+      ? `${postBase(p)}/authors/${slugify(p.authors[0].name)}`
+      : undefined,
     excerpt: p.excerpt,
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
     author: p.authors?.map((a) => a.name).join(", "),
   }));
-  const rail = leftRail(navPosts, host.title, basePath);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
@@ -384,15 +417,29 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     return candidates.length ? candidates.join(", ") : undefined;
   };
 
-  for (const p of posts) {
-    const pageUrl = canonicalFor(channel, p.slug);
-    const canonical = postCanonical(p, channel);
-    const body = postBody(p, channel);
+  // Aggregates bake no post pages — each post already lives in its section.
+  for (const p of aggregated ? [] : posts) {
+    const pageUrl = canonicalFor(postChannel(p), p.slug);
+    const canonical = postCanonical(p, postChannel(p));
+    const body = postBody(p, postChannel(p));
+    const plain = postPlain(body);
     const bodyHtml = portableTextToHtml(body, {
       imageUrl: imgUrl,
       imageSrcSet: imgSrcSet,
+      videoUrl: (b) =>
+        (b.file?.asset?._ref
+          ? fileUrl(opts.projectId, opts.dataset, b.file.asset._ref)
+          : undefined) ?? b.file?.asset?.url,
       linkCard,
     });
+    const heroBlock = p.coverRef ? { asset: { _ref: p.coverRef } } : undefined;
+    const heroSrc = heroBlock ? imgUrl(heroBlock) : undefined;
+    const heroDims = imageDims(p.coverRef);
+    const hero =
+      heroBlock && heroSrc
+        ? `${figureHtml({ src: heroSrc, srcset: imgSrcSet(heroBlock), alt: p.coverAlt, width: heroDims?.w, height: heroDims?.h })}\n<hr class="nav-rule">`
+        : "";
+    const bodyWithHero = hero ? `${hero}\n${bodyHtml}` : bodyHtml;
     const galleries =
       channel === "events"
         ? (p.albums ?? [])
@@ -402,6 +449,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
                 a.images.flatMap((i) => {
                   const url = img(i.ref, "w=800&auto=format");
                   const fullUrl = img(i.ref, "w=2400&auto=format");
+                  const dims = imageDims(i.ref);
                   return url && fullUrl
                     ? [
                         {
@@ -410,6 +458,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
                           alt: i.alt ?? "",
                           caption: i.caption,
                           credit: i.credit,
+                          width: dims?.w,
+                          height: dims?.h,
                         },
                       ]
                     : [];
@@ -500,12 +550,19 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       ],
       headExtra: `${feedLinks(meta)}${galleryScript}`,
       chrome: chromeStamped,
-      leftRail: rail,
+      leftRail: leftRail(
+        navPosts,
+        host.title,
+        basePath,
+        `${basePath}/${p.slug}`,
+      ),
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
         canonical: pageUrl,
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
+        minutes: readingMinutes(plain),
+        words: plain.trim().split(/\s+/).filter(Boolean).length,
       }),
       bodyEnd: navScript,
       mainHtml: articleHtml({
@@ -516,16 +573,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           ? `${basePath}/authors/${slugify(p.authors[0].name)}`
           : undefined,
         canonical: pageUrl,
-        category: p.tags?.[0] ?? (p.outlet ? p.outlet : undefined),
-        categoryHref: p.tags?.[0]
-          ? `${basePath}/tags/${slugify(p.tags[0])}`
-          : undefined,
+        category: CHANNEL_LABEL[channel],
+        categoryHref: basePath,
         monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
-        bodyHtml: galleries ? `${bodyHtml}\n${galleries}` : bodyHtml,
+        bodyHtml: galleries ? `${bodyWithHero}\n${galleries}` : bodyWithHero,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
-        readingMinutes: readingMinutes(postPlain(body)),
+        readingMinutes: readingMinutes(plain),
       }),
     });
     await mkdir(join(dir, p.slug), { recursive: true });
@@ -543,6 +598,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             author: p.authors?.map((a) => a.name).join(", "),
             tags: p.tags,
             body,
+            assetUrl: (a) =>
+              a._ref
+                ? (img(a._ref, "auto=format") ??
+                  fileUrl(opts.projectId, opts.dataset, a._ref))
+                : a.url,
           })
         : (p.markdown ?? "").replace(/\s*$/, "\n"),
     );
@@ -629,16 +689,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               excerpt: p.excerpt ?? "",
               imageUrl: p.imageUrl,
               author: p.author,
-              authorHref: p.author
-                ? `${basePath}/authors/${slugify(p.author)}`
-                : undefined,
-              categoryHref:
-                p.category && p.category !== "Uncategorized"
-                  ? `${basePath}/tags/${slugify(p.category)}`
-                  : undefined,
+              authorHref:
+                p.authorHref ??
+                (p.author
+                  ? `${basePath}/authors/${slugify(p.author)}`
+                  : undefined),
+              categoryHref: p.categoryHref,
             })),
             filterBar(slice),
-            title,
             { page, pages, prevHref, nextHref },
           ),
         }),
@@ -683,7 +741,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   // Tags and authors are authored on every post but only ever drove a
   // client-side filter; each term now has a crawlable archive with its own
-  // feed, and a directory page lists them.
+  // feed, and a directory page lists them. Aggregates skip term archives —
+  // those live on the sections.
   const termsOf = (
     pick: (p: FetchedPost) => string[],
   ): { label: string; slug: string; posts: NavPost[] }[] => {
@@ -725,7 +784,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     },
   ];
 
-  for (const taxonomy of taxonomies) {
+  for (const taxonomy of aggregated ? [] : taxonomies) {
     if (taxonomy.terms.length === 0) continue;
     for (const term of taxonomy.terms)
       await writeListing({
@@ -779,13 +838,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         chrome: chromeStamped,
         leftRail: emptyRail(),
         mainHtml: termIndexMain(
-          taxonomy.heading,
           taxonomy.noun,
           taxonomy.terms.map((t) => ({
             label: t.label,
             href: `${basePath}/${taxonomy.at}/${t.slug}`,
             count: t.posts.length,
           })),
+          basePath,
         ),
       }),
     );
@@ -796,7 +855,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     .filter((p) => !p.noIndex)
     .map((p) => ({
       title: p.title,
-      url: postCanonical(p, channel),
+      url: postCanonical(p, postChannel(p)),
       date: p.publishedAt,
       excerpt: p.excerpt ?? "",
     }));
@@ -817,7 +876,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   await writeFile(join(dir, "atom.xml"), atom(meta, feedPosts));
   await writeFile(
     join(dir, "sitemap.xml"),
-    sitemap([...sitemapEntries, ...listingSitemap]),
+    sitemap(
+      [...new Map(
+        [...sitemapEntries, ...listingSitemap].map((e) => [e.loc, e]),
+      ).values()],
+    ),
   );
   await writeFile(
     join(dir, "404.html"),
@@ -843,7 +906,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     }),
   );
 
-  await writeChannelRedirects(outDir, channel, basePath, posts);
+  await writeChannelRedirects(outDir, channel, basePath, posts, aggregated);
 
 
   return { pages: posts.length + 1 };
@@ -869,6 +932,7 @@ async function writeChannelRedirects(
   channel: Channel,
   basePath: string,
   posts: FetchedPost[],
+  aggregated = false,
 ): Promise<void> {
   const rules: RedirectRule[] = [];
 
@@ -885,20 +949,28 @@ async function writeChannelRedirects(
         force: true,
       },
     );
+  }
+
+  // Every imported post keeps its legacy host URL as a 301 → its current
+  // canonical. Emitted in the post's own section block so a post that moved
+  // channels (e.g. Ghost → thought) still gets its rule. Ghost posts without
+  // a recorded legacyUrl fall back to the slug-derived Ghost path.
+  if (!aggregated) {
     for (const p of posts) {
-      const fallback = legacyRedirect("press", p.slug);
-      const from =
-        p.legacyUrl && /^https?:\/\/blog\.remilia\.org\//i.test(p.legacyUrl)
-          ? ghostFromUrl(p.legacyUrl)
-          : p.migrationSource === "ghost"
-            ? fallback.from
-            : null;
+      const fallback = legacyRedirect(p.channel ?? channel, p.slug);
+      const from = p.legacyUrl
+        ? ghostFromUrl(p.legacyUrl)
+        : p.migrationSource === "ghost"
+          ? fallback.from
+          : null;
       if (!from) continue;
       rules.push({ from, to: fallback.to, force: true });
     }
   }
 
-  rules.push(...aliasRules(basePath, posts));
+  // Post-level aliases live on the section the post is in — aggregates only
+  // need their own 404.
+  if (!aggregated) rules.push(...aliasRules(basePath, posts));
 
   rules.push({ from: `${basePath}/*`, to: `${basePath}/404.html`, status: 404 });
 

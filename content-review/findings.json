@@ -1,0 +1,248 @@
+[
+  {
+    "id": "drafts.post-press-03-2022-nyc-milady-rave-2",
+    "channel": "events",
+    "slug": "03-2022-nyc-milady-rave-2",
+    "kind": "slug",
+    "fix": null,
+    "note": "collision suffix 03-2022-nyc-milady-rave-2 — rename if base slug free",
+    "flag": true
+  },
+  {
+    "id": "drafts.post-press-06-2024-london-33reisen-london-2",
+    "channel": "events",
+    "slug": "06-2023-london-33reisen-london",
+    "kind": "alias",
+    "fix": {
+      "setIfMissing": {
+        "aliases": [
+          "/events/06-2024-london-33reisen-london-2"
+        ]
+      }
+    },
+    "note": "legacy slug 06-2024-london-33reisen-london-2 ≠ 06-2023-london-33reisen-london — add alias",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-angelicism01-collected-commentaries-on-milady",
+    "channel": "archive",
+    "slug": "angelicism01-collected-commentaries-on-milady",
+    "kind": "mojibake",
+    "fix": null,
+    "note": "encoding junk: _These are the IntelligenceWars™, the wars over inscription._ What’s at stake is",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-angelicism01-collected-commentaries-on-milady",
+    "channel": "archive",
+    "slug": "angelicism01-collected-commentaries-on-milady",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube.com/watch?v=3QRwQx23A8A",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-angelicism01-collected-commentaries-on-milady",
+    "channel": "archive",
+    "slug": "angelicism01-collected-commentaries-on-milady",
+    "kind": "mojibake",
+    "fix": null,
+    "note": "encoding junk: If the Moralism Cancellation Plays of Ripps TL™ were correct in their normative ",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-angelicism01-collected-commentaries-on-milady",
+    "channel": "archive",
+    "slug": "angelicism01-collected-commentaries-on-milady",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube.com/watch?v=vWMDchOVqjY",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-can-whats-playing-milady-make-it-to-level-2",
+    "channel": "updates",
+    "slug": "can-whats-playing-milady-make-it-to-level-2",
+    "kind": "slug",
+    "fix": null,
+    "note": "collision suffix can-whats-playing-milady-make-it-to-level-2 — rename if base slug free",
+    "flag": true
+  },
+  {
+    "id": "drafts.post-press-cheeseworld-p2p-press-release",
+    "channel": "press",
+    "slug": "cheeseworld-p2p-press-release",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://discord.gg/MILADY",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-ethereum-starter-pack",
+    "channel": "archive",
+    "slug": "ethereum-starter-pack",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://github.com/makerdao/multicall",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-ethereum-starter-pack",
+    "channel": "archive",
+    "slug": "ethereum-starter-pack",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://github.com/Destiner/ethcall",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-ethereum-starter-pack",
+    "channel": "archive",
+    "slug": "ethereum-starter-pack",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://betterprogramming.pub/how-to-write-smart-contracts-that-optimize-gas-spent-on-ethereum-30b5e",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-ethereum-starter-pack",
+    "channel": "archive",
+    "slug": "ethereum-starter-pack",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://eattheblocks.com/how-to-optimize-gas-cost-in-a-solidity-smart-contract-6-tips/",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-ethereum-starter-pack",
+    "channel": "archive",
+    "slug": "ethereum-starter-pack",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.researchgate.net/publication/340300470_Design_Patterns_for_Gas_Optimization_in_Ethereum",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-external-memo-7-12-22-where-are-the-art-critics",
+    "channel": "updates",
+    "slug": "external-memo-7-12-22-where-are-the-art-critics",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube.com/watch?v=LlaJ1CjT03k",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-how-to-torrent",
+    "channel": "archive",
+    "slug": "how-to-torrent",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://gist.githubusercontent.com/sa3dany/1478e311e6371a60e251e7bdfc2dda65/raw/6288d84627e23823427d",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-how-to-torrent",
+    "channel": "archive",
+    "slug": "how-to-torrent",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://raw.githubusercontent.com/libellula/qbt-plugins/main/pantsu.py",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-how-to-torrent",
+    "channel": "archive",
+    "slug": "how-to-torrent",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://raw.githubusercontent.com/khensolomon/leyts/master/yts.py",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-jadeposting",
+    "channel": "thought",
+    "slug": "jadeposting",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube-nocookie.com/embed/iI-clmmpdZM",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-launching-urbit-on-windows",
+    "channel": "archive",
+    "slug": "launching-urbit-on-windows",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.microsoft.com/en-us/software-download/windows10",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-launching-urbit-on-windows",
+    "channel": "archive",
+    "slug": "launching-urbit-on-windows",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-neogyaru",
+    "channel": "archive",
+    "slug": "neogyaru",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube-nocookie.com/embed/ErQtHvN0vxU?rel=0&autoplay=0&showinfo=0&enablejsapi=0",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-press-release-fruits-x-remilia-01-2024",
+    "channel": "press",
+    "slug": "press-release-fruits-x-remilia-01-2024",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://platform.twitter.com/embed/Tweet.html?creatorScreenName=scatterart&dnt=false&embedId=twitter",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-remilianet-alpha-v0-4-1-christmas-hat-time",
+    "channel": "dev-blog",
+    "slug": "remilianet-alpha-v0-4-1-christmas-hat-time",
+    "kind": "mojibake",
+    "fix": null,
+    "note": "encoding junk: Here at Remilia, we felt it best to expedite this process and provide a service ",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-remilianet-alpha-v0-7-trinkets-tune-ups-and-transformation-2",
+    "channel": "dev-blog",
+    "slug": "remilianet-alpha-v0-7-trinkets-tune-ups-and-transformation",
+    "kind": "alias",
+    "fix": {
+      "setIfMissing": {
+        "aliases": [
+          "/dev-blog/remilianet-alpha-v0-7-trinkets-tune-ups-and-transformation-2"
+        ]
+      }
+    },
+    "note": "legacy slug remilianet-alpha-v0-7-trinkets-tune-ups-and-transformation-2 ≠ remilianet-alpha-v0-7-trinkets-tune-ups-and-transformation — add alias",
+    "flag": false
+  },
+  {
+    "id": "drafts.post-press-things-desired-an-egoless-online-gp",
+    "channel": "thought",
+    "slug": "things-desired-an-egoless-online-gp",
+    "kind": "bare-url",
+    "fix": null,
+    "note": "bare URL paragraph: https://www.youtube.com/watch?v=l3UKGxQUXCE",
+    "flag": false
+  },
+  {
+    "id": "post-press-corporate-memo-remilia-2024-christmas-missive",
+    "channel": "updates",
+    "slug": "corporate-memo-remilia-2024-christmas-missive",
+    "kind": "mojibake",
+    "fix": null,
+    "note": "encoding junk: On-going improvements to Miladycraft (the minimum viable metaverse™),",
+    "flag": false
+  }
+]

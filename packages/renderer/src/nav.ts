@@ -8,10 +8,13 @@ export interface NavPost {
   excerpt?: string;
   imageUrl?: string;
   author?: string;
+  /** Overrides the section-derived links — pooled listings point home per post. */
+  categoryHref?: string;
+  authorHref?: string;
 }
 
 const MAGNIFYING_GLASS = `<svg class="nav-search-icon" width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>`;
-const NAV_SEARCH = `<form class="nav-search" role="search">
+export const NAV_SEARCH = `<form class="nav-search" role="search">
 <span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>`;
 
@@ -51,11 +54,13 @@ function filterSel(
 }
 
 function catSel(posts: NavPost[]): { css: string; html: string } {
+  const cats = [...new Set(posts.map((p) => p.category))].sort();
+  if (cats.length < 2) return { css: "", html: "" };
   return filterSel(
     "post-cat",
     "Filter posts",
     "All posts",
-    [...new Set(posts.map((p) => p.category))].sort(),
+    cats,
     "data-cat",
   );
 }
@@ -79,8 +84,8 @@ function authorSel(posts: NavPost[]): { css: string; html: string } {
 export function filterBar(posts: NavPost[]): string {
   const { html: cat } = catSel(posts);
   const { html: authors } = authorSel(posts);
+  if (!cat && !authors) return "";
   return `<div class="nav-page">
-${NAV_SEARCH}
 ${cat}
 ${authors}
 </div>`;
@@ -90,13 +95,14 @@ export function leftRail(
   posts: NavPost[],
   _label: string,
   _indexHref = "/press",
+  currentUrl?: string,
 ): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const { css, html: cat } = catSel(posts);
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}">${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">
@@ -136,6 +142,7 @@ export const NAV_JS = `(() => {
   const prev = document.querySelector('.nav-prev');
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
+  const statusEl = document.querySelector('.index-mast h1');
   const cards = [...document.querySelectorAll('.post-card')];
   if (!q && !cards.length) return;
   const PAGE = 4;
@@ -209,6 +216,17 @@ export const NAV_JS = `(() => {
       if (next) next.disabled = page >= pages - 1;
     }
     cards.forEach((c) => { c.hidden = !match(c).show; });
+    if (statusEl && cards.length) {
+      const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
+      const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
+      const month = params.get('month') || '';
+      const plural = (s) => /(s|x|z|ch|sh)$/i.test(s) ? s + 'es' : (/[^aeiou]y$/i.test(s) ? s.slice(0, -1) + 'ies' : s + 's');
+      let t = catv ? 'Showing all ' + plural(catv) : 'Showing all posts';
+      if (author) t += ' by ' + author;
+      if (month) t += ' from ' + month;
+      if (query) t += ' matching \u201C' + query + '\u201D';
+      statusEl.textContent = t;
+    }
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
@@ -347,10 +365,12 @@ export const NAV_JS = `(() => {
 (() => {
   addEventListener('click', (e) => {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const a = e.target.closest('a.permalink');
+    const a = e.target.closest('.copy-url');
     if (!a || !navigator.clipboard || !navigator.clipboard.writeText) return;
+    const u = a.getAttribute('data-url');
+    if (!u) return;
     e.preventDefault();
-    navigator.clipboard.writeText(a.href);
+    navigator.clipboard.writeText(u);
   });
 })();
 (() => {
@@ -362,5 +382,79 @@ export const NAV_JS = `(() => {
     e.preventDefault();
     fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t));
   });
+})();
+// The sticky left rail can't subgrid like .right-rail without breaking its
+// internal scroll, so the site-head stretches to the masthead row here.
+(() => {
+  try {
+    const mast = document.querySelector('.sec.mast');
+    const head = document.querySelector('.left-rail .site-head');
+    if (!mast || !head || typeof ResizeObserver !== 'function') return;
+    const mq = matchMedia('(min-width: 1100px)');
+    const sync = () => {
+      head.style.minHeight = mq.matches ? mast.offsetHeight + 'px' : '';
+    };
+    new ResizeObserver(sync).observe(mast);
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+    sync();
+  } catch (e) {}
+})();
+// Sidenotes anchor to their ref's line; a note that would overlap the one
+// above drops below it and --fn-drop draws the elbow back up to the ref.
+(() => {
+  try {
+    const notes = [...document.querySelectorAll('.fn .fn-note')];
+    if (!notes.length) return;
+    const mq = matchMedia('(min-width: 1100px)');
+    const clear = () => {
+      for (const n of notes) {
+        n.style.top = '';
+        n.style.removeProperty('--fn-drop');
+        n.removeAttribute('data-drop');
+      }
+    };
+    const stack = () => {
+      clear();
+      if (!mq.matches) return;
+      const cs = getComputedStyle(document.documentElement);
+      const gap = parseFloat(cs.getPropertyValue('--grid')) || 4;
+      const tick =
+        (parseFloat(cs.getPropertyValue('--space-xs')) || 0) +
+        ((parseFloat(cs.getPropertyValue('--size-base')) || 0) *
+          (parseFloat(cs.getPropertyValue('--leading')) || 1)) / 2;
+      let floor = 0;
+      const drops = [];
+      for (const n of notes) {
+        const parent = n.offsetParent;
+        if (!parent) continue;
+        const fn = n.closest('.fn');
+        const ref = fn ? fn.querySelector('.fn-ref') : null;
+        const pTop = parent.getBoundingClientRect().top;
+        const r = ref ? ref.getBoundingClientRect() : null;
+        const natural = r
+          ? Math.max(0, r.top - pTop + r.height / 2 - tick)
+          : n.offsetTop;
+        const naturalAbs = pTop + scrollY + natural;
+        const placedAbs = Math.max(naturalAbs, floor);
+        const drop = placedAbs - naturalAbs;
+        drops.push([n, natural + drop, drop]);
+        floor = placedAbs + n.offsetHeight + gap;
+      }
+      for (const [n, placed, drop] of drops) {
+        if (drop <= 1) continue;
+        n.style.top = placed + 'px';
+        n.style.setProperty('--fn-drop', drop + 'px');
+        n.setAttribute('data-drop', '');
+      }
+    };
+    stack();
+    addEventListener('resize', stack, { passive: true });
+    addEventListener('load', stack);
+    if (mq.addEventListener) mq.addEventListener('change', stack);
+    if (typeof ResizeObserver === 'function') {
+      const body = document.querySelector('.article-body');
+      if (body) new ResizeObserver(() => stack()).observe(body);
+    }
+  } catch (e) {}
 })();
 `;
