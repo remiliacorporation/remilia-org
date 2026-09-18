@@ -25,6 +25,9 @@
   --dither-mid:#ffc8c8;
   --dither-light:#fff8f7;
   --dither-hover:0.7;
+  /* Strength of the spread ink pass in #print-fx. Keep this at full
+     opacity: part-opacity ink reads as haze behind type, not as print. */
+  --plate-ink:1;
 }
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:'Alte Haas Grotesk',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:var(--ink);font-weight:bold}
@@ -62,9 +65,13 @@ svg.fx{position:absolute;width:0;height:0}
 .page-simple main{max-width:720px;margin:40px auto;padding:20px}
 
 .layer-wrap{position:relative;height:100vh;overflow-y:auto;scroll-behavior:smooth}
-.layer-base,.layer-fx{max-width:720px;margin:0 auto;padding:20px}
-.layer-fx{display:none}
-.layer-base{position:relative;z-index:2;background:transparent;filter:url(#print-fx)}
+.layer-base{
+  position:relative;z-index:2;max-width:720px;margin:0 auto;padding:20px;
+  background:transparent;filter:url(#print-fx)
+}
+/* The spread pass is ink, not a fixed red: it retints with --ink and can be
+   dialled out entirely without touching the paper grain. */
+#print-fx feFlood{flood-color:var(--ink);flood-opacity:var(--plate-ink)}
 table{width:100%;border-collapse:collapse;margin-bottom:20px}
 th{border:1px solid var(--ink);padding:6px 8px;text-align:center;font-weight:bold}
 th h1,th h2,th h3{
@@ -306,8 +313,6 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .office-name{padding:10px 8px 4px;text-align:center}
 .office-blurb{padding:0 8px 8px;text-align:center;line-height:1.7}
 .office-card:hover .office-name,.office-card.is-on .office-name{background:var(--ink);color:#fff}
-.layer-fx .office-photo,
-.layer-fx .inspo-photo{visibility:hidden}
 .inspo-frame{
   display:block;position:relative;width:100%;margin:0 auto;border:0;background:#fff;
   padding:0;text-decoration:none;color:inherit
@@ -319,9 +324,7 @@ td a.inspo-frame{padding:0;text-decoration:none}
   object-fit:contain;object-position:center;background:transparent;filter:grayscale(1)
 }
 .inspo-frame:hover .ht::after,
-.inspo-frame:focus-visible .ht::after,
-body:has(.layer-base .inspo-frame:hover) .layer-fx .inspo-frame .ht::after,
-body:has(.layer-base .inspo-frame:focus-visible) .layer-fx .inspo-frame .ht::after{opacity:0}
+.inspo-frame:focus-visible .ht::after{opacity:0}
 .inspo-cell{padding:16px;background:#fff}
 .inspo-row{padding:6px 8px;text-align:center;line-height:1.35;font-size:9px}
 .inspo-row,.inspo-row *{font-size:9px;line-height:1.35;color:inherit}
@@ -394,7 +397,7 @@ header > h1:focus-visible{outline-offset:4px}
   .page-home .logo-row{padding-top:36px;padding-bottom:0}
   .logo-nav{margin:12px 0 20px}
   .page-home .logo-nav{margin:12px 0 24px}
-  .layer-base,.layer-fx{padding:12px}
+  .layer-base{padding:12px}
 }
 @media(max-width:700px){
   .link-grid td a,
@@ -423,15 +426,20 @@ header > h1:focus-visible{outline-offset:4px}
   html,.layer-wrap{scroll-behavior:auto}
 }
 @media (prefers-contrast: more){
-  :root{--paper:#fff;--ink:#b00000;--focus:#000;--skip-bg:#b00000}
+  /* Crisp type: no plate, no grain. filter:none is the belt for engines that
+     ignore CSS on <feFlood>; --plate-ink:0 is the braces. */
+  :root{--paper:#fff;--ink:#b00000;--focus:#000;--skip-bg:#b00000;--plate-ink:0}
+  .layer-base{filter:none}
 }
 @media (forced-colors: active){
   *{border-color:CanvasText}
+  .layer-base{filter:none}
 }
 
 @media print{
   body{overflow:visible;height:auto;background:#fff;color:#000}
-  .skip,.layer-fx,.wiki-float,.language-switcher,iframe{display:none !important}
+  .skip,.wiki-float,.language-switcher,iframe{display:none !important}
   .layer-wrap,.layer-base{position:static;height:auto;overflow:visible;max-width:none}
+  .layer-base{filter:none}
   a[href^="http"]::after{content:" (" attr(href) ")";font-size:10px;font-weight:normal}
 }

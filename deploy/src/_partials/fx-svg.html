@@ -5,21 +5,67 @@
   focusable="false"
 >
   <defs>
-    <filter id="print-fx" x="-5%" y="-5%" width="110%" height="110%">
+    <!-- Two ink passes on one surface. A wandering copy of the linework
+         prints first and spreads into the paper; the crisp sheet prints over
+         it. No DOM twin, and type stays single, solid and selectable. -->
+    <filter
+      id="print-fx"
+      x="-6%"
+      y="-6%"
+      width="112%"
+      height="112%"
+    >
       <feTurbulence
         type="turbulence"
         baseFrequency="0.013"
         numOctaves="1"
         seed="0"
-        result="noise"
+        result="grain"
       />
       <feDisplacementMap
         in="SourceGraphic"
-        in2="noise"
+        in2="grain"
         scale="0.7"
         xChannelSelector="R"
         yChannelSelector="G"
+        result="sheet"
       />
+      <feTurbulence
+        type="turbulence"
+        baseFrequency="0.008"
+        numOctaves="2"
+        seed="7"
+        result="drift"
+      />
+      <!-- The plate takes the ink only: alpha = R - G keeps red type and
+           rules and drops the grayscale photographs, which print once. -->
+      <feColorMatrix
+        in="SourceGraphic"
+        type="matrix"
+        values="0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                1 -1 0 0 0"
+        result="inkonly"
+      />
+      <feComposite in="inkonly" in2="SourceAlpha" operator="in" result="linework" />
+      <feDisplacementMap
+        in="linework"
+        in2="drift"
+        scale="1.1"
+        xChannelSelector="R"
+        yChannelSelector="G"
+        result="wet"
+      />
+      <!-- flood-color / flood-opacity are restated in site.css so the plate
+           tracks --ink and drops out under prefers-contrast: more. Full
+           strength: a part-opacity plate reads as haze under type. -->
+      <feFlood flood-color="#f00" flood-opacity="1" result="inkwell" />
+      <feComposite in="inkwell" in2="wet" operator="in" result="plate" />
+      <feMerge>
+        <feMergeNode in="plate" />
+        <feMergeNode in="sheet" />
+      </feMerge>
     </filter>
     <filter id="dither-3" color-interpolation-filters="sRGB">
       <feColorMatrix type="saturate" values="0" />
