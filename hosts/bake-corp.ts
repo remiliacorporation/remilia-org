@@ -2,7 +2,6 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { layerBounds } from "./bake-fx";
 import { localizeCorpChrome } from "./corp-locales";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -10,6 +9,46 @@ const defaultSrc = join(here, "../deploy/src");
 const defaultOut = join(here, "../deploy");
 
 const INCLUDE_RE = /<!-- @include _partials\/([^\s]+) -->/g;
+
+/**
+ * Bounds of a `.layer-<name>` block, brace-matched over nested `<div>`s.
+ * Retained for `stripFxLayer`: pages are one ink-treated surface now, but
+ * authored HTML may still carry a twin from the two-layer era.
+ */
+export function layerBounds(
+  html: string,
+  name: "fx" | "base",
+): { start: number; end: number; openEnd: number; inner: string } | null {
+  const re = new RegExp(`<div\\b[^>]*\\bclass="[^"]*\\blayer-${name}\\b[^"]*"[^>]*>`, "i");
+  const m = re.exec(html);
+  if (!m || m.index === undefined) return null;
+  const start = m.index;
+  const openEnd = start + m[0].length;
+  let depth = 1;
+  let i = openEnd;
+  while (i < html.length && depth > 0) {
+    const nextOpen = html.indexOf("<div", i);
+    const nextClose = html.indexOf("</div>", i);
+    if (nextClose === -1) return null;
+    if (nextOpen !== -1 && nextOpen < nextClose) {
+      depth += 1;
+      i = nextOpen + 4;
+    } else {
+      depth -= 1;
+      if (depth === 0) {
+        const closeStart = nextClose;
+        let end = nextClose + 6;
+        const commentClose = `<!-- /layer-${name} -->`;
+        const after = html.slice(end, end + commentClose.length + 16);
+        const cAt = after.indexOf(commentClose);
+        if (cAt !== -1) end = end + cAt + commentClose.length;
+        return { start, end, openEnd, inner: html.slice(openEnd, closeStart) };
+      }
+      i = nextClose + 6;
+    }
+  }
+  return null;
+}
 
 export function stripFxLayer(html: string): string {
   const fx = layerBounds(html, "fx");
@@ -62,7 +101,9 @@ export async function bakeCorp(srcDir = defaultSrc, outDir = defaultOut): Promis
     const rel = relative(srcDir, file);
     const dest = join(outDir, rel);
     const raw = await readFile(file, "utf8");
-    const html = localizeCorpChrome(await expandIncludes(raw, partialsDir), rel);
+    const html = stripFxLayer(
+      localizeCorpChrome(await expandIncludes(raw, partialsDir), rel),
+    );
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, html);
     n += 1;

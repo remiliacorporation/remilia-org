@@ -3,8 +3,7 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { expandIncludes, stripFxLayer } from "./bake-corp";
-import { injectFx, layerBounds } from "./bake-fx";
+import { expandIncludes, layerBounds, stripFxLayer } from "./bake-corp";
 import { localizeCorpChrome } from "./corp-locales";
 
 const partialsDir = join(fileURLToPath(new URL(".", import.meta.url)), "../deploy/src/_partials");
@@ -27,18 +26,28 @@ test("stripFxLayer removes decorative twin", () => {
   assert.match(out, /id="x"/);
 });
 
-test("corp bake pipeline: partials then fx", async () => {
+test("layerBounds brace-matches nested divs", () => {
+  const html = `<div class="layer-wrap">
+<div class="layer-base"><div class="inner"><p id="x">Hi</p></div></div>
+</div>`;
+  const b = layerBounds(html, "base");
+  assert.ok(b);
+  assert.match(b!.inner, /<div class="inner">/);
+  assert.match(b!.inner, /id="x"/);
+  assert.equal(html.slice(b!.start, b!.end).endsWith("</div>"), true);
+});
+
+test("corp bake pipeline leaves one ink-treated surface", async () => {
   const src = `<!DOCTYPE html><html><head>
 <!-- @include _partials/head-common.html -->
 <title>Test</title>
-</head><body><div class="layer-wrap"><div class="layer-base"><h1 id="h">Hi</h1></div><!-- /layer-base --></div></body></html>`;
-  const merged = await expandIncludes(src, partialsDir);
-  const { html, status } = injectFx(merged);
-  assert.equal(status, "injected");
-  assert.equal(layerBounds(html, "fx") !== null, true);
+</head><body><div class="layer-wrap"><div class="layer-fx" aria-hidden="true"><h1>Ghost</h1></div><!-- /layer-fx --><div class="layer-base"><h1 id="h">Hi</h1></div><!-- /layer-base --></div></body></html>`;
+  const html = stripFxLayer(await expandIncludes(src, partialsDir));
+  assert.equal(layerBounds(html, "fx"), null);
   assert.equal(layerBounds(html, "base") !== null, true);
+  assert.equal(html.includes("Ghost"), false);
   assert.match(html, /id="h"/);
-  assert.equal(/id=/.test(layerBounds(html, "fx")!.inner), false);
+  assert.match(html, /site\.css/);
 });
 
 test("corporate locale chrome maps SEO and selectors to equivalent pages", () => {

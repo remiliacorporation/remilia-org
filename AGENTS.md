@@ -21,7 +21,7 @@ pnpm dev              # Studio — http://localhost:3333
 pnpm validate
 pnpm typecheck
 pnpm test
-pnpm bake             # remilia.org: bake:corp then bake:org then bake:fx
+pnpm bake             # remilia.org: bake:corp then bake:org
 pnpm bake:com         # remilia.com blogs → deploy-com/{a/news,a/events}
 pnpm bake:net         # remilia.net blogs → deploy-net/{updates,blog}
 ```
@@ -57,8 +57,8 @@ Each host pins a default theme on `<html>` (`data-hue`/`data-dots`/`data-scheme`
 `SITE_META` in `packages/seo/src/site.ts`: org red, light, dense lattice; com red, dark,
 no lattice; net blue, light, sparse lattice. A stored reader preference still wins.
 
-Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials;
-`bake:fx` clones `.layer-fx` at build. Baked pages land in `deploy/` (gitignored). Generated
+Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials
+and drops any stale `.layer-fx` twin. Baked pages land in `deploy/` (gitignored). Generated
 literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
 
 Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
@@ -135,7 +135,8 @@ Hosted at `remilia.sanity.studio`. Do not use `pnpm deploy` (pnpm builtin).
 ## Corporate pages
 
 Edit `.layer-base` only in `deploy/src/` (about, home, careers, contact). `bake:corp` merges
-head partials; `bake:fx` clones `.layer-fx` at build for the print filter — no client JS.
+head partials; the `print-fx` filter prints the spread ink pass from that one layer —
+no twin, no client JS.
 Details: [/about](https://remilia.org/about).
 
 ## License
