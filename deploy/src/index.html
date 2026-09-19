@@ -883,28 +883,167 @@
     <script>
       (function () {
         document
-          .querySelectorAll(".layer-base [data-video]")
-          .forEach(function (button) {
-            button.addEventListener(
-              "click",
-              function () {
-                var frame = document.createElement("iframe");
-                frame.className = "video-frame";
-                frame.title = button
-                  .getAttribute("aria-label")
-                  .replace(/^Play /, "");
-                frame.src =
-                  "https://www.youtube-nocookie.com/embed/" +
-                  button.dataset.video +
-                  "?autoplay=1&controls=0&cc_load_policy=0&iv_load_policy=3&rel=0&playsinline=1&modestbranding=1";
-                frame.allow =
-                  "autoplay; encrypted-media; picture-in-picture; fullscreen";
-                frame.referrerPolicy = "strict-origin-when-cross-origin";
-                frame.allowFullscreen = true;
-                button.replaceWith(frame);
-              },
-              { once: true },
-            );
+          .querySelectorAll("[data-video-player]")
+          .forEach(function (player) {
+            var media = player.querySelector(".video-media");
+            var controls = player.querySelector(".video-controls");
+            var toggle = player.querySelector(".video-playpause");
+            var sound = player.querySelector(".video-sound");
+            var seek = player.querySelector(".video-seek");
+            var fill = player.querySelector(".video-seek-fill");
+            var nowEl = player.querySelector("[data-video-now]");
+            var endEl = player.querySelector("[data-video-end]");
+            if (!media || !controls || !toggle || !sound || !seek || !fill || !nowEl || !endEl)
+              return;
+            controls.removeAttribute("aria-hidden");
+            function tryPlay() {
+              var p = media.play();
+              if (p && p.catch) p.catch(function () {});
+            }
+            function startVideo() {
+              media.querySelectorAll("source[data-src]").forEach(function (s) {
+                s.src = s.dataset.src;
+              });
+              media.preload = "auto";
+              media.addEventListener("canplay", tryPlay, { once: true });
+              media.addEventListener("canplaythrough", tryPlay, { once: true });
+              media.load();
+            }
+            function whenIdle(fn) {
+              if (window.requestIdleCallback)
+                window.requestIdleCallback(fn, { timeout: 3000 });
+              else setTimeout(fn, 200);
+            }
+            if (document.readyState === "complete") whenIdle(startVideo);
+            else
+              window.addEventListener("load", function () {
+                whenIdle(startVideo);
+              });
+            function syncPlay() {
+              var paused = media.paused;
+              toggle.classList.toggle("is-paused", paused);
+              toggle.setAttribute("aria-label", paused ? "Play" : "Pause");
+            }
+            function syncSound() {
+              sound.classList.toggle("is-live", !media.muted);
+              sound.setAttribute("aria-pressed", String(!media.muted));
+              sound.setAttribute(
+                "aria-label",
+                media.muted ? "Turn sound on" : "Turn sound off",
+              );
+            }
+            toggle.addEventListener("click", function () {
+              if (media.paused) {
+                var p = media.play();
+                if (p && p.then) p.then(syncPlay, syncPlay);
+                else syncPlay();
+              } else {
+                media.pause();
+                syncPlay();
+              }
+            });
+            media.addEventListener("play", syncPlay);
+            media.addEventListener("pause", syncPlay);
+            syncPlay();
+            syncSound();
+            sound.addEventListener("click", function () {
+              media.muted = !media.muted;
+              syncSound();
+            });
+            media.addEventListener("volumechange", syncSound);
+            var scrubbing = false;
+            function mediaDuration() {
+              var d = media.duration;
+              if (isFinite(d) && d > 0) return d;
+              try {
+                if (media.seekable && media.seekable.length)
+                  return media.seekable.end(media.seekable.length - 1);
+              } catch (err) {}
+              return 0;
+            }
+            function formatTime(t) {
+              if (!isFinite(t) || t < 0) return "0:00";
+              t = Math.floor(t + 0.001);
+              var m = Math.floor(t / 60);
+              var s = t % 60;
+              return m + ":" + (s < 10 ? "0" : "") + s;
+            }
+            function setRatio(ratio) {
+              ratio = Math.max(0, Math.min(1, ratio));
+              fill.style.transform = "scaleX(" + ratio + ")";
+              var d = mediaDuration();
+              var now = d ? ratio * d : 0;
+              nowEl.textContent = formatTime(now);
+              endEl.textContent = d ? formatTime(d) : "0:00";
+              seek.setAttribute("aria-valuemax", String(Math.floor(d)));
+              seek.setAttribute("aria-valuenow", String(Math.floor(now)));
+              seek.setAttribute(
+                "aria-valuetext",
+                nowEl.textContent + " of " + endEl.textContent,
+              );
+            }
+            function syncTime() {
+              var d = mediaDuration();
+              if (scrubbing) {
+                endEl.textContent = d ? formatTime(d) : "0:00";
+                return;
+              }
+              setRatio(d ? media.currentTime / d : 0);
+            }
+            function seekRatio(clientX) {
+              var r = seek.getBoundingClientRect();
+              if (!r.width) return 0;
+              return (clientX - r.left) / r.width;
+            }
+            function scrubTo(clientX) {
+              var d = mediaDuration();
+              var ratio = seekRatio(clientX);
+              setRatio(ratio);
+              if (!d) return;
+              try {
+                media.currentTime = ratio * d;
+              } catch (err) {}
+            }
+            media.addEventListener("loadedmetadata", syncTime);
+            media.addEventListener("durationchange", syncTime);
+            media.addEventListener("timeupdate", syncTime);
+            media.addEventListener("seeked", syncTime);
+            seek.addEventListener("pointerdown", function (e) {
+              if (e.button !== 0) return;
+              scrubbing = true;
+              player.classList.add("is-scrubbing");
+              if (seek.setPointerCapture) {
+                try {
+                  seek.setPointerCapture(e.pointerId);
+                } catch (err) {}
+              }
+              scrubTo(e.clientX);
+            });
+            seek.addEventListener("pointermove", function (e) {
+              if (!scrubbing) return;
+              scrubTo(e.clientX);
+            });
+            function endScrub() {
+              scrubbing = false;
+              player.classList.remove("is-scrubbing");
+              syncTime();
+            }
+            seek.addEventListener("pointerup", endScrub);
+            seek.addEventListener("pointercancel", endScrub);
+            seek.addEventListener("keydown", function (e) {
+              var d = mediaDuration();
+              if (!d) return;
+              var step = e.shiftKey ? 10 : 5;
+              var next = media.currentTime;
+              if (e.key === "ArrowLeft" || e.key === "ArrowDown") next -= step;
+              else if (e.key === "ArrowRight" || e.key === "ArrowUp") next += step;
+              else if (e.key === "Home") next = 0;
+              else if (e.key === "End") next = d;
+              else return;
+              e.preventDefault();
+              media.currentTime = Math.max(0, Math.min(d, next));
+              syncTime();
+            });
           });
         var reduce =
           window.matchMedia &&
