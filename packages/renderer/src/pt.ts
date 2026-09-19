@@ -148,26 +148,70 @@ interface RenderState {
   emitted: Set<string>;
   /** every fn-N id this document will render — lets in-note refs resolve. */
   fnTargets: Set<number>;
+  /** footnote texts by number — nested in-note refs can embed the target as a sub-note. */
+  fnTexts: Map<number, string>;
   /** pooled endnote entries — every note also lists at the end of the article. */
   endnotes: string[];
 }
 
 const FN_GLYPH: Record<string, number> = { "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁰": 0 };
 const fnGlyphNum = (g: string) => parseInt([...g].map((c) => FN_GLYPH[c]).join(""), 10);
+const FN_XREF_RE = /⁽([¹²³⁴⁵⁶⁷⁸⁹⁰]+)⁾?|\\\[(\d+)\\\]|\[(\d+)\]|([A-Za-z])(\d{1,3})(?=[,.;:)\s]|$)/g;
+const xrefTarget = (m: RegExpMatchArray) =>
+  m[1] != null ? fnGlyphNum(m[1]) : parseInt(m[2] ?? m[3] ?? m[5], 10);
 
-// in-note references: ⁽²³⁾ / [6] / \[6\] → link to that note's own element
+const BARE_URL_RE = /https?:\/\/(?:[^\s<>"')\]&]|&amp;)+/g;
+const urlFor = (u: string) =>
+  (/^https?:\/\//.test(u) ? u : `https://${u}`).replace(/\\/g, "");
+const urlHost = (u: string) =>
+  urlFor(u).replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+
+// Footnote text is a hand-marked string: _emphasis_, <urls> and bare
+// https://, citation tails "Author, _Title_ (year); <url>", in-note refs
+// ⁽N⁾ / [N] / word-glued digits, and \n paragraph breaks. Normalize all of
+// it into real markup — links point at the title, quoted passages become
+// inset blocks, each \n chunk a paragraph.
 function fnTextHtml(text: string, state: RenderState): string {
-  return esc(text)
-    .replace(/\n/g, "<br>")
-    .replace(
-    /⁽([¹²³⁴⁵⁶⁷⁸⁹⁰]+)⁾?|\\\[(\d+)\\\]|\[(\d+)\]/g,
-    (m, g, b, u) => {
-      const t = g != null ? fnGlyphNum(g) : parseInt(b ?? u, 10);
-      return state.fnTargets.has(t)
-        ? `<a class="fn-xref" href="#fn-${t}">${esc(m)}</a>`
-        : m;
-    },
-  );
+  const stash: string[] = [];
+  const keep = (h: string) => `\u0000${stash.push(h) - 1}\u0000`;
+  const resolve = (s: string): string =>
+    s.replace(/\u0000(\d+)\u0000/g, (_m, i) => resolve(stash[+i]));
+  const link = (label: string, url: string, ital = false) =>
+    keep(
+      `<a href="${esc(urlFor(url))}">${ital ? `<em>${esc(label)}</em>` : esc(label)}</a>`,
+    );
+  const inline = (s0: string): string =>
+    s0
+      .replace(/\\([[\]()<>_])/g, "$1")
+      .replace(
+        /, (_[^_]{2,90}?_|[^,;_()]{2,90}?) \((\d{4}[a-z]?)\); (?:<([^\s>]*(?:[\w-]+\.)+[a-zA-Z]{2,}[^\s>]*)>|_((?:https?:\/\/)?[^\s_]+)_)/g,
+        (_m, t: string, y: string, u1?: string, u2?: string) =>
+          `, ${link(t.replace(/^_+|_+$/g, ""), u1 ?? u2 ?? "", /^_/.test(t))} (${y})`,
+      )
+      .replace(
+        /<([^\s>]*(?:[\w-]+\.)+[a-zA-Z]{2,}[^\s>]*)>|_((?:https?:\/\/)[^\s_]+)_|(https?:\/\/[^\s<>"')\]]+)/g,
+        (_m, a?: string, b?: string, c?: string) =>
+          link(urlHost(a ?? b ?? c ?? ""), a ?? b ?? c ?? ""),
+      )
+      .replace(FN_XREF_RE, (m, ...a) => {
+        const mm = [m, ...a] as RegExpMatchArray;
+        const t = xrefTarget(mm);
+        return state.fnTargets.has(t)
+          ? (mm[4] ?? "") +
+              keep(`<a class="fn-xref" href="#fn-${t}"><sup>${t}</sup></a>`)
+          : m;
+      })
+      .replace(/_([^_\n]+)_/g, (_m, i: string) => keep(`<em>${esc(i)}</em>`));
+  const para = (p: string): string => {
+    let s = esc(inline(p));
+    s = s.replace(/“[^”]{80,}”|&quot;.{80,}?&quot;/g, (m) =>
+      keep(`<span class="fn-q">${m}</span>`),
+    );
+    const q = s.match(/^(.{0,100}?): (\S[\s\S]{150,})$/);
+    if (q) s = `${q[1]}: ${keep(`<span class="fn-q">${q[2]}</span>`)}`;
+    return keep(`<span class="fn-par">${s}</span>`);
+  };
+  return resolve(text.split(/\n+/).map(para).join(""));
 }
 
 function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
@@ -200,13 +244,19 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
   state.endnotes.push(
-    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span><a class="fn-back" href="#${id}" aria-label="Back to reference ${n}">↩</a></div>`,
+    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`,
   );
-  return `${inner}<span class="fn" id="${id}"><input type="checkbox" class="fn-on" id="${id}-on" aria-label="Show note ${n}"><a class="fn-ref" href="#fndef-${id.slice(3)}">[${n}]</a><label class="fn-scrim" for="${id}-on"></label><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span></span></span>`;
+  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span></span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
-  let html = esc(span.text).replace(/\n/g, "<br>");
+  let html = esc(span.text)
+    .replace(/\n/g, "<br>")
+    .replace(BARE_URL_RE, (u) => {
+      const trail = u.match(/[.,;:!?)\]]+$/)?.[0] ?? "";
+      const url = u.slice(0, u.length - trail.length);
+      return `<a href="${url}">${url}</a>${trail}`;
+    });
   for (const mark of span.marks ?? []) {
     if (mark === "strong") html = `<strong>${html}</strong>`;
     else if (mark === "em") html = `<em>${html}</em>`;
@@ -251,13 +301,16 @@ export function figureHtml(input: {
 }
 
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
-  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), endnotes: [] };
+  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [] };
   {
     let pos = 0;
     for (const b of blocks) {
       if (!isTextBlock(b)) continue;
       for (const d of b.markDefs ?? []) {
-        if (d._type === "footnote") state.fnTargets.add(d.n ?? ++pos);
+        if (d._type !== "footnote") continue;
+        const n = d.n ?? ++pos;
+        state.fnTargets.add(n);
+        state.fnTexts.set(n, d.text ?? "");
       }
     }
   }
