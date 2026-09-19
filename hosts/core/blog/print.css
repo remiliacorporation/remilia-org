@@ -23,10 +23,6 @@
     width: auto;
     margin: var(--space-xs) 0;
   }
-  .fn-on,
-  .fn-scrim {
-    display: none;
-  }
   .dither-fx,
   .ht-ink {
     display: none;

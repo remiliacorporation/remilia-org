@@ -519,103 +519,33 @@
     display: grid;
   }
 }
-@media (max-width: 1099px) {
-  .fn {
-    position: relative;
-  }
-  .fn-on:checked ~ .fn-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 25;
-  }
-  .fn:hover .fn-note,
-  .fn:target .fn-note,
-  .fn-on:checked ~ .fn-note {
-    display: flex;
-    gap: var(--grid);
-    align-items: flex-start;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: var(--card);
-    max-width: min(var(--card), calc(100vw - 2 * var(--rail-gap)));
-    margin: 0;
-    padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
-    z-index: 30;
-    pointer-events: auto;
-  }
-  @supports (position-try-fallbacks: flip-inline) {
-    .fn:hover .fn-note,
-    .fn:target .fn-note,
-    .fn-on:checked ~ .fn-note {
-      position-try-fallbacks: flip-inline;
-    }
-  }
+.fn {
+  position: relative;
 }
-@media (max-width: 1099px) {
-  .fn-on:checked ~ .fn-ref {
-    background: var(--ink);
-    color: var(--ink-contrast);
-    text-decoration: none;
-  }
+.fn:hover .fn-note,
+.fn:focus-within .fn-note {
+  display: flex;
+  gap: var(--grid);
+  align-items: flex-start;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: calc(var(--measure) * 0.75);
+  max-width: min(calc(var(--measure) * 0.75), calc(100vw - 2 * var(--rail-gap)));
+  margin: 0;
+  padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
+  z-index: 30;
+  pointer-events: auto;
 }
 @media (min-width: 1100px) {
-  .fn-on,
-  .fn-scrim {
-    display: none;
-  }
-  .fn-ref {
-    cursor: pointer;
-  }
-  .fn-note {
-    display: flex;
-    gap: var(--grid);
-    align-items: flex-start;
-    position: absolute;
-    left: 100%;
-    right: auto;
-    top: 0;
-    bottom: auto;
-    width: var(--toc-rail);
-    max-width: var(--toc-rail);
-    margin: 0 0 0 var(--sidenote-gap);
-    background: var(--wm-wash, var(--paper));
-    border-color: var(--ink);
-    z-index: 1;
-    user-select: text;
-    pointer-events: auto;
-    cursor: text;
-  }
-  .fn-note::before {
-    content: "";
-    display: block;
-    position: absolute;
-    right: 100%;
-    left: auto;
-    top: calc(var(--space-xs) + var(--size-base) * var(--leading) / 2);
-    width: var(--rail-gap);
-    height: var(--border-w);
-    border: 0;
-    background: var(--ink);
-    z-index: -1;
+  .right-rail,
+  .right-rail .post-nav {
     pointer-events: none;
   }
-  .fn-note[data-drop]::before {
-    top: calc(
-      var(--space-xs) + var(--size-base) * var(--leading) / 2 - var(--fn-drop)
-    );
-    width: var(--sidenote-gap);
-    height: var(--fn-drop);
-    background: none;
-    border-top: var(--border-w) solid var(--ink);
-    border-right: var(--border-w) solid var(--ink);
-  }
-  .fn:hover .fn-note,
-  .fn:hover .fn-note .sn-text,
-  .fn:hover .fn-note strong {
-    background: var(--ink);
-    color: var(--ink-contrast);
+  .right-rail .theme-sel,
+  .right-rail .post-nav .nav-box,
+  .right-rail .post-nav .disclosure-label {
+    pointer-events: auto;
   }
 }
 @media (min-width: 824px) and (max-width: 1099px) {

@@ -14,7 +14,6 @@
   --border-w: 1px;
   --border: var(--border-w) solid var(--ink);
   --radius: 0;
-  --sidenote-gap: calc(var(--gutter) + var(--border-w) + var(--rail-gap));
   --mast-line: 16px;
   --mast-title: 24px;
   --toc-spy: 24vh;
