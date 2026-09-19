@@ -44,6 +44,9 @@
 html {
   font-size: var(--size-root);
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
   overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
@@ -103,7 +106,9 @@ a:focus-visible {
 strong {
   font-weight: var(--weight-strong);
 }
-em {
+em,
+i {
+  font-family: var(--font-serif);
   font-style: italic;
 }
 .layout {

@@ -383,7 +383,10 @@
   }
   .cite-box .nav-box {
     display: grid;
-    grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
+    grid-template-rows: var(--mast-line) var(--border-w) minmax(
+        var(--mast-title),
+        auto
+      );
     row-gap: var(--space-xs);
     padding: var(--space-xs);
     max-width: none;
@@ -406,7 +409,8 @@
   }
   .cite-box .cite-copy {
     margin: 0;
-    height: var(--mast-title);
+    height: auto;
+    min-height: var(--mast-title);
     line-height: var(--mast-title);
   }
   .cite-box button {

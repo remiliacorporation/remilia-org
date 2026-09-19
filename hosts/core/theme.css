@@ -97,13 +97,14 @@
 
   --font-body: "Alte Haas Grotesk", Helvetica, Arial, sans-serif,
     "Noto Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-serif: "Times New Roman", Times, serif;
   --font-mono: monospace;
-  --size-base: 12px;
+  --size-base: 16px;
   --size-title: 20px;
   --weight-body: normal;
   --weight-strong: bold;
 
-  --measure: 560px;
+  --measure: 80ch;
   --gutter: 24px;
   --rail-gap: 12px;
   --rail: 240px;

@@ -21,12 +21,16 @@ h3,
   -webkit-hyphens: auto;
   hyphens: auto;
   text-wrap: pretty;
+  hanging-punctuation: first allow-end;
+  orphans: 3;
+  widows: 3;
 }
 .prose li {
   overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
   text-wrap: pretty;
+  hanging-punctuation: first allow-end;
 }
 .prose h2,
 .prose h3,
@@ -34,6 +38,7 @@ h3,
   margin: var(--space) 0 var(--space-s);
   line-height: var(--leading-tight);
   text-wrap: balance;
+  hanging-punctuation: first allow-end;
   overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
@@ -119,15 +124,26 @@ h3,
 .prose blockquote {
   padding: 0 0 0 var(--space-s);
   margin: 0 0 var(--space-s) var(--space-s);
-  border-left: var(--border-w) solid var(--ink);
+  border-left: calc(var(--border-w) * 2) solid var(--ink);
   font-style: italic;
+  hanging-punctuation: first allow-end;
 }
 .prose blockquote p {
   margin: 0;
 }
+.prose blockquote em,
+.prose blockquote i {
+  font-family: var(--font-body);
+}
+.prose blockquote:has(.bq-by) {
+  padding: 0;
+  margin: 0 var(--space) var(--space-s);
+  border-left: 0;
+}
 .prose blockquote .bq-by {
   display: block;
   text-align: right;
+  font-style: normal;
 }
 .prose code {
   font-family: var(--font-mono);
@@ -189,6 +205,7 @@ h3,
   padding: var(--grid) var(--space-xs);
   border: var(--border);
   background: var(--surface);
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: var(--weight-strong);
   max-width: 100%;
