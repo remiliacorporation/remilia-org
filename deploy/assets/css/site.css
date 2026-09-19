@@ -471,6 +471,10 @@ header > h1:focus-visible{outline-offset:4px}
   .wiki-under{display:flex;flex-direction:column;align-items:center;margin-top:4px;text-decoration:none}
   .wiki-under .logo-wiki{height:90px}
   .wiki-under .logo-tag{position:static;transform:none;margin-top:8px}
+  .language-switcher{border-color:var(--ink);background:var(--paper)}
+}
+@media (pointer: coarse){
+  .language-switcher{border-color:var(--ink);background:var(--paper)}
 }
 
 @media (prefers-reduced-motion: reduce){
