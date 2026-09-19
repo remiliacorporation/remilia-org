@@ -375,6 +375,25 @@ export const NAV_JS = `(() => {
       };
       requestAnimationFrame(step);
     };
+    const fitNote = (fn) => {
+      const note = fn && fn.querySelector('.fn-note');
+      if (!note) return;
+      note.style.left = '';
+      const col = fn.closest('.prose, .article-rest, .article-body');
+      if (!col) return;
+      const cr = col.getBoundingClientRect();
+      const fr = fn.getBoundingClientRect();
+      const x = Math.max(cr.left, Math.min(fr.left, cr.right - note.offsetWidth - 2));
+      note.style.left = x - fr.left + 'px';
+    };
+    document.addEventListener('pointerover', (e) => {
+      const fn = e.target && e.target.closest && e.target.closest('.fn');
+      if (fn) requestAnimationFrame(() => fitNote(fn));
+    });
+    document.addEventListener('focusin', (e) => {
+      const fn = e.target && e.target.closest && e.target.closest('.fn');
+      if (fn) requestAnimationFrame(() => fitNote(fn));
+    });
     addEventListener('click', (e) => {
       if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target.closest('a[href^="#"]');
@@ -390,14 +409,7 @@ export const NAV_JS = `(() => {
       a.blur();
       if (location.hash !== href) history.pushState(null, '', href);
       go(el);
-      const on = document.getElementById(id + '-on');
-      if (on && on.type === 'checkbox') on.checked = true;
     });
-    const boot = location.hash.slice(1);
-    if (boot) {
-      const on0 = document.getElementById(boot + '-on');
-      if (on0 && on0.type === 'checkbox') on0.checked = true;
-    }
   } catch (e) {}
 })();
 (() => {
@@ -451,64 +463,6 @@ export const NAV_JS = `(() => {
     new ResizeObserver(sync).observe(mast);
     if (mq.addEventListener) mq.addEventListener('change', sync);
     sync();
-  } catch (e) {}
-})();
-// Sidenotes anchor to their ref's line; a note that would overlap the one
-// above drops below it and --fn-drop draws the elbow back up to the ref.
-(() => {
-  try {
-    const notes = [...document.querySelectorAll('.fn .fn-note')];
-    if (!notes.length) return;
-    const mq = matchMedia('(min-width: 1100px)');
-    const clear = () => {
-      for (const n of notes) {
-        n.style.top = '';
-        n.style.removeProperty('--fn-drop');
-        n.removeAttribute('data-drop');
-      }
-    };
-    const stack = () => {
-      clear();
-      if (!mq.matches) return;
-      const cs = getComputedStyle(document.documentElement);
-      const gap = parseFloat(cs.getPropertyValue('--grid')) || 4;
-      const tick =
-        (parseFloat(cs.getPropertyValue('--space-xs')) || 0) +
-        ((parseFloat(cs.getPropertyValue('--size-base')) || 0) *
-          (parseFloat(cs.getPropertyValue('--leading')) || 1)) / 2;
-      let floor = 0;
-      const drops = [];
-      for (const n of notes) {
-        const parent = n.offsetParent;
-        if (!parent) continue;
-        const fn = n.closest('.fn');
-        const ref = fn ? fn.querySelector('.fn-ref') : null;
-        const pTop = parent.getBoundingClientRect().top;
-        const r = ref ? ref.getBoundingClientRect() : null;
-        const natural = r
-          ? Math.max(0, r.top - pTop + r.height / 2 - tick)
-          : n.offsetTop;
-        const naturalAbs = pTop + scrollY + natural;
-        const placedAbs = Math.max(naturalAbs, floor);
-        const drop = placedAbs - naturalAbs;
-        drops.push([n, natural + drop, drop]);
-        floor = placedAbs + n.offsetHeight + gap;
-      }
-      for (const [n, placed, drop] of drops) {
-        if (drop <= 1) continue;
-        n.style.top = placed + 'px';
-        n.style.setProperty('--fn-drop', drop + 'px');
-        n.setAttribute('data-drop', '');
-      }
-    };
-    stack();
-    addEventListener('resize', stack, { passive: true });
-    addEventListener('load', stack);
-    if (mq.addEventListener) mq.addEventListener('change', stack);
-    if (typeof ResizeObserver === 'function') {
-      const body = document.querySelector('.article-body');
-      if (body) new ResizeObserver(() => stack()).observe(body);
-    }
   } catch (e) {}
 })();
 `;
