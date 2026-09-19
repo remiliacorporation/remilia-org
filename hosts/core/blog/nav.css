@@ -85,6 +85,7 @@
   flex: 1;
   min-width: 0;
   text-align: left;
+  color: inherit;
 }
 .sel-mark {
   flex: none;

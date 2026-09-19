@@ -90,6 +90,10 @@
   height: auto;
   min-height: var(--mast-title);
 }
+.site-head nav a[aria-current] {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
 .left-rail .site-head {
   order: 1;
 }
