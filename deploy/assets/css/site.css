@@ -299,19 +299,24 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .scroll-copy{flex-shrink:0;font-size:12px}
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .home-crest{
+  --crest-turn:0deg;
   display:block;width:64px;margin:12px auto 20px;text-decoration:none;position:relative;
   /* room so the offset dither shadow is not clipped */
   padding:0 3px 4px 0
 }
 .home-crest .ht{
   width:64px;height:64px;aspect-ratio:1;background:transparent;position:relative;z-index:1;
-  overflow:visible;isolation:auto
+  overflow:visible;isolation:auto;transform-origin:center;
+  transform:rotate(var(--crest-turn));
+  transition:transform .8s cubic-bezier(.15,.85,.25,1)
 }
 .home-crest .ht-map{background:transparent;filter:none;overflow:visible}
 /* Dithered drop shadow behind the flower pin (on crest, not .ht — avoids overflow/isolation clip) */
 .home-crest::before{
   content:"";position:absolute;left:0;top:0;width:64px;height:64px;z-index:0;
-  transform:translate(2px,2px);
+  transform:translate(2px,2px) rotate(var(--crest-turn));
+  transform-origin:center;
+  transition:transform .8s cubic-bezier(.15,.85,.25,1);
   background-color:var(--ink);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%23fff'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23fff'/%3E%3C/svg%3E");
   background-size:var(--dither-cell,2px) var(--dither-cell,2px);
