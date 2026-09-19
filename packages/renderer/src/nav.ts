@@ -33,10 +33,18 @@ function filterSel(
   values: string[],
   attr: string,
 ): { css: string; html: string } {
+  // <style> content is raw text — no HTML entity decoding — so values need
+  // CSS escaping, not esc(). The `<` keeps the rule from closing the element.
+  const cssStr = (s: string): string =>
+    s
+      .replace(/\\/g, "\\\\")
+      .replace(/</g, "\\3C ")
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, "\\a ");
   const css = values
     .map(
       (v) =>
-        `.nav-box:has(#${id}[data-value="${esc(v)}"]) .nav-all>li:not([${attr}="${esc(v)}"]){display:none}`,
+        `.nav-box:has(#${id}[data-value="${cssStr(v)}"]) .nav-all>li:not([${attr}="${cssStr(v)}"]){display:none}`,
     )
     .join("");
   const items = [
@@ -153,7 +161,7 @@ export const NAV_JS = `(() => {
     if (!el) return;
     el.dataset.value = v || '';
     const lab = el.querySelector('.sel-label');
-    const btn = v ? el.querySelector('.sel-menu [data-value="'+v+'"]') : null;
+    const btn = v ? el.querySelector('.sel-menu [data-value="'+CSS.escape(v)+'"]') : null;
     if (lab) lab.textContent = btn && v ? btn.textContent : empty;
   };
   const bindSel = (el, empty) => {
