@@ -21,7 +21,16 @@ import {
   type NavPost,
   type PTBlock,
 } from "@remilia/renderer";
-import { blogPosting, canonicalFor, feedLinks, indexUrl } from "@remilia/seo";
+import {
+  blogPosting,
+  canonicalFor,
+  feedLinks,
+  indexUrl,
+  CHANNEL_BASEPATH,
+  CHANNEL_HOST,
+  CHANNEL_LABEL,
+  HOST_SECTIONS,
+} from "@remilia/seo";
 import { chrome, host } from "./core/sections";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -246,7 +255,22 @@ const meta = {
   title: host.title,
   description: host.description,
 };
-const rail = leftRail(navPosts, host.title, "/blog/press", `/press/${post.slug}`);
+const sharedCats = {
+  cats: HOST_SECTIONS[CHANNEL_HOST[post.channel]].map((c) => ({
+    label: CHANNEL_LABEL[c],
+    href: CHANNEL_BASEPATH[c],
+  })),
+  current: CHANNEL_LABEL[post.channel],
+  allHref:
+    CHANNEL_HOST[post.channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
+};
+const rail = leftRail(
+  navPosts,
+  host.title,
+  "/blog/press",
+  `/press/${post.slug}`,
+  sharedCats,
+);
 const bodyHtml = portableTextToHtml(BODY, {
   imageUrl: (img) =>
     (
@@ -298,6 +322,7 @@ await writeFile(
     ogImage:
       "https://storage.ghost.io/c/34/4d/344db379-6ee0-4527-979b-c712c2e2f368/content/images/2026/06/Hikki-Punks-Cover.jpg",
     headExtra: feedLinks(meta),
+    channel: post.channel,
     chrome,
     leftRail: rail,
     tocHtml: tocBox(tocItems(extractHeadings(BODY)), footnoteCount(BODY)),
@@ -347,6 +372,7 @@ await writeFile(
       { "@context": "https://schema.org", "@type": "Blog", name: host.title },
     ],
     headExtra: feedLinks(meta),
+    channel: post.channel,
     chrome,
     layoutClass: "is-index",
     leftRail: emptyRail(),
@@ -361,7 +387,7 @@ await writeFile(
         imageUrl: n.imageUrl,
         author: n.author,
       })),
-      filterBar(navPosts),
+      filterBar(navPosts, sharedCats),
     ),
   }),
 );

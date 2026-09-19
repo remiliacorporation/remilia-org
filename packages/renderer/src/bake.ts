@@ -5,8 +5,10 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
+  CHANNEL_HOST,
   CHANNEL_LABEL,
   CHANNEL_ORIGIN,
+  HOST_SECTIONS,
   atom,
   blogPosting,
   breadcrumbs,
@@ -388,6 +390,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
     author: p.authors?.map((a) => a.name).join(", "),
   }));
+  // The category dropdown is one shared control — every listing offers the
+  // host's full section set. On a section index the options navigate to the
+  // sibling index; on the pooled index they filter in place.
+  const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]];
+  const sharedCats = aggregated
+    ? { cats: siblings.map((c) => ({ label: CHANNEL_LABEL[c] })), current: "" }
+    : {
+        cats: siblings.map((c) => ({
+          label: CHANNEL_LABEL[c],
+          href: CHANNEL_BASEPATH[c],
+        })),
+        current: CHANNEL_LABEL[channel],
+        allHref:
+          CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
+      };
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
@@ -555,6 +572,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         host.title,
         basePath,
         `${basePath}/${p.slug}`,
+        sharedCats,
       ),
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
       citeHtml: citeBox({
@@ -626,6 +644,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     trail: { name: string; url: string }[];
     alternates?: { type: string; title: string; href: string }[];
     feed?: boolean;
+    filter?: { tag?: string; author?: string };
   }): Promise<void> => {
     const root = listing.at ? `${basePath}/${listing.at}` : basePath;
     const rootDir = join(
@@ -696,8 +715,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
                   : undefined),
               categoryHref: p.categoryHref,
             })),
-            filterBar(slice),
+            filterBar(slice, sharedCats),
             { page, pages, prevHref, nextHref },
+            listing.filter,
           ),
         }),
       );
@@ -789,6 +809,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     for (const term of taxonomy.terms)
       await writeListing({
         at: `${taxonomy.at}/${term.slug}`,
+        filter:
+          taxonomy.noun === "Tag" ? { tag: term.label } : { author: term.label },
         title: `${term.label} — ${host.title}`,
         description: `${taxonomy.noun === "Tag" ? "Posts tagged" : "Posts by"} ${term.label} in ${host.title}.`,
         posts: term.posts,
@@ -886,6 +908,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     join(dir, "404.html"),
     notFoundHtml(chromeStamped, basePath, {
       sectionTitle: host.title,
+      channel,
       recent: navPosts.map((p) => ({
         title: p.title,
         url: p.url,

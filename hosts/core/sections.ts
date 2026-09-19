@@ -128,13 +128,17 @@ export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const meta = SECTION_META[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
+  // Index points at the pooled index where one exists (org); the other hosts
+  // bake standalone sections, so Index is the section itself.
+  const indexBase =
+    CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : base;
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
 <a class="site-title" href="${base}">${brand.label} — ${meta.short}</a>
 <hr class="nav-rule">
 <nav aria-label="Site">
-<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}">Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${channel === "blog" ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 </header>`,
     footer: `<footer>

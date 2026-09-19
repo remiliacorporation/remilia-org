@@ -64,8 +64,11 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
   const fixture = await fixtureServer();
   const outDir = await mkdtemp(join(tmpdir(), "bake-listings-"));
   try {
-    // Host-level files a section links to but does not own.
+    // Host-level files a section links to but does not own — including the
+    // shared index and sibling sections the category nav points at.
     await mkdir(join(outDir, "assets"), { recursive: true });
+    for (const dir of ["blog", "blog/press", "blog/thought", "blog/archive"])
+      await mkdir(join(outDir, dir), { recursive: true });
     for (const file of [
       "assets/emblem.svg",
       "assets/logo.png",
@@ -76,6 +79,10 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       "index.html",
       "llms.txt",
       "llms-full.txt",
+      "blog/index.html",
+      "blog/press/index.html",
+      "blog/thought/index.html",
+      "blog/archive/index.html",
     ])
       await writeFile(join(outDir, file), "stub");
 

@@ -501,7 +501,12 @@ export function indexMain(
   posts: IndexCard[],
   toolsHtml: string,
   pager?: Pager,
+  filter?: { tag?: string; author?: string },
 ): string {
+  const tag = filter?.tag ?? "";
+  const authorF = filter?.author ?? "";
+  const heading = `Showing all posts${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}`;
   const cards = posts
     .map((p) => {
       const month = p.date.slice(0, 7);
@@ -538,7 +543,7 @@ ${row}
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
-<h1>Showing all posts</h1>
+<h1${filterAttrs}>${heading}</h1>
 <hr class="nav-rule mast-tools-rule">
 <div class="mast-tools">${NAV_SEARCH}</div>
 </header>
@@ -596,6 +601,7 @@ export function notFoundHtml(
   basePath: string,
   input: {
     sectionTitle?: string;
+    channel?: Channel;
     recent?: { title: string; url: string; date: string }[];
   } = {},
 ): string {
@@ -618,6 +624,7 @@ ${recent
     canonical: "about:blank",
     jsonld: [],
     noindex: true,
+    channel: input.channel,
     chrome,
     mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">

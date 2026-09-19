@@ -77,6 +77,13 @@ export type ComSection = (typeof COM_SECTIONS)[number];
 
 export const NET_SECTIONS: Channel[] = ["dev-updates", "dev-blog"];
 
+/** The post sections each host serves — the blog's categories. */
+export const HOST_SECTIONS: Record<HostId, Channel[]> = {
+  org: ORG_SECTIONS,
+  com: [...COM_SECTIONS],
+  net: NET_SECTIONS,
+};
+
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   updates: "remilia.org/blog/updates",
   press: "remilia.org/blog/press",

@@ -89,8 +89,38 @@ function authorSel(posts: NavPost[]): { css: string; html: string } {
   );
 }
 
-export function filterBar(posts: NavPost[]): string {
-  const { html: cat } = catSel(posts);
+/** One shared category control across every listing of the host. */
+export interface SharedCats {
+  /** Every sibling category in nav order. `href` navigates; omit to filter. */
+  cats: { label: string; href?: string }[];
+  /** This listing's own category — shown as the control's label. */
+  current: string;
+  /** Target for the "All posts" item; omit to filter in place. */
+  allHref?: string;
+}
+
+// The category dropdown is shared, not isolated: on a section listing its
+// options carry data-href and navigate to the sibling index rather than
+// filtering cards that are not on the page.
+function sharedCatSel(shared: SharedCats): string {
+  const href = (h?: string) => (h ? ` data-href="${esc(h)}"` : "");
+  const items = [
+    shared.allHref || !shared.cats.some((c) => c.href)
+      ? `<li><button type="button" data-value=""${href(shared.allHref)}>All posts</button></li>`
+      : "",
+    ...shared.cats.map(
+      (c) =>
+        `<li><button type="button" data-value="${esc(c.label)}"${href(c.href)}>${esc(c.label)}</button></li>`,
+    ),
+  ].join("");
+  return `<details class="sel nav-cat-sel" id="post-cat" data-value="" aria-label="Filter posts">
+<summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
+}
+
+export function filterBar(posts: NavPost[], shared?: SharedCats): string {
+  const cat = shared ? sharedCatSel(shared) : catSel(posts).html;
   const { html: authors } = authorSel(posts);
   if (!cat && !authors) return "";
   return `<div class="nav-page">
@@ -104,9 +134,12 @@ export function leftRail(
   _label: string,
   _indexHref = "/press",
   currentUrl?: string,
+  shared?: SharedCats,
 ): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
-  const { css, html: cat } = catSel(posts);
+  const { css, html: cat } = shared
+    ? { css: "", html: sharedCatSel(shared) }
+    : catSel(posts);
   const items = byDate
     .map(
       (p) =>
@@ -179,6 +212,8 @@ export const NAV_JS = `(() => {
       const btn = e.target.closest('.sel-menu button');
       if (!btn) return;
       e.preventDefault();
+      const href = btn.getAttribute('data-href');
+      if (href) { location.assign(href); return; }
       setSel(el, btn.getAttribute('data-value') || '', empty);
       el.open = false;
       page = 0; apply();
@@ -228,8 +263,8 @@ export const NAV_JS = `(() => {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
       const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
       const month = params.get('month') || '';
-      const plural = (s) => /(s|x|z|ch|sh)$/i.test(s) ? s + 'es' : (/[^aeiou]y$/i.test(s) ? s.slice(0, -1) + 'ies' : s + 's');
-      let t = catv ? 'Showing all ' + plural(catv) : 'Showing all posts';
+      let t = catv ? 'Showing all ' + catv + ' posts' : 'Showing all posts';
+      if (tagv) t += ' tagged ' + tagv;
       if (author) t += ' by ' + author;
       if (month) t += ' from ' + month;
       if (query) t += ' matching \u201C' + query + '\u201D';
@@ -252,8 +287,19 @@ export const NAV_JS = `(() => {
   });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
-  if (params.get('cat')) setSel(cat, params.get('cat'), 'All posts');
+  const tagv = (statusEl && statusEl.dataset.tag) || '';
+  const catParam = params.get('cat');
+  if (catParam && cat) {
+    const b = cat.querySelector('.sel-menu button[data-href][data-value="' + CSS.escape(catParam) + '"]');
+    if (b && (b.getAttribute('data-href') || '').replace(/[/]+$/, '') !== location.pathname.replace(/[/]+$/, '')) {
+      location.replace(b.getAttribute('data-href'));
+      return;
+    }
+    setSel(cat, catParam, 'All posts');
+  }
   if (params.get('author')) setSel(auth, params.get('author'), 'All authors');
+  if (statusEl && statusEl.dataset.author)
+    setSel(auth, statusEl.dataset.author, 'All authors');
   apply();
 })();
 (() => {
