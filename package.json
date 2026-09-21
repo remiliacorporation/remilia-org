@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Sanity studio for the Remilia content graph (org / com / net sections)",
   "scripts": {
-    "dev": "sanity dev",
+    "dev": "sanity dev --host 127.0.0.1",
     "build": "sanity build",
     "deploy:studio": "sanity deploy",
     "bake:org": "pnpm --filter @remilia/hosts bake:org",
