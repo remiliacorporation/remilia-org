@@ -251,10 +251,6 @@
   align-content: center;
   height: 100%;
 }
-.sec.mast.index-mast:has(.site-sec) > header {
-  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-line)
-    var(--border-w) var(--mast-title);
-}
 .index-mast h1 {
   font-size: var(--size-base);
   font-weight: var(--weight-body);
@@ -268,6 +264,8 @@
   height: auto;
   align-items: center;
   white-space: normal;
+  /* The base .mast-tools clips; the dropdown menus have to escape the row. */
+  overflow: visible;
 }
 .index-mast .mast-tools .nav-search {
   flex: 1;
@@ -277,25 +275,18 @@
 .index-mast .mast-tools .nav-field {
   width: 100%;
 }
+.index-mast .mast-tools details.sel {
+  flex: none;
+  min-width: calc(24 * var(--grid));
+  border: var(--border);
+  background: var(--surface);
+  color: var(--ink);
+}
+.index-mast .mast-tools details.sel > summary {
+  padding: var(--grid) var(--space-xs);
+}
 .index-mast .mast-tools-rule {
   display: block;
-}
-.index-tools {
-  padding: var(--space-xs);
-  margin: 0 0 var(--rail-gap);
-}
-.index-tools .nav-page {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--grid);
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-.index-tools .sel {
-  flex: none;
-  min-width: 0;
 }
 .post-card {
   position: relative;

@@ -275,6 +275,23 @@ test("index filter bar includes category and author dropdowns", () => {
   assert.match(rail, /aria-label="Previous page"/);
 });
 
+test("listing controls share one masthead tools line", () => {
+  const html = indexMain(
+    [POST],
+    filterBar([POST]),
+    undefined,
+    undefined,
+    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+  );
+  assert.match(
+    html,
+    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+  );
+  assert.equal(html.includes('class="byline"'), false);
+  assert.equal(html.includes("index-tools"), false);
+  assert.equal(html.includes('class="nav-page"'), false);
+});
+
 test("gallery renders figures with alt and a dialog lightbox", () => {
   const html = galleryHtml("FW26", [
     {

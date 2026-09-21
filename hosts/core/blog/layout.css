@@ -391,7 +391,6 @@
     flex-direction: column;
     gap: var(--rail-gap);
   }
-  .article-rest > .index-tools,
   .article-rest > .post-card {
     margin-bottom: 0;
   }

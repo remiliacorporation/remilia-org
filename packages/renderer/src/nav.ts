@@ -121,10 +121,7 @@ export function filterBar(posts: NavPost[], shared?: SharedCats): string {
   const cat = shared ? "" : catSel(posts).html;
   const { html: authors } = authorSel(posts);
   if (!cat && !authors) return "";
-  return `<div class="nav-page">
-${cat}
-${authors}
-</div>`;
+  return `${cat}${authors}`;
 }
 
 export function leftRail(

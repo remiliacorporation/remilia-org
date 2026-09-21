@@ -546,22 +546,17 @@ ${row}
 </article>`;
     })
     .join("\n");
-  const byline = sectionSel
-    ? `<div class="byline"><span class="byline-date"></span>${sectionSel}<span class="author"></span></div>
-<hr class="nav-rule">
-`
-    : "";
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
-${byline}<h1${filterAttrs}>${heading}</h1>
+<h1${filterAttrs}>${heading}</h1>
 <hr class="nav-rule mast-tools-rule">
-<div class="mast-tools">${NAV_SEARCH}</div>
+<div class="mast-tools">${NAV_SEARCH}${toolsHtml}${sectionSel ?? ""}</div>
 </header>
 </div>
 <div class="article-rest">
-${toolsHtml ? `<div class="sec index-tools">\n${toolsHtml}\n</div>\n` : ""}${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
+${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>
 </article>
