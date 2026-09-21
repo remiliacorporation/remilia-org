@@ -110,6 +110,10 @@ em,
 i {
   font-style: italic;
 }
+.left-rail,
+.right-rail {
+  --size-base: var(--size-ui);
+}
 .layout {
   margin: 0;
 }

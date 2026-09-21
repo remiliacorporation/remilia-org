@@ -99,6 +99,7 @@
     "Noto Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
   --font-mono: monospace;
   --size-base: 16px;
+  --size-ui: 12px;
   --size-title: 20px;
   --weight-body: normal;
   --weight-strong: bold;

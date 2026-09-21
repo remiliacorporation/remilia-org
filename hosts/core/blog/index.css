@@ -2,6 +2,7 @@
 
 .sec.mast {
   padding: var(--space-xs);
+  --size-base: var(--size-ui);
 }
 .sec.mast > header {
   display: grid;
