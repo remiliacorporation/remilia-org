@@ -28,7 +28,6 @@
 }
 .fn-note {
   display: none;
-  font-family: var(--font-serif);
   font-style: italic;
   line-height: var(--leading);
   border: var(--border);
@@ -99,7 +98,6 @@
   scroll-margin-top: 50vh;
   font-variant-numeric: tabular-nums;
   position: relative;
-  font-family: var(--font-serif);
   font-style: italic;
   line-height: var(--leading);
   border: var(--border);

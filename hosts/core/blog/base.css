@@ -108,7 +108,6 @@ strong {
 }
 em,
 i {
-  font-family: var(--font-serif);
   font-style: italic;
 }
 .layout {
