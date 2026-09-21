@@ -40,7 +40,8 @@
   text-align: left;
   display: flex;
   align-items: center;
-  padding: 0 var(--grid) 0 var(--space-xs);
+  gap: var(--grid);
+  padding: 0 var(--space-xs);
 }
 .sel {
   position: relative;
@@ -58,7 +59,7 @@
   border: 0;
   background: transparent;
   color: var(--ink);
-  padding: var(--grid) var(--grid) var(--grid) 0;
+  padding: var(--grid) 0;
   text-align: left;
   outline: none;
 }
