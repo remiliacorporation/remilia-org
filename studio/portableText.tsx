@@ -6,8 +6,6 @@ import {
   type BlockDecoratorProps,
   type BlockProps,
   type BlockStyleProps,
-  type FieldProps,
-  type PortableTextInputProps,
   type StringInputProps,
 } from "sanity";
 import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
@@ -25,25 +23,8 @@ function postHref(channel: Channel, slug: string): string {
   return `${path}/${slug}`;
 }
 
-export function ProseField(props: FieldProps): ReactNode {
-  return (
-    <div className="blog-prose-field">
-      <span className="blog-sr">{props.title}</span>
-      {props.children ?? props.renderDefault(props)}
-    </div>
-  );
-}
-
-export function BodyInput(props: PortableTextInputProps): ReactNode {
-  return <div className="blog-pt">{props.renderDefault(props)}</div>;
-}
-
 // Must not use <p>/<h2>/blockquote — those break the contenteditable tree
 // and the editor renders empty.
-export function NormalStyle(props: BlockStyleProps): ReactNode {
-  return <div className="blog-pt-p">{props.children}</div>;
-}
-
 export function H2Style(props: BlockStyleProps): ReactNode {
   return <div className="blog-pt-h2">{props.children}</div>;
 }
