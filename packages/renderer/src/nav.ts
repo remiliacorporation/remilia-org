@@ -141,7 +141,7 @@ export function leftRail(
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt ?? "")}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">
@@ -230,7 +230,9 @@ export const NAV_JS = `(() => {
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
     const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
     const month = params.get('month') || '';
-    const sc = query ? score(query, el.dataset.title) : 0;
+    const sc = query
+      ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
+      : 0;
     const ok = (query ? sc >= 0 : true)
       && (!catv || el.dataset.cat === catv)
       && (!author || el.dataset.author === author)

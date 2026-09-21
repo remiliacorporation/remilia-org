@@ -270,6 +270,7 @@ test("index filter bar includes category and author dropdowns", () => {
   });
   assert.match(thought, />Showing all Thought posts tagged Essay</);
   assert.match(thought, /data-section="Thought"/);
+  assert.match(index, /data-excerpt="How vaults work."/);
   assert.match(rail, /placeholder="Search"/);
   assert.match(rail, /aria-label="Previous page"/);
 });
