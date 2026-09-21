@@ -13,6 +13,29 @@
   .layout {
     position: relative;
   }
+  .sec.mast > header {
+    grid-template-rows: auto var(--border-w) auto var(--border-w) auto;
+  }
+  .sec.mast .byline,
+  .sec.mast .mast-tools {
+    height: auto;
+    overflow: visible;
+    white-space: normal;
+  }
+  .byline,
+  .sec > header address {
+    white-space: normal;
+  }
+  .mast-tools {
+    flex-wrap: wrap;
+    row-gap: var(--grid);
+  }
+  .theme-hues label,
+  .theme-dots label,
+  .theme-mode {
+    width: var(--space);
+    height: var(--space);
+  }
   .head-dials {
     display: inline;
   }
