@@ -450,7 +450,7 @@ export function articleHtml(input: {
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
-<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">|</span> Table of Contents</label>${copy}</p>
+<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">|</span> Contents</label>${copy}</p>
 </header>
 </div>
 <div class="article-rest">
