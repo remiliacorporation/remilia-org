@@ -102,10 +102,10 @@
   position: absolute;
   left: 3px;
   right: 3px;
-  top: 7px;
-  height: 1px;
+  top: 50%;
+  height: var(--border-w);
   background: var(--ink);
-  transform: rotate(-45deg);
+  transform: translateY(-50%) rotate(-45deg);
 }
 .theme-dot-small {
   background-color: color-mix(in oklch, var(--ink) 10%, var(--paper));
