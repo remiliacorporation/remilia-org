@@ -33,6 +33,8 @@
   line-height: var(--leading-tight);
   font-weight: var(--weight-strong);
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
   overflow: visible;
   text-wrap: balance;
   overflow-wrap: break-word;
