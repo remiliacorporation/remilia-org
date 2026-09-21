@@ -116,6 +116,19 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
   }
 });
 
+test("site-head names the section in the title, not a list of peers", () => {
+  const thought = chromeFor("thought");
+  assert.match(thought.header, /REMILIA CORPORATION — THOUGHT/);
+  assert.match(thought.header, />Index</);
+  assert.match(thought.header, /rss\.xml">RSS</);
+  assert.equal(thought.header.includes("id=\"site-sec\""), false);
+  assert.equal(thought.header.includes(">Updates</a>"), false);
+  const index = chromeFor("blog");
+  assert.match(index.header, /aria-current="page">Index</);
+  const news = chromeFor("news");
+  assert.match(news.header, /REMILIA — NEWS/);
+});
+
 test("org still wears its own brand and pinned light theme", async () => {
   const { outDir, close } = await bakeSections([ORG_SECTIONS[0]]);
   try {
@@ -153,6 +166,8 @@ test("an intentionally empty section still publishes its index", async () => {
       "utf8",
     );
     assert.match(index, /REMILIA CORPORATION — ARCHIVE/);
+    assert.match(index, /id="site-sec"/);
+    assert.match(index, />Archive</);
     assert.ok(!index.includes("Post 1"));
   } finally {
     f.close();

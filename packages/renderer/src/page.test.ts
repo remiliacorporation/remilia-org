@@ -235,6 +235,22 @@ test("toc notes are a labeled row, not bold-only chips", () => {
   assert.ok(html.includes('href="#fn-2">[2]</a>'));
 });
 
+test("article byline can host the section switcher", () => {
+  const html = articleHtml({
+    title: "Vaults",
+    publishedAt: "2026-08-01T00:00:00Z",
+    byline: "Remilia",
+    category: "Press",
+    bodyHtml: "<p>body</p>",
+    sectionSel: `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+  });
+  assert.match(
+    html,
+    /<div class="byline">[\s\S]*id="site-sec"[\s\S]*class="author"[\s\S]*<\/div>/,
+  );
+  assert.equal(html.includes('class="byline-cat"'), false);
+});
+
 test("index filter bar includes category and author dropdowns", () => {
   const other = { ...POST, title: "Memo", url: "/press/memo", category: "News" };
   const html = filterBar([POST, other]);
@@ -247,6 +263,13 @@ test("index filter bar includes category and author dropdowns", () => {
   const rail = leftRail([POST], "Press", "/press");
   assert.match(index, /Read more: Vaults/);
   assert.match(index, /08\.01\.26/);
+  assert.match(index, />Showing all posts</);
+  const thought = indexMain([POST], "<p>tools</p>", undefined, {
+    section: "Thought",
+    tag: "Essay",
+  });
+  assert.match(thought, />Showing all Thought posts tagged Essay</);
+  assert.match(thought, /data-section="Thought"/);
   assert.match(rail, /placeholder="Search"/);
   assert.match(rail, /aria-label="Previous page"/);
 });

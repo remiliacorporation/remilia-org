@@ -408,11 +408,15 @@ export function articleHtml(input: {
   txtHref?: string;
   /** Whole minutes at 200 words per minute; omitted for short notes. */
   readingMinutes?: number;
+  /** Host section switcher — occupies the byline's center slot. */
+  sectionSel?: string;
 }): string {
   const date = new Date(input.publishedAt);
-  const cat = input.category
-    ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
-    : `<span class="byline-cat"></span>`;
+  const cat = input.sectionSel
+    ? input.sectionSel
+    : input.category
+      ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
+      : `<span class="byline-cat"></span>`;
   const author = input.byline
     ? input.authorHref
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
@@ -442,7 +446,7 @@ export function articleHtml(input: {
 <article class="article-body">
 <div class="sec mast">
 <header>
-<p class="byline">${dated}${cat}${author}</p>
+<div class="byline">${dated}${cat}${author}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
@@ -501,12 +505,15 @@ export function indexMain(
   posts: IndexCard[],
   toolsHtml: string,
   pager?: Pager,
-  filter?: { tag?: string; author?: string },
+  filter?: { tag?: string; author?: string; section?: string },
+  sectionSel?: string,
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
-  const heading = `Showing all posts${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}`;
-  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}`;
+  const section = filter?.section ?? "";
+  const surface = section ? `${section} posts` : "posts";
+  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}`;
   const cards = posts
     .map((p) => {
       const month = p.date.slice(0, 7);
@@ -539,11 +546,16 @@ ${row}
 </article>`;
     })
     .join("\n");
+  const byline = sectionSel
+    ? `<div class="byline"><span class="byline-date"></span>${sectionSel}<span class="author"></span></div>
+<hr class="nav-rule">
+`
+    : "";
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
 <header>
-<h1${filterAttrs}>${heading}</h1>
+${byline}<h1${filterAttrs}>${heading}</h1>
 <hr class="nav-rule mast-tools-rule">
 <div class="mast-tools">${NAV_SEARCH}</div>
 </header>

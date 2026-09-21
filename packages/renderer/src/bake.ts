@@ -49,7 +49,14 @@ import {
   termIndexMain,
   type Chrome,
 } from "./page";
-import { leftRail, emptyRail, filterBar, NAV_JS, type NavPost } from "./nav";
+import {
+  leftRail,
+  emptyRail,
+  filterBar,
+  sectionSel,
+  NAV_JS,
+  type NavPost,
+} from "./nav";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 import {
@@ -391,20 +398,19 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     author: p.authors?.map((a) => a.name).join(", "),
   }));
   // The category dropdown is one shared control — every listing offers the
-  // host's full section set. On a section index the options navigate to the
-  // sibling index; on the pooled index they filter in place.
+  // host's full section set. Options navigate to that section's index (or
+  // the pooled index) instead of filtering a paginated page in place.
   const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]];
-  const sharedCats = aggregated
-    ? { cats: siblings.map((c) => ({ label: CHANNEL_LABEL[c] })), current: "" }
-    : {
-        cats: siblings.map((c) => ({
-          label: CHANNEL_LABEL[c],
-          href: CHANNEL_BASEPATH[c],
-        })),
-        current: CHANNEL_LABEL[channel],
-        allHref:
-          CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
-      };
+  const sharedCats = {
+    cats: siblings.map((c) => ({
+      label: CHANNEL_LABEL[c],
+      href: CHANNEL_BASEPATH[c],
+    })),
+    current: aggregated ? "" : CHANNEL_LABEL[channel],
+    allHref:
+      CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
+  };
+  const sectionNav = sectionSel(sharedCats);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
@@ -599,6 +605,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
         readingMinutes: readingMinutes(plain),
+        sectionSel: sectionNav,
       }),
     });
     await mkdir(join(dir, p.slug), { recursive: true });
@@ -717,7 +724,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             })),
             filterBar(slice, sharedCats),
             { page, pages, prevHref, nextHref },
-            listing.filter,
+            {
+              ...listing.filter,
+              section: aggregated ? undefined : CHANNEL_LABEL[channel],
+            },
+            sectionNav,
           ),
         }),
       );

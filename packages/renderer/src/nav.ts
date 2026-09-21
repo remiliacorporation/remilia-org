@@ -99,28 +99,26 @@ export interface SharedCats {
   allHref?: string;
 }
 
-// The category dropdown is shared, not isolated: on a section listing its
-// options carry data-href and navigate to the sibling index rather than
-// filtering cards that are not on the page.
-function sharedCatSel(shared: SharedCats): string {
+export function sectionSel(shared: SharedCats): string {
   const href = (h?: string) => (h ? ` data-href="${esc(h)}"` : "");
+  const current = shared.current || "All posts";
   const items = [
-    shared.allHref || !shared.cats.some((c) => c.href)
-      ? `<li><button type="button" data-value=""${href(shared.allHref)}>All posts</button></li>`
+    shared.allHref
+      ? `<li><button type="button" data-value="All posts"${href(shared.allHref)}>All posts</button></li>`
       : "",
     ...shared.cats.map(
       (c) =>
         `<li><button type="button" data-value="${esc(c.label)}"${href(c.href)}>${esc(c.label)}</button></li>`,
     ),
   ].join("");
-  return `<details class="sel nav-cat-sel" id="post-cat" data-value="" aria-label="Filter posts">
-<summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
+  return `<details class="sel site-sec" id="site-sec" data-value="${esc(shared.current)}" aria-label="Section">
+<summary><span class="sel-label">${esc(current)}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
 }
 
 export function filterBar(posts: NavPost[], shared?: SharedCats): string {
-  const cat = shared ? sharedCatSel(shared) : catSel(posts).html;
+  const cat = shared ? "" : catSel(posts).html;
   const { html: authors } = authorSel(posts);
   if (!cat && !authors) return "";
   return `<div class="nav-page">
@@ -138,7 +136,7 @@ export function leftRail(
 ): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const { css, html: cat } = shared
-    ? { css: "", html: sharedCatSel(shared) }
+    ? { css: "", html: "" }
     : catSel(posts);
   const items = byDate
     .map(
@@ -201,7 +199,7 @@ export const NAV_JS = `(() => {
     if (!el) return;
     el.addEventListener('click', (e) => {
       const mark = e.target.closest('.sel-mark');
-      if (mark && el.dataset.value) {
+      if (mark && el.dataset.value && el.id !== 'site-sec') {
         e.preventDefault();
         e.stopPropagation();
         setSel(el, '', empty);
@@ -263,7 +261,8 @@ export const NAV_JS = `(() => {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
       const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
       const month = params.get('month') || '';
-      let t = catv ? 'Showing all ' + catv + ' posts' : 'Showing all posts';
+      const section = statusEl.dataset.section || '';
+      let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;
       if (author) t += ' by ' + author;
       if (month) t += ' from ' + month;
@@ -275,6 +274,7 @@ export const NAV_JS = `(() => {
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
+  bindSel(document.getElementById('site-sec'), '');
   addEventListener('click', (e) => {
     const a = e.target.closest('.post-card a.author');
     if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
