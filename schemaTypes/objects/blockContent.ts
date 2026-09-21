@@ -1,4 +1,17 @@
 import { defineArrayMember, defineType } from "sanity";
+import {
+  CodeDecorator,
+  DividerBlock,
+  FootnoteAnnotation,
+  H2Style,
+  H3Style,
+  H4Style,
+  ImageBlock,
+  LinkAnnotation,
+  LinkHrefInput,
+  QuoteStyle,
+  VideoBlock,
+} from "../../studio/portableText";
 
 export const blockContent = defineType({
   name: "blockContent",
@@ -9,10 +22,10 @@ export const blockContent = defineType({
       type: "block",
       styles: [
         { title: "Normal", value: "normal" },
-        { title: "H2", value: "h2" },
-        { title: "H3", value: "h3" },
-        { title: "H4", value: "h4" },
-        { title: "Quote", value: "blockquote" },
+        { title: "H2", value: "h2", component: H2Style },
+        { title: "H3", value: "h3", component: H3Style },
+        { title: "H4", value: "h4", component: H4Style },
+        { title: "Quote", value: "blockquote", component: QuoteStyle },
       ],
       lists: [
         { title: "Bullet", value: "bullet" },
@@ -22,18 +35,20 @@ export const blockContent = defineType({
         decorators: [
           { title: "Strong", value: "strong" },
           { title: "Emphasis", value: "em" },
-          { title: "Code", value: "code" },
+          { title: "Code", value: "code", component: CodeDecorator },
         ],
         annotations: [
           {
             name: "link",
             type: "object",
             title: "Link",
+            components: { annotation: LinkAnnotation },
             fields: [
               {
                 name: "href",
                 type: "url",
                 title: "URL",
+                components: { input: LinkHrefInput },
                 validation: (r) =>
                   r.uri({
                     allowRelative: true,
@@ -46,6 +61,7 @@ export const blockContent = defineType({
             name: "footnote",
             type: "object",
             title: "Footnote",
+            components: { annotation: FootnoteAnnotation },
             fields: [
               {
                 name: "text",
@@ -56,16 +72,12 @@ export const blockContent = defineType({
               {
                 name: "n",
                 type: "number",
-                title: "Source note number",
-                description:
-                  "Optional: the note's number in the source document. Pins the rendered ref/id (fn-N) so in-note [N] references resolve to it; when absent, notes are numbered by position.",
+                title: "Note number",
               },
               {
                 name: "image",
                 type: "image",
-                title: "Note image",
-                description:
-                  "For notes whose body is an image — rendered inside the note alongside any text.",
+                hidden: true,
                 options: { hotspot: false },
                 fields: [
                   { name: "alt", type: "string", title: "Alt text" },
@@ -81,6 +93,7 @@ export const blockContent = defineType({
       name: "divider",
       type: "object",
       title: "Divider",
+      components: { block: DividerBlock },
       fields: [
         { name: "kind", type: "string", initialValue: "hr", readOnly: true, hidden: true },
       ],
@@ -90,6 +103,7 @@ export const blockContent = defineType({
       name: "video",
       type: "object",
       title: "Video",
+      components: { block: VideoBlock },
       fields: [
         {
           name: "file",
@@ -117,6 +131,7 @@ export const blockContent = defineType({
     defineArrayMember({
       type: "image",
       options: { hotspot: true },
+      components: { block: ImageBlock },
       fields: [
         {
           name: "alt",
