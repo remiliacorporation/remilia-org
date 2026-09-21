@@ -26,9 +26,17 @@
 /cn/contact/ /cn/contact/index.html 200
 /cn/careers /cn/careers/index.html 200
 /cn/careers/ /cn/careers/index.html 200
+# The rules above are hand-written and live only here, so this file stays
+# tracked even though the rest of deploy/ is generated and gitignored.
+#
 # bake:org writes one "bake:redirects:<section>" block per section below:
 # 301s for renamed or moved posts, the Ghost host rules for /press, and a
-# section-scoped 404. None are forced, so a real page always wins.
+# section-scoped 404. None are forced, so a real page always wins. Each
+# block is rebuilt from the published posts every deploy, so what sits
+# inside the markers here is a stale snapshot, not what is live.
+#
+# Losing this file does not fail the build: the bake starts from a bare
+# "/*  /404.html  404" instead and silently ships without the rules above.
 
 # BEGIN bake:redirects:updates
 https://blog.remilia.org/corporate-memo-remilia-2024-christmas-missive/  https://remilia.org/blog/updates/corporate-memo-remilia-2024-christmas-missive  301!
