@@ -431,6 +431,13 @@ export const NAV_JS = `(() => {
   });
 })();
 (() => {
+  const flash = (el) => {
+    if (!el || el.dataset.copied) return;
+    const orig = el.textContent;
+    el.dataset.copied = '1';
+    el.textContent = 'Copied';
+    setTimeout(() => { el.textContent = orig; delete el.dataset.copied; }, 1500);
+  };
   addEventListener('click', (e) => {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const a = e.target.closest('.copy-url');
@@ -438,17 +445,15 @@ export const NAV_JS = `(() => {
     const u = a.getAttribute('data-url');
     if (!u) return;
     e.preventDefault();
-    navigator.clipboard.writeText(u);
+    navigator.clipboard.writeText(u).then(() => flash(a));
   });
-})();
-(() => {
   addEventListener('click', (e) => {
     const b = e.target.closest('.copy-md, .copy-txt');
     if (!b || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const src = b.getAttribute('data-src');
     if (!src || !navigator.clipboard || !navigator.clipboard.writeText) return;
     e.preventDefault();
-    fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t));
+    fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t).then(() => flash(b)));
   });
 })();
 // The sticky left rail can't subgrid like .right-rail without breaking its
