@@ -6,12 +6,17 @@ import {
   canEditChannel,
   type Channel,
 } from "../../lib/access";
+import { PostInput, TitleField, TitleInput } from "../../studio/postInput";
 
 export const post = defineType({
   name: "post",
   title: "Post",
   type: "document",
   icon: DocumentTextIcon,
+  // Custom mast already shows the title; Sanity's form header duplicates it
+  // at heading size 4 and wraps long titles into a second giant line.
+  __experimental_formPreviewTitle: false,
+  components: { input: PostInput },
   readOnly: ({ currentUser, document }) =>
     !canEditChannel(currentUser, document?.channel as Channel | undefined),
   fields: [
@@ -27,6 +32,7 @@ export const post = defineType({
     defineField({
       name: "title",
       type: "string",
+      components: { field: TitleField, input: TitleInput },
       validation: (r) => r.required(),
     }),
     defineField({

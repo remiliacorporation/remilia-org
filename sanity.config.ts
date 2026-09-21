@@ -3,6 +3,8 @@ import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./schemaTypes";
 import { structure } from "./structure";
+import { SettingsField } from "./studio/postInput";
+import "./studio/editor.css";
 
 export default defineConfig({
   name: "remilia",
@@ -22,6 +24,11 @@ export default defineConfig({
         value: (params: { channel: string }) => ({ channel: params.channel }),
       },
     ],
+  },
+  form: {
+    components: {
+      field: SettingsField,
+    },
   },
   document: {
     newDocumentOptions: (prev) => prev.filter((t) => t.templateId !== "org"),
