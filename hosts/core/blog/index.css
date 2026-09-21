@@ -251,9 +251,12 @@
   align-content: center;
   height: 100%;
 }
-.index-mast h1 {
+.sec.mast.index-mast h1 {
   font-size: var(--size-base);
   font-weight: var(--weight-body);
+  /* A status line, not a title — no caps treatment from .sec.mast h1. */
+  text-transform: none;
+  letter-spacing: normal;
   line-height: var(--mast-line);
   height: var(--mast-line);
   min-height: var(--mast-line);
@@ -263,6 +266,7 @@
   display: flex;
   height: auto;
   align-items: center;
+  gap: var(--space-xs);
   white-space: normal;
   /* The base .mast-tools clips; the dropdown menus have to escape the row. */
   overflow: visible;
