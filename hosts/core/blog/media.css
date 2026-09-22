@@ -65,32 +65,32 @@
 .prose figure > a:focus-visible .ht-map,
 .gallery figure > a:hover .ht-map,
 .gallery figure > a:focus-visible .ht-map,
-.post-card .card-thumb:hover .ht-map,
-.post-card .card-thumb:focus-visible .ht-map {
+.post-card:hover .card-thumb .ht-map,
+.post-card:focus-within .card-thumb .ht-map {
   filter: var(--ht-map-h, var(--dither-filter, url(#dither-3)));
 }
 .prose figure > a:hover .ht::after,
 .prose figure > a:focus-visible .ht::after,
 .gallery figure > a:hover .ht::after,
 .gallery figure > a:focus-visible .ht::after,
-.post-card .card-thumb:hover .ht::after,
-.post-card .card-thumb:focus-visible .ht::after {
+.post-card:hover .card-thumb .ht::after,
+.post-card:focus-within .card-thumb .ht::after {
   opacity: var(--ht-tint-h, 1);
 }
 .prose figure > a:hover .ht img,
 .prose figure > a:focus-visible .ht img,
 .gallery figure > a:hover .ht img,
 .gallery figure > a:focus-visible .ht img,
-.post-card .card-thumb:hover .ht img,
-.post-card .card-thumb:focus-visible .ht img {
+.post-card:hover .card-thumb .ht img,
+.post-card:focus-within .card-thumb .ht img {
   filter: var(--ht-img-h, grayscale(1));
 }
 .prose figure > a:hover .ht-ink,
 .prose figure > a:focus-visible .ht-ink,
 .gallery figure > a:hover .ht-ink,
 .gallery figure > a:focus-visible .ht-ink,
-.post-card .card-thumb:hover .ht-ink,
-.post-card .card-thumb:focus-visible .ht-ink {
+.post-card:hover .card-thumb .ht-ink,
+.post-card:focus-within .card-thumb .ht-ink {
   opacity: var(--ht-ink-op-h, 1);
 }
 .gallery {

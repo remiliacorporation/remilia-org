@@ -334,25 +334,6 @@ article.post-card > header {
   position: relative;
   z-index: 2;
 }
-.post-card:hover {
-  background: var(--ink);
-  color: var(--ink-contrast);
-}
-.post-card:hover h2,
-.post-card:hover h2 a,
-.post-card:hover .card-meta,
-.post-card:hover .card-meta time,
-.post-card:hover .card-meta .author,
-.post-card:hover .card-ex,
-.post-card:hover .card-foot .byline-cat,
-.post-card:hover .card-more {
-  color: var(--ink-contrast);
-}
-.post-card:hover a:hover,
-.post-card:hover a:focus-visible {
-  background: var(--ink-contrast);
-  color: var(--ink);
-}
 .post-card .card-meta {
   display: flex;
   justify-content: space-between;
@@ -411,6 +392,12 @@ article.post-card > header {
 .post-card h2 a {
   text-decoration: none;
   font: inherit;
+  color: inherit;
+}
+/* The title link's overlay covers the whole card, so it is hovered whenever
+   the card is; the card answers through its image, not an inverted title. */
+.post-card h2 a:hover {
+  background: none;
   color: inherit;
 }
 .post-card .card-ex {
