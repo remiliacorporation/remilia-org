@@ -65,7 +65,6 @@
   border: 0;
   background: none;
   font: inherit;
-  font-weight: var(--weight-strong);
   color: inherit;
   cursor: pointer;
   padding: 0;
@@ -121,7 +120,8 @@
   font-variant-numeric: tabular-nums;
 }
 .mast-tools .mast-toc:hover,
-.mast-tools button:hover {
+.mast-tools button:hover,
+.mast-tools button:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }
@@ -163,7 +163,11 @@
   text-decoration: none;
 }
 .byline .byline-date:hover,
-.byline .author:hover {
+.byline .byline-date:hover time,
+.byline .byline-date:focus-visible,
+.byline .byline-date:focus-visible time,
+.byline .author:hover,
+.byline .author:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
   text-decoration: none;
@@ -203,7 +207,10 @@
 }
 .byline .site-sec > summary:hover,
 .byline .site-sec > summary:hover .sel-label,
-.byline .site-sec > summary:hover .sel-mark {
+.byline .site-sec > summary:hover .sel-mark,
+.byline .site-sec > summary:focus-visible,
+.byline .site-sec > summary:focus-visible .sel-label,
+.byline .site-sec > summary:focus-visible .sel-mark {
   background: var(--ink);
   color: var(--ink-contrast);
 }
@@ -234,6 +241,7 @@
   font-style: normal;
   color: var(--muted);
   text-transform: none;
+  text-decoration: none;
 }
 .sec > header > p:empty {
   display: none;

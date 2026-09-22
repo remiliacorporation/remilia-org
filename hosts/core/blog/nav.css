@@ -187,6 +187,10 @@
 .nav-all li a:hover {
   text-decoration: none;
 }
+.nav-all li a:focus-visible {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
 .nav-all li a:hover .nav-meta,
 .nav-all li a:hover .nav-meta time,
 .nav-all li a:hover .nav-cat {
@@ -252,7 +256,8 @@
   opacity: 0.4;
   cursor: default;
 }
-.nav-pager button:not(:disabled):hover {
+.nav-pager button:not(:disabled):hover,
+.nav-pager button:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }

@@ -436,20 +436,6 @@
     min-height: var(--mast-title);
     line-height: var(--mast-title);
   }
-  .cite-box button {
-    appearance: none;
-    border: 0;
-    background: none;
-    font: inherit;
-    font-weight: var(--weight-strong);
-    color: inherit;
-    cursor: pointer;
-    padding: 0;
-  }
-  .cite-box button:hover {
-    background: var(--ink);
-    color: var(--ink-contrast);
-  }
   .post-nav > .disclosure-label {
     display: none;
   }
