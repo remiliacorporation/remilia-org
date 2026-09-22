@@ -422,7 +422,7 @@ article.post-card > header {
   justify-content: space-between;
   align-items: baseline;
   gap: var(--grid);
-  margin: 0;
+  margin: var(--space-s) 0 0;
   width: 100%;
 }
 .post-card .card-foot .byline-cat {
