@@ -322,11 +322,15 @@ article.post-card > header {
   margin: 0;
   align-self: center;
 }
-.post-card h2 a::after {
-  content: "";
+/* The card's pointer target: an overlay link under the raised links, so
+   hovering the title or image is distinguishable from hovering the card.
+   Skipped by the keyboard and assistive tech; the title is the post link. */
+.post-card .card-hit {
   position: absolute;
   inset: 0;
+  background: none;
 }
+.post-card h2 a,
 .post-card .card-thumb,
 .post-card .card-meta .author,
 .post-card .byline-cat,
@@ -384,12 +388,8 @@ article.post-card > header {
   text-decoration: none;
   font: inherit;
   color: inherit;
-}
-/* The title link's overlay covers the whole card, so it is hovered whenever
-   the card is: the card's invert is its hover, it takes no box of its own. */
-.post-card h2 a:hover {
-  background: none;
-  color: inherit;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .post-card .card-ex {
   margin: 0;
@@ -444,8 +444,10 @@ article.post-card > header {
 .post-card a:focus-visible {
   outline-color: var(--ink-contrast);
 }
-/* Inner links sit above the title overlay and invert again against the
+/* Inner links sit above the card overlay and invert again against the
    inverted card, as chrome links do against the page. */
+.post-card h2 a:hover,
+.post-card h2 a:focus-visible,
 .post-card .card-meta a.author:hover,
 .post-card .card-meta a.author:focus-visible,
 .post-card .card-foot a.byline-cat:hover,

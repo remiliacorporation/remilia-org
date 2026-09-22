@@ -275,6 +275,15 @@ test("index filter bar includes category and author dropdowns", () => {
   assert.match(rail, /aria-label="Previous page"/);
 });
 
+test("index card stretches its link from an overlay the keyboard skips", () => {
+  const html = indexMain([POST], "<p>tools</p>");
+  assert.match(
+    html,
+    /<article class="sec post-card"[^>]*>\n<a class="card-hit" href="\/press\/vaults" tabindex="-1" aria-hidden="true"><\/a>\n<header>/,
+  );
+  assert.match(html, /<h2><a href="\/press\/vaults">Vaults<\/a><\/h2>/);
+});
+
 test("listing controls share one masthead tools line", () => {
   const html = indexMain(
     [POST],

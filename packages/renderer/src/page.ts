@@ -536,6 +536,7 @@ ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 </div>`
           : "";
       return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
+<a class="card-hit" href="${esc(p.url)}" tabindex="-1" aria-hidden="true"></a>
 <header>
 <p class="card-meta"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time>${author}</p>
 <hr class="nav-rule">
