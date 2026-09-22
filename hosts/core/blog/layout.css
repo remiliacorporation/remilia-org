@@ -366,6 +366,7 @@
   }
   .article-wrap {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: subgrid;
     grid-column: 2;
     grid-row: 1 / -1;

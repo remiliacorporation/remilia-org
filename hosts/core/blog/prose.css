@@ -7,6 +7,13 @@ h3,
 .prose h3 > .hlink {
   font-weight: var(--weight-strong);
 }
+.prose {
+  overflow-wrap: anywhere;
+}
+.prose a {
+  -webkit-hyphens: manual;
+  hyphens: manual;
+}
 .prose > * {
   max-width: 100%;
 }
@@ -17,7 +24,6 @@ h3,
 .prose p {
   margin: 0 0 var(--space-s);
   line-height: var(--leading-prose);
-  overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
   text-wrap: pretty;
@@ -26,7 +32,6 @@ h3,
   widows: 3;
 }
 .prose li {
-  overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
   text-wrap: pretty;
@@ -39,7 +44,6 @@ h3,
   line-height: var(--leading-tight);
   text-wrap: balance;
   hanging-punctuation: first allow-end;
-  overflow-wrap: break-word;
   -webkit-hyphens: auto;
   hyphens: auto;
 }
@@ -191,6 +195,11 @@ h3,
 }
 .prose > figure img {
   width: auto;
+}
+.prose video {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 .gallery figure img {
   width: 100%;
