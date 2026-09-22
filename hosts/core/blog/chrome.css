@@ -22,39 +22,6 @@
 .head-dials label {
   cursor: pointer;
 }
-.post-nav .site-head {
-  max-width: var(--rail);
-  width: 100%;
-  margin: 0;
-  padding: var(--space-xs);
-  text-align: inherit;
-  border: var(--border);
-  background: var(--surface);
-  display: grid;
-  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
-  row-gap: var(--space-xs);
-}
-.post-nav .site-head .site-title {
-  text-align: inherit;
-  margin: 0;
-  line-height: var(--mast-line);
-  height: var(--mast-line);
-  overflow: hidden;
-}
-.post-nav .site-head .nav-rule {
-  margin: 0;
-  height: 0;
-  align-self: center;
-}
-.post-nav .site-head nav {
-  display: block;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  text-align: inherit;
-  margin: 0;
-  line-height: var(--mast-title);
-  height: var(--mast-title);
-}
 .left-rail .site-head {
   max-width: var(--rail);
   width: 100%;
@@ -64,7 +31,10 @@
   border: var(--border);
   background: var(--surface);
   display: grid;
-  grid-template-rows: auto var(--border-w) auto;
+  /* Same rows as the article mast and the theme box — link row, rule,
+     brand — packed to the top so the three rules line up in one row. */
+  grid-template-rows: minmax(var(--mast-line), auto) var(--border-w) auto;
+  align-content: start;
   row-gap: var(--space-xs);
 }
 .left-rail .site-head .site-title {

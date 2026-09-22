@@ -10,6 +10,7 @@
   background: var(--surface);
   display: grid;
   grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
+  align-content: start;
   row-gap: var(--space-xs);
 }
 .theme-label {

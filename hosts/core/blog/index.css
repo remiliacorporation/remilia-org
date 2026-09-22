@@ -254,7 +254,7 @@
 }
 .sec.mast.index-mast > header {
   grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
-  align-content: center;
+  align-content: start;
   height: 100%;
 }
 .sec.mast.index-mast h1 {

@@ -497,8 +497,6 @@
     gap: var(--grid);
   }
   .left-rail .site-head {
-    grid-template-rows: auto var(--border-w) auto;
-    align-content: center;
     align-items: stretch;
   }
   .left-rail .site-head .site-title {
@@ -513,13 +511,10 @@
     flex-wrap: wrap;
   }
   .theme-sel {
-    grid-template-rows: auto var(--border-w) auto;
-    align-content: center;
     align-items: stretch;
   }
   .sec.mast > header {
-    grid-template-rows: auto var(--border-w) auto;
-    align-content: center;
+    align-content: start;
     height: 100%;
   }
   .sec.mast h1 {
