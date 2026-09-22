@@ -127,9 +127,13 @@
 .sel-menu {
   position: absolute;
   /* Outset from the control's box so the menu reads as a layer around it. */
-  right: calc(-1 * (var(--grid) + var(--border-w)));
   left: calc(-1 * (var(--grid) + var(--border-w)));
+  right: auto;
   top: calc(100% + var(--border-w));
+  /* Size to the longest item, never narrower than the outset control. */
+  width: max-content;
+  min-width: calc(100% + 2 * (var(--grid) + var(--border-w)));
+  max-width: var(--rail);
   z-index: 20;
   margin: 0;
   list-style: none;
@@ -147,6 +151,7 @@
   color: var(--ink);
   padding: var(--grid) var(--space-xs);
   text-align: left;
+  white-space: nowrap;
   cursor: pointer;
 }
 .sel-menu li + li {
