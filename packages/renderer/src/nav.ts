@@ -323,6 +323,8 @@ export const NAV_JS = `(() => {
 })();
 // <details> has no "only one open" behaviour and no outside dismissal, so a
 // click anywhere closes every .sel but the one clicked, and Escape closes all.
+// A mouse that leaves an open .sel closes it after a beat unless it comes
+// back; touch never leaves, and a keyboard-focused dropdown stays open.
 (() => {
   const shut = (keep) => {
     document.querySelectorAll('details.sel[open]').forEach((d) => {
@@ -335,6 +337,23 @@ export const NAV_JS = `(() => {
   });
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') shut(null);
+  });
+  const LEAVE_MS = 500;
+  document.querySelectorAll('details.sel').forEach((d) => {
+    let timer = 0;
+    const cancel = () => { clearTimeout(timer); timer = 0; };
+    d.addEventListener('pointerleave', (e) => {
+      if (e.pointerType !== 'mouse' || !d.open) return;
+      cancel();
+      timer = setTimeout(() => {
+        timer = 0;
+        if (!d.querySelector(':focus-visible')) d.open = false;
+      }, LEAVE_MS);
+    });
+    d.addEventListener('pointerenter', (e) => {
+      if (e.pointerType === 'mouse') cancel();
+    });
+    d.addEventListener('toggle', () => { if (!d.open) cancel(); });
   });
 })();
 (() => {

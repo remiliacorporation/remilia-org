@@ -1,4 +1,4 @@
-import { test } from "node:test";
+import { mock, test } from "node:test";
 import assert from "node:assert/strict";
 import { NAV_JS } from "./nav";
 
@@ -72,4 +72,93 @@ test("a month archive keeps its month in the status line", () => {
   });
   assert.equal(replaced, undefined);
   assert.equal(text, "Showing all Updates posts from December 2024");
+});
+
+/** Runs NAV_JS on a page holding one dropdown; returns its event hooks. */
+function runDropdown(): {
+  details: { open: boolean; focused: boolean };
+  fire: (type: string, pointerType?: string) => void;
+} {
+  const hooks = new Map<string, (e: object) => void>();
+  const details = {
+    open: false,
+    focused: false,
+    addEventListener: (type: string, fn: (e: object) => void) =>
+      hooks.set(type, fn),
+    querySelector: (sel: string) =>
+      sel === ":focus-visible" && details.focused ? {} : null,
+  };
+  const document = {
+    getElementById: () => null,
+    querySelector: () => null,
+    querySelectorAll: (sel: string) => (sel === "details.sel" ? [details] : []),
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function(
+    "document",
+    "location",
+    "addEventListener",
+    "matchMedia",
+    NAV_JS,
+  )(
+    document,
+    { pathname: "/", search: "" },
+    () => {},
+    () => ({ matches: true }),
+  );
+  return {
+    details,
+    fire: (type, pointerType = "mouse") => hooks.get(type)?.({ pointerType }),
+  };
+}
+
+test("a dropdown the mouse leaves closes after half a second", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const { details, fire } = runDropdown();
+    details.open = true;
+    fire("pointerleave");
+    mock.timers.tick(200);
+    assert.equal(details.open, true, "still open at 200ms");
+    mock.timers.tick(300);
+    assert.equal(details.open, false, "closed at 500ms");
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("returning to the dropdown in time keeps it open", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const { details, fire } = runDropdown();
+    details.open = true;
+    fire("pointerleave");
+    mock.timers.tick(300);
+    fire("pointerenter");
+    mock.timers.tick(1000);
+    assert.equal(details.open, true);
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("touch and keyboard focus never close a dropdown on leave", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const touch = runDropdown();
+    touch.details.open = true;
+    touch.fire("pointerleave", "touch");
+    mock.timers.tick(1000);
+    assert.equal(touch.details.open, true, "touch leave is ignored");
+
+    const keyboard = runDropdown();
+    keyboard.details.open = true;
+    keyboard.details.focused = true;
+    keyboard.fire("pointerleave");
+    mock.timers.tick(1000);
+    assert.equal(keyboard.details.open, true, "keyboard focus holds it open");
+  } finally {
+    mock.timers.reset();
+  }
 });
