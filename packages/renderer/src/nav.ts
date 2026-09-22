@@ -301,6 +301,22 @@ export const NAV_JS = `(() => {
     setSel(auth, statusEl.dataset.author, 'All authors');
   apply();
 })();
+// <details> has no "only one open" behaviour and no outside dismissal, so a
+// click anywhere closes every .sel but the one clicked, and Escape closes all.
+(() => {
+  const shut = (keep) => {
+    document.querySelectorAll('details.sel[open]').forEach((d) => {
+      if (d !== keep) d.open = false;
+    });
+  };
+  addEventListener('click', (e) => {
+    const t = e.target;
+    shut(t && t.closest ? t.closest('details.sel') : null);
+  });
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') shut(null);
+  });
+})();
 (() => {
   try {
     const toc = document.querySelector('.toc nav ol');
