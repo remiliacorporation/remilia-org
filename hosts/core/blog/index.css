@@ -348,15 +348,6 @@ article.post-card > header {
   text-align: right;
   text-decoration: none;
 }
-.post-card .card-meta .author:hover,
-.post-card .card-meta .author:focus-visible,
-.post-card .card-foot a.byline-cat:hover,
-.post-card .card-foot a.byline-cat:focus-visible,
-.post-card .card-more:hover,
-.post-card .card-more:focus-visible {
-  background: var(--ink);
-  color: var(--ink-contrast);
-}
 .post-card .card-meta time,
 .post-card .card-meta .author {
   color: var(--muted);
@@ -395,7 +386,7 @@ article.post-card > header {
   color: inherit;
 }
 /* The title link's overlay covers the whole card, so it is hovered whenever
-   the card is; the card answers through its image, not an inverted title. */
+   the card is: the card's invert is its hover, it takes no box of its own. */
 .post-card h2 a:hover {
   background: none;
   color: inherit;
@@ -422,6 +413,47 @@ article.post-card > header {
   margin: 0;
   text-align: right;
   text-decoration: none;
+}
+.post-card:hover,
+.post-card:focus-within {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
+.post-card:hover h2,
+.post-card:hover .card-ex,
+.post-card:hover .card-meta,
+.post-card:hover .card-meta time,
+.post-card:hover .card-meta .author,
+.post-card:hover .card-foot .byline-cat,
+.post-card:hover .card-more,
+.post-card:focus-within h2,
+.post-card:focus-within .card-ex,
+.post-card:focus-within .card-meta,
+.post-card:focus-within .card-meta time,
+.post-card:focus-within .card-meta .author,
+.post-card:focus-within .card-foot .byline-cat,
+.post-card:focus-within .card-more {
+  color: var(--ink-contrast);
+}
+.post-card:hover > header .nav-rule,
+.post-card:hover .card-thumb,
+.post-card:focus-within > header .nav-rule,
+.post-card:focus-within .card-thumb {
+  border-color: var(--ink-contrast);
+}
+.post-card a:focus-visible {
+  outline-color: var(--ink-contrast);
+}
+/* Inner links sit above the title overlay and invert again against the
+   inverted card, as chrome links do against the page. */
+.post-card .card-meta a.author:hover,
+.post-card .card-meta a.author:focus-visible,
+.post-card .card-foot a.byline-cat:hover,
+.post-card .card-foot a.byline-cat:focus-visible,
+.post-card .card-foot a.card-more:hover,
+.post-card .card-foot a.card-more:focus-visible {
+  background: var(--ink-contrast);
+  color: var(--ink);
 }
 .post-card[hidden] {
   display: none;
