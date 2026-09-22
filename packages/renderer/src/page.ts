@@ -315,7 +315,7 @@ ${p.bodyEnd ?? ""}
 }
 
 function mastCopy(basePath: string): string {
-  return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> <span class="nav-sep" aria-hidden="true">|</span> <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
+  return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
 }
 
 function bylineDate(iso: string): string {
@@ -361,7 +361,7 @@ export function citeBox(input: {
     input.words ? `${input.words.toLocaleString("en-US")} words` : "",
   ]
     .filter(Boolean)
-    .join(" | ");
+    .join(" — ");
   return `<aside class="cite-box">
 <div class="nav-box">
 <p class="cite-url">${stats}</p>
@@ -437,7 +437,7 @@ export function articleHtml(input: {
     : "";
   const copy =
     md && txt
-      ? `<span class="mast-copy"><span class="nav-sep" aria-hidden="true">|</span> Copy: ${md} — ${txt}</span>`
+      ? `<span class="mast-copy"><span class="nav-sep" aria-hidden="true">—</span> Copy: ${md} — ${txt}</span>`
       : "";
   const read = input.readingMinutes
     ? `<span class="mast-read">${input.readingMinutes} min read</span>`
@@ -450,7 +450,7 @@ export function articleHtml(input: {
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
-<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">|</span> Contents</label>${copy}</p>
+<p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">—</span> Contents</label>${copy}</p>
 </header>
 </div>
 <div class="article-rest">

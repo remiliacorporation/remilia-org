@@ -196,7 +196,7 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
   assert.ok(
     left >= 0 && toc > left && cite > toc && cite < right && nav > right,
   );
-  assert.ok(html.includes("3 min read | 612 words"));
+  assert.ok(html.includes("3 min read — 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
   assert.ok(html.includes("Copy:"));
   assert.ok(html.includes("[URL]"));
