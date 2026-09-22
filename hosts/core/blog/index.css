@@ -367,7 +367,12 @@ article.post-card > header {
   text-align: right;
   text-decoration: none;
 }
-.post-card .card-meta .author:hover {
+.post-card .card-meta .author:hover,
+.post-card .card-meta .author:focus-visible,
+.post-card .card-foot a.byline-cat:hover,
+.post-card .card-foot a.byline-cat:focus-visible,
+.post-card .card-more:hover,
+.post-card .card-more:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }
@@ -424,10 +429,12 @@ article.post-card > header {
   font-weight: var(--weight-strong);
   text-transform: uppercase;
   color: var(--muted);
+  text-decoration: none;
 }
 .post-card .card-more {
   margin: 0;
   text-align: right;
+  text-decoration: none;
 }
 .post-card[hidden] {
   display: none;
