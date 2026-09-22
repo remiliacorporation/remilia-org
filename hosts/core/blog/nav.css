@@ -126,9 +126,10 @@
 }
 .sel-menu {
   position: absolute;
-  right: calc(-1 * var(--border-w));
-  left: calc(-1 * var(--border-w));
-  top: 100%;
+  /* Outset from the control's box so the menu reads as a layer around it. */
+  right: calc(-1 * (var(--grid) + var(--border-w)));
+  left: calc(-1 * (var(--grid) + var(--border-w)));
+  top: calc(100% + var(--border-w));
   z-index: 20;
   margin: 0;
   list-style: none;

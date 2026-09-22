@@ -4,6 +4,12 @@
   padding: var(--space-xs);
   --size-base: var(--size-ui);
 }
+/* base.css clamps .article-body > .sec to level 1, and the cards raise their
+   own links to 2 — the mast has to outrank them so an open dropdown covers
+   the card list instead of being painted through by it. */
+.article-body > .sec.mast {
+  z-index: 5;
+}
 .sec.mast > header {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
