@@ -153,7 +153,7 @@ export function leftRail(
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt ?? "")}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta">${datedHtml(p.date, shortDate(p.date), p.monthHref, "nav-date")} — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt ?? "")}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta">${datedHtml(p.date, shortDate(p.date), p.monthHref, "nav-date")} — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">
@@ -241,14 +241,12 @@ export const NAV_JS = `(() => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
     const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
-    const month = params.get('month') || '';
     const sc = query
       ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
       : 0;
     const ok = (query ? sc >= 0 : true)
       && (!catv || el.dataset.cat === catv)
-      && (!author || el.dataset.author === author)
-      && (!month || el.dataset.month === month);
+      && (!author || el.dataset.author === author);
     return { el, sc, show: ok };
   };
   const apply = () => {
@@ -274,12 +272,11 @@ export const NAV_JS = `(() => {
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
       const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
-      const month = statusEl.dataset.month || params.get('month') || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;
       if (author) t += ' by ' + author;
-      if (month) t += ' from ' + month;
+      if (monthv) t += ' from ' + monthv;
       if (query) t += ' matching \u201C' + query + '\u201D';
       statusEl.textContent = t;
     }
@@ -302,6 +299,14 @@ export const NAV_JS = `(() => {
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
   const tagv = (statusEl && statusEl.dataset.tag) || '';
+  const monthv = (statusEl && statusEl.dataset.month) || '';
+  // Months are archive pages now; the old ?month= filter links on a
+  // section index land on the month's archive instead.
+  const monthParam = params.get('month') || '';
+  if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && statusEl.dataset.section && !tagv && !monthv && !statusEl.dataset.author) {
+    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam + '/');
+    return;
+  }
   const catParam = params.get('cat');
   if (catParam && cat) {
     const b = cat.querySelector('.sel-menu button[data-href][data-value="' + CSS.escape(catParam) + '"]');
