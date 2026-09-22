@@ -313,7 +313,8 @@
 article.post-card > header {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: var(--mast-line) var(--border-w) auto;
+  /* The meta row sizes to its body leading so descenders clear the rule. */
+  grid-template-rows: auto var(--border-w) auto;
   row-gap: var(--grid);
   margin: 0 0 var(--space-xs);
   width: 100%;
@@ -347,7 +348,7 @@ article.post-card > header {
   margin: 0;
   width: 100%;
   color: var(--muted);
-  line-height: var(--mast-line);
+  line-height: var(--leading);
 }
 .post-card .card-meta .author {
   text-align: right;
