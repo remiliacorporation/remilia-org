@@ -499,7 +499,7 @@
   z-index: 10;
   width: var(--card);
   max-width: min(var(--card), calc(100vw - 2 * var(--rail-gap)));
-  background: var(--wm-wash, var(--paper));
+  background: var(--surface);
   color: var(--ink);
   border: var(--border);
   padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
@@ -520,7 +520,7 @@
 .interlink:hover .link-card,
 .interlink:hover .link-card * {
   color: var(--ink);
-  background: var(--wm-wash, var(--paper));
+  background: var(--surface);
   text-decoration: none;
 }
 .interlink:hover {

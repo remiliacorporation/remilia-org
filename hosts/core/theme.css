@@ -86,7 +86,6 @@
   --ink-l: calc(0.54 - 0.15 * var(--hue-wash-4));
   --ink-c: calc(0.2577 - 0.09 * var(--hue-wash-4));
   --paper: oklch(0.984 calc(0.012 + 0.016 * var(--hue-wash-2)) var(--hue));
-  --wm-wash: color-mix(in oklch, var(--ink) 10%, var(--paper));
   --surface: #fff;
 
   --ink: oklch(var(--ink-l) var(--ink-c) var(--hue));
@@ -203,7 +202,6 @@ html[data-scheme="dark"] {
   --ink-l: calc(0.68 + 0.06 * var(--hue-wash-4));
   --ink-c: calc(0.11 - 0.03 * var(--hue-wash-4));
   --paper: oklch(0.15 calc(0.01 + 0.006 * var(--hue-wash-2)) var(--hue));
-  --wm-wash: color-mix(in oklch, var(--paper) 88%, var(--ink));
   --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
   --ink-contrast: oklch(0.13 0.008 var(--hue));
   --focus: #fff;
@@ -214,7 +212,6 @@ html[data-scheme="dark"] {
     --ink-l: calc(0.68 + 0.06 * var(--hue-wash-4));
     --ink-c: calc(0.11 - 0.03 * var(--hue-wash-4));
     --paper: oklch(0.15 calc(0.01 + 0.006 * var(--hue-wash-2)) var(--hue));
-    --wm-wash: color-mix(in oklch, var(--paper) 88%, var(--ink));
     --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
     --ink-contrast: oklch(0.13 0.008 var(--hue));
     --focus: #fff;

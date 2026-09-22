@@ -32,7 +32,7 @@
   line-height: var(--leading);
   border: var(--border);
   padding: var(--grid);
-  background: var(--wm-wash, var(--paper));
+  background: var(--surface);
   text-decoration: none;
   color: inherit;
   overflow-wrap: break-word;
@@ -102,7 +102,7 @@
   line-height: var(--leading);
   border: var(--border);
   padding: var(--grid);
-  background: var(--wm-wash, var(--paper));
+  background: var(--surface);
   text-decoration: none;
   color: inherit;
 }
