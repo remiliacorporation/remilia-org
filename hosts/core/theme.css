@@ -100,6 +100,10 @@
   --size-base: 16px;
   --size-ui: 12px;
   --size-title: 20px;
+  /* Rail wordmark: the largest size that sets REMILIA CORPORATION on one
+     line in the rail box, 211px once the scrollbar gutter is taken
+     (20px runs to 237px, 18px to 213px). */
+  --size-brand: 17px;
   --weight-body: normal;
   --weight-strong: bold;
 

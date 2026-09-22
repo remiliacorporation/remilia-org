@@ -76,7 +76,10 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
     assert.match(news, /data-scheme="dark"/);
     assert.match(news, /data-hue="30"/);
     assert.match(news, /data-dots="none"/);
-    assert.ok(news.includes("REMILIA — NEWS"), "wears the com wordmark");
+    assert.ok(
+      news.includes('<a class="site-title" href="/a/news">REMILIA</a>'),
+      "wears the com wordmark",
+    );
     assert.ok(news.includes('href="https://remilia.com/"'), "links its own root");
     assert.ok(
       news.includes('<link rel="canonical" href="https://remilia.com/a/news">'),
@@ -102,7 +105,9 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
     assert.match(devblog, /data-scheme="light"/);
     assert.match(devblog, /data-hue="255"/);
     assert.match(devblog, /data-dots="large"/);
-    assert.ok(devblog.includes("REMILIANET — DEVBLOG"));
+    assert.ok(
+      devblog.includes('<a class="site-title" href="/blog">REMILIANET</a>'),
+    );
     assert.ok(devblog.includes('href="https://www.remilia.net/"'));
     assert.ok(
       devblog.includes(
@@ -116,9 +121,18 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
   }
 });
 
-test("site-head names the section in the title, not a list of peers", () => {
+test("site-head leads with its links and closes on the brand alone", () => {
   const thought = chromeFor("thought");
-  assert.match(thought.header, /REMILIA CORPORATION — THOUGHT/);
+  assert.match(
+    thought.header,
+    /<a class="site-title" href="\/blog\/thought">REMILIA CORPORATION<\/a>/,
+  );
+  assert.equal(thought.header.includes("THOUGHT"), false);
+  assert.match(
+    thought.header,
+    /<\/nav>\s*<hr class="nav-rule">\s*<a class="site-title"/,
+    "nav row, then rule, then title",
+  );
   assert.match(thought.header, />Index</);
   assert.match(thought.header, /rss\.xml">RSS</);
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
@@ -126,7 +140,11 @@ test("site-head names the section in the title, not a list of peers", () => {
   const index = chromeFor("blog");
   assert.match(index.header, /aria-current="page">Index</);
   const news = chromeFor("news");
-  assert.match(news.header, /REMILIA — NEWS/);
+  assert.match(
+    news.header,
+    /<a class="site-title" href="\/a\/news">REMILIA<\/a>/,
+  );
+  assert.equal(news.header.includes("NEWS"), false);
 });
 
 test("org still wears its own brand and pinned light theme", async () => {
@@ -139,7 +157,11 @@ test("org still wears its own brand and pinned light theme", async () => {
     assert.match(updates, /data-scheme="light"/);
     assert.match(updates, /data-hue="30"/);
     assert.match(updates, /data-dots="small"/);
-    assert.ok(updates.includes("REMILIA CORPORATION — UPDATES"));
+    assert.ok(
+      updates.includes(
+        '<a class="site-title" href="/blog/updates">REMILIA CORPORATION</a>',
+      ),
+    );
     assert.ok(updates.includes('href="https://remilia.org/"'));
   } finally {
     close();
@@ -165,7 +187,10 @@ test("an intentionally empty section still publishes its index", async () => {
       join(outDir, "blog/archive/index.html"),
       "utf8",
     );
-    assert.match(index, /REMILIA CORPORATION — ARCHIVE/);
+    assert.match(
+      index,
+      /<a class="site-title" href="\/blog\/archive">REMILIA CORPORATION<\/a>/,
+    );
     assert.match(index, /id="site-sec"/);
     assert.match(index, />Archive</);
     assert.ok(!index.includes("Post 1"));

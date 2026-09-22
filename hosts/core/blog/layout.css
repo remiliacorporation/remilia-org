@@ -502,12 +502,12 @@
   }
   .left-rail .site-head .site-title {
     height: auto;
-    min-height: var(--mast-line);
+    min-height: var(--mast-title);
     overflow: visible;
   }
   .left-rail .site-head nav {
     height: auto;
-    min-height: var(--mast-title);
+    min-height: var(--mast-line);
     white-space: normal;
     flex-wrap: wrap;
   }

@@ -11,7 +11,6 @@ import {
 const SECTION_META: Record<
   Channel,
   {
-    short: string;
     title: string;
     description: string;
     lead: string;
@@ -19,7 +18,6 @@ const SECTION_META: Record<
   }
 > = {
   updates: {
-    short: "UPDATES",
     title: "Remilia Corporation — Updates",
     description: "Company essays and memos from Remilia Corporation.",
     lead: "Christmas missives, Level-2 notes, Admin Reveal, and similar company essays.",
@@ -29,7 +27,6 @@ const SECTION_META: Record<
     ],
   },
   press: {
-    short: "PRESS",
     title: "Remilia Corporation — Press",
     description: "Org corporate statements from Remilia Corporation.",
     lead: "Corporate statements only. Brand releases (fashion, product launches) live on remilia.com/a/news.",
@@ -39,7 +36,6 @@ const SECTION_META: Record<
     ],
   },
   thought: {
-    short: "THOUGHT",
     title: "Remilia Corporation — Thought",
     description: "Org/product thought leadership — theory and NFTs.",
     lead: "Core Remilia theory and NFT essays — not secondary blog posts.",
@@ -49,7 +45,6 @@ const SECTION_META: Record<
     ],
   },
   archive: {
-    short: "ARCHIVE",
     title: "Remilia Corporation — Archive",
     description: "External coverage (Firecrawl’d) and secondary essays.",
     lead: "Press coverage & interviews (snapshot via Firecrawl) plus secondary Substack/Paragraph.",
@@ -59,7 +54,6 @@ const SECTION_META: Record<
     ],
   },
   news: {
-    short: "NEWS",
     title: "Remilia — News",
     description:
       "Fashion, lifestyle brand, publishing, and brand press releases.",
@@ -69,7 +63,6 @@ const SECTION_META: Record<
     ],
   },
   events: {
-    short: "EVENTS",
     title: "Remilia — Events",
     description: "Event posts from Remilia — writeups with photo galleries.",
     lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
@@ -78,7 +71,6 @@ const SECTION_META: Record<
     ],
   },
   "dev-updates": {
-    short: "UPDATES",
     title: "RemiliaNET — Updates",
     description: "Other RemiliaNET product notes (vault, promos).",
     lead: "Product notes that aren’t full engineering posts. Schema id `dev-updates`; path /updates.",
@@ -88,7 +80,6 @@ const SECTION_META: Record<
     ],
   },
   "dev-blog": {
-    short: "DEVBLOG",
     title: "RemiliaNET — Dev blog",
     description: "RemiliaNET Alpha, wiki, and miladychan engineering posts.",
     lead: "Engineering writeups: RemiliaNET Alpha, wiki, miladychan. Schema id `dev-blog`; path /blog.",
@@ -97,7 +88,6 @@ const SECTION_META: Record<
     ],
   },
   blog: {
-    short: "BLOG",
     title: "Remilia Corporation — Blog",
     description:
       "Every Remilia Corporation post across Updates, Press, Thought and Archive.",
@@ -126,7 +116,6 @@ const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = 
 
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
-  const meta = SECTION_META[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
   // Index points at the pooled index where one exists (org); the other hosts
   // bake standalone sections, so Index is the section itself.
@@ -135,11 +124,11 @@ export function chromeFor(channel: Channel): Chrome {
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
-<a class="site-title" href="${base}">${brand.label} — ${meta.short}</a>
-<hr class="nav-rule">
 <nav aria-label="Site">
 <a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${channel === "blog" ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
+<hr class="nav-rule">
+<a class="site-title" href="${base}">${brand.label}</a>
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">

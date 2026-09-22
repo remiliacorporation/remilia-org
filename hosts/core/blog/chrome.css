@@ -70,9 +70,12 @@
 .left-rail .site-head .site-title {
   text-align: inherit;
   margin: 0;
-  line-height: var(--mast-line);
+  font-size: var(--size-brand);
+  line-height: var(--mast-title);
+  text-transform: uppercase;
+  white-space: nowrap;
   height: auto;
-  min-height: var(--mast-line);
+  min-height: var(--mast-title);
   overflow: visible;
 }
 .left-rail .site-head .nav-rule {
@@ -86,9 +89,9 @@
   white-space: normal;
   text-align: center;
   margin: 0;
-  line-height: var(--mast-title);
+  line-height: var(--mast-line);
   height: auto;
-  min-height: var(--mast-title);
+  min-height: var(--mast-line);
 }
 .site-head nav a[aria-current] {
   background: var(--ink);
