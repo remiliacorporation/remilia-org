@@ -284,6 +284,43 @@ test("index card stretches its link from an overlay the keyboard skips", () => {
   assert.match(html, /<h2><a href="\/press\/vaults">Vaults<\/a><\/h2>/);
 });
 
+test("post dates link to their month archive, keeping the time element", () => {
+  const month = "/press/months/2026-08";
+  const card = indexMain([{ ...POST, monthHref: month }], "");
+  assert.ok(
+    card.includes(
+      `<p class="card-meta"><a class="byline-date" href="${month}"><time datetime="2026-08-01T00:00:00Z">08.01.26</time></a>`,
+    ),
+  );
+  const rail = leftRail([{ ...POST, monthHref: month }], "Press", "/press");
+  assert.ok(
+    rail.includes(
+      `<span class="nav-meta"><a class="nav-date" href="${month}"><time datetime="2026-08-01T00:00:00Z">08.01.26</time></a> — `,
+    ),
+  );
+  const article = articleHtml({
+    title: "Vaults",
+    publishedAt: "2026-08-01T00:00:00Z",
+    monthHref: month,
+    bodyHtml: "<p>x</p>",
+  });
+  assert.ok(
+    article.includes(
+      `<div class="byline"><a class="byline-date" href="${month}"><time datetime="2026-08-01T00:00:00.000Z">08.01.26</time></a>`,
+    ),
+  );
+  const nf = notFoundHtml(CHROME, "/press", {
+    recent: [{ title: "Vaults", url: "/press/vaults", date: POST.date, monthHref: month }],
+  });
+  assert.ok(
+    nf.includes(
+      `<a class="post-date" href="${month}"><time datetime="2026-08-01T00:00:00Z">2026-08-01</time></a>`,
+    ),
+  );
+  // Without an archive the date stays a plain time.
+  assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
+});
+
 test("listing controls share one masthead tools line", () => {
   const html = indexMain(
     [POST],

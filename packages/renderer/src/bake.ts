@@ -398,6 +398,18 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     cards.set(`${postBase(p)}/${p.slug}`, card);
   }
 
+  // Dates link to the post's month archive — which only exists for a month
+  // holding at least one indexable post.
+  const archivedMonths = new Set(
+    posts.filter((p) => !p.noIndex).map((p) => monthKey(p.publishedAt)),
+  );
+  const monthHrefFor = (p: FetchedPost): string | undefined => {
+    const month = monthKey(p.publishedAt);
+    return archivedMonths.has(month)
+      ? `${postBase(p)}/months/${month}`
+      : undefined;
+  };
+
   // The card's category is the section it lives under — the index is shared
   // between channels, so the filter dropdown groups by section, not tag.
   const navPosts: NavPost[] = posts.map((p) => ({
@@ -409,6 +421,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     authorHref: p.authors?.[0]
       ? `${postBase(p)}/authors/${slugify(p.authors[0].name)}`
       : undefined,
+    monthHref: monthHrefFor(p),
     excerpt: p.excerpt,
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
     author: p.authors?.map((a) => a.name).join(", "),
@@ -615,7 +628,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         canonical: pageUrl,
         category: CHANNEL_LABEL[channel],
         categoryHref: basePath,
-        monthHref: `${basePath}/?month=${p.publishedAt.slice(0, 7)}`,
+        monthHref: monthHrefFor(p),
         bodyHtml: galleries ? `${bodyWithHero}\n${galleries}` : bodyWithHero,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
         mdHref: `${basePath}/${p.slug}.md`,
@@ -737,6 +750,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
                   ? `${basePath}/authors/${slugify(p.author)}`
                   : undefined),
               categoryHref: p.categoryHref,
+              monthHref: p.monthHref,
             })),
             filterBar(slice, sharedCats),
             { page, pages, prevHref, nextHref },
@@ -960,6 +974,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         title: p.title,
         url: p.url,
         date: p.date,
+        monthHref: p.monthHref,
       })),
     }),
   );

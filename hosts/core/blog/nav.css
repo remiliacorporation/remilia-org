@@ -174,7 +174,7 @@
 .nav-all li:last-child {
   margin: 0;
 }
-.nav-all li a {
+.nav-all li > a {
   display: block;
   min-width: 0;
   text-decoration: none;
@@ -216,6 +216,18 @@
 .nav-meta .nav-cat {
   font-style: normal;
   color: var(--muted);
+}
+.nav-meta .nav-date {
+  color: var(--muted);
+  text-decoration: none;
+}
+.nav-meta .nav-date time {
+  color: inherit;
+}
+.nav-meta .nav-date:hover,
+.nav-meta .nav-date:focus-visible {
+  background: var(--ink);
+  color: var(--ink-contrast);
 }
 .nav-cat {
   border: 0;

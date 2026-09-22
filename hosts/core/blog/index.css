@@ -332,6 +332,7 @@ article.post-card > header {
 }
 .post-card h2 a,
 .post-card .card-thumb,
+.post-card .card-meta .byline-date,
 .post-card .card-meta .author,
 .post-card .byline-cat,
 .post-card .card-more {
@@ -353,8 +354,15 @@ article.post-card > header {
   text-decoration: none;
 }
 .post-card .card-meta time,
+.post-card .card-meta .byline-date,
 .post-card .card-meta .author {
   color: var(--muted);
+}
+.post-card .card-meta .byline-date {
+  text-decoration: none;
+}
+.post-card .card-meta a.byline-date time {
+  color: inherit;
 }
 .post-card .card-row {
   display: grid;
@@ -423,6 +431,7 @@ article.post-card > header {
 .post-card:hover .card-ex,
 .post-card:hover .card-meta,
 .post-card:hover .card-meta time,
+.post-card:hover .card-meta .byline-date,
 .post-card:hover .card-meta .author,
 .post-card:hover .card-foot .byline-cat,
 .post-card:hover .card-more,
@@ -430,6 +439,7 @@ article.post-card > header {
 .post-card:focus-within .card-ex,
 .post-card:focus-within .card-meta,
 .post-card:focus-within .card-meta time,
+.post-card:focus-within .card-meta .byline-date,
 .post-card:focus-within .card-meta .author,
 .post-card:focus-within .card-foot .byline-cat,
 .post-card:focus-within .card-more {
@@ -448,6 +458,8 @@ article.post-card > header {
    inverted card, as chrome links do against the page. */
 .post-card h2 a:hover,
 .post-card h2 a:focus-visible,
+.post-card .card-meta a.byline-date:hover,
+.post-card .card-meta a.byline-date:focus-visible,
 .post-card .card-meta a.author:hover,
 .post-card .card-meta a.author:focus-visible,
 .post-card .card-foot a.byline-cat:hover,

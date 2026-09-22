@@ -1,5 +1,5 @@
 import { THEME_JS } from "./theme";
-import { NAV_SEARCH } from "./nav";
+import { NAV_SEARCH, datedHtml } from "./nav";
 import {
   type Channel,
   CHANNEL_BASEPATH,
@@ -422,10 +422,12 @@ export function articleHtml(input: {
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
       : `<span class="author">${esc(input.byline)}</span>`
     : `<span class="author"></span>`;
-  const time = `<time datetime="${date.toISOString()}">${bylineDate(input.publishedAt)}</time>`;
-  const dated = input.monthHref
-    ? `<a class="byline-date" href="${esc(input.monthHref)}">${time}</a>`
-    : time;
+  const dated = datedHtml(
+    date.toISOString(),
+    bylineDate(input.publishedAt),
+    input.monthHref,
+    "byline-date",
+  );
   const meta = input.metaHtml
     ? `\n<div class="sec post-meta">${input.metaHtml}</div>`
     : "";
@@ -476,6 +478,8 @@ export interface IndexCard {
   authorHref?: string;
   /** Tag archive; falls back to a plain label. */
   categoryHref?: string;
+  /** Month archive; falls back to a plain date. */
+  monthHref?: string;
 }
 
 export interface Pager {
@@ -539,7 +543,7 @@ ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
       return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(month)}">
 <a class="card-hit" href="${esc(p.url)}" tabindex="-1" aria-hidden="true"></a>
 <header>
-<p class="card-meta"><time datetime="${esc(p.date)}">${bylineDate(p.date)}</time>${author}</p>
+<p class="card-meta">${datedHtml(p.date, bylineDate(p.date), p.monthHref, "byline-date")}${author}</p>
 <hr class="nav-rule">
 <h2><a href="${esc(p.url)}">${esc(p.title)}</a></h2>
 </header>
@@ -611,7 +615,7 @@ export function notFoundHtml(
   input: {
     sectionTitle?: string;
     channel?: Channel;
-    recent?: { title: string; url: string; date: string }[];
+    recent?: { title: string; url: string; date: string; monthHref?: string }[];
   } = {},
 ): string {
   const section = input.sectionTitle ?? "this section";
@@ -622,7 +626,7 @@ export function notFoundHtml(
 ${recent
   .map(
     (p) =>
-      `<li><a href="${esc(p.url)}">${esc(p.title)}</a> <time datetime="${esc(p.date)}">${esc(p.date.slice(0, 10))}</time></li>`,
+      `<li><a href="${esc(p.url)}">${esc(p.title)}</a> ${datedHtml(p.date, p.date.slice(0, 10), p.monthHref, "post-date")}</li>`,
   )
   .join("\n")}
 </ul>`

@@ -11,12 +11,27 @@ export interface NavPost {
   /** Overrides the section-derived links — pooled listings point home per post. */
   categoryHref?: string;
   authorHref?: string;
+  /** The month archive the post's date links to. */
+  monthHref?: string;
 }
 
 const MAGNIFYING_GLASS = `<svg class="nav-search-icon" width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>`;
 export const NAV_SEARCH = `<form class="nav-search" role="search">
 <span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>`;
+
+/** A post date, linked to its month archive when there is one. */
+export function datedHtml(
+  iso: string,
+  text: string,
+  monthHref: string | undefined,
+  cls: string,
+): string {
+  const time = `<time datetime="${esc(iso)}">${esc(text)}</time>`;
+  return monthHref
+    ? `<a class="${cls}" href="${esc(monthHref)}">${time}</a>`
+    : time;
+}
 
 function shortDate(iso: string): string {
   const d = new Date(iso);
@@ -138,7 +153,7 @@ export function leftRail(
   const items = byDate
     .map(
       (p) =>
-        `<li data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt ?? "")}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta"><time datetime="${esc(p.date)}">${shortDate(p.date)}</time> — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
+        `<li data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt ?? "")}" data-date="${esc(p.date)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}" data-month="${esc(p.date.slice(0, 7))}"><a href="${esc(p.url)}"${p.url === currentUrl ? ' aria-current="page"' : ""}>${esc(p.title)}</a><span class="nav-meta">${datedHtml(p.date, shortDate(p.date), p.monthHref, "nav-date")} — <span class="nav-cat">${esc(p.category)}</span></span></li>`,
     )
     .join("\n");
   return `<div class="post-nav rail">

@@ -340,7 +340,7 @@ await writeFile(
       canonical,
       category: "Feature",
       categoryHref: "/blog/press/?cat=Feature",
-      monthHref: "/blog/press/?month=2026-08",
+      monthHref: "/blog/press/months/2026-08",
       bodyHtml,
       metaHtml: adjacentHtml(navPosts, `/press/${post.slug}`),
       mdHref: `/press/${post.slug}.md`,

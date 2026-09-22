@@ -268,6 +268,15 @@ test("a section bakes a paginated archive and a directory for each month", async
     ])
       assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
 
+    // Card, byline and rail dates link to the month archive.
+    assert.ok(dec1.includes('<a class="byline-date" href="/blog/updates/months/2024-12">'));
+    const post = await read("blog/updates/dated-23/index.html");
+    assert.ok(
+      post.includes('<div class="byline"><a class="byline-date" href="/blog/updates/months/2024-11">'),
+    );
+    assert.ok(post.includes('<a class="nav-date" href="/blog/updates/months/2024-09">'));
+    assert.ok(!post.includes("?month="));
+
     assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
   } finally {
     fixture.close();
