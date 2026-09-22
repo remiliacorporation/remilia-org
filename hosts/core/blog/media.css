@@ -93,6 +93,12 @@
 .post-card:focus-within .card-thumb .ht-ink {
   opacity: var(--ht-ink-op-h, 1);
 }
+/* Pointing at (or tabbing to) a card's image flips its halftone to the
+   negative: the image's own invert inside the inverted card. */
+.post-card .card-thumb:hover .ht-map,
+.post-card .card-thumb:focus-visible .ht-map {
+  filter: var(--dither-filter, url(#dither-3)) invert(1);
+}
 .gallery {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
