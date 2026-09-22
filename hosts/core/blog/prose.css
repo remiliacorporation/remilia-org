@@ -93,7 +93,7 @@ h3,
   content: "";
   position: absolute;
   left: calc(-1 * var(--space-s));
-  top: 6px;
+  top: 5px;
   width: var(--grid);
   height: var(--grid);
   background: var(--ink);

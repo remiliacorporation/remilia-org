@@ -5,7 +5,7 @@
      scale, dither) is defined once in theme.css. */
   --grid: 4px;
   --leading: 1.3334;
-  --leading-prose: 1.6667;
+  --leading-prose: 1.5;
   --leading-tight: 1.2;
 
   --card: 280px;
