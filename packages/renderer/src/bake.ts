@@ -257,6 +257,22 @@ function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
   return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
 }
 
+/** The UTC calendar month a timestamp falls in, as `YYYY-MM`. */
+export function monthKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** `2024-12` → `December 2024`. */
+export function monthLabel(key: string): string {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export interface IndexEntry {
   title: string;
   url: string;
@@ -651,7 +667,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     trail: { name: string; url: string }[];
     alternates?: { type: string; title: string; href: string }[];
     feed?: boolean;
-    filter?: { tag?: string; author?: string };
+    filter?: { tag?: string; author?: string; month?: string };
   }): Promise<void> => {
     const root = listing.at ? `${basePath}/${listing.at}` : basePath;
     const rootDir = join(
@@ -770,12 +786,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     ],
   });
 
-  // Tags and authors are authored on every post but only ever drove a
-  // client-side filter; each term now has a crawlable archive with its own
-  // feed, and a directory page lists them. Aggregates skip term archives —
-  // those live on the sections.
+  // Tags, authors and publication months each get a crawlable archive per
+  // term, and a directory page lists the terms. Aggregates skip term
+  // archives — those live on the sections.
   const termsOf = (
     pick: (p: FetchedPost) => string[],
+    slugOf: (label: string) => string = slugify,
   ): { label: string; slug: string; posts: NavPost[] }[] => {
     const byTerm = new Map<string, { label: string; posts: NavPost[] }>();
     for (const p of posts) {
@@ -784,7 +800,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       for (const label of pick(p)) {
         const trimmed = label.trim();
         if (!trimmed) continue;
-        const slug = slugify(trimmed);
+        const slug = slugOf(trimmed);
         const bucket = byTerm.get(slug) ?? { label: trimmed, posts: [] };
         bucket.posts.push(nav);
         byTerm.set(slug, bucket);
@@ -800,18 +816,39 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     heading: string;
     noun: string;
     terms: { label: string; slug: string; posts: NavPost[] }[];
+    filter: (label: string) => { tag?: string; author?: string; month?: string };
+    describe: (label: string) => string;
+    feed: boolean;
   }[] = [
     {
       at: "tags",
       heading: `${host.title} — Tags`,
       noun: "Tag",
       terms: termsOf((p) => p.tags ?? []),
+      filter: (tag) => ({ tag }),
+      describe: (tag) => `Posts tagged ${tag} in ${host.title}.`,
+      feed: true,
     },
     {
       at: "authors",
       heading: `${host.title} — Authors`,
       noun: "Author",
       terms: termsOf((p) => p.authors?.map((a) => a.name) ?? []),
+      filter: (author) => ({ author }),
+      describe: (author) => `Posts by ${author} in ${host.title}.`,
+      feed: true,
+    },
+    {
+      at: "months",
+      heading: `${host.title} — Months`,
+      noun: "Month",
+      terms: termsOf((p) => [monthKey(p.publishedAt)], (key) => key)
+        .map((t) => ({ ...t, label: monthLabel(t.slug) }))
+        .sort((a, b) => b.slug.localeCompare(a.slug)),
+      filter: (month) => ({ month }),
+      describe: (month) => `Posts from ${month} in ${host.title}.`,
+      // A closed month never gains posts, so its feed would never update.
+      feed: false,
     },
   ];
 
@@ -820,10 +857,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     for (const term of taxonomy.terms)
       await writeListing({
         at: `${taxonomy.at}/${term.slug}`,
-        filter:
-          taxonomy.noun === "Tag" ? { tag: term.label } : { author: term.label },
+        filter: taxonomy.filter(term.label),
         title: `${term.label} — ${host.title}`,
-        description: `${taxonomy.noun === "Tag" ? "Posts tagged" : "Posts by"} ${term.label} in ${host.title}.`,
+        description: taxonomy.describe(term.label),
         posts: term.posts,
         trail: [
           { name: site.name, url: `${site.origin}/` },
@@ -837,7 +873,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             url: `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}/${term.slug}`,
           },
         ],
-        feed: true,
+        feed: taxonomy.feed,
       });
 
     const dirUrl = `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}`;

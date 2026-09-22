@@ -40,14 +40,16 @@ const posts = Array.from({ length: 25 }, (_, i) => ({
   tags: [i % 3 === 0 ? "Theory" : "Notes"],
 }));
 
-async function fixtureServer(): Promise<{ url: string; close: () => void }> {
+async function fixtureServer(
+  served: unknown[] = posts,
+): Promise<{ url: string; close: () => void }> {
   const server: Server = createServer((req, res) => {
     const query = decodeURIComponent(new URL(req.url ?? "/", "http://x").search);
     const body = query.includes('_id == "org"')
       ? { result: { name: "Remigumi-guchi Digital, LLC" } }
       : query.includes("count(")
-        ? { result: posts.length }
-        : { result: posts };
+        ? { result: served.length }
+        : { result: served };
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(body));
   });
@@ -60,43 +62,50 @@ async function fixtureServer(): Promise<{ url: string; close: () => void }> {
   };
 }
 
+/** Host-level files a section links to but does not own — including the
+ * shared index and sibling sections the category nav points at. */
+async function hostStubs(outDir: string): Promise<void> {
+  await mkdir(join(outDir, "assets"), { recursive: true });
+  for (const dir of ["blog", "blog/press", "blog/thought", "blog/archive"])
+    await mkdir(join(outDir, dir), { recursive: true });
+  for (const file of [
+    "assets/emblem.svg",
+    "assets/logo.png",
+    "assets/apple-touch-icon.png",
+    "assets/og.png",
+    "favicon.ico",
+    "site.webmanifest",
+    "index.html",
+    "llms.txt",
+    "llms-full.txt",
+    "blog/index.html",
+    "blog/press/index.html",
+    "blog/thought/index.html",
+    "blog/archive/index.html",
+  ])
+    await writeFile(join(outDir, file), "stub");
+}
+
+async function bakeUpdates(outDir: string, apiHost: string): Promise<void> {
+  await bake({
+    channel: "updates",
+    chrome: CHROME,
+    host: HOST,
+    outDir,
+    projectId: "test",
+    dataset: "production",
+    token: "sk-test",
+    apiHost,
+    stylesheets: [],
+  });
+}
+
 test("a section bakes paginated listings, taxonomy archives and resolvable links", async () => {
   const fixture = await fixtureServer();
   const outDir = await mkdtemp(join(tmpdir(), "bake-listings-"));
   try {
-    // Host-level files a section links to but does not own — including the
-    // shared index and sibling sections the category nav points at.
-    await mkdir(join(outDir, "assets"), { recursive: true });
-    for (const dir of ["blog", "blog/press", "blog/thought", "blog/archive"])
-      await mkdir(join(outDir, dir), { recursive: true });
-    for (const file of [
-      "assets/emblem.svg",
-      "assets/logo.png",
-      "assets/apple-touch-icon.png",
-      "assets/og.png",
-      "favicon.ico",
-      "site.webmanifest",
-      "index.html",
-      "llms.txt",
-      "llms-full.txt",
-      "blog/index.html",
-      "blog/press/index.html",
-      "blog/thought/index.html",
-      "blog/archive/index.html",
-    ])
-      await writeFile(join(outDir, file), "stub");
-
-    await bake({
-      channel: "updates",
-      chrome: CHROME,
-      host: HOST,
-      outDir,
-      projectId: "test",
-      dataset: "production",
-      token: "sk-test",
-      apiHost: fixture.url,
-      stylesheets: [],
-    });
+    await hostStubs(outDir);
+    await bakeUpdates(outDir, fixture.url);
     const page1 = await readFile(join(outDir, "blog/updates/index.html"), "utf8");
     const page2 = await readFile(
       join(outDir, "blog/updates/page/2/index.html"),
@@ -175,6 +184,91 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     assert.ok(written.includes("tags"));
     assert.ok(written.includes("authors"));
     assert.ok(written.includes("page"));
+  } finally {
+    fixture.close();
+  }
+});
+
+test("a section bakes a paginated archive and a directory for each month", async () => {
+  // 22 posts in December (two pages), 3 in November, 2 in September —
+  // newest first, as the posts query returns them.
+  const dates = [
+    ...Array.from({ length: 22 }, (_, i) => `2024-12-${String(22 - i).padStart(2, "0")}T12:00:00.000Z`),
+    "2024-11-30T23:30:00.000Z",
+    "2024-11-15T12:00:00.000Z",
+    "2024-11-01T00:00:00.000Z",
+    "2024-09-20T12:00:00.000Z",
+    "2024-09-02T12:00:00.000Z",
+  ];
+  const monthly = dates.map((publishedAt, i) => ({
+    ...posts[0],
+    title: `Dated ${i + 1}`,
+    slug: `dated-${i + 1}`,
+    publishedAt,
+    updatedAt: publishedAt,
+  }));
+  const fixture = await fixtureServer(monthly);
+  const outDir = await mkdtemp(join(tmpdir(), "bake-months-"));
+  try {
+    await hostStubs(outDir);
+    await bakeUpdates(outDir, fixture.url);
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const cards = (html: string) =>
+      (html.match(/class="sec post-card"/g) ?? []).length;
+
+    const dec1 = await read("blog/updates/months/2024-12/index.html");
+    const dec2 = await read("blog/updates/months/2024-12/page/2/index.html");
+    assert.equal(cards(dec1), 20);
+    assert.equal(cards(dec2), 2);
+    assert.ok(dec1.includes("Page 1 of 2"));
+    assert.ok(
+      dec1.includes(
+        '<link rel="next" href="https://remilia.org/blog/updates/months/2024-12/page/2">',
+      ),
+    );
+    assert.ok(
+      dec2.includes(
+        '<link rel="prev" href="https://remilia.org/blog/updates/months/2024-12">',
+      ),
+    );
+    assert.ok(
+      dec1.includes(
+        '<h1 data-month="December 2024" data-section="Updates">Showing all Updates posts from December 2024</h1>',
+      ),
+    );
+    assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Updates</title>"));
+
+    const nov = await read("blog/updates/months/2024-11/index.html");
+    assert.equal(cards(nov), 3, "months are UTC calendar months");
+    assert.ok(nov.includes("Showing all Updates posts from November 2024"));
+    assert.equal(cards(await read("blog/updates/months/2024-09/index.html")), 2);
+    // No October posts, no October page; a closed month carries no feed.
+    const months = await readdir(join(outDir, "blog/updates/months"));
+    assert.deepEqual(months.sort(), ["2024-09", "2024-11", "2024-12", "index.html"]);
+    assert.ok(!(await readdir(join(outDir, "blog/updates/months/2024-12"))).includes("rss.xml"));
+
+    // The directory lists months newest first with their post counts.
+    const dir = await read("blog/updates/months/index.html");
+    assert.ok(dir.includes("Showing all months"));
+    const rows = [...dir.matchAll(/<li><a href="([^"]+)">([^<]+)<\/a> <span class="term-count">(\d+)<\/span><\/li>/g)]
+      .map((m) => [m[1], m[2], m[3]]);
+    assert.deepEqual(rows, [
+      ["/blog/updates/months/2024-12", "December 2024", "22"],
+      ["/blog/updates/months/2024-11", "November 2024", "3"],
+      ["/blog/updates/months/2024-09", "September 2024", "2"],
+    ]);
+
+    const sitemap = await read("blog/updates/sitemap.xml");
+    for (const loc of [
+      "https://remilia.org/blog/updates/months",
+      "https://remilia.org/blog/updates/months/2024-12",
+      "https://remilia.org/blog/updates/months/2024-12/page/2",
+      "https://remilia.org/blog/updates/months/2024-11",
+      "https://remilia.org/blog/updates/months/2024-09",
+    ])
+      assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
   } finally {
     fixture.close();
   }

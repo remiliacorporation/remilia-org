@@ -259,7 +259,7 @@ export const NAV_JS = `(() => {
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
       const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
-      const month = params.get('month') || '';
+      const month = statusEl.dataset.month || params.get('month') || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;

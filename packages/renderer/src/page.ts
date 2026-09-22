@@ -505,15 +505,16 @@ export function indexMain(
   posts: IndexCard[],
   toolsHtml: string,
   pager?: Pager,
-  filter?: { tag?: string; author?: string; section?: string },
+  filter?: { tag?: string; author?: string; month?: string; section?: string },
   sectionSel?: string,
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
+  const month = filter?.month ?? "";
   const section = filter?.section ?? "";
   const surface = section ? `${section} posts` : "posts";
-  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}`;
-  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}`;
+  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}`;
   const cards = posts
     .map((p) => {
       const month = p.date.slice(0, 7);
