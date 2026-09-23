@@ -40,7 +40,9 @@ h3,
 .prose h2,
 .prose h3,
 .prose h4 {
-  margin: var(--space) 0 var(--space-s);
+  /* More air above a heading than below, so it binds to its own text.
+     Each level sets its own top margin below. */
+  margin: 0 0 var(--space-xs);
   line-height: var(--leading-tight);
   text-wrap: balance;
   hanging-punctuation: first allow-end;
@@ -48,13 +50,16 @@ h3,
   hyphens: auto;
 }
 .sec > :first-child,
-.sec > .prose > :first-child {
+.sec > .prose > :first-child,
+.sec > .prose > :is(.h2-sec, .h3-sec):first-child > :first-child {
   margin-top: 0;
 }
 .article-body > .sec > .prose > :last-child {
   margin-bottom: 0;
 }
 .prose h2 {
+  margin-top: var(--space-l);
+  font-size: var(--size-title);
   font-weight: var(--weight-strong);
   text-align: left;
   text-decoration: underline;
@@ -66,18 +71,14 @@ h3,
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: var(--track-caps);
-  line-height: 1;
-  margin: var(--space-s) 0 var(--space-xs);
+  margin-top: var(--space);
 }
 .prose h4 {
+  margin-top: var(--space-s);
   font-weight: var(--weight-body);
   text-decoration: underline;
   text-transform: none;
   font-style: normal;
-}
-.prose h2 > .hlink,
-.prose h3 > .hlink {
-  font-weight: var(--weight-strong);
 }
 .prose .h2-sec,
 .prose .h3-sec {
@@ -238,6 +239,10 @@ h3,
 .prose :is(h2, h3) > .hlink {
   position: relative;
   display: block;
+  /* The universal rule would set the link at the body size and leading
+     inside a larger heading. */
+  font-size: inherit;
+  line-height: inherit;
   color: inherit;
   text-decoration: inherit;
 }
