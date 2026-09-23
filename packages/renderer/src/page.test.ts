@@ -10,7 +10,7 @@ import {
   indexMain,
   type Chrome,
 } from "./page";
-import { filterBar, leftRail } from "./nav";
+import { dateSel, filterBar, leftRail } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -336,6 +336,78 @@ test("listing controls share one masthead tools line", () => {
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
   assert.equal(html.includes('class="nav-page"'), false);
+});
+
+const MONTHS = ["2024-12", "2024-04", "2023-11", "2023-09", "2022-06"].map(
+  (key) => ({ key, href: `/blog/updates/months/${key}` }),
+);
+
+/** The menu's direct options and year rows, in order. */
+const menuRows = (html: string): string[] =>
+  [
+    ...html
+      .slice(html.indexOf('<ul class="sel-menu">'))
+      .replace(/<ul class="sel-sub">[\s\S]*?<\/ul>/g, "")
+      .matchAll(/<button [^>]*>([^<]+)<\/button>|<summary><span class="sel-label">([^<]+)<\/span>/g),
+  ].map((m) => m[1] ?? `year ${m[2]}`);
+
+test("date dropdown lists the newest year flat and nests older years", () => {
+  const html = dateSel([...MONTHS].reverse(), "/blog/updates");
+  assert.match(html, /^<details class="sel date-sel" id="post-date" data-value="" aria-label="Date">/);
+  assert.match(html, /<summary><span class="sel-label">All dates<\/span><span class="sel-mark"><\/span><\/summary>/);
+  assert.deepEqual(menuRows(html), [
+    "All dates",
+    "December 2024",
+    "April 2024",
+    "year 2023",
+    "year 2022",
+  ]);
+  // Older years are collapsed native <details> rows holding month names only.
+  const y2023 = html.match(/<li class="sel-year"><details><summary><span class="sel-label">2023<\/span><span class="sel-mark"><\/span><\/summary><ul class="sel-sub">([\s\S]*?)<\/ul><\/details><\/li>/);
+  assert.ok(y2023, "2023 is a collapsed sublist");
+  assert.deepEqual(
+    [...y2023[1].matchAll(/data-href="([^"]+)">([^<]+)</g)].map((m) => [m[1], m[2]]),
+    [
+      ["/blog/updates/months/2023-11", "November"],
+      ["/blog/updates/months/2023-09", "September"],
+    ],
+  );
+  assert.ok(html.includes('<button type="button" data-value="" data-href="/blog/updates" aria-current="page">All dates</button>'));
+  assert.ok(html.includes('<button type="button" data-value="2024-12" data-href="/blog/updates/months/2024-12">December 2024</button>'));
+  assert.equal(html.includes("<details open>"), false);
+  assert.equal(html.includes('class="sel-year"><details class='), false, "the nested year is not a .sel");
+});
+
+test("date dropdown marks the month being shown and opens its year", () => {
+  const html = dateSel(MONTHS, "/blog", "2023-09");
+  assert.match(html, /data-value="2023-09" aria-label="Date">\n<summary><span class="sel-label">September 2023<\/span>/);
+  assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
+  assert.ok(html.includes('data-value="2023-09" data-href="/blog/updates/months/2023-09" aria-current="page">September</button>'));
+  assert.ok(html.includes('<details open><summary><span class="sel-label">2023</span>'));
+  assert.ok(html.includes('<details><summary><span class="sel-label">2022</span>'));
+  assert.ok(html.includes('data-value="" data-href="/blog">All dates</button>'));
+
+  const newest = dateSel(MONTHS, "/blog", "2024-04");
+  assert.match(newest, /<span class="sel-label">April 2024<\/span>/);
+  assert.equal(newest.includes("<details open>"), false);
+});
+
+test("date dropdown is absent without month archives", () => {
+  assert.equal(dateSel([], "/blog/press"), "");
+});
+
+test("date dropdown sits between authors and section in the tools line", () => {
+  const html = indexMain(
+    [POST],
+    `${filterBar([POST])}${dateSel(MONTHS, "/blog/updates")}`,
+    undefined,
+    undefined,
+    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+  );
+  assert.match(
+    html,
+    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+  );
 });
 
 test("gallery renders figures with alt and a dialog lightbox", () => {

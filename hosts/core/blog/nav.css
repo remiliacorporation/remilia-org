@@ -162,6 +162,44 @@
   background: var(--ink);
   color: var(--ink-contrast);
 }
+.sel-menu button[aria-current] {
+  font-weight: var(--weight-strong);
+}
+/* An older year in the date menu: a row that expands in place, its months
+   indented beneath it. */
+.sel-year > details > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--grid);
+  list-style: none;
+  cursor: pointer;
+  padding: var(--grid) var(--space-xs);
+  white-space: nowrap;
+  background: var(--surface);
+  color: var(--ink);
+}
+.sel-year > details > summary::-webkit-details-marker,
+.sel-year > details > summary::marker {
+  display: none;
+  content: none;
+}
+.sel-year > details > summary:hover,
+.sel-year > details > summary:focus-visible {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
+.sel-year > details:not([open]) .sel-mark::before {
+  content: "\25B8";
+}
+.sel-sub {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--border);
+}
+.sel-sub button {
+  padding-left: var(--space);
+}
 .nav-all {
   list-style: none;
   min-height: calc(4 * (2 * var(--leading-tight) + var(--grid)));

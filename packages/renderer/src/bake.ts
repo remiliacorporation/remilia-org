@@ -52,6 +52,7 @@ import {
 import {
   leftRail,
   emptyRail,
+  dateSel,
   filterBar,
   sectionSel,
   NAV_JS,
@@ -409,6 +410,17 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       ? `${postBase(p)}/months/${month}`
       : undefined;
   };
+  // The date control offers this listing's own month archives — the
+  // section's, or the pooled ones on an aggregate.
+  const dateNav = (current?: string): string =>
+    dateSel(
+      [...archivedMonths].map((key) => ({
+        key,
+        href: `${basePath}/months/${key}`,
+      })),
+      basePath,
+      current,
+    );
 
   // The card's category is the section it lives under — the index is shared
   // between channels, so the filter dropdown groups by section, not tag.
@@ -681,6 +693,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     alternates?: { type: string; title: string; href: string }[];
     feed?: boolean;
     filter?: { tag?: string; author?: string; month?: string };
+    /** The date control; omitted where picking a month would drop a filter. */
+    dateNav?: string;
   }): Promise<void> => {
     const root = listing.at ? `${basePath}/${listing.at}` : basePath;
     const rootDir = join(
@@ -752,7 +766,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               categoryHref: p.categoryHref,
               monthHref: p.monthHref,
             })),
-            filterBar(slice, sharedCats),
+            `${filterBar(slice, sharedCats)}${listing.dateNav ?? ""}`,
             { page, pages, prevHref, nextHref },
             {
               ...listing.filter,
@@ -782,6 +796,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     title: host.title,
     description: host.description,
     posts: navPosts,
+    dateNav: dateNav(),
     trail: [
       { name: site.name, url: `${site.origin}/` },
       { name: host.title, url: indexUrl(channel) },
@@ -836,6 +851,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     feed: boolean;
     /** Also baked for an aggregate, over the pooled posts. */
     pooled?: boolean;
+    /** The date control for a term's archive, if it offers one. */
+    dateNav?: (slug: string) => string;
   }[] = [
     {
       at: "tags",
@@ -867,6 +884,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       // A closed month never gains posts, so its feed would never update.
       feed: false,
       pooled: true,
+      dateNav,
     },
   ];
 
@@ -892,6 +910,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           },
         ],
         feed: taxonomy.feed,
+        dateNav: taxonomy.dateNav?.(term.slug),
       });
 
     const dirUrl = `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}`;

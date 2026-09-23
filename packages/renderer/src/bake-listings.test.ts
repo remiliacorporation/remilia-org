@@ -157,6 +157,15 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     );
     assert.ok(authorDir.includes('href="/blog/updates/authors/charlotte-fang"'));
 
+    // The date dropdown rides every page of the index, but a tag or author
+    // archive would lose its filter to a month pick, so it has none.
+    for (const page of [page1, page2]) {
+      assert.ok(page.includes('id="post-date" data-value=""'));
+      assert.ok(page.includes('data-href="/blog/updates/months/2026-09">September 2026</button>'));
+    }
+    for (const page of [theory, author, tagDir, authorDir])
+      assert.equal(page.includes('id="post-date"'), false);
+
     // A post's byline points at its section index and author archive.
     const post = await readFile(
       join(outDir, "blog/updates/post-1/index.html"),
@@ -237,6 +246,16 @@ test("a section bakes a paginated archive and a directory for each month", async
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Updates</title>"));
+    // The date dropdown names the month shown, on each of its pages.
+    for (const page of [dec1, dec2]) {
+      assert.ok(page.includes('id="post-date" data-value="2024-12"'));
+      assert.ok(page.includes('<span class="sel-label">December 2024</span>'));
+      assert.ok(
+        page.includes(
+          'data-value="2024-12" data-href="/blog/updates/months/2024-12" aria-current="page">December 2024</button>',
+        ),
+      );
+    }
 
     const nov = await read("blog/updates/months/2024-11/index.html");
     assert.equal(cards(nov), 3, "months are UTC calendar months");
@@ -408,6 +427,18 @@ test("the pooled index bakes month archives across every section", async () => {
       "https://remilia.org/blog/months/2022-06",
     ])
       assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
+
+    // The pooled date dropdown offers the pooled months; an older month's
+    // page opens its year.
+    const index = await read("blog/index.html");
+    assert.ok(index.includes('id="post-date" data-value=""'));
+    assert.ok(index.includes('data-href="/blog/months/2024-12">December 2024</button>'));
+    assert.ok(index.includes('data-href="/blog/months/2022-06">June</button>'));
+    assert.equal(index.includes('data-href="/blog/updates/months/'), false);
+    const nov = await read("blog/months/2023-11/index.html");
+    assert.ok(nov.includes('<span class="sel-label">November 2023</span>'));
+    assert.ok(nov.includes('<details open><summary><span class="sel-label">2023</span>'));
+    assert.ok(nov.includes('data-href="/blog/months/2023-11" aria-current="page">November</button>'));
 
     // Section month archives stay per section.
     assert.equal(cards(await read("blog/updates/months/2024-12/index.html")), 12);

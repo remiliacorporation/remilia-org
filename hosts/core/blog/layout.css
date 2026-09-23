@@ -30,6 +30,17 @@
     flex-wrap: wrap;
     row-gap: var(--grid);
   }
+  /* The listing controls take two lines: search across the full width,
+     the dropdowns sharing the line beneath it. */
+  .sec.mast.index-mast > header {
+    grid-template-rows: var(--mast-line) var(--border-w) auto;
+  }
+  .index-mast .mast-tools .nav-search {
+    flex: 1 0 100%;
+  }
+  .index-mast .mast-tools details.sel {
+    flex: 1 1 auto;
+  }
   .theme-hues label,
   .theme-dots label,
   .theme-mode {

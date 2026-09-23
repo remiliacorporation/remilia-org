@@ -132,6 +132,59 @@ export function sectionSel(shared: SharedCats): string {
 </details>`;
 }
 
+/** A month the listing has an archive page for. */
+export interface DateMonth {
+  /** `YYYY-MM`. */
+  key: string;
+  href: string;
+}
+
+function monthText(key: string, withYear: boolean): string {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "long",
+    ...(withYear ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  });
+}
+
+/**
+ * Month archive picker. The newest year's months are listed directly; each
+ * older year is a native `<details>` inside the menu that expands in place.
+ * `current` is the month archive being shown, "" on the undated listing.
+ */
+export function dateSel(
+  months: DateMonth[],
+  allHref: string,
+  current = "",
+): string {
+  if (!months.length) return "";
+  const sorted = [...months].sort((a, b) => b.key.localeCompare(a.key));
+  const newest = sorted[0].key.slice(0, 4);
+  const option = (value: string, href: string, text: string): string =>
+    `<li><button type="button" data-value="${esc(value)}" data-href="${esc(href)}"${value === current ? ' aria-current="page"' : ""}>${esc(text)}</button></li>`;
+  const years = new Map<string, DateMonth[]>();
+  for (const m of sorted) {
+    const year = m.key.slice(0, 4);
+    years.set(year, [...(years.get(year) ?? []), m]);
+  }
+  const items = [
+    option("", allHref, "All dates"),
+    ...[...years].map(([year, ms]) =>
+      year === newest
+        ? ms.map((m) => option(m.key, m.href, monthText(m.key, true))).join("")
+        : `<li class="sel-year"><details${current.startsWith(`${year}-`) ? " open" : ""}><summary><span class="sel-label">${esc(year)}</span><span class="sel-mark"></span></summary><ul class="sel-sub">${ms
+            .map((m) => option(m.key, m.href, monthText(m.key, false)))
+            .join("")}</ul></details></li>`,
+    ),
+  ].join("");
+  const label = current ? monthText(current, true) : "All dates";
+  return `<details class="sel date-sel" id="post-date" data-value="${esc(current)}" aria-label="Date">
+<summary><span class="sel-label">${esc(label)}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
+}
+
 export function filterBar(posts: NavPost[], shared?: SharedCats): string {
   const cat = shared ? "" : catSel(posts).html;
   const { html: authors } = authorSel(posts);
