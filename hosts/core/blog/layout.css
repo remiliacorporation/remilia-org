@@ -465,7 +465,11 @@
     border: var(--border);
     background: var(--surface);
     display: grid;
-    grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
+    /* The swatch row fills what a two-line mast title adds to the row. */
+    grid-template-rows: var(--mast-line) var(--border-w) minmax(
+        var(--mast-title),
+        1fr
+      );
     row-gap: var(--space-xs);
   }
   .theme-sel .nav-rule {
@@ -489,17 +493,25 @@
     align-items: center;
     justify-content: center;
     height: var(--mast-title);
+    align-self: center;
     padding: 0;
     border: 0;
     gap: var(--grid);
   }
+  /* Row 1 and the rule stay packed to the top, level with the mast's; the
+     brand row takes the rest of the row, centred against the title. */
   .left-rail .site-head {
     align-items: stretch;
+    grid-template-rows: minmax(var(--mast-line), auto) var(--border-w) minmax(
+        var(--mast-title),
+        1fr
+      );
   }
   .left-rail .site-head .site-title {
     height: auto;
     min-height: var(--mast-title);
     overflow: visible;
+    align-self: center;
   }
   .left-rail .site-head nav {
     height: auto;
