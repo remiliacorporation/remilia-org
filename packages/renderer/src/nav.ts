@@ -262,9 +262,12 @@ export const NAV_JS = `(() => {
   };
   const bindSel = (el, empty) => {
     if (!el) return;
+    // Options that navigate leave no in-place value to clear: the mark just
+    // toggles the menu, and a year row's mark toggles its year.
+    const navigates = !!el.querySelector('.sel-menu button[data-href]');
     el.addEventListener('click', (e) => {
       const mark = e.target.closest('.sel-mark');
-      if (mark && el.dataset.value && el.id !== 'site-sec') {
+      if (mark && el.dataset.value && !navigates) {
         e.preventDefault();
         e.stopPropagation();
         setSel(el, '', empty);
@@ -339,6 +342,7 @@ export const NAV_JS = `(() => {
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
   bindSel(document.getElementById('site-sec'), '');
+  bindSel(document.getElementById('post-date'), 'All dates');
   addEventListener('click', (e) => {
     const a = e.target.closest('.post-card a.author');
     if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
