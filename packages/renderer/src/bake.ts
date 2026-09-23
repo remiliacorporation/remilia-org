@@ -274,6 +274,61 @@ export function monthLabel(key: string): string {
   });
 }
 
+/** A taxonomy a listing can bake a per-term archive for. */
+type ArchiveKind = "tags" | "authors" | "months";
+
+interface ArchiveTerm {
+  label: string;
+  slug: string;
+  posts: FetchedPost[];
+}
+
+/**
+ * The per-term archives a listing bakes over its posts: one per tag, author
+ * and publication month holding an indexable post. Bakes write exactly these,
+ * and links check against them, so nothing points at a page never written.
+ */
+function termArchives(posts: FetchedPost[]): Record<ArchiveKind, ArchiveTerm[]> {
+  const termsOf = (
+    pick: (p: FetchedPost) => string[],
+    slugOf: (label: string) => string = slugify,
+  ): ArchiveTerm[] => {
+    const byTerm = new Map<string, ArchiveTerm>();
+    for (const p of posts) {
+      if (p.noIndex) continue;
+      for (const label of pick(p)) {
+        const trimmed = label.trim();
+        if (!trimmed) continue;
+        const slug = slugOf(trimmed);
+        const term = byTerm.get(slug) ?? { label: trimmed, slug, posts: [] };
+        term.posts.push(p);
+        byTerm.set(slug, term);
+      }
+    }
+    return [...byTerm.values()].sort((a, b) => a.label.localeCompare(b.label));
+  };
+  return {
+    tags: termsOf((p) => p.tags ?? []),
+    authors: termsOf((p) => p.authors?.map((a) => a.name) ?? []),
+    months: termsOf((p) => [monthKey(p.publishedAt)], (key) => key)
+      .map((t) => ({ ...t, label: monthLabel(t.slug) }))
+      .sort((a, b) => b.slug.localeCompare(a.slug)),
+  };
+}
+
+/** The listing paths of `archives` under `basePath`, for `kinds`. */
+function archivePaths(
+  basePath: string,
+  archives: Record<ArchiveKind, ArchiveTerm[]>,
+  kinds: readonly ArchiveKind[],
+): string[] {
+  return kinds.flatMap((at) =>
+    archives[at].map((term) => `${basePath}/${at}/${term.slug}`),
+  );
+}
+
+const ARCHIVE_KINDS: readonly ArchiveKind[] = ["tags", "authors", "months"];
+
 export interface IndexEntry {
   title: string;
   url: string;
@@ -399,24 +454,39 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     cards.set(`${postBase(p)}/${p.slug}`, card);
   }
 
-  // Dates link to the post's month archive — which only exists for a month
-  // holding at least one indexable post.
-  const archivedMonths = new Set(
-    posts.filter((p) => !p.noIndex).map((p) => monthKey(p.publishedAt)),
-  );
-  const monthHrefFor = (p: FetchedPost): string | undefined => {
-    const month = monthKey(p.publishedAt);
-    return archivedMonths.has(month)
-      ? `${postBase(p)}/months/${month}`
-      : undefined;
+  // This listing's own archives — only months on an aggregate — and, for an
+  // aggregate, the ones each pooled section bakes over the same posts.
+  const archives = termArchives(posts);
+  const ownKinds: readonly ArchiveKind[] = aggregated
+    ? ["months"]
+    : ARCHIVE_KINDS;
+  const bakedArchives = new Set([
+    ...archivePaths(basePath, archives, ownKinds),
+    ...(opts.aggregateOf ?? []).flatMap((c) =>
+      archivePaths(
+        CHANNEL_BASEPATH[c],
+        termArchives(posts.filter((p) => postChannel(p) === c)),
+        ARCHIVE_KINDS,
+      ),
+    ),
+  ]);
+  // Dates and authors link to the post's section archive only when that
+  // archive is baked; otherwise they render unlinked.
+  const baked = (href: string): string | undefined =>
+    bakedArchives.has(href) ? href : undefined;
+  const monthHrefFor = (p: FetchedPost): string | undefined =>
+    baked(`${postBase(p)}/months/${monthKey(p.publishedAt)}`);
+  const authorHrefFor = (p: FetchedPost): string | undefined => {
+    const name = p.authors?.[0]?.name?.trim();
+    return name ? baked(`${postBase(p)}/authors/${slugify(name)}`) : undefined;
   };
   // The date control offers this listing's own month archives — the
   // section's, or the pooled ones on an aggregate.
   const dateNav = (current?: string): string =>
     dateSel(
-      [...archivedMonths].map((key) => ({
-        key,
-        href: `${basePath}/months/${key}`,
+      archives.months.map((t) => ({
+        key: t.slug,
+        href: `${basePath}/months/${t.slug}`,
       })),
       basePath,
       current,
@@ -430,9 +500,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     date: p.publishedAt,
     category: CHANNEL_LABEL[postChannel(p)],
     categoryHref: indexUrl(postChannel(p)),
-    authorHref: p.authors?.[0]
-      ? `${postBase(p)}/authors/${slugify(p.authors[0].name)}`
-      : undefined,
+    authorHref: authorHrefFor(p),
     monthHref: monthHrefFor(p),
     excerpt: p.excerpt,
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
@@ -634,9 +702,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         title: p.title,
         publishedAt: p.publishedAt,
         byline: p.authors?.map((a) => a.name).join(", "),
-        authorHref: p.authors?.[0]?.name
-          ? `${basePath}/authors/${slugify(p.authors[0].name)}`
-          : undefined,
+        authorHref: authorHrefFor(p),
         canonical: pageUrl,
         category: CHANNEL_LABEL[channel],
         categoryHref: basePath,
@@ -758,11 +824,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               excerpt: p.excerpt ?? "",
               imageUrl: p.imageUrl,
               author: p.author,
-              authorHref:
-                p.authorHref ??
-                (p.author
-                  ? `${basePath}/authors/${slugify(p.author)}`
-                  : undefined),
+              authorHref: p.authorHref,
               categoryHref: p.categoryHref,
               monthHref: p.monthHref,
             })),
@@ -819,38 +881,21 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   // term, and a directory page lists the terms. Aggregates bake only the
   // month archives, pooled across their sections — tag and author archives
   // live on the sections.
-  const termsOf = (
-    pick: (p: FetchedPost) => string[],
-    slugOf: (label: string) => string = slugify,
-  ): { label: string; slug: string; posts: NavPost[] }[] => {
-    const byTerm = new Map<string, { label: string; posts: NavPost[] }>();
-    for (const [i, p] of posts.entries()) {
-      const nav = navPosts[i];
-      if (p.noIndex) continue;
-      for (const label of pick(p)) {
-        const trimmed = label.trim();
-        if (!trimmed) continue;
-        const slug = slugOf(trimmed);
-        const bucket = byTerm.get(slug) ?? { label: trimmed, posts: [] };
-        bucket.posts.push(nav);
-        byTerm.set(slug, bucket);
-      }
-    }
-    return [...byTerm]
-      .map(([slug, bucket]) => ({ slug, label: bucket.label, posts: bucket.posts }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  };
+  const navOf = new Map(posts.map((p, i) => [p, navPosts[i]]));
+  const termsFor = (at: ArchiveKind) =>
+    archives[at].map((t) => ({
+      ...t,
+      posts: t.posts.map((p) => navOf.get(p) as NavPost),
+    }));
 
   const taxonomies: {
-    at: string;
+    at: ArchiveKind;
     heading: string;
     noun: string;
     terms: { label: string; slug: string; posts: NavPost[] }[];
     filter: (label: string) => { tag?: string; author?: string; month?: string };
     describe: (label: string) => string;
     feed: boolean;
-    /** Also baked for an aggregate, over the pooled posts. */
-    pooled?: boolean;
     /** The date control for a term's archive, if it offers one. */
     dateNav?: (slug: string) => string;
   }[] = [
@@ -858,7 +903,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       at: "tags",
       heading: `${host.title} — Tags`,
       noun: "Tag",
-      terms: termsOf((p) => p.tags ?? []),
+      terms: termsFor("tags"),
       filter: (tag) => ({ tag }),
       describe: (tag) => `Posts tagged ${tag} in ${host.title}.`,
       feed: true,
@@ -867,7 +912,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       at: "authors",
       heading: `${host.title} — Authors`,
       noun: "Author",
-      terms: termsOf((p) => p.authors?.map((a) => a.name) ?? []),
+      terms: termsFor("authors"),
       filter: (author) => ({ author }),
       describe: (author) => `Posts by ${author} in ${host.title}.`,
       feed: true,
@@ -876,19 +921,16 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       at: "months",
       heading: `${host.title} — Months`,
       noun: "Month",
-      terms: termsOf((p) => [monthKey(p.publishedAt)], (key) => key)
-        .map((t) => ({ ...t, label: monthLabel(t.slug) }))
-        .sort((a, b) => b.slug.localeCompare(a.slug)),
+      terms: termsFor("months"),
       filter: (month) => ({ month }),
       describe: (month) => `Posts from ${month} in ${host.title}.`,
       // A closed month never gains posts, so its feed would never update.
       feed: false,
-      pooled: true,
       dateNav,
     },
   ];
 
-  for (const taxonomy of taxonomies.filter((t) => !aggregated || t.pooled)) {
+  for (const taxonomy of taxonomies.filter((t) => ownKinds.includes(t.at))) {
     if (taxonomy.terms.length === 0) continue;
     for (const term of taxonomy.terms)
       await writeListing({

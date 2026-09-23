@@ -100,6 +100,49 @@ async function bakeUpdates(outDir: string, apiHost: string): Promise<void> {
   });
 }
 
+const SECTIONS = ["updates", "press", "thought", "archive"] as const;
+
+/**
+ * Bakes every org section and then the pooled index from one fixture that
+ * answers each section's query with its own posts, as the host bake does.
+ */
+async function bakeOrg(
+  outDir: string,
+  bySection: Record<string, unknown[]>,
+): Promise<Server> {
+  const server: Server = createServer((req, res) => {
+    const url = new URL(req.url ?? "/", "http://x");
+    const query = url.searchParams.get("query") ?? "";
+    const channel = JSON.parse(url.searchParams.get("$channel") ?? '""') as string;
+    const body = query.includes('_id == "org"')
+      ? { result: { name: "Remigumi-guchi Digital, LLC" } }
+      : { result: bySection[channel] ?? [] };
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(body));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const common = {
+    chrome: CHROME,
+    host: HOST,
+    outDir,
+    projectId: "test",
+    dataset: "production",
+    token: "sk-test",
+    apiHost: `http://127.0.0.1:${typeof address === "object" && address ? address.port : 0}`,
+    stylesheets: [],
+  };
+  await hostStubs(outDir);
+  for (const channel of SECTIONS) await bake({ ...common, channel });
+  await bake({
+    ...common,
+    channel: "blog",
+    host: { ...HOST, title: "Remilia Corporation — Blog" },
+    aggregateOf: [...SECTIONS],
+  });
+  return server;
+}
+
 test("a section bakes paginated listings, taxonomy archives and resolvable links", async () => {
   const fixture = await fixtureServer();
   const outDir = await mkdtemp(join(tmpdir(), "bake-listings-"));
@@ -330,40 +373,9 @@ test("the pooled index bakes month archives across every section", async () => {
       dated("archive", 2, at(1, "2021-01"), { noIndex: true }),
     ],
   };
-  const server: Server = createServer((req, res) => {
-    const url = new URL(req.url ?? "/", "http://x");
-    const query = url.searchParams.get("query") ?? "";
-    const channel = JSON.parse(url.searchParams.get("$channel") ?? '""') as string;
-    const body = query.includes('_id == "org"')
-      ? { result: { name: "Remigumi-guchi Digital, LLC" } }
-      : { result: bySection[channel] ?? [] };
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify(body));
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const address = server.address();
-  const apiHost = `http://127.0.0.1:${typeof address === "object" && address ? address.port : 0}`;
   const outDir = await mkdtemp(join(tmpdir(), "bake-pooled-months-"));
-  const sections = ["updates", "press", "thought", "archive"] as const;
-  const common = {
-    chrome: CHROME,
-    host: HOST,
-    outDir,
-    projectId: "test",
-    dataset: "production",
-    token: "sk-test",
-    apiHost,
-    stylesheets: [],
-  };
+  const server = await bakeOrg(outDir, bySection);
   try {
-    await hostStubs(outDir);
-    for (const channel of sections) await bake({ ...common, channel });
-    await bake({
-      ...common,
-      channel: "blog",
-      host: { ...HOST, title: "Remilia Corporation — Blog" },
-      aggregateOf: [...sections],
-    });
     const read = (path: string) => readFile(join(outDir, path), "utf8");
     const cards = (html: string) =>
       (html.match(/class="sec post-card"/g) ?? []).length;
@@ -443,6 +455,77 @@ test("the pooled index bakes month archives across every section", async () => {
     // Section month archives stay per section.
     assert.equal(cards(await read("blog/updates/months/2024-12/index.html")), 12);
     assert.equal(cards(await read("blog/press/months/2024-12/index.html")), 10);
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
+  } finally {
+    server.close();
+  }
+});
+
+test("dates and authors link only to archives that are baked", async () => {
+  const dated = (
+    section: string,
+    n: number,
+    publishedAt: string,
+    author: string,
+    extra = {},
+  ) => ({
+    ...posts[0],
+    title: `${section} ${n}`,
+    slug: `${section}-${n}`,
+    publishedAt,
+    updatedAt: publishedAt,
+    authors: [{ name: author }],
+    ...extra,
+  });
+  const hidden = { noIndex: true };
+  // December has an indexable post in Updates only, so the pooled December
+  // archive exists but Press's does not. Thought holds nothing indexable, so
+  // it bakes no author or month archive at all.
+  const bySection: Record<string, unknown[]> = {
+    updates: [
+      dated("updates", 1, "2024-12-20T12:00:00.000Z", "Remilia Jackson"),
+      dated("updates", 2, "2024-12-10T12:00:00.000Z", "Hidden Hand", hidden),
+    ],
+    press: [
+      dated("press", 1, "2024-12-15T12:00:00.000Z", "Remilia Jackson", hidden),
+      dated("press", 2, "2024-10-01T12:00:00.000Z", "Remilia Jackson"),
+    ],
+    thought: [
+      dated("thought", 1, "2024-11-01T12:00:00.000Z", "Charlotte Fang", hidden),
+    ],
+  };
+  const outDir = await mkdtemp(join(tmpdir(), "bake-archive-links-"));
+  const server = await bakeOrg(outDir, bySection);
+  try {
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const pooled = await read("blog/index.html");
+    const card = (html: string, slug: string) => {
+      const at = html.indexOf(`data-title="${slug.replace("-", " ")}"`);
+      return html.slice(at, html.indexOf("</article>", at));
+    };
+
+    // The pooled December archive exists, but a hidden Press post's date
+    // must not link to Press's December archive, which does not.
+    assert.ok((await readdir(join(outDir, "blog/months"))).includes("2024-12"));
+    assert.ok(!(await readdir(join(outDir, "blog/press/months"))).includes("2024-12"));
+    assert.ok(!pooled.includes('href="/blog/press/months/2024-12"'));
+    assert.ok(card(pooled, "press-1").includes('<p class="card-meta"><time datetime="2024-12-15T12:00:00.000Z">'));
+    assert.ok(card(pooled, "updates-1").includes('<a class="byline-date" href="/blog/updates/months/2024-12">'));
+    assert.ok(card(pooled, "press-2").includes('<a class="byline-date" href="/blog/press/months/2024-10">'));
+
+    // Authors link to an archive only where the section baked one; the
+    // card falls back to the in-page filter, the byline to plain text.
+    assert.ok(card(pooled, "updates-2").includes('<a class="author" href="?author=Hidden%20Hand">'));
+    assert.ok(card(pooled, "press-1").includes('<a class="author" href="/blog/press/authors/remilia-jackson">'));
+    assert.ok(card(pooled, "thought-1").includes('<a class="author" href="?author=Charlotte%20Fang">'));
+    const thought = await read("blog/thought/thought-1/index.html");
+    assert.ok(!thought.includes("/blog/thought/authors/"));
+    assert.ok(!thought.includes("/blog/thought/months/"));
+    assert.ok(thought.includes('<span class="author">Charlotte Fang</span>'));
+    const hand = await read("blog/updates/updates-2/index.html");
+    assert.ok(!hand.includes("/blog/updates/authors/hidden-hand"));
+    assert.ok(hand.includes('<a class="byline-date" href="/blog/updates/months/2024-12">'));
 
     assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
   } finally {
