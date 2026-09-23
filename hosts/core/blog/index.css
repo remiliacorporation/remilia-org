@@ -414,7 +414,10 @@ article.post-card > header {
   justify-content: space-between;
   align-items: baseline;
   gap: var(--grid);
-  margin: var(--space-s) 0 0;
+  /* Ruled off like the meta row: the rule sits one --grid from the text. */
+  margin: var(--space-xs) 0 0;
+  padding: var(--grid) 0 0;
+  border-top: var(--border);
   width: 100%;
 }
 .post-card .card-foot .byline-cat {
@@ -453,8 +456,10 @@ article.post-card > header {
 }
 .post-card:hover > header .nav-rule,
 .post-card:hover .card-thumb,
+.post-card:hover p.card-foot,
 .post-card:focus-within > header .nav-rule,
-.post-card:focus-within .card-thumb {
+.post-card:focus-within .card-thumb,
+.post-card:focus-within p.card-foot {
   border-color: var(--ink-contrast);
 }
 .post-card a:focus-visible {
