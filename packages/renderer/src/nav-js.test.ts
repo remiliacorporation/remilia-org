@@ -61,7 +61,7 @@ test("a malformed or out-of-place ?month= does not redirect", () => {
         .replaced,
       undefined,
     );
-  // The pooled index has no month archives.
+  // Only a section listing redirects an old ?month= link.
   assert.equal(runListing("/blog/", "?month=2024-12", {}).replaced, undefined);
 });
 

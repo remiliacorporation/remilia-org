@@ -801,16 +801,17 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   });
 
   // Tags, authors and publication months each get a crawlable archive per
-  // term, and a directory page lists the terms. Aggregates skip term
-  // archives — those live on the sections.
+  // term, and a directory page lists the terms. Aggregates bake only the
+  // month archives, pooled across their sections — tag and author archives
+  // live on the sections.
   const termsOf = (
     pick: (p: FetchedPost) => string[],
     slugOf: (label: string) => string = slugify,
   ): { label: string; slug: string; posts: NavPost[] }[] => {
     const byTerm = new Map<string, { label: string; posts: NavPost[] }>();
-    for (const p of posts) {
-      const nav = navPosts.find((n) => n.url === `${basePath}/${p.slug}`);
-      if (!nav || p.noIndex) continue;
+    for (const [i, p] of posts.entries()) {
+      const nav = navPosts[i];
+      if (p.noIndex) continue;
       for (const label of pick(p)) {
         const trimmed = label.trim();
         if (!trimmed) continue;
@@ -833,6 +834,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     filter: (label: string) => { tag?: string; author?: string; month?: string };
     describe: (label: string) => string;
     feed: boolean;
+    /** Also baked for an aggregate, over the pooled posts. */
+    pooled?: boolean;
   }[] = [
     {
       at: "tags",
@@ -863,10 +866,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       describe: (month) => `Posts from ${month} in ${host.title}.`,
       // A closed month never gains posts, so its feed would never update.
       feed: false,
+      pooled: true,
     },
   ];
 
-  for (const taxonomy of aggregated ? [] : taxonomies) {
+  for (const taxonomy of taxonomies.filter((t) => !aggregated || t.pooled)) {
     if (taxonomy.terms.length === 0) continue;
     for (const term of taxonomy.terms)
       await writeListing({

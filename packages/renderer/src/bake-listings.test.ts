@@ -282,3 +282,139 @@ test("a section bakes a paginated archive and a directory for each month", async
     fixture.close();
   }
 });
+
+test("the pooled index bakes month archives across every section", async () => {
+  // December spans two sections and two pages, as June 2022 spans two
+  // sections; a hidden post makes no month on its own.
+  const at = (day: number, month = "2024-12") =>
+    `${month}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
+  const dated = (section: string, n: number, publishedAt: string, extra = {}) => ({
+    ...posts[0],
+    title: `${section} ${n}`,
+    slug: `${section}-${n}`,
+    publishedAt,
+    updatedAt: publishedAt,
+    ...extra,
+  });
+  const bySection: Record<string, unknown[]> = {
+    updates: [
+      ...Array.from({ length: 12 }, (_, i) => dated("updates", i + 1, at(28 - i))),
+      dated("updates", 13, at(10, "2024-04")),
+    ],
+    press: [
+      ...Array.from({ length: 10 }, (_, i) => dated("press", i + 1, at(15 - i))),
+      dated("press", 11, at(5, "2023-11")),
+    ],
+    thought: [dated("thought", 1, at(9, "2022-06"))],
+    archive: [
+      dated("archive", 1, at(20, "2022-06")),
+      dated("archive", 2, at(1, "2021-01"), { noIndex: true }),
+    ],
+  };
+  const server: Server = createServer((req, res) => {
+    const url = new URL(req.url ?? "/", "http://x");
+    const query = url.searchParams.get("query") ?? "";
+    const channel = JSON.parse(url.searchParams.get("$channel") ?? '""') as string;
+    const body = query.includes('_id == "org"')
+      ? { result: { name: "Remigumi-guchi Digital, LLC" } }
+      : { result: bySection[channel] ?? [] };
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(body));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const apiHost = `http://127.0.0.1:${typeof address === "object" && address ? address.port : 0}`;
+  const outDir = await mkdtemp(join(tmpdir(), "bake-pooled-months-"));
+  const sections = ["updates", "press", "thought", "archive"] as const;
+  const common = {
+    chrome: CHROME,
+    host: HOST,
+    outDir,
+    projectId: "test",
+    dataset: "production",
+    token: "sk-test",
+    apiHost,
+    stylesheets: [],
+  };
+  try {
+    await hostStubs(outDir);
+    for (const channel of sections) await bake({ ...common, channel });
+    await bake({
+      ...common,
+      channel: "blog",
+      host: { ...HOST, title: "Remilia Corporation — Blog" },
+      aggregateOf: [...sections],
+    });
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const cards = (html: string) =>
+      (html.match(/class="sec post-card"/g) ?? []).length;
+
+    // December pools both sections, newest first, over two pages.
+    const dec1 = await read("blog/months/2024-12/index.html");
+    const dec2 = await read("blog/months/2024-12/page/2/index.html");
+    assert.equal(cards(dec1), 20);
+    assert.equal(cards(dec2), 2);
+    assert.ok(
+      dec1.includes(
+        '<h1 data-month="December 2024">Showing all posts from December 2024</h1>',
+      ),
+    );
+    assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Blog</title>"));
+    assert.ok(dec1.includes('href="/blog/updates/updates-1"'));
+    assert.ok(dec1.includes('href="/blog/press/press-1"'));
+    assert.ok(
+      dec1.indexOf("/blog/updates/updates-1") < dec1.indexOf("/blog/press/press-1"),
+      "pooled months keep newest-first order across sections",
+    );
+    assert.ok(
+      dec1.includes(
+        '<link rel="next" href="https://remilia.org/blog/months/2024-12/page/2">',
+      ),
+    );
+    assert.equal(cards(await read("blog/months/2024-04/index.html")), 1);
+    assert.equal(cards(await read("blog/months/2023-11/index.html")), 1);
+    assert.equal(cards(await read("blog/months/2022-06/index.html")), 2);
+
+    // Only months holding an indexable post; no feeds; no tag or author
+    // archives on the pooled index.
+    const months = await readdir(join(outDir, "blog/months"));
+    assert.deepEqual(months.sort(), [
+      "2022-06",
+      "2023-11",
+      "2024-04",
+      "2024-12",
+      "index.html",
+    ]);
+    assert.ok(!(await readdir(join(outDir, "blog/months/2024-12"))).includes("rss.xml"));
+    const pooledRoot = await readdir(join(outDir, "blog"));
+    assert.ok(!pooledRoot.includes("tags"));
+    assert.ok(!pooledRoot.includes("authors"));
+
+    const dir = await read("blog/months/index.html");
+    const rows = [...dir.matchAll(/<li><a href="([^"]+)">([^<]+)<\/a> <span class="term-count">(\d+)<\/span><\/li>/g)]
+      .map((m) => [m[1], m[2], m[3]]);
+    assert.deepEqual(rows, [
+      ["/blog/months/2024-12", "December 2024", "22"],
+      ["/blog/months/2024-04", "April 2024", "1"],
+      ["/blog/months/2023-11", "November 2023", "1"],
+      ["/blog/months/2022-06", "June 2022", "2"],
+    ]);
+
+    const sitemap = await read("blog/sitemap.xml");
+    for (const loc of [
+      "https://remilia.org/blog/months",
+      "https://remilia.org/blog/months/2024-12",
+      "https://remilia.org/blog/months/2024-12/page/2",
+      "https://remilia.org/blog/months/2022-06",
+    ])
+      assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
+
+    // Section month archives stay per section.
+    assert.equal(cards(await read("blog/updates/months/2024-12/index.html")), 12);
+    assert.equal(cards(await read("blog/press/months/2024-12/index.html")), 10);
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
+  } finally {
+    server.close();
+  }
+});
