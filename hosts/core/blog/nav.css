@@ -326,7 +326,8 @@
   align-items: center;
   gap: var(--grid);
   margin: calc(-1 * var(--space-xs)) calc(-1 * var(--space-xs)) 0;
-  padding: var(--space-xs);
+  /* No bottom padding: the rule's own margin is the gap beneath. */
+  padding: var(--space-xs) var(--space-xs) 0;
   text-align: center;
   background: var(--surface);
 }
