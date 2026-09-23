@@ -227,10 +227,17 @@ h3,
   background: var(--ink);
   color: var(--ink-contrast);
 }
-.prose > hr {
+/* Every rule in a post body, at any depth: a heading-section wrapper
+   must not drop an author's rule back to the browser's bevelled line. */
+.prose hr {
   margin: 0 0 var(--space);
   border: 0;
   border-top: var(--border);
+}
+/* Under a heading the rule takes the heading's own gap above and the
+   paragraph gap below, so heading, rule and text read as one unit. */
+.prose :is(h2, h3, h4) + hr {
+  margin-bottom: var(--space-s);
 }
 .prose :is(h2, h3) {
   position: relative;
