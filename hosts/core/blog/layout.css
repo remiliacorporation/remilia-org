@@ -8,6 +8,14 @@
   .sec.mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
   }
+  /* The article title leads at display size once the mast has the
+     measure to itself; the listing's status line keeps its own size.
+     One grid step of leading keeps each line a whole pixel, so the
+     site-head, sized from the mast's offsetHeight, stays level with it. */
+  .sec.mast h1 {
+    font-size: var(--size-display);
+    line-height: calc(var(--size-display) + var(--grid));
+  }
 }
 @media (max-width: 823px) {
   .layout {
@@ -534,7 +542,6 @@
   .sec.mast h1 {
     height: auto;
     overflow: visible;
-    line-height: var(--leading-tight);
   }
 }
 @media (max-width: 823px) {
