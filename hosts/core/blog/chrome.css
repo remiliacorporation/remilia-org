@@ -111,6 +111,9 @@ footer {
   position: relative;
   isolation: isolate;
   z-index: 1;
+  /* Chrome, not prose: the UI size like the rail boxes. Set as the token
+     because the universal rule sizes every element from it. */
+  --size-base: var(--size-ui);
 }
 footer hr {
   display: none;
