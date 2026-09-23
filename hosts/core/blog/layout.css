@@ -16,6 +16,22 @@
     font-size: var(--size-display);
     line-height: calc(var(--size-display) + var(--grid));
   }
+  /* The site head sits beside the mast from here up. Row 1 and the rule
+     stay packed to the top, level with the mast's; the brand row takes
+     the rest of the box, centred against the title. */
+  .left-rail .site-head {
+    align-items: stretch;
+    grid-template-rows: minmax(var(--mast-line), auto) var(--border-w) minmax(
+        var(--mast-title),
+        1fr
+      );
+  }
+  .left-rail .site-head .site-title {
+    height: auto;
+    min-height: var(--mast-title);
+    overflow: visible;
+    align-self: center;
+  }
 }
 @media (max-width: 823px) {
   .layout {
@@ -510,21 +526,6 @@
     padding: 0;
     border: 0;
     gap: var(--grid);
-  }
-  /* Row 1 and the rule stay packed to the top, level with the mast's; the
-     brand row takes the rest of the row, centred against the title. */
-  .left-rail .site-head {
-    align-items: stretch;
-    grid-template-rows: minmax(var(--mast-line), auto) var(--border-w) minmax(
-        var(--mast-title),
-        1fr
-      );
-  }
-  .left-rail .site-head .site-title {
-    height: auto;
-    min-height: var(--mast-title);
-    overflow: visible;
-    align-self: center;
   }
   .left-rail .site-head nav {
     height: auto;
