@@ -214,6 +214,11 @@
   background: var(--ink);
   color: var(--ink-contrast);
 }
+/* The byline switcher reads as a link, so it takes the links' ring. */
+.byline .site-sec > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: var(--grid);
+}
 .byline .site-sec .sel-label {
   flex: none;
   color: inherit;

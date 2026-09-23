@@ -78,7 +78,8 @@
   background: var(--surface);
   color: var(--ink);
 }
-.sel > summary:hover {
+.sel > summary:hover,
+.sel > summary:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }
@@ -159,6 +160,15 @@
 .sel-menu button:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
+}
+/* Keyboard focus inverts a dropdown row as hover does and adds the site's
+   ring, drawn inside the inverted row in the contrast colour so it neither
+   spills over the neighbouring rows nor vanishes against the menu. */
+.sel > summary:focus-visible,
+.sel-menu button:focus-visible,
+.sel-year > details > summary:focus-visible {
+  outline: 2px solid var(--ink-contrast);
+  outline-offset: calc(-1 * var(--grid));
 }
 .sel-menu button[aria-current] {
   font-weight: var(--weight-strong);
