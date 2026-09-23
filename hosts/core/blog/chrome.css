@@ -118,6 +118,14 @@ footer hr {
 footer p {
   text-align: center;
 }
+/* The chrome boxes' line box, so the footer is --space-xs around one
+   16px row like the rail boxes. The links set it too: the universal
+   rule gives every element the body leading, which would reopen the
+   line. */
+footer p,
+footer p a {
+  line-height: var(--mast-line);
+}
 footer a {
   text-decoration: none;
 }
