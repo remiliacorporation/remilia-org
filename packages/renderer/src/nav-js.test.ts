@@ -438,3 +438,85 @@ test("the date dropdown still closes on an outside click or Escape", () => {
   ui.windowHooks.get("keydown")?.forEach((fn) => fn({ key: "Escape" }));
   assert.equal(ui.date.open, false, "Escape");
 });
+
+/**
+ * Runs NAV_JS on an article page at `width`, with the masthead and site
+ * head reduced to what the head-sizing script touches. `resize` changes
+ * the width and fires the media query's change listeners.
+ */
+function runHeadSizing(width: number): {
+  head: { style: { minHeight: string } };
+  mast: { offsetHeight: number };
+  resize: (to: number) => void;
+  observe: () => void;
+} {
+  const mast = { offsetHeight: 116 };
+  const head = { style: { minHeight: "" } };
+  const changes: (() => void)[] = [];
+  const observers: (() => void)[] = [];
+  const document = {
+    getElementById: () => null,
+    querySelector: (sel: string) =>
+      sel === ".sec.mast" ? mast : sel === ".left-rail .site-head" ? head : null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  const matchMedia = (q: string) => {
+    const min = /\(min-width: (\d+)px\)/.exec(q);
+    return {
+      get matches() {
+        return min ? width >= Number(min[1]) : false;
+      },
+      addEventListener: (_: string, fn: () => void) => changes.push(fn),
+    };
+  };
+  class ResizeObserver {
+    constructor(private fn: () => void) {}
+    observe() {
+      observers.push(this.fn);
+    }
+  }
+  new Function(
+    "document",
+    "location",
+    "addEventListener",
+    "matchMedia",
+    "ResizeObserver",
+    NAV_JS,
+  )(document, { pathname: "/", search: "" }, () => {}, matchMedia, ResizeObserver);
+  return {
+    head,
+    mast,
+    resize: (to) => {
+      width = to;
+      changes.forEach((fn) => fn());
+    },
+    observe: () => observers.forEach((fn) => fn()),
+  };
+}
+
+test("the site head takes the masthead's height wherever it sits beside it", () => {
+  for (const width of [824, 900, 1099, 1100, 1280]) {
+    const { head } = runHeadSizing(width);
+    assert.equal(head.style.minHeight, "116px", `at ${width}px`);
+  }
+});
+
+test("the site head keeps its own height once it stacks above the masthead", () => {
+  for (const width of [320, 700, 823]) {
+    const { head } = runHeadSizing(width);
+    assert.equal(head.style.minHeight, "", `at ${width}px`);
+  }
+});
+
+test("the site head follows the masthead across resizes and breakpoints", () => {
+  const ui = runHeadSizing(900);
+  ui.mast.offsetHeight = 84;
+  ui.observe();
+  assert.equal(ui.head.style.minHeight, "84px", "a shorter title");
+  ui.resize(823);
+  assert.equal(ui.head.style.minHeight, "", "narrowing below 824px");
+  ui.resize(1000);
+  assert.equal(ui.head.style.minHeight, "84px", "widening back past 824px");
+});

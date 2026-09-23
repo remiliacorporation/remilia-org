@@ -565,14 +565,15 @@ export const NAV_JS = `(() => {
     fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t).then(() => flash(b)));
   });
 })();
-// The sticky left rail can't subgrid like .right-rail without breaking its
-// internal scroll, so the site-head stretches to the masthead row here.
+// The site-head sits beside the masthead from 824px, in a sticky rail
+// that can't subgrid like .right-rail without breaking its internal
+// scroll, so it stretches to the masthead's height here.
 (() => {
   try {
     const mast = document.querySelector('.sec.mast');
     const head = document.querySelector('.left-rail .site-head');
     if (!mast || !head || typeof ResizeObserver !== 'function') return;
-    const mq = matchMedia('(min-width: 1100px)');
+    const mq = matchMedia('(min-width: 824px)');
     const sync = () => {
       head.style.minHeight = mq.matches ? mast.offsetHeight + 'px' : '';
     };
