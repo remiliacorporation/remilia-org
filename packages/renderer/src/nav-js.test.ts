@@ -61,8 +61,29 @@ test("a malformed or out-of-place ?month= does not redirect", () => {
         .replaced,
       undefined,
     );
-  // Only a section listing redirects an old ?month= link.
-  assert.equal(runListing("/blog/", "?month=2024-12", {}).replaced, undefined);
+  // A listing already filtered to a tag, author or month stays put.
+  const filtered: [string, Record<string, string>][] = [
+    ["/blog/updates/tags/theory/", { section: "Updates", tag: "Theory" }],
+    ["/blog/updates/authors/remilia-jackson/", { section: "Updates", author: "Remilia Jackson" }],
+    ["/blog/months/2024-11/", { month: "November 2024" }],
+  ];
+  for (const [path, heading] of filtered)
+    assert.equal(runListing(path, "?month=2024-12", heading).replaced, undefined);
+});
+
+test("an old ?month= link on the pooled index lands on the pooled month archive", () => {
+  assert.equal(
+    runListing("/blog/", "?month=2024-12", {}).replaced,
+    "/blog/months/2024-12/",
+  );
+  assert.equal(
+    runListing("/blog", "?month=2022-06", {}).replaced,
+    "/blog/months/2022-06/",
+  );
+  assert.equal(
+    runListing("/blog/page/3/", "?month=2023-11", {}).replaced,
+    "/blog/months/2023-11/",
+  );
 });
 
 test("a month archive keeps its month in the status line", () => {

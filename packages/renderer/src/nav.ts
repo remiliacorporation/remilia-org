@@ -358,9 +358,9 @@ export const NAV_JS = `(() => {
   const tagv = (statusEl && statusEl.dataset.tag) || '';
   const monthv = (statusEl && statusEl.dataset.month) || '';
   // Months are archive pages now; the old ?month= filter links on a
-  // section index land on the month's archive instead.
+  // section or pooled index land on that listing's month archive instead.
   const monthParam = params.get('month') || '';
-  if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && statusEl.dataset.section && !tagv && !monthv && !statusEl.dataset.author) {
+  if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && !tagv && !monthv && !statusEl.dataset.author) {
     location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam + '/');
     return;
   }
