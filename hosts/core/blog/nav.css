@@ -88,14 +88,17 @@
   text-align: left;
   color: inherit;
 }
+/* The caret takes its summary's colour, so it inverts with the row. */
 .sel-mark {
   flex: none;
   width: 12px;
   text-align: center;
   line-height: 1;
+  color: inherit;
 }
 .sel-mark::before {
   content: "\25BE";
+  color: inherit;
 }
 #post-cat[data-value]:not([data-value=""]) > summary,
 #post-author[data-value]:not([data-value=""]) > summary {
@@ -105,15 +108,10 @@
 #post-cat[data-value]:not([data-value=""]) .sel-mark::before,
 #post-author[data-value]:not([data-value=""]) .sel-mark::before {
   content: "\00D7";
-  color: var(--ink-contrast);
 }
 #post-cat[data-value]:not([data-value=""]):hover > summary,
 #post-author[data-value]:not([data-value=""]):hover > summary {
   background: var(--surface);
-  color: var(--ink);
-}
-#post-cat[data-value]:not([data-value=""]):hover .sel-mark::before,
-#post-author[data-value]:not([data-value=""]):hover .sel-mark::before {
   color: var(--ink);
 }
 .sel > summary::-webkit-details-marker,
