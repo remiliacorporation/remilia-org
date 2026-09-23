@@ -225,6 +225,11 @@
     text-align: center;
     background: var(--surface);
   }
+  .cite-box .nav-rule {
+    margin: 0;
+    height: 0;
+    align-self: center;
+  }
   .post-nav {
     display: flex;
     padding: 0;
@@ -418,7 +423,7 @@
   .cite-box .nav-box {
     display: grid;
     grid-template-rows: var(--mast-line) var(--border-w) minmax(
-        var(--mast-title),
+        var(--mast-line),
         auto
       );
     row-gap: var(--space-xs);
@@ -444,8 +449,8 @@
   .cite-box .cite-copy {
     margin: 0;
     height: auto;
-    min-height: var(--mast-title);
-    line-height: var(--mast-title);
+    min-height: var(--mast-line);
+    line-height: var(--mast-line);
   }
   .post-nav > .disclosure-label {
     display: none;
