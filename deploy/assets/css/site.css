@@ -463,15 +463,37 @@ header > h1:focus-visible{outline-offset:4px}
   .logo-wiki{max-height:129px}
   .logo-word{max-height:113px}
   .logo-book .floater-label{white-space:normal}
-  .jobs-board :is(.jobs-cols th,td):not(:nth-child(3)){white-space:normal}
-  .jobs-board .jobs-cols th{padding-left:4px;padding-right:4px}
-  .jobs-board td a{padding-left:4px;padding-right:4px}
-  .jobs-chips{flex-wrap:wrap}
   .wiki-float{display:none}
   .wiki-under{display:flex;flex-direction:column;align-items:center;margin-top:4px;text-decoration:none}
   .wiki-under .logo-wiki{height:90px}
   .wiki-under .logo-tag{position:static;transform:none;margin-top:8px}
   .language-switcher{border-color:var(--ink);background:var(--paper)}
+  /* The two office cards stack, one per row. */
+  .offices,.offices :is(tbody,tr,th,td){display:block;width:auto}
+  .offices tr + tr :is(th,td),
+  .offices td + td{border-top:0}
+  .offices td.office{width:auto;padding:16px}
+  /* Four job columns leave every cell wrapping at this width. Each opening
+     becomes a card (role across the top; office, domain and levels beneath),
+     spaced apart from the next, and each filter column a labelled row of chips. */
+  .jobs-board,.jobs-board :is(caption,tbody){display:block}
+  .jobs-board tr{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.2fr);border:1px solid var(--ink);border-top:0}
+  .jobs-board :is(.jobs-cols th, td):not(:nth-child(3)),
+  .jobs-board :is(.jobs-cols th, td):nth-child(3){width:auto;white-space:normal}
+  .jobs-board td{display:block;border:0;border-left:1px solid var(--ink);font-size:11px}
+  .jobs-board td a{font-size:11px;padding:6px 8px}
+  .jobs-board td:first-child,
+  .jobs-board td[colspan]{border-left:0}
+  .jobs-board td[colspan]{grid-column:1/-1}
+  .jobs-board td:nth-child(3){grid-column:1/-1;grid-row:1;border-left:0;border-bottom:1px solid var(--ink)}
+  .jobs-board td:nth-child(3) a{font-size:12px;padding:8px}
+  .jobs-board tr + tr{margin-top:12px;border-top:1px solid var(--ink)}
+  .jobs-board .jobs-cols{grid-template-columns:1fr;border-bottom:3px double var(--ink)}
+  .jobs-board .jobs-cols th{display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;padding:4px 8px}
+  .jobs-board .jobs-cols th + th{border-top:1px solid var(--ink)}
+  .jobs-label{border:0;padding:0;margin:0}
+  .jobs-chips{flex-wrap:wrap;justify-content:flex-end;font-size:11px}
+  .jobs-chip{display:inline-block;min-height:24px;padding:4px 2px}
 }
 @media (pointer: coarse){
   .language-switcher{border-color:var(--ink);background:var(--paper)}
