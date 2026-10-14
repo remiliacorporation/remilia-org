@@ -25,14 +25,14 @@ const BODY_TEXT =
 const GOOD_PAGE = `<!doctype html><html><head>
 <title>Vaults — RemiliaNET Devblog</title>
 <meta name="description" content="How vaults work.">
-<link rel="canonical" href="https://www.remilia.net/blog/vaults">
-<meta property="og:url" content="https://www.remilia.net/blog/vaults">
+<link rel="canonical" href="https://blog.remilia.net/dev-blog/vaults">
+<meta property="og:url" content="https://blog.remilia.net/dev-blog/vaults">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Vaults"}</script>
 </head><body><h1>Vaults</h1><p>${BODY_TEXT}</p></body></html>`;
 
 test("auditPage passes a conforming page", () => {
   assert.deepEqual(
-    auditPage(GOOD_PAGE, "https://www.remilia.net/blog/vaults"),
+    auditPage(GOOD_PAGE, "https://blog.remilia.net/dev-blog/vaults"),
     [],
   );
 });
@@ -40,37 +40,37 @@ test("auditPage passes a conforming page", () => {
 test("auditPage catches missing/duplicate/wrong signals", () => {
   const wrongCanonical = auditPage(
     GOOD_PAGE,
-    "https://www.remilia.net/blog/other",
+    "https://blog.remilia.net/dev-blog/other",
   );
   assert.ok(wrongCanonical.some((e) => e.includes("canonical is")));
 
   const noLd = auditPage(
     GOOD_PAGE.replace(/<script[\s\S]*?<\/script>/, ""),
-    "https://www.remilia.net/blog/vaults",
+    "https://blog.remilia.net/dev-blog/vaults",
   );
   assert.ok(noLd.includes("no JSON-LD <script> found"));
 
   const noH1 = auditPage(
     GOOD_PAGE.replace("<h1>Vaults</h1>", ""),
-    "https://www.remilia.net/blog/vaults",
+    "https://blog.remilia.net/dev-blog/vaults",
   );
   assert.ok(noH1.some((e) => e.includes("<h1>")));
 
   const thin = auditPage(
     GOOD_PAGE.replace(BODY_TEXT, "ok"),
-    "https://www.remilia.net/blog/vaults",
+    "https://blog.remilia.net/dev-blog/vaults",
   );
   assert.ok(thin.some((e) => e.includes("no-JS text content")));
 
   const twoTitles = auditPage(
     GOOD_PAGE.replace("</head>", "<title>x</title></head>"),
-    "https://www.remilia.net/blog/vaults",
+    "https://blog.remilia.net/dev-blog/vaults",
   );
   assert.ok(twoTitles.some((e) => e.includes("exactly one <title>")));
 
   const vercelCanonical = auditPage(
     GOOD_PAGE.replaceAll(
-      "https://www.remilia.net/blog/vaults",
+      "https://blog.remilia.net/dev-blog/vaults",
       "https://x.vercel.app/blog/vaults",
     ),
     "https://x.vercel.app/blog/vaults",
@@ -120,7 +120,7 @@ test("generated feeds pass their own audits (generator ↔ auditor lockstep)", (
   assert.deepEqual(auditFeedDiscovery(`<head>${head}</head>`, "dev-blog"), []);
 
   const sitemapXml = sitemap([
-    { loc: "https://www.remilia.net/blog/vaults", lastmod: "2026-08-01" },
+    { loc: "https://blog.remilia.net/dev-blog/vaults", lastmod: "2026-08-01" },
   ]);
   assert.deepEqual(auditSitemap(sitemapXml, "dev-blog"), []);
 
@@ -191,7 +191,7 @@ test("audit404 rejects soft-404s and bare 404 bodies", () => {
 test("auditRobots requires the channel sitemap line", () => {
   assert.deepEqual(
     auditRobots(
-      "User-agent: *\nSitemap: https://www.remilia.net/blog/sitemap.xml",
+      "User-agent: *\nSitemap: https://blog.remilia.net/dev-blog/sitemap.xml",
       "dev-blog",
     ),
     [],
@@ -201,7 +201,7 @@ test("auditRobots requires the channel sitemap line", () => {
 
 test("page audits accept typed JSON-LD graphs", () => {
   const html = GOOD_PAGE.replace('{"@context":"https://schema.org","@type":"BlogPosting","headline":"Vaults"}', '{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","headline":"Vaults"}]}');
-  assert.deepEqual(auditPage(html, "https://www.remilia.net/blog/vaults"), []);
+  assert.deepEqual(auditPage(html, "https://blog.remilia.net/dev-blog/vaults"), []);
 });
 
 test("sitemaps reject lookalike origins", () => {

@@ -652,7 +652,7 @@ ${recent
 ${recentHtml}
 <h2>Where to go</h2>
 <ul>
-<li><a href="${esc(basePath)}">${esc(section)} index</a></li>
+<li><a href="${esc(basePath || "/")}">${esc(section)} index</a></li>
 <li><a href="${esc(basePath)}/rss.xml"><code>rss.xml</code></a></li>
 <li><a href="${esc(basePath)}/sitemap.xml"><code>sitemap.xml</code></a></li>
 <li><a href="${esc(basePath)}/llms.txt"><code>llms.txt</code></a></li>

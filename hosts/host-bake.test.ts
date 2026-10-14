@@ -72,20 +72,22 @@ async function bakeSections(
 test("com bakes only its blog sections, dark red with no lattice", async () => {
   const { outDir, close } = await bakeSections(COM_POST_SECTIONS);
   try {
-    const news = await readFile(join(outDir, "a/news/index.html"), "utf8");
+    const news = await readFile(join(outDir, "a/blog/news/index.html"), "utf8");
     assert.match(news, /data-scheme="dark"/);
     assert.match(news, /data-hue="30"/);
     assert.match(news, /data-dots="none"/);
     assert.ok(
-      news.includes('<a class="site-title" href="/a/news">REMILIA</a>'),
+      news.includes('<a class="site-title" href="/a/blog/news">REMILIA</a>'),
       "wears the com wordmark",
     );
     assert.ok(news.includes('href="https://remilia.com/"'), "links its own root");
     assert.ok(
-      news.includes('<link rel="canonical" href="https://remilia.com/a/news">'),
+      news.includes(
+        '<link rel="canonical" href="https://remilia.com/a/blog/news">',
+      ),
     );
-    await readFile(join(outDir, "a/events/index.html"), "utf8");
-    await readFile(join(outDir, "a/news/rss.xml"), "utf8");
+    await readFile(join(outDir, "a/blog/events/index.html"), "utf8");
+    await readFile(join(outDir, "a/blog/news/rss.xml"), "utf8");
     // Nothing from another host leaked in.
     await assert.rejects(() =>
       readFile(join(outDir, "blog/updates/index.html"))
@@ -101,21 +103,23 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
 test("net bakes only its blog sections, light blue with a sparse lattice", async () => {
   const { outDir, close } = await bakeSections(NET_SECTIONS);
   try {
-    const devblog = await readFile(join(outDir, "blog/index.html"), "utf8");
+    const devblog = await readFile(join(outDir, "dev-blog/index.html"), "utf8");
     assert.match(devblog, /data-scheme="light"/);
     assert.match(devblog, /data-hue="255"/);
     assert.match(devblog, /data-dots="large"/);
     assert.ok(
-      devblog.includes('<a class="site-title" href="/blog">REMILIANET</a>'),
+      devblog.includes('<a class="site-title" href="/dev-blog">REMILIANET</a>'),
     );
     assert.ok(devblog.includes('href="https://www.remilia.net/"'));
     assert.ok(
       devblog.includes(
-        '<link rel="canonical" href="https://www.remilia.net/blog">',
+        '<link rel="canonical" href="https://blog.remilia.net/dev-blog">',
       ),
     );
     await readFile(join(outDir, "updates/index.html"), "utf8");
-    await assert.rejects(() => readFile(join(outDir, "a/news/index.html")));
+    await assert.rejects(() =>
+      readFile(join(outDir, "a/blog/news/index.html"))
+    );
   } finally {
     close();
   }
@@ -142,9 +146,13 @@ test("site-head leads with its links and closes on the brand alone", () => {
   const news = chromeFor("news");
   assert.match(
     news.header,
-    /<a class="site-title" href="\/a\/news">REMILIA<\/a>/,
+    /<a class="site-title" href="\/a\/blog\/news">REMILIA<\/a>/,
   );
   assert.equal(news.header.includes("NEWS"), false);
+  // Index is the host's pooled listing on every host.
+  assert.match(news.header, /<a href="\/a\/blog">Index</);
+  assert.match(chromeFor("dev-blog").header, /<a href="\/">Index</);
+  assert.match(chromeFor("net-blog").header, /aria-current="page">Index</);
 });
 
 test("org still wears its own brand and pinned light theme", async () => {

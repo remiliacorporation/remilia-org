@@ -22,8 +22,8 @@ pnpm validate
 pnpm typecheck
 pnpm test
 pnpm bake             # remilia.org: bake:corp then bake:org
-pnpm bake:com         # remilia.com blogs → deploy-com/{a/news,a/events}
-pnpm bake:net         # remilia.net blogs → deploy-net/{updates,blog}
+pnpm bake:com         # remilia.com blog → deploy-com/a/blog/{news,events}
+pnpm bake:net         # blog.remilia.net → deploy-net/{updates,dev-blog}
 ```
 
 Sanity: project `8x9419lh`, dataset `production`.

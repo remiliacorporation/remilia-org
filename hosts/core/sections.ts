@@ -3,7 +3,10 @@ import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
   CHANNEL_PATH_LABEL,
+  HOST_AGGREGATE,
+  indexPath,
   indexUrl,
+  isAggregate,
   type Channel,
   type HostId,
 } from "@remilia/seo";
@@ -29,7 +32,7 @@ const SECTION_META: Record<
   press: {
     title: "Remilia Corporation — Press",
     description: "Org corporate statements from Remilia Corporation.",
-    lead: "Corporate statements only. Brand releases (fashion, product launches) live on remilia.com/a/news.",
+    lead: "Corporate statements only. Brand releases (fashion, product launches) live on remilia.com/a/blog/news.",
     whenToUse: [
       "Cite Remilia corporate statements.",
       "HIKKI Punks / Atelier / FRUiTS / product launches → News.",
@@ -59,7 +62,7 @@ const SECTION_META: Record<
       "Fashion, lifestyle brand, publishing, and brand press releases.",
     lead: "Fashion, lifestyle, publishing, and brand launches (incl. HIKKI Punks, Atelier) on remilia.com.",
     whenToUse: [
-      "Cite Remilia fashion / lifestyle / publishing / brand press releases on remilia.com/a/news.",
+      "Cite Remilia fashion / lifestyle / publishing / brand press releases on remilia.com/a/blog/news.",
     ],
   },
   events: {
@@ -67,13 +70,13 @@ const SECTION_META: Record<
     description: "Event posts from Remilia — writeups with photo galleries.",
     lead: "Describe the event, attach a gallery. Same idea as Ghost posts on blog.remilia.org.",
     whenToUse: [
-      "Cite Remilia event writeups and photo galleries on remilia.com/a/events.",
+      "Cite Remilia event writeups and photo galleries on remilia.com/a/blog/events.",
     ],
   },
   "dev-updates": {
     title: "RemiliaNET — Updates",
     description: "Other RemiliaNET product notes (vault, promos).",
-    lead: "Product notes that aren’t full engineering posts. Schema id `dev-updates`; path /updates.",
+    lead: "Product notes and announcements that aren’t full engineering posts. Schema id `dev-updates`; path /updates.",
     whenToUse: [
       "Cite short RemiliaNET product notes.",
       "Alpha / wiki / miladychan engineering posts → Dev blog.",
@@ -82,7 +85,7 @@ const SECTION_META: Record<
   "dev-blog": {
     title: "RemiliaNET — Dev blog",
     description: "RemiliaNET Alpha, wiki, and miladychan engineering posts.",
-    lead: "Engineering writeups: RemiliaNET Alpha, wiki, miladychan. Schema id `dev-blog`; path /blog.",
+    lead: "Engineering writeups: RemiliaNET Alpha, wiki, miladychan. Schema id `dev-blog`; path /dev-blog.",
     whenToUse: [
       "Cite RemiliaNET Alpha, wiki, or miladychan engineering posts.",
     ],
@@ -95,6 +98,24 @@ const SECTION_META: Record<
     whenToUse: [
       "Scan everything Remilia Corporation has published in one feed.",
       "Per-section feeds and archives live under /blog/<section>.",
+    ],
+  },
+  "com-blog": {
+    title: "Remilia — Blog",
+    description: "Every Remilia post on remilia.com across News and Events.",
+    lead: "Brand news and event writeups from remilia.com, pooled.",
+    whenToUse: [
+      "Scan everything published on remilia.com in one feed.",
+      "Per-section feeds and archives live under /a/blog/<section>.",
+    ],
+  },
+  "net-blog": {
+    title: "RemiliaNET — Blog",
+    description: "Every RemiliaNET post across Updates and the Dev blog.",
+    lead: "RemiliaNET product updates and engineering writeups, pooled.",
+    whenToUse: [
+      "Scan everything RemiliaNET has published in one feed.",
+      "Per-section feeds and archives live under /<section>.",
     ],
   },
 };
@@ -117,18 +138,16 @@ const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = 
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
-  // Index points at the pooled index where one exists (org); the other hosts
-  // bake standalone sections, so Index is the section itself.
-  const indexBase =
-    CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : base;
+  // Index and the wordmark both point at the host's pooled index.
+  const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
 <nav aria-label="Site">
-<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${channel === "blog" ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${isAggregate(channel) ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 <hr class="nav-rule">
-<a class="site-title" href="${base}">${brand.label}</a>
+<a class="site-title" href="${indexPath(channel)}">${brand.label}</a>
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">
@@ -149,8 +168,8 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
         label: "Remilia Corporation (wiki)",
         url: "https://wiki.remilia.org/Remilia_Corporation",
       },
-      { label: "RemiliaNET blog", url: "https://www.remilia.net/blog" },
-      { label: "News", url: "https://remilia.com/a/news" },
+      { label: "RemiliaNET blog", url: indexUrl("net-blog") },
+      { label: "Remilia blog", url: indexUrl("com-blog") },
       { label: CHANNEL_PATH_LABEL.press, url: indexUrl("press") },
     ],
   };

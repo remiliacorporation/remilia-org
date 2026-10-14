@@ -10,7 +10,10 @@ import {
 import { CHANNELS, CHANNEL_BASEPATH } from "./urls";
 
 test("the edge function knows every section the bake publishes", () => {
-  const baked = [...new Set(CHANNELS.map((c) => CHANNEL_BASEPATH[c]))];
+  // A pooled index at a site root (blog.remilia.net) is no section prefix.
+  const baked = [
+    ...new Set(CHANNELS.map((c) => CHANNEL_BASEPATH[c]).filter(Boolean)),
+  ];
   const known = [...new Set([...baked, ...MOVED_PREFIXES])].sort();
   assert.deepEqual(
     [...SECTION_PREFIXES].sort(),
@@ -26,7 +29,7 @@ test("a mixed-case section URL redirects to the canonical lowercase path", () =>
   );
   // Old top-level paths lowercase too — `_redirects` then 301s to /blog/*.
   assert.equal(caseRedirect("/PRESS"), "/press");
-  assert.equal(caseRedirect("/A/News/Drop"), "/a/news/drop");
+  assert.equal(caseRedirect("/A/Blog/News/Drop"), "/a/blog/news/drop");
 });
 
 test("an already-lowercase path is left alone", () => {

@@ -15,10 +15,10 @@ export const CHANNELS: { title: string; value: Channel }[] = [
   { title: "Press (remilia.org/blog/press)", value: "press" },
   { title: "Thought (remilia.org/blog/thought)", value: "thought" },
   { title: "Archive (remilia.org/blog/archive)", value: "archive" },
-  { title: "News (remilia.com/a/news)", value: "news" },
-  { title: "Events (remilia.com/a/events)", value: "events" },
-  { title: "Dev updates (remilia.net/updates)", value: "dev-updates" },
-  { title: "Dev blog (remilia.net/blog)", value: "dev-blog" },
+  { title: "News (remilia.com/a/blog/news)", value: "news" },
+  { title: "Events (remilia.com/a/blog/events)", value: "events" },
+  { title: "Dev updates (blog.remilia.net/updates)", value: "dev-updates" },
+  { title: "Dev blog (blog.remilia.net/dev-blog)", value: "dev-blog" },
 ];
 
 export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
@@ -26,10 +26,10 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   press: "remilia.org/blog/press",
   thought: "remilia.org/blog/thought",
   archive: "remilia.org/blog/archive",
-  news: "remilia.com/a/news",
-  events: "remilia.com/a/events",
-  "dev-updates": "remilia.net/updates",
-  "dev-blog": "remilia.net/blog",
+  news: "remilia.com/a/blog/news",
+  events: "remilia.com/a/blog/events",
+  "dev-updates": "blog.remilia.net/updates",
+  "dev-blog": "blog.remilia.net/dev-blog",
 };
 
 const CHANNEL_EDITORS: Record<Channel, string[]> = {

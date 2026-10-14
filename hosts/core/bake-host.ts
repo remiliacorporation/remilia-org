@@ -1,14 +1,20 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
+import { createClient } from "@sanity/client";
 import {
   CHANNEL_BASEPATH,
+  CHANNEL_HOST,
+  HOST_AGGREGATE,
+  canonicalFor,
+  indexUrl,
   type Channel,
 } from "@remilia/seo";
 import {
   assertDatasetReadable,
   bake,
   checkInternalLinks,
+  legacyHostRules,
   mergeRedirectBlock,
   type RedirectRule,
 } from "@remilia/renderer";
@@ -30,12 +36,18 @@ export interface HostBake {
    */
   linkOrigin?: string;
   /**
-   * Bake the shared blog index — a listing-only surface pooling these channels
-   * at /blog (org only). Posts, archives and feeds stay on their sections.
+   * Bake the host's pooled index (`HOST_AGGREGATE`) — a listing-only surface
+   * over these channels. Posts, archives and feeds stay on their sections.
    */
   aggregate?: Channel[];
   /** Old top-level paths the sections used to live at — emits 301s. */
   movedFrom?: Partial<Record<Channel, string>>;
+  /**
+   * A retired blog host served from this site as a domain alias. Every post
+   * imported from it 301s to its canonical, on any host; other paths land on
+   * this host's pooled index.
+   */
+  legacyHost?: { origin: string; channels: Channel[] };
 }
 
 const projectId = "8x9419lh";
@@ -97,11 +109,12 @@ export async function bakeHost(spec: HostBake): Promise<void> {
     total += result.pages;
     console.log(`baked ${result.pages} pages for ${channel} into ${outDir}`);
   }
+  const aggregate = HOST_AGGREGATE[CHANNEL_HOST[spec.sections[0]!]];
   if (spec.aggregate) {
     const result = await bake({
-      channel: "blog",
-      chrome: chromeFor("blog"),
-      host: hostFor("blog"),
+      channel: aggregate,
+      chrome: chromeFor(aggregate),
+      host: hostFor(aggregate),
       outDir,
       projectId,
       dataset,
@@ -111,9 +124,41 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       aggregateOf: spec.aggregate,
     });
     total += result.pages;
-    console.log(`baked aggregate index at /blog (${result.pages} pages)`);
+    console.log(
+      `baked aggregate index at ${CHANNEL_BASEPATH[aggregate] || "/"} (${result.pages} pages)`,
+    );
   }
   console.log(`baked ${total} ${spec.name} pages total`);
+
+  if (spec.legacyHost) {
+    const { origin, channels } = spec.legacyHost;
+    const client = createClient({
+      projectId,
+      dataset,
+      apiVersion: "2026-02-01",
+      useCdn: false,
+      token,
+      perspective,
+    });
+    const posts = await client.fetch<
+      { channel: Channel; slug: string; legacyUrl?: string }[]
+    >(
+      `*[_type == "post" && channel in $channels && defined(slug.current)]{
+        channel, "slug": slug.current, "legacyUrl": migration.legacyUrl
+      }`,
+      { channels },
+    );
+    const rules = legacyHostRules(
+      origin,
+      posts.map((p) => ({
+        legacyUrl: p.legacyUrl,
+        canonical: canonicalFor(p.channel, p.slug),
+      })),
+      `${indexUrl(aggregate)}/`,
+    );
+    await mergeInto(outDir, "redirects:legacy-host", rules);
+    console.log(`redirects: ${rules.length - 3} posts from ${origin}`);
+  }
 
   if (spec.movedFrom) {
     const rules = Object.entries(spec.movedFrom).flatMap(
@@ -125,17 +170,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
         ];
       },
     );
-    const redirectsPath = join(outDir, "_redirects");
-    let existing = "";
-    try {
-      existing = await readFile(redirectsPath, "utf8");
-    } catch {
-      existing = "/*    /404.html    404\n";
-    }
-    await writeFile(
-      redirectsPath,
-      mergeRedirectBlock(existing, "redirects:moved-sections", rules),
-    );
+    await mergeInto(outDir, "redirects:moved-sections", rules);
     console.log(`redirects: ${rules.length / 2} moved sections 301 to /blog/*`);
   }
 
@@ -158,6 +193,21 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       );
   }
   console.log(`internal links resolve across ${spec.sections.length} sections`);
+}
+
+async function mergeInto(
+  outDir: string,
+  block: string,
+  rules: RedirectRule[],
+): Promise<void> {
+  const redirectsPath = join(outDir, "_redirects");
+  let existing = "";
+  try {
+    existing = await readFile(redirectsPath, "utf8");
+  } catch {
+    existing = "/*    /404.html    404\n";
+  }
+  await writeFile(redirectsPath, mergeRedirectBlock(existing, block, rules));
 }
 
 export function runHostBake(spec: HostBake): void {

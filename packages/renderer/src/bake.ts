@@ -8,6 +8,7 @@ import {
   CHANNEL_HOST,
   CHANNEL_LABEL,
   CHANNEL_ORIGIN,
+  HOST_AGGREGATE,
   HOST_SECTIONS,
   atom,
   blogPosting,
@@ -16,6 +17,7 @@ import {
   event as eventJsonLd,
   feedLinks,
   imageGallery,
+  indexPath,
   indexUrl,
   legacyRedirect,
   llmsTxt,
@@ -62,6 +64,7 @@ import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 import {
   aliasRules,
+  ghostFromUrl,
   mergeRedirectBlock,
   type RedirectRule,
 } from "./redirects";
@@ -488,7 +491,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         key: t.slug,
         href: `${basePath}/months/${t.slug}`,
       })),
-      basePath,
+      indexPath(channel),
       current,
     );
 
@@ -513,11 +516,10 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const sharedCats = {
     cats: siblings.map((c) => ({
       label: CHANNEL_LABEL[c],
-      href: CHANNEL_BASEPATH[c],
+      href: indexPath(c),
     })),
     current: aggregated ? "" : CHANNEL_LABEL[channel],
-    allHref:
-      CHANNEL_HOST[channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
+    allHref: indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]),
   };
   const sectionNav = sectionSel(sharedCats);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
@@ -705,7 +707,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         authorHref: authorHrefFor(p),
         canonical: pageUrl,
         category: CHANNEL_LABEL[channel],
-        categoryHref: basePath,
+        categoryHref: indexPath(channel),
         monthHref: monthHrefFor(p),
         bodyHtml: galleries ? `${bodyWithHero}\n${galleries}` : bodyWithHero,
         metaHtml: adjacentHtml(navPosts, `${basePath}/${p.slug}`),
@@ -776,7 +778,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       const path = page === 1 ? root : `${root}/page/${page}`;
       const canonical = `${CHANNEL_ORIGIN[channel]}${path}`;
       const prevHref =
-        page === 2 ? root : page > 2 ? `${root}/page/${page - 1}` : undefined;
+        page === 2 ? root || "/" : page > 2 ? `${root}/page/${page - 1}` : undefined;
       const nextHref = page < pages ? `${root}/page/${page + 1}` : undefined;
       const relLinks = [
         prevHref
@@ -1062,19 +1064,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   return { pages: posts.length + 1 };
 }
 
-/** Normalize Ghost-style URLs so Netlify host redirects match. */
-function ghostFromUrl(url: string): string {
-  const u = new URL(url);
-  u.hash = "";
-  u.search = "";
-  let path = u.pathname;
-  if (!path.endsWith("/")) path += "/";
-  return `${u.origin}${path}`;
-}
-
 /**
  * One `_redirects` block per section: 301s for every path a post used to live
- * at, the Ghost host rules for press, and a section-scoped 404 so a bad URL
+ * at and a section-scoped 404 so a bad URL
  * under `/updates` lands on the Updates 404 rather than the corporate one.
  */
 async function writeChannelRedirects(
@@ -1085,21 +1077,6 @@ async function writeChannelRedirects(
   aggregated = false,
 ): Promise<void> {
   const rules: RedirectRule[] = [];
-
-  if (channel === "press") {
-    rules.push(
-      {
-        from: "https://blog.remilia.org/",
-        to: `${indexUrl("press")}/`,
-        force: true,
-      },
-      {
-        from: "https://blog.remilia.org",
-        to: `${indexUrl("press")}/`,
-        force: true,
-      },
-    );
-  }
 
   // Every imported post keeps its legacy host URL as a 301 → its current
   // canonical. Emitted in the post's own section block so a post that moved
@@ -1122,7 +1099,10 @@ async function writeChannelRedirects(
   // need their own 404.
   if (!aggregated) rules.push(...aliasRules(basePath, posts));
 
-  rules.push({ from: `${basePath}/*`, to: `${basePath}/404.html`, status: 404 });
+  // At a site root the section 404 is the site-wide catch-all, which the
+  // file already ends on.
+  if (basePath)
+    rules.push({ from: `${basePath}/*`, to: `${basePath}/404.html`, status: 404 });
 
   const redirectsPath = join(outDir, "_redirects");
   let existing = "";

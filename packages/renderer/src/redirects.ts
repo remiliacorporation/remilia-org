@@ -48,6 +48,39 @@ export function aliasRules(
   return rules;
 }
 
+/** Normalize Ghost-style URLs so Netlify host redirects match. */
+export function ghostFromUrl(url: string): string {
+  const u = new URL(url);
+  u.hash = "";
+  u.search = "";
+  let path = u.pathname;
+  if (!path.endsWith("/")) path += "/";
+  return `${u.origin}${path}`;
+}
+
+/**
+ * Rules for a retired blog host pointed at this site (a domain alias): every
+ * post that used to live there 301s to its canonical, wherever it lives now,
+ * and any other path on that host lands on `fallback` rather than a 404.
+ */
+export function legacyHostRules(
+  origin: string,
+  posts: { legacyUrl?: string; canonical: string }[],
+  fallback: string,
+): RedirectRule[] {
+  const rules: RedirectRule[] = [];
+  for (const p of posts) {
+    if (!p.legacyUrl?.startsWith(`${origin}/`)) continue;
+    rules.push({ from: ghostFromUrl(p.legacyUrl), to: p.canonical, force: true });
+  }
+  rules.push(
+    { from: `${origin}/`, to: fallback, force: true },
+    { from: origin, to: fallback, force: true },
+    { from: `${origin}/*`, to: fallback, force: true },
+  );
+  return rules;
+}
+
 export function netlifyRedirectLine(rule: RedirectRule): string {
   const status = rule.status ?? 301;
   return `${rule.from}  ${rule.to}  ${status}${rule.force ? "!" : ""}`;

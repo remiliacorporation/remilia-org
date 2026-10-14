@@ -19,6 +19,8 @@ import {
   COM_SECTIONS,
   COM_POST_SECTIONS,
   EVENTS_PATH_LABEL,
+  indexPath,
+  indexUrl,
 } from "./index";
 
 test("canonical URLs follow the ratified section map", () => {
@@ -27,26 +29,32 @@ test("canonical URLs follow the ratified section map", () => {
     ["press", "launch", "https://remilia.org/blog/press/launch"],
     ["thought", "essay", "https://remilia.org/blog/thought/essay"],
     ["archive", "interview", "https://remilia.org/blog/archive/interview"],
-    ["news", "fw26", "https://remilia.com/a/news/fw26"],
-    ["events", "party", "https://remilia.com/a/events/party"],
-    ["dev-updates", "ship", "https://www.remilia.net/updates/ship"],
-    ["dev-blog", "vaults", "https://www.remilia.net/blog/vaults"],
+    ["news", "fw26", "https://remilia.com/a/blog/news/fw26"],
+    ["events", "party", "https://remilia.com/a/blog/events/party"],
+    ["dev-updates", "ship", "https://blog.remilia.net/updates/ship"],
+    ["dev-blog", "vaults", "https://blog.remilia.net/dev-blog/vaults"],
   ] as const) assert.equal(canonicalFor(channel, slug), expected);
-  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/events/tokyo");
-  assert.equal(eventsIndexUrl(), "https://remilia.com/a/events");
-  assert.equal(rssUrl("dev-blog"), "https://www.remilia.net/blog/rss.xml");
-  assert.equal(sitemapUrl("news"), "https://remilia.com/a/news/sitemap.xml");
+  assert.equal(eventUrl("tokyo"), "https://remilia.com/a/blog/events/tokyo");
+  assert.equal(eventsIndexUrl(), "https://remilia.com/a/blog/events");
+  assert.equal(rssUrl("dev-blog"), "https://blog.remilia.net/dev-blog/rss.xml");
+  assert.equal(sitemapUrl("news"), "https://remilia.com/a/blog/news/sitemap.xml");
   assert.equal(CHANNEL_BASEPATH["dev-updates"], "/updates");
-  assert.equal(CHANNEL_BASEPATH.events, "/a/events");
+  assert.equal(CHANNEL_BASEPATH.events, "/a/blog/events");
+  // Each host pools its sections: org at /blog, com at /a/blog, and
+  // blog.remilia.net at its root.
+  assert.equal(indexUrl("com-blog"), "https://remilia.com/a/blog");
+  assert.equal(indexUrl("net-blog"), "https://blog.remilia.net");
+  assert.equal(indexPath("net-blog"), "/");
+  assert.equal(indexPath("events"), "/a/blog/events");
   assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
   assert.deepEqual(COM_SECTIONS, ["news", "events"]);
   assert.deepEqual(COM_POST_SECTIONS, ["news", "events"]);
-  assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/events");
+  assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/blog/events");
 });
 
 test("legacy Ghost redirect maps slug to the channel host", () => {
   for (const [channel, to] of [
-    ["dev-blog", "https://www.remilia.net/blog/vault-notes"],
+    ["dev-blog", "https://blog.remilia.net/dev-blog/vault-notes"],
     ["press", "https://remilia.org/blog/press/vault-notes"],
   ] as const)
     assert.deepEqual(legacyRedirect(channel, "vault-notes"), {
@@ -155,13 +163,13 @@ test("rss escapes entities and uses canonical permalinks", () => {
   );
   assert.ok(
     xml.includes(
-      '<guid isPermaLink="true">https://www.remilia.net/blog/vaults</guid>',
+      '<guid isPermaLink="true">https://blog.remilia.net/dev-blog/vaults</guid>',
     ),
   );
   assert.ok(xml.includes("Vaults &lt;2&gt;"));
   assert.ok(xml.includes("Notes &amp; &quot;vaults&quot;"));
   assert.ok(
-    xml.includes('atom:link href="https://www.remilia.net/blog/rss.xml"'),
+    xml.includes('atom:link href="https://blog.remilia.net/dev-blog/rss.xml"'),
   );
 });
 
@@ -193,7 +201,9 @@ test("llmsTxt lists only the host channel plus citations", () => {
       },
     ],
   });
-  assert.ok(txt.includes("[Vaults <2>](https://www.remilia.net/blog/vaults)"));
+  assert.ok(
+    txt.includes("[Vaults <2>](https://blog.remilia.net/dev-blog/vaults)"),
+  );
   assert.ok(txt.includes("## Cite elsewhere"));
   assert.ok(txt.includes("## When to use this site"));
   assert.ok(!txt.includes("remilia.org/press"));

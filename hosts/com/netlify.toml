@@ -1,0 +1,14 @@
+# Netlify site for the com blog. Set this site's base directory to hosts/com so
+# Netlify reads this file instead of the root one, which bakes remilia.org.
+[build]
+  # Prune to production before baking, as the org site does.
+  command = "cd ../.. && pnpm install --prod --frozen-lockfile && pnpm --filter @remilia/hosts bake:com"
+  publish = "../../deploy-com"
+  ignore = "bash ../../netlify/ignore-build.sh"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_ENV = "production"
+
+[context.deploy-preview.environment]
+  SANITY_PERSPECTIVE = "drafts"

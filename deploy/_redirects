@@ -26,14 +26,24 @@
 /cn/contact/ /cn/contact/index.html 200
 /cn/careers /cn/careers/index.html 200
 /cn/careers/ /cn/careers/index.html 200
+# Brand releases that moved from org Press to remilia.com News. Unforced, so
+# they apply only once the org page is gone.
+/blog/press/press-release-remilia-corporation-launches-megasize-alien-milady-fumo-fueling-unprecedented-demand-in-fumo-token  https://remilia.com/a/blog/news/press-release-remilia-corporation-launches-megasize-alien-milady-fumo-fueling-unprecedented-demand-in-fumo-token  301
+/blog/press/press-release-elena-velez-partners-with-remilia-corporation-to-launch-remilia-atelier-debuting-the-universal-work-suit  https://remilia.com/a/blog/news/press-release-elena-velez-partners-with-remilia-corporation-to-launch-remilia-atelier-debuting-the-universal-work-suit  301
+/blog/press/pre-release-announcement-the-exegesis-of-miya-black-hearted-cyber-angel-baby  https://remilia.com/a/blog/news/pre-release-announcement-the-exegesis-of-miya-black-hearted-cyber-angel-baby  301
+/blog/press/press-release-fruits-x-remilia-01-2024  https://remilia.com/a/blog/news/press-release-fruits-x-remilia-01-2024  301
+/blog/press/press-release-remilia-corporation-debuts-luxury-streetwear-collection-hikki-punks-exit-society  https://remilia.com/a/blog/news/press-release-remilia-corporation-debuts-luxury-streetwear-collection-hikki-punks-exit-society  301
+
 # The rules above are hand-written and live only here, so this file stays
 # tracked even though the rest of deploy/ is generated and gitignored.
 #
 # bake:org writes one "bake:redirects:<section>" block per section below:
-# 301s for renamed or moved posts, the Ghost host rules for /press, and a
-# section-scoped 404. None are forced, so a real page always wins. Each
-# block is rebuilt from the published posts every deploy, so what sits
-# inside the markers here is a stale snapshot, not what is live.
+# 301s for renamed or moved posts and a section-scoped 404, then a
+# "bake:redirects:legacy-host" block sending every old blog.remilia.org URL to
+# its post, on whichever host it lives now. Path rules are unforced, so a real
+# page always wins; host rules are forced. Each block is rebuilt from the
+# published posts every deploy, so what sits inside the markers here is a
+# stale snapshot, not what is live.
 #
 # Losing this file does not fail the build: the bake starts from a bare
 # "/*  /404.html  404" instead and silently ships without the rules above.

@@ -39,9 +39,9 @@ Corporate pages are hand-authored in `deploy/src/`. Edit `.layer-base` and run `
 
 | Host | Sections | Paths |
 | --- | --- | --- |
-| remilia.org | updates, press, thought, archive | `/updates`, `/press`, `/thought`, `/archive` |
-| remilia.com | news, events | `/a/news`, `/a/events` |
-| remilia.net | dev-updates, dev-blog | `/updates`, `/blog` |
+| remilia.org | updates, press, thought, archive | `/blog` (all), `/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/archive` |
+| remilia.com | news, events | `/a/blog` (all), `/a/blog/news`, `/a/blog/events` (Shopify app proxy) |
+| blog.remilia.net | dev-updates, dev-blog | `/` (all), `/updates`, `/dev-blog` |
 
 Sanity uses project `8x9419lh`, dataset `production`. The `.org` build reads published content only. Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` to a read token when authenticated access is needed. Keep credentials in the deployment environment, never in source control.
 
