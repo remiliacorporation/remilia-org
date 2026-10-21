@@ -4,8 +4,7 @@
   var ASHBY = "https://jobs.ashbyhq.com/remilia";
   var table = document.getElementById("jobs-table");
   var fxTable = document.querySelector(".layer-fx .jobs-board");
-  var root = document.querySelector(".layer-base");
-  if (!table || !root) return;
+  if (!table) return;
   var office = table.getAttribute("data-office");
 
   var COPY = {
@@ -32,32 +31,6 @@
   };
   var copy = COPY[document.documentElement.lang] || COPY.en;
 
-  var COLS = [
-    {
-      key: "domain",
-      label: "Domain",
-      chips: [
-        ["Eng", "Eng"],
-        ["Design", "Design"],
-        ["Ops", "Ops"],
-      ],
-    },
-    {
-      key: "title",
-      label: "Role",
-      chips: [],
-    },
-    {
-      key: "level",
-      label: "Levels",
-      chips: [
-        ["Entry", "Entry"],
-        ["Career", "Career"],
-        ["Senior", "Senior"],
-      ],
-    },
-  ];
-  var picked = { domain: "", level: "" };
   var rows = [];
 
   function esc(s) {
@@ -94,12 +67,6 @@
     if (/irvine|orange county|\boc\b|california/.test(s))
       return { name: "Irvine, CA", chip: "us" };
     return { name: location || a.addressLocality || "—", chip: "" };
-  }
-  function groupOf(j) {
-    var d = ((j.department || "") + " " + (j.title || "")).toLowerCase();
-    if (/product|design/.test(d)) return "Design";
-    if (/tech|engineer/.test(d)) return "Eng";
-    return "Ops";
   }
   function levelsOf(j) {
     var title = (j.title || "").toLowerCase();
@@ -149,7 +116,6 @@
   function rowsFrom(j) {
     var shared = {
       domain: j.department || "Open",
-      group: groupOf(j),
       title: j.title || "",
       levels: levelsOf(j),
       url: j.jobUrl || j.applyUrl || ASHBY + "/" + j.id,
@@ -189,46 +155,8 @@
       ? '<caption><a tabindex="-1" href="#open-positions">OPEN POSITIONS</a></caption>'
       : '<caption><h2 id="open-positions"><a href="#open-positions">OPEN POSITIONS</a></h2></caption>';
   }
-  function chipRow(col) {
-    return (
-      '<div class="jobs-chips">' +
-      col.chips
-        .map(function (c, i) {
-          var on = picked[col.key] === c[0];
-          return (
-            (i ? '<span class="jobs-slash"> / </span>' : "") +
-            '<button type="button" class="jobs-chip' +
-            (on ? " on" : "") +
-            '" aria-pressed="' +
-            on +
-            '" data-col="' +
-            col.key +
-            '" data-val="' +
-            c[0] +
-            '">' +
-            (on ? "[x] " : "[_] ") +
-            c[1] +
-            "</button>"
-          );
-        })
-        .join("") +
-      "</div>"
-    );
-  }
   function html(fx) {
-    var out =
-      caption(fx) +
-      '<tr class="jobs-cols">' +
-      COLS.map(function (c) {
-        return (
-          '<th><div class="jobs-label">' +
-          c.label +
-          "</div>" +
-          chipRow(c) +
-          "</th>"
-        );
-      }).join("") +
-      "</tr>";
+    var out = caption(fx);
     if (!rows.length) {
       return (
         out +
@@ -248,32 +176,12 @@
           '<a class="job-go" rel="external noopener noreferrer" href="' +
           esc(j.url) +
           '">';
-        var cells = [
-          ["domain", j.group, picked.domain === j.group, j.domain],
-          ["title", j.title, false, j.title],
-          [
-            "level",
-            j.levels.join(" "),
-            j.levels.indexOf(picked.level) >= 0,
-            j.levels.join(" • "),
-          ],
-        ];
+        var cells = [j.domain, j.title, j.levels.join(" • ")];
         out +=
           "<tr>" +
           cells
             .map(function (c) {
-              return (
-                '<td class="' +
-                (c[2] ? "hit" : "") +
-                '" data-' +
-                c[0] +
-                '="' +
-                esc(c[1]) +
-                '">' +
-                go +
-                esc(c[3]) +
-                "</a></td>"
-              );
+              return "<td>" + go + esc(c) + "</a></td>";
             })
             .join("") +
           "</tr>";
@@ -284,53 +192,6 @@
     table.innerHTML = html(false);
     if (fxTable) fxTable.innerHTML = html(true);
   }
-  function toggle(col, id) {
-    picked[col] = picked[col] === id ? "" : id;
-    var focused = table.contains(document.activeElement);
-    paint();
-    if (focused)
-      table
-        .querySelector('[data-col="' + col + '"][data-val="' + id + '"]')
-        ?.focus();
-  }
-  function preview(chip, on) {
-    var col = chip.getAttribute("data-col");
-    var val = chip.getAttribute("data-val");
-    var sel =
-      ".jobs-board td" +
-      (col === "level" ? '[data-level~="' : "[data-" + col + '="') +
-      val +
-      '"]';
-    document.querySelectorAll(sel).forEach(function (td) {
-      td.classList.toggle("preview", on);
-    });
-  }
-  function crossing(e, sel) {
-    var el = e.target.closest(sel);
-    return el && !(e.relatedTarget && el.contains(e.relatedTarget)) ? el : null;
-  }
-
-  root.addEventListener("click", function (e) {
-    var chip = e.target.closest(".jobs-chip");
-    if (chip)
-      toggle(chip.getAttribute("data-col"), chip.getAttribute("data-val"));
-  });
-  root.addEventListener("mouseover", function (e) {
-    var chip = crossing(e, ".jobs-chip");
-    if (chip) preview(chip, true);
-  });
-  root.addEventListener("mouseout", function (e) {
-    var chip = crossing(e, ".jobs-chip");
-    if (chip) preview(chip, false);
-  });
-  root.addEventListener("focusin", function (e) {
-    var chip = e.target.closest(".jobs-chip");
-    if (chip) preview(chip, true);
-  });
-  root.addEventListener("focusout", function (e) {
-    var chip = e.target.closest(".jobs-chip");
-    if (chip) preview(chip, false);
-  });
 
   fetch(BOARD)
     .then(function (r) {
