@@ -6,6 +6,35 @@
   var fxTable = document.querySelector(".layer-fx .jobs-board");
   if (!table) return;
   var office = table.getAttribute("data-office");
+  var heading = table.caption ? table.caption.outerHTML : "";
+  var wrap = document.querySelector(".layer-wrap");
+  var SCROLL = "careers-scroll";
+
+  // Switching office keeps the reader where they were on the page.
+  document.addEventListener("click", function (e) {
+    if (!wrap || !e.target.closest(".office-card")) return;
+    try {
+      sessionStorage.setItem(SCROLL, String(wrap.scrollTop));
+    } catch (_) {}
+  });
+  var top = null;
+  try {
+    top = sessionStorage.getItem(SCROLL);
+    sessionStorage.removeItem(SCROLL);
+  } catch (_) {}
+  // Runs again once the openings load, since the page is shorter until then.
+  // A page too short to reach the old position gets just enough end space.
+  function restore() {
+    var main = document.getElementById("content");
+    if (!wrap || !top || !main) return;
+    main.style.paddingBottom = "";
+    var short = +top - (wrap.scrollHeight - wrap.clientHeight);
+    if (short > 0)
+      main.style.paddingBottom =
+        parseFloat(getComputedStyle(main).paddingBottom) + short + "px";
+    wrap.scrollTo({ top: +top, behavior: "instant" });
+  }
+  restore();
 
   var COPY = {
     en: {
@@ -153,7 +182,7 @@
   function caption(fx) {
     return fx
       ? '<caption><a tabindex="-1" href="#open-positions">OPEN POSITIONS</a></caption>'
-      : '<caption><h2 id="open-positions"><a href="#open-positions">OPEN POSITIONS</a></h2></caption>';
+      : heading;
   }
   function html(fx) {
     var out = caption(fx);
@@ -211,6 +240,7 @@
         return !office || !j.chip || j.chip === office;
       });
       paint();
+      restore();
     })
     .catch(function () {
       var body =
@@ -220,5 +250,6 @@
         ".</td></tr>";
       table.innerHTML = caption(false) + body;
       if (fxTable) fxTable.innerHTML = caption(true) + body;
+      restore();
     });
 })();
