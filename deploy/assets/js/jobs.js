@@ -43,12 +43,9 @@
       ],
     },
     {
-      key: "track",
+      key: "title",
       label: "Role",
-      chips: [
-        ["IC", "IC"],
-        ["Manager", "Manager"],
-      ],
+      chips: [],
     },
     {
       key: "level",
@@ -60,7 +57,7 @@
       ],
     },
   ];
-  var picked = { domain: "", track: "", level: "" };
+  var picked = { domain: "", level: "" };
   var rows = [];
 
   function esc(s) {
@@ -134,12 +131,6 @@
       return tags.indexOf(x) >= 0;
     });
   }
-  function trackOf(j) {
-    var s = [j.title, j.department, j.team].join(" ").toLowerCase();
-    return /\bmanager\b|director|head of|\bvp\b|chief/.test(s)
-      ? "Manager"
-      : "IC";
-  }
   function places(j) {
     var raw = [{ location: j.location, address: j.address }].concat(
       j.secondaryLocations || [],
@@ -160,7 +151,6 @@
       domain: j.department || "Open",
       group: groupOf(j),
       title: j.title || "",
-      track: trackOf(j),
       levels: levelsOf(j),
       url: j.jobUrl || j.applyUrl || ASHBY + "/" + j.id,
     };
@@ -260,7 +250,7 @@
           '">';
         var cells = [
           ["domain", j.group, picked.domain === j.group, j.domain],
-          ["track", j.track, picked.track === j.track, j.title],
+          ["title", j.title, false, j.title],
           [
             "level",
             j.levels.join(" "),
