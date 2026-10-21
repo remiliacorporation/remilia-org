@@ -471,13 +471,14 @@ header > h1:focus-visible{outline-offset:4px}
      becomes one list entry: the role on top, domain and levels on a small
      line beneath, one rule between entries. */
   .jobs-board,.jobs-board :is(caption,tbody){display:block}
-  .jobs-board tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;padding:10px 8px;border:1px solid var(--ink);border-top:0}
+  .jobs-board tr{display:flex;flex-wrap:wrap;align-items:baseline;padding:10px 8px;border:1px solid var(--ink);border-top:0}
   .jobs-board td{display:block;width:auto;white-space:normal;border:0;padding:0}
   .jobs-board td a{padding:0;font-size:10px}
-  .jobs-board td:nth-child(2){grid-column:1/-1;grid-row:1;margin-bottom:4px}
+  .jobs-board td:nth-child(2){order:-1;flex-basis:100%;margin-bottom:4px}
   .jobs-board td:nth-child(2) a{font-size:13px}
-  .jobs-board td:nth-child(3){text-align:right}
-  .jobs-board td[colspan]{grid-column:1/-1}
+  .jobs-board td:not(:nth-child(2)){width:auto}
+  .jobs-board td:nth-child(3) a::before{content:"\00a0\2014\00a0"}
+  .jobs-board td[colspan]{flex-basis:100%}
 }
 @media (pointer: coarse){
   .language-switcher{border-color:var(--ink);background:var(--paper)}
