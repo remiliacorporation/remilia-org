@@ -127,7 +127,7 @@
       return _;
     });
     if (/entry[- ]?level|associate|junior/.test(s)) add("Entry");
-    if (/\bii\b|\biii\b|regular|mid[- ]?level/.test(s)) add("Career");
+    if (/\bii\b|\biii\b|regular|\bmid\b/.test(s)) add("Career");
     if (/advanced|senior|staff|principal/.test(s)) add("Senior");
     if (!tags.length) add("Career");
     return ["Entry", "Career", "Senior"].filter(function (x) {
