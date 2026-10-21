@@ -11,7 +11,7 @@ Use this host for the Remilia org map: mission, properties, literature, hiring, 
 - Homepage (mission, inspirations, network, literature)
 - About this host (`/about`)
 - Contact (`/contact`, corporate@remilia.org)
-- Careers at Remilia (`/careers`); applications on Ashby
+- Careers at Remilia: Irvine, CA (`/careers`) and Hongdae, Seoul (`/careers/seoul`); applications on Ashby
 - Updates (`/blog/updates`); Press (`/blog/press`); Thought (`/blog/thought`); Archive (`/blog/archive`) — per-section maps at `/<section>/llms.txt`
 
 Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite https://wiki.remilia.org/Remilia_Corporation for facts. Shop: https://remilia.com/
@@ -21,7 +21,8 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [Homepage](https://remilia.org/): Remilia Corporation public site
 - [About](https://remilia.org/about): Host map, how the site is built, standards, print surface
 - [Contact](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org
-- [Careers](https://remilia.org/careers): Openings (apply at https://jobs.ashbyhq.com/remilia); studios in Irvine, CA and Hongdae, Seoul
+- [Careers: Irvine, CA](https://remilia.org/careers): Irvine openings, benefits, referral program (apply at https://jobs.ashbyhq.com/remilia)
+- [Careers: Hongdae, Seoul](https://remilia.org/careers/seoul): Seoul openings (apply at https://jobs.ashbyhq.com/remilia)
 - [Updates](https://remilia.org/blog/updates): Routine notes (`/blog/updates/llms.txt`)
 - [Press](https://remilia.org/blog/press): Formal releases (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
 - [Thought](https://remilia.org/blog/thought): Essays / longform (`/blog/thought/llms.txt`)

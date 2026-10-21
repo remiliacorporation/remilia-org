@@ -8,24 +8,32 @@
 /contact/ /contact/index.html   200
 /careers /careers/index.html   200
 /careers/ /careers/index.html   200
+/careers/seoul /careers/seoul/index.html   200
+/careers/seoul/ /careers/seoul/index.html   200
 /kr/about   /kr/about/index.html   200
 /kr/about/  /kr/about/index.html   200
 /kr/contact /kr/contact/index.html 200
 /kr/contact/ /kr/contact/index.html 200
 /kr/careers /kr/careers/index.html 200
 /kr/careers/ /kr/careers/index.html 200
+/kr/careers/seoul /kr/careers/seoul/index.html   200
+/kr/careers/seoul/ /kr/careers/seoul/index.html   200
 /jp/about   /jp/about/index.html   200
 /jp/about/  /jp/about/index.html   200
 /jp/contact /jp/contact/index.html 200
 /jp/contact/ /jp/contact/index.html 200
 /jp/careers /jp/careers/index.html 200
 /jp/careers/ /jp/careers/index.html 200
+/jp/careers/seoul /jp/careers/seoul/index.html   200
+/jp/careers/seoul/ /jp/careers/seoul/index.html   200
 /cn/about   /cn/about/index.html   200
 /cn/about/  /cn/about/index.html   200
 /cn/contact /cn/contact/index.html 200
 /cn/contact/ /cn/contact/index.html 200
 /cn/careers /cn/careers/index.html 200
 /cn/careers/ /cn/careers/index.html 200
+/cn/careers/seoul /cn/careers/seoul/index.html   200
+/cn/careers/seoul/ /cn/careers/seoul/index.html   200
 # Brand releases that moved from org Press to remilia.com News. Unforced, so
 # they apply only once the org page is gone.
 /blog/press/press-release-remilia-corporation-launches-megasize-alien-milady-fumo-fueling-unprecedented-demand-in-fumo-token  https://remilia.com/a/blog/news/press-release-remilia-corporation-launches-megasize-alien-milady-fumo-fueling-unprecedented-demand-in-fumo-token  301

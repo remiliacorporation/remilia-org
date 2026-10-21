@@ -20,7 +20,13 @@
   </url>
   <url>
     <loc>https://remilia.org/careers</loc>
-    <lastmod>2026-08-28</lastmod>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://remilia.org/careers/seoul</loc>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -15,7 +15,8 @@ Literature sections (`/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/arc
 - [Welcome to Remilia Corporation!](https://remilia.org/): Public site; mission, inspirations, network, literature.
 - [About — remilia.org](https://remilia.org/about): Host map (.org / .com / .net / wiki), how the site is built, web standards, dual-layer print surface.
 - [Contact — remilia.org](https://remilia.org/contact): corporate@remilia.org; referrals admin@remilia.org.
-- [Careers at Remilia](https://remilia.org/careers): Job openings listed here; apply on Ashby (https://jobs.ashbyhq.com/remilia). Studios in Irvine, CA and Hongdae, Seoul.
+- [Careers at Remilia: Irvine, CA](https://remilia.org/careers): Irvine job openings, benefits, and the referral program; apply on Ashby (https://jobs.ashbyhq.com/remilia).
+- [Careers at Remilia: Hongdae, Seoul](https://remilia.org/careers/seoul): Seoul job openings; apply on Ashby (https://jobs.ashbyhq.com/remilia).
 - [Updates](https://remilia.org/blog/updates): Routine notes. Map: https://remilia.org/blog/updates/llms.txt
 - [Press](https://remilia.org/blog/press): Formal releases. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/blog/press/llms.txt
 - [Thought](https://remilia.org/blog/thought): Essays / longform. Map: https://remilia.org/blog/thought/llms.txt

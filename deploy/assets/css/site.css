@@ -338,6 +338,7 @@ body:has(.hot-net:focus-visible) .logo-word{filter:none}
 .rj-photo{display:block;width:40px;height:40px;object-fit:cover;border:1px solid var(--ink)}
 .offices td.office{width:50%;padding:20px;vertical-align:top;text-align:center}
 .office-card{display:inline-block;width:100%;max-width:280px;cursor:pointer;text-align:center;margin:0 auto}
+td a.office-card{padding:0;color:inherit;text-decoration:none}
 .office-frame{position:relative;border:1px solid var(--ink);padding:16px;background:#fff}
 .office-photo{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .ht{
@@ -397,7 +398,7 @@ a.inspo:focus-visible{
 a.inspo:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .jobs-board td a{display:block;padding:6px 8px;font-size:10px;line-height:1.4}
 .jobs-board td a.job-go{text-decoration:none}
-.jobs-board td:nth-child(3) a.job-go{text-decoration:underline}
+.jobs-board td:nth-child(2) a.job-go{text-decoration:underline}
 .jobs-board td{font-size:10px;line-height:1.4}
 .jobs-board{table-layout:auto;width:100%}
 .jobs-board caption{
@@ -405,8 +406,8 @@ a.inspo:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   font-weight:bold;text-align:center
 }
 .jobs-board caption :is(h2, a){font-size:inherit;font-weight:inherit;margin:0;padding:0;display:block;color:inherit;text-decoration:none}
-.jobs-board :is(.jobs-cols th, td):not(:nth-child(3)){width:1%;white-space:nowrap}
-.jobs-board :is(.jobs-cols th, td):nth-child(3){width:auto}
+.jobs-board :is(.jobs-cols th, td):not(:nth-child(2)){width:1%;white-space:nowrap}
+.jobs-board :is(.jobs-cols th, td):nth-child(2){width:auto}
 .jobs-board .jobs-cols th{vertical-align:bottom;text-align:center;font-size:12px;border-bottom:3px double var(--ink)}
 .jobs-label{border-bottom:1px solid var(--ink);padding:0 0 4px;margin:0 0 4px}
 .jobs-chips{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;white-space:nowrap;overflow:visible;font-size:clamp(8px,1.35vw,11px)}
@@ -473,20 +474,20 @@ header > h1:focus-visible{outline-offset:4px}
   .offices tr + tr :is(th,td),
   .offices td + td{border-top:0}
   .offices td.office{width:auto;padding:16px}
-  /* Four job columns leave every cell wrapping at this width. Each opening
-     becomes a card (role across the top; office, domain and levels beneath),
+  /* Three job columns leave every cell wrapping at this width. Each opening
+     becomes a card (role across the top; domain and levels beneath),
      spaced apart from the next, and each filter column a labelled row of chips. */
   .jobs-board,.jobs-board :is(caption,tbody){display:block}
-  .jobs-board tr{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.2fr);border:1px solid var(--ink);border-top:0}
-  .jobs-board :is(.jobs-cols th, td):not(:nth-child(3)),
-  .jobs-board :is(.jobs-cols th, td):nth-child(3){width:auto;white-space:normal}
+  .jobs-board tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:1px solid var(--ink);border-top:0}
+  .jobs-board :is(.jobs-cols th, td):not(:nth-child(2)),
+  .jobs-board :is(.jobs-cols th, td):nth-child(2){width:auto;white-space:normal}
   .jobs-board td{display:block;border:0;border-left:1px solid var(--ink);font-size:11px}
   .jobs-board td a{font-size:11px;padding:6px 8px}
   .jobs-board td:first-child,
   .jobs-board td[colspan]{border-left:0}
   .jobs-board td[colspan]{grid-column:1/-1}
-  .jobs-board td:nth-child(3){grid-column:1/-1;grid-row:1;border-left:0;border-bottom:1px solid var(--ink)}
-  .jobs-board td:nth-child(3) a{font-size:12px;padding:8px}
+  .jobs-board td:nth-child(2){grid-column:1/-1;grid-row:1;border-left:0;border-bottom:1px solid var(--ink)}
+  .jobs-board td:nth-child(2) a{font-size:12px;padding:8px}
   .jobs-board tr + tr{margin-top:12px;border-top:1px solid var(--ink)}
   .jobs-board .jobs-cols{grid-template-columns:1fr;border-bottom:3px double var(--ink)}
   .jobs-board .jobs-cols th{display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;padding:4px 8px}

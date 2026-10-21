@@ -64,6 +64,10 @@ test("corporate locale routing honors explicit, saved, browser, then country cho
     { pathname: "/kr/careers", locale: "kr", remember: false },
   );
   assert.deepEqual(
+    localeRedirect({ pathname: "/careers/seoul/", preference: "kr" }),
+    { pathname: "/kr/careers/seoul", locale: "kr", remember: false },
+  );
+  assert.deepEqual(
     localeRedirect({
       pathname: "/contact",
       acceptLanguage: "en-US;q=0.8, ja-JP;q=0.9",

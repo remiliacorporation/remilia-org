@@ -41,6 +41,7 @@ const PAGE_FILES = new Map([
   ["index.html", "/"],
   ["about/index.html", "/about"],
   ["careers/index.html", "/careers"],
+  ["careers/seoul/index.html", "/careers/seoul"],
   ["contact/index.html", "/contact"],
 ]);
 

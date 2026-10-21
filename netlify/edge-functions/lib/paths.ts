@@ -43,7 +43,7 @@ export interface LocaleRedirect {
   remember: boolean;
 }
 
-const CORP_ROUTES = new Set(["/", "/about", "/careers", "/contact"]);
+const CORP_ROUTES = new Set(["/", "/about", "/careers", "/careers/seoul", "/contact"]);
 const LOCALE_PREFIXES: Record<Exclude<CorpLocale, "en">, string> = {
   kr: "/kr",
   jp: "/jp",

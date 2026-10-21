@@ -6,6 +6,7 @@
   var fxTable = document.querySelector(".layer-fx .jobs-board");
   var root = document.querySelector(".layer-base");
   if (!table || !root) return;
+  var office = table.getAttribute("data-office");
 
   var COPY = {
     en: {
@@ -33,14 +34,6 @@
 
   var COLS = [
     {
-      key: "office",
-      label: "Office",
-      chips: [
-        ["us", "US"],
-        ["kr", "KR"],
-      ],
-    },
-    {
       key: "domain",
       label: "Domain",
       chips: [
@@ -67,7 +60,7 @@
       ],
     },
   ];
-  var picked = { office: "", domain: "", track: "", level: "" };
+  var picked = { domain: "", track: "", level: "" };
   var rows = [];
 
   function esc(s) {
@@ -249,7 +242,7 @@
     if (!rows.length) {
       return (
         out +
-        '<tr><td class="text" colspan="4">' +
+        '<tr><td class="text" colspan="3">' +
         copy.empty +
         ashbyA("jobs.ashbyhq.com/remilia") +
         ".</td></tr>"
@@ -266,7 +259,6 @@
           esc(j.url) +
           '">';
         var cells = [
-          ["office", j.chip, j.chip && picked.office === j.chip, j.office],
           ["domain", j.group, picked.domain === j.group, j.domain],
           ["track", j.track, picked.track === j.track, j.title],
           [
@@ -298,19 +290,9 @@
       });
     return out;
   }
-  function syncOffices() {
-    document.querySelectorAll(".office-card").forEach(function (c) {
-      var on =
-        picked.office !== "" && c.getAttribute("data-office") === picked.office;
-      c.classList.toggle("is-on", on);
-      if (c.hasAttribute("aria-pressed"))
-        c.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-  }
   function paint() {
     table.innerHTML = html(false);
     if (fxTable) fxTable.innerHTML = html(true);
-    syncOffices();
   }
   function toggle(col, id) {
     picked[col] = picked[col] === id ? "" : id;
@@ -341,19 +323,7 @@
   root.addEventListener("click", function (e) {
     var chip = e.target.closest(".jobs-chip");
     if (chip)
-      return toggle(
-        chip.getAttribute("data-col"),
-        chip.getAttribute("data-val"),
-      );
-    var card = e.target.closest(".office-card");
-    if (card) toggle("office", card.getAttribute("data-office"));
-  });
-  root.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    var card = e.target.closest(".office-card");
-    if (!card) return;
-    e.preventDefault();
-    toggle("office", card.getAttribute("data-office"));
+      toggle(chip.getAttribute("data-col"), chip.getAttribute("data-val"));
   });
   root.addEventListener("mouseover", function (e) {
     var chip = crossing(e, ".jobs-chip");
@@ -386,17 +356,18 @@
           .reduce(function (acc, j) {
             return acc.concat(rowsFrom(j));
           }, []),
-      );
+      ).filter(function (j) {
+        return !office || !j.chip || j.chip === office;
+      });
       paint();
     })
     .catch(function () {
       var body =
-        '<tr><td class="text" colspan="4">' +
+        '<tr><td class="text" colspan="3">' +
         copy.failed +
         ashbyA(copy.view) +
         ".</td></tr>";
       table.innerHTML = caption(false) + body;
       if (fxTable) fxTable.innerHTML = caption(true) + body;
-      syncOffices();
     });
 })();
