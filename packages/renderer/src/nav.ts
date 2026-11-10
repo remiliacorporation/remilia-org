@@ -346,8 +346,10 @@ export const NAV_JS = `(() => {
   addEventListener('click', (e) => {
     const a = e.target.closest('.post-card a.author');
     if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    // Only the ?author= fallback filters in place; an author archive link
+    // navigates like any other link.
     const v = new URL(a.getAttribute('href'), location.href).searchParams.get('author') || '';
-    if (auth) {
+    if (v && auth) {
       e.preventDefault();
       setSel(auth, v, 'All authors');
       page = 0; apply();

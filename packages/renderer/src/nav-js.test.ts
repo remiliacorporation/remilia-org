@@ -256,6 +256,10 @@ function matches(n: Node, sel: string): boolean {
       return n.tag === "button" && inMenu();
     case ".sel-menu button[data-href]":
       return n.tag === "button" && "data-href" in n.attrs && inMenu();
+    case ".post-card a.author":
+      return n.tag === "a" && n.cls.includes("author") && !!n.parent?.closest(".post-card");
+    case ".post-card":
+      return n.cls.includes("post-card");
     default:
       return false;
   }
@@ -409,6 +413,27 @@ test("a navigating dropdown's mark toggles its menu instead of clearing", () => 
   assert.equal(ui.author.dataset.value, "");
   assert.equal(ui.author.kids[0].kids[0].textContent, "All authors");
   assert.equal(ui.author.open, false);
+});
+
+test("a card's author archive link navigates; only the ?author= fallback filters", () => {
+  const ui = runControls();
+  const cardWith = (href: string) => {
+    const a = el("a", { cls: "author", text: "Charlotte Fang", attrs: { href } });
+    el("article", { cls: "sec post-card" }, [a]);
+    return a;
+  };
+  let prevented = false;
+  const clickLink = (a: Node) => {
+    prevented = false;
+    const e = { target: a, button: 0, preventDefault: () => { prevented = true; }, stopPropagation: () => {} };
+    (ui.windowHooks.get("click") ?? []).forEach((fn) => fn(e));
+  };
+  clickLink(cardWith("/blog/updates/authors/charlotte-fang"));
+  assert.equal(prevented, false, "the archive link is left to the browser");
+  assert.equal(ui.author.dataset.value, "Charlotte Fang", "the filter is not cleared");
+  clickLink(cardWith("?author=Remilia%20Jackson"));
+  assert.equal(prevented, true, "the fallback link filters in place");
+  assert.equal(ui.author.dataset.value, "Remilia Jackson");
 });
 
 test("expanding a year keeps the date dropdown open and selects nothing", () => {
