@@ -78,7 +78,9 @@
 .mast-tools > :first-child > .nav-sep:first-child {
   display: none;
 }
+/* The pager is a chrome row like the mast's tools: it sets at the UI size. */
 .pager {
+  --size-base: var(--size-ui);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: baseline;
@@ -344,6 +346,12 @@ article.post-card > header {
 .post-card .card-more {
   position: relative;
   z-index: 2;
+}
+/* The card's meta and foot rows are the post byline in miniature, so they
+   set at the byline's UI size, not the body size of the excerpt. */
+.post-card .card-meta,
+.post-card p.card-foot {
+  --size-base: var(--size-ui);
 }
 .post-card .card-meta {
   display: flex;
