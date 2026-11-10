@@ -534,7 +534,7 @@ function runHeadSizing(
 }
 
 test("the site head takes the masthead's height wherever it sits beside it", () => {
-  for (const width of [824, 900, 1099, 1100, 1280]) {
+  for (const width of [824, 900, 1179, 1180, 1280]) {
     const { head } = runHeadSizing(width);
     assert.equal(head.style.minHeight, "116px", `at ${width}px`);
   }

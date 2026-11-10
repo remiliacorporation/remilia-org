@@ -46,7 +46,7 @@ test("post images offer candidate widths with a measure-aware sizes hint", () =>
       'srcset="https://cdn/img?w=640 640w, https://cdn/img?w=1280 1280w"',
     ),
   );
-  assert.ok(html.includes('sizes="(min-width: 1100px) 560px, 100vw"'));
+  assert.ok(html.includes('sizes="(min-width: 1180px) 560px, 100vw"'));
 });
 
 test("a caller can override the sizes hint", () => {
