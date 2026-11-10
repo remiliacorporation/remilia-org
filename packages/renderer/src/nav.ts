@@ -469,7 +469,9 @@ export const NAV_JS = `(() => {
 })();
 (() => {
   try {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Reduced motion only drops the glide: notes still fit the column and
+    // in-page links still land and release focus.
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.documentElement.style.scrollBehavior = 'auto';
     const yFor = (el) => {
       const raw = getComputedStyle(el).scrollMarginTop;
@@ -479,6 +481,7 @@ export const NAV_JS = `(() => {
     const go = (el) => {
       const to = yFor(el), from = scrollY, d = to - from;
       if (Math.abs(d) < 1) return;
+      if (still) { scrollTo(0, to); return; }
       const t0 = performance.now();
       const step = (now) => {
         const t = Math.min(1, (now - t0) / 200);
