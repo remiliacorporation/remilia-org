@@ -601,6 +601,13 @@
     margin-right: auto;
   }
 }
+/* A phone card keeps the thumbnail beside the excerpt, but narrower, so
+   the excerpt is not set in a column of a dozen characters. */
+@media (max-width: 639px) {
+  .post-card:has(.card-thumb) .card-row {
+    grid-template-columns: calc(24 * var(--grid)) minmax(0, 1fr);
+  }
+}
 @media (min-width: 640px) {
   .gallery {
     grid-template-columns: repeat(3, 1fr);
