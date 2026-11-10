@@ -216,7 +216,7 @@
 /* Beside one rail the column already fills the viewport, so the text
    keeps the base gutter at the sides there; with both rails it gets more
    room as the viewport allows. */
-@media (min-width: 824px) and (max-width: 1179px) {
+@media (min-width: 824px) and (max-width: 1099px) {
   :root {
     --read-pad: var(--gutter);
   }
@@ -226,11 +226,7 @@
     --read-pad: calc(2 * var(--space));
   }
 }
-/* Between phone and desktop the page takes two columns. The top bar is
-   the site head and the sections box; the theme box folds into the rail
-   below the site head, level with the page's masthead. The third rail
-   waits for 1180px, where all three columns fit with room at the edges. */
-@media (min-width: 824px) and (max-width: 1179px) {
+@media (min-width: 824px) and (max-width: 1099px) {
   .layout {
     display: grid;
     grid-template-columns: var(--rail) var(--column);
@@ -369,7 +365,7 @@
     order: 2;
   }
 }
-@media (min-width: 1180px) {
+@media (min-width: 1100px) {
   .layout {
     display: grid;
     grid-template-columns: var(--rail) var(--column) var(--rail);
@@ -640,7 +636,7 @@
   z-index: 30;
   pointer-events: auto;
 }
-@media (min-width: 1180px) {
+@media (min-width: 1100px) {
   .right-rail,
   .right-rail .post-nav {
     pointer-events: none;
@@ -651,7 +647,7 @@
     pointer-events: auto;
   }
 }
-@media (min-width: 824px) and (max-width: 1179px) {
+@media (min-width: 824px) and (max-width: 1099px) {
   footer {
     margin-left: calc(
       50% - (var(--rail) + var(--rail-gap) + var(--column)) / 2 + var(--rail) +

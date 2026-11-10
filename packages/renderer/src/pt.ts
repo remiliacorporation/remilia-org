@@ -315,7 +315,7 @@ export function figureHtml(input: {
     ? `<figcaption><a href="${esc(input.src)}">${esc(input.caption)}</a></figcaption>`
     : "";
   const responsive = input.srcset
-    ? ` srcset="${esc(input.srcset)}" sizes="${esc(input.sizes ?? "(min-width: 1180px) 560px, 100vw")}"`
+    ? ` srcset="${esc(input.srcset)}" sizes="${esc(input.sizes ?? "(min-width: 1100px) 560px, 100vw")}"`
     : "";
   const dims =
     input.width && input.height
