@@ -27,7 +27,8 @@
     "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve",
-    "test": "node --import tsx --test bake-corp.test.ts host-bake.test.ts"
+    "test": "node --import tsx --test bake-corp.test.ts host-bake.test.ts visual-preview/server.test.ts",
+    "visual-preview": "node --import tsx visual-preview/server.ts"
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",
@@ -36,6 +37,10 @@
     "tsx": "^4.19.0"
   },
   "devDependencies": {
+    "@sanity/core-loader": "^2.3.0",
+    "@sanity/visual-editing-standalone": "^2.0.3",
+    "esbuild": "^0.28.2",
+    "idiomorph": "^0.8.0",
     "typescript": "^5.8.2"
   }
 }

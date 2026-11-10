@@ -18,6 +18,7 @@ Archive entries can store an external outlet URL plus a Firecrawl snapshot and c
 ```bash
 pnpm install
 pnpm dev              # Studio — http://localhost:3333
+pnpm dev:preview      # Visual editor preview server — http://localhost:3334
 pnpm validate
 pnpm typecheck
 pnpm test

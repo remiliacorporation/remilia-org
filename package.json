@@ -5,6 +5,7 @@
   "description": "Sanity studio for the Remilia content graph (org / com / net sections)",
   "scripts": {
     "dev": "sanity dev --host 127.0.0.1",
+    "dev:preview": "pnpm --filter @remilia/hosts visual-preview",
     "build": "sanity build",
     "deploy:studio": "sanity deploy",
     "bake:org": "pnpm --filter @remilia/hosts bake:org",

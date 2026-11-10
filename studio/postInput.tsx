@@ -15,6 +15,7 @@ import {
   type StringFieldProps,
   type StringInputProps,
 } from "sanity";
+import { usePresentationParams } from "sanity/presentation";
 import { CHANNELS } from "../lib/access";
 
 const WRITE = new Set(["title", "body", "commentary"]);
@@ -180,7 +181,10 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
 }
 
 export function PostInput(props: ObjectInputProps): ReactNode {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // In the visual editor the page is the writing surface, so the pane opens
+  // on the settings.
+  const inPresentation = usePresentationParams(false) !== null;
+  const [settingsOpen, setSettingsOpen] = useState(inPresentation);
   const [drawer, setDrawer] = useState<HTMLElement | null>(null);
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
   const shell = useRef<HTMLDivElement>(null);
@@ -205,6 +209,14 @@ export function PostInput(props: ObjectInputProps): ReactNode {
     if (!shell.current) return;
     return pinEditorToolbar(shell.current);
   }, []);
+
+  // Jumping to a field (from the page or a validation link) shows the layer
+  // it lives on: settings fields open the drawer, title and body close it.
+  const focused = props.focusPath[0];
+  useEffect(() => {
+    if (typeof focused !== "string") return;
+    setSettingsOpen(!WRITE.has(focused));
+  }, [focused]);
 
   return (
     <SettingsRoot.Provider value={drawer}>

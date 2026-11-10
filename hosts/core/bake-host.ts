@@ -54,29 +54,33 @@ const projectId = "8x9419lh";
 const dataset = "production";
 
 /**
+ * The blog surface: theme.css is the skin (tokens, hues, scheme, lattice,
+ * dither); blog/ is the component system, concatenated in a fixed order.
+ */
+export const BLOG_STYLESHEETS = [
+  join(here, "theme.css"),
+  ...[
+    "base",
+    "chrome",
+    "controls",
+    "index",
+    "nav",
+    "prose",
+    "media",
+    "notes",
+    "layout",
+    "print",
+  ].map((n) => join(here, "blog", `${n}.css`)),
+];
+
+/**
  * One bake entry for every host: same credentials, same guards, same
  * stylesheets. Hosts differ only in which sections they serve and where the
  * output lands.
  */
 export async function bakeHost(spec: HostBake): Promise<void> {
   const outDir = process.argv[2] ?? join(here, "../..", spec.outDir);
-  // The blog surface: theme.css is the skin (tokens, hues, scheme, lattice,
-  // dither); blog/ is the component system, concatenated in a fixed order.
-  const stylesheets = [
-    join(here, "theme.css"),
-    ...[
-      "base",
-      "chrome",
-      "controls",
-      "index",
-      "nav",
-      "prose",
-      "media",
-      "notes",
-      "layout",
-      "print",
-    ].map((n) => join(here, "blog", `${n}.css`)),
-  ];
+  const stylesheets = BLOG_STYLESHEETS;
   const token = process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
   const allowEmpty = process.env.ALLOW_EMPTY_BAKE === "1";
   const perspective =

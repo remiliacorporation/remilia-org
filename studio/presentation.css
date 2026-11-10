@@ -1,0 +1,78 @@
+/* Visual editor layout (studio/presentationHeader.tsx toggles the classes).
+   Presentation exposes stable hooks only for its root testid and the panel
+   ids it uses as tab targets, so the rules key on those. */
+
+.rve-tools {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.rve-tool {
+  appearance: none;
+  border: 1px solid var(--card-border-color, #c5c7ce);
+  border-radius: 3px;
+  background: var(--card-bg-color, #fff);
+  color: var(--card-fg-color, #101112);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 8px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rve-tool:hover {
+  background: var(--card-muted-bg-color, #f2f3f5);
+}
+
+.rve-tool:focus-visible {
+  outline: 2px solid var(--card-focus-ring-color, #2276fc);
+  outline-offset: 1px;
+}
+
+/* Full window: the Studio bar goes, the tool fills the browser. */
+.rve-full [data-testid="studio-navbar"] {
+  display: none !important;
+}
+
+/* Floating editor: the page takes the whole width and the document pane
+   floats over its right side. */
+@media (min-width: 900px) {
+  .rve-float [data-testid="presentation-root"] {
+    position: relative;
+  }
+
+  .rve-float #presentation-narrow-panel-preview {
+    flex: 1 1 0 !important;
+  }
+
+  .rve-float [data-testid="presentation-root"] div:has(+ #presentation-narrow-panel-content) {
+    display: none;
+  }
+
+  .rve-float #presentation-narrow-panel-content {
+    position: absolute;
+    top: 56px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 5;
+    width: min(440px, calc(100% - 32px));
+    overflow: hidden;
+    border: 1px solid var(--card-border-color, #c5c7ce);
+    border-radius: 6px;
+    background: var(--card-bg-color, #fff);
+    box-shadow: 0 16px 48px rgb(16 17 18 / 0.22);
+  }
+
+  .rve-float.rve-editor-hidden #presentation-narrow-panel-content {
+    display: none;
+  }
+
+  /* The post form's desk layout is built for a wide pane; in the floating
+     panel the settings drawer takes the full width. */
+  .rve-float #presentation-narrow-panel-content .blog-settings-drawer {
+    width: 100%;
+  }
+}

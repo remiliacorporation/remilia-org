@@ -9,6 +9,7 @@ Use Node.js 22 or newer and pnpm 10.27.0.
 ```sh
 pnpm install --frozen-lockfile
 pnpm dev
+pnpm dev:preview
 pnpm check
 pnpm validate
 pnpm build
@@ -16,7 +17,7 @@ pnpm bake
 pnpm --filter @remilia/hosts preview
 ```
 
-`dev` starts Studio at localhost:3333. `check` runs TypeScript and every Node test. `validate` checks the Studio schema; `build` builds Studio. `bake` reads published Sanity content and generates the corporate site. `preview` serves the corporate pages and a sample article at http://127.0.0.1:8477, without changing Sanity content.
+`dev` starts Studio at localhost:3333. `dev:preview` starts the visual editor's preview server at localhost:3334 (see Visual editor). `check` runs TypeScript and every Node test. `validate` checks the Studio schema; `build` builds Studio. `bake` reads published Sanity content and generates the corporate site. `preview` serves the corporate pages and a sample article at http://127.0.0.1:8477, without changing Sanity content.
 
 ## Structure
 
@@ -60,6 +61,18 @@ structure.ts     Org / Com / Net desks
 Netlify runs `pnpm bake` and publishes `deploy/`. Connect a Sanity post-publishing webhook to a Netlify build hook to trigger rebuilds. `pnpm deploy:studio` publishes Studio separately; it does not publish the corporate website.
 
 Maintenance commands retain their names, for example `pnpm --filter @remilia/hosts import:ghost`. Their source is in `hosts/maintenance/`. Read the command before running it: imports can write local exports, and migration/repair commands can change Sanity content. They are not part of the site build or release checks.
+
+## Visual editor
+
+Studio's **Visual editor** tool (Sanity's Presentation tool) shows the real blog page, baked by the production renderer from draft content, and updates it as you type. Hover any text, image, byline or date for its edit outline; click it to open that field. Settings fields (author, slug, date, tags, SEO, cover) open in the post's settings drawer.
+
+The header adds three toggles: **Full window** hides the Studio bar, **Float editor / Dock editor** floats the document pane over the page or returns it to a column, and **Hide editor** clears the page while you browse (clicking an edit outline brings it back). The built-in open-preview button pops the page out into its own window, still connected.
+
+How it works: `hosts/visual-preview/server.ts` serves an empty shell for every section path. In the Studio, `client.ts` asks the Studio for that section's posts over Presentation live mode (the Studio runs the query with the editor's own login; the server holds no token), posts them to `/__ve/render`, and morphs the baked page into the frame. Stega-encoded strings and `data-sanity` targets drive the overlays from `@sanity/visual-editing-standalone`. Outside the Studio the shell renders nothing, so no draft is reachable from its URL.
+
+The production bake is untouched: its Sanity client never enables stega, and nothing it imports reaches `hosts/visual-preview` (`server.test.ts` checks both).
+
+Deploying it needs a host for the preview server (it renders on request, so not a static Netlify site), `SANITY_STUDIO_PREVIEW_URL` set to that host when building Studio, `SANITY_STUDIO_URL` on the server, and the Studio origin added to the server's `PREVIEW_FRAME_ANCESTORS`.
 
 ## License
 

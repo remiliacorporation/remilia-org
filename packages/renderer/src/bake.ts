@@ -172,7 +172,7 @@ function fileUrl(
 
 // Production omits future posts. Draft previews include them so editors can
 // review scheduled content before its publication time.
-const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] | order(publishedAt desc) {
+export const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "coverAlt": coverImage.alt,
@@ -191,7 +191,7 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
     "images": images[]{ "ref": asset._ref, alt, caption, credit } }
 }`;
 
-const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
+export const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
   "logoRef": logo.asset._ref }`;
 
 function postPlain(blocks: PTBlock[]): string {
