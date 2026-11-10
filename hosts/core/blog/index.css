@@ -431,8 +431,11 @@ article.post-card > header {
   text-align: right;
   text-decoration: none;
 }
+/* Keyboard focus inverts the card like a pointer does. :focus-within would
+   also match the link a mouse click leaves focused, so the card would stay
+   inverted after the pointer moves on. */
 .post-card:hover,
-.post-card:focus-within {
+.post-card:has(:focus-visible) {
   background: var(--ink);
   color: var(--ink-contrast);
 }
@@ -444,22 +447,22 @@ article.post-card > header {
 .post-card:hover .card-meta .author,
 .post-card:hover .card-foot .byline-cat,
 .post-card:hover .card-more,
-.post-card:focus-within h2,
-.post-card:focus-within .card-ex,
-.post-card:focus-within .card-meta,
-.post-card:focus-within .card-meta time,
-.post-card:focus-within .card-meta .byline-date,
-.post-card:focus-within .card-meta .author,
-.post-card:focus-within .card-foot .byline-cat,
-.post-card:focus-within .card-more {
+.post-card:has(:focus-visible) h2,
+.post-card:has(:focus-visible) .card-ex,
+.post-card:has(:focus-visible) .card-meta,
+.post-card:has(:focus-visible) .card-meta time,
+.post-card:has(:focus-visible) .card-meta .byline-date,
+.post-card:has(:focus-visible) .card-meta .author,
+.post-card:has(:focus-visible) .card-foot .byline-cat,
+.post-card:has(:focus-visible) .card-more {
   color: var(--ink-contrast);
 }
 .post-card:hover > header .nav-rule,
 .post-card:hover .card-thumb,
 .post-card:hover p.card-foot,
-.post-card:focus-within > header .nav-rule,
-.post-card:focus-within .card-thumb,
-.post-card:focus-within p.card-foot {
+.post-card:has(:focus-visible) > header .nav-rule,
+.post-card:has(:focus-visible) .card-thumb,
+.post-card:has(:focus-visible) p.card-foot {
   border-color: var(--ink-contrast);
 }
 .post-card a:focus-visible {

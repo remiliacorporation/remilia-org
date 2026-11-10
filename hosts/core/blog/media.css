@@ -66,7 +66,7 @@
 .gallery figure > a:hover .ht-map,
 .gallery figure > a:focus-visible .ht-map,
 .post-card:hover .card-thumb .ht-map,
-.post-card:focus-within .card-thumb .ht-map {
+.post-card:has(:focus-visible) .card-thumb .ht-map {
   filter: var(--ht-map-h, var(--dither-filter, url(#dither-3)));
 }
 .prose figure > a:hover .ht::after,
@@ -74,7 +74,7 @@
 .gallery figure > a:hover .ht::after,
 .gallery figure > a:focus-visible .ht::after,
 .post-card:hover .card-thumb .ht::after,
-.post-card:focus-within .card-thumb .ht::after {
+.post-card:has(:focus-visible) .card-thumb .ht::after {
   opacity: var(--ht-tint-h, 1);
 }
 .prose figure > a:hover .ht img,
@@ -82,7 +82,7 @@
 .gallery figure > a:hover .ht img,
 .gallery figure > a:focus-visible .ht img,
 .post-card:hover .card-thumb .ht img,
-.post-card:focus-within .card-thumb .ht img {
+.post-card:has(:focus-visible) .card-thumb .ht img {
   filter: var(--ht-img-h, grayscale(1));
 }
 .prose figure > a:hover .ht-ink,
@@ -90,7 +90,7 @@
 .gallery figure > a:hover .ht-ink,
 .gallery figure > a:focus-visible .ht-ink,
 .post-card:hover .card-thumb .ht-ink,
-.post-card:focus-within .card-thumb .ht-ink {
+.post-card:has(:focus-visible) .card-thumb .ht-ink {
   opacity: var(--ht-ink-op-h, 1);
 }
 /* Pointing at (or tabbing to) a card's image flips its halftone to the
