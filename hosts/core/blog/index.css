@@ -270,15 +270,73 @@
   min-height: var(--mast-line);
   overflow: hidden;
 }
-/* A listing's masthead is the section row and the status line; search
-   and the Author and Date filters sit in a slim bar above the posts. */
-.sec.mast.list-mast > header {
-  grid-template-rows: var(--mast-title);
-  align-content: center;
+/* A listing's masthead is the sections box, built like the theme box:
+   a label, a rule, then the links on the main line at the wordmark's
+   size. Search and the Author and Date filters sit in a slim bar above
+   the posts. The status line stays for screen readers only. */
+.sec.mast.list-mast:has(> .sec-nav) {
+  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
 }
-.sec.mast.list-mast h1 {
+.list-mast > .sec-box-label {
+  margin: 0;
+  height: var(--mast-line);
+  line-height: var(--mast-line);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  text-align: center;
+}
+.list-mast > .mast-nav-rule {
+  margin: 0;
+  height: 0;
+  align-self: center;
+}
+.list-mast > .sec-nav {
   height: var(--mast-title);
   line-height: var(--mast-title);
+  /* Every element sets its size from --size-base, so the row sets it. */
+  --size-base: var(--size-brand);
+}
+.list-mast > .sec-nav a {
+  color: var(--ink);
+}
+.list-mast > .sec-nav a:hover,
+.list-mast > .sec-nav a:focus-visible,
+.list-mast > .sec-nav a[aria-current] {
+  color: var(--ink-contrast);
+}
+.sec.mast.list-mast > header {
+  position: absolute;
+  width: var(--border-w);
+  height: var(--border-w);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sec.list-empty {
+  padding: var(--space-xs);
+  margin: 0 0 var(--rail-gap);
+  text-align: center;
+  --size-base: var(--size-ui);
+}
+.sec.list-empty[hidden] {
+  display: none;
+}
+.list-clear {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.list-clear:hover,
+.list-clear:focus-visible {
+  background: var(--ink);
+  color: var(--ink-contrast);
+  text-decoration: none;
 }
 .sec.list-tools {
   display: flex;

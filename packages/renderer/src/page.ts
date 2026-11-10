@@ -560,12 +560,13 @@ ${row}
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast list-mast">
-${mastNav(sectionNav)}<header>
+${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
 <h1${filterAttrs}>${heading}</h1>
 </header>
 </div>
 <div class="article-rest">
 <div class="sec list-tools">${NAV_SEARCH}${toolsHtml}</div>
+<p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>

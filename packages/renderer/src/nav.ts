@@ -293,6 +293,7 @@ export const NAV_JS = `(() => {
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
   const statusEl = document.querySelector('.index-mast h1');
+  const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
   if (!q && !cards.length) return;
   const PAGE = 4;
@@ -369,6 +370,14 @@ export const NAV_JS = `(() => {
       if (next) next.disabled = page >= pages - 1;
     }
     cards.forEach((c) => { c.hidden = !match(c).show; });
+    // The listing has no status line; a search that hides every card says
+    // so, with a way back.
+    if (emptyEl) {
+      const none = cards.length > 0 && cards.every((c) => c.hidden);
+      emptyEl.hidden = !none;
+      const text = emptyEl.querySelector('.list-empty-text');
+      if (none && text) text.textContent = query ? 'No posts match \u201C' + query + '\u201D.' : 'No posts match.';
+    }
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
       const author = statusEl.dataset.author || '';
@@ -382,6 +391,8 @@ export const NAV_JS = `(() => {
     }
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
+  const clearBtn = emptyEl && emptyEl.querySelector('.list-clear');
+  if (clearBtn && q) clearBtn.addEventListener('click', () => { q.value = ''; page = 0; apply(); q.focus(); });
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');

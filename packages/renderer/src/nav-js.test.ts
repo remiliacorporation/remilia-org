@@ -548,3 +548,44 @@ test("the site head follows the masthead across resizes and breakpoints", () => 
   ui.resize(1000);
   assert.equal(ui.head.style.minHeight, "84px", "widening back past 824px");
 });
+
+test("a search that hides every card says so and offers to clear it", () => {
+  const hooks = new Map<string, () => void>();
+  const node = () => ({
+    hooks: new Map<string, () => void>(),
+    addEventListener(type: string, fn: () => void) {
+      this.hooks.set(type, fn);
+    },
+  });
+  const q = { ...node(), value: "", focus: () => {} };
+  const text = { textContent: "No posts match." };
+  const clear = node();
+  const empty = {
+    hidden: true,
+    querySelector: (sel: string) => (sel === ".list-empty-text" ? text : sel === ".list-clear" ? clear : null),
+  };
+  const card = { dataset: { title: "Vaults", excerpt: "", cat: "Updates", author: "" }, hidden: false };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) => (sel === ".list-empty" ? empty : null),
+    querySelectorAll: (sel: string) => (sel === ".post-card" ? [card] : []),
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog", replace: () => {} },
+    (type: string, fn: () => void) => hooks.set(type, fn),
+    () => ({ matches: true }),
+  );
+  assert.equal(empty.hidden, true, "hidden while cards show");
+  q.value = "zzz";
+  q.hooks.get("input")?.();
+  assert.equal(card.hidden, true);
+  assert.equal(empty.hidden, false);
+  assert.equal(text.textContent, "No posts match “zzz”.");
+  clear.hooks.get("click")?.();
+  assert.equal(q.value, "");
+  assert.equal(card.hidden, false);
+  assert.equal(empty.hidden, true);
+});

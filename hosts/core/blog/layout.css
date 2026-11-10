@@ -57,12 +57,19 @@
   .sec.mast.index-mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
   }
-  /* Without the section row a listing's mast is its status line alone. */
+  /* The head menu holds the sections here, so a listing's mast keeps
+     only its heading, for screen readers. */
   .sec.mast.index-mast.list-mast {
+    position: absolute;
+    width: var(--border-w);
+    height: var(--border-w);
     min-height: 0;
-  }
-  .sec.mast.list-mast > header {
-    grid-template-rows: var(--mast-title);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   /* The listing controls share one line: search takes what the Author
      and Date dropdowns leave. */
@@ -489,7 +496,8 @@
     gap: var(--rail-gap);
   }
   .article-rest > .post-card,
-  .article-rest > .list-tools {
+  .article-rest > .list-tools,
+  .article-rest > .list-empty {
     margin-bottom: 0;
   }
   .right-rail .post-nav {

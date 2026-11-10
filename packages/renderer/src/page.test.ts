@@ -398,13 +398,17 @@ test("a listing's mast is the section row and status; its controls sit in a bar 
   );
   assert.match(
     html,
-    /<div class="sec mast index-mast list-mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
+    /<div class="sec mast index-mast list-mast">\n<p class="sec-box-label"[\s\S]*<\/nav>\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
-    /<div class="article-rest">\n<div class="sec list-tools"><form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>\n<article class="sec post-card"/,
+    /<div class="article-rest">\n<div class="sec list-tools"><form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>\n<p class="sec list-empty"[\s\S]*<\/p>\n<article class="sec post-card"/,
   );
   assert.equal(html.includes("mast-tools"), false);
+  // The status line is read to screen readers only; the mast shows the
+  // sections, and an empty search result waits, hidden, above the cards.
+  assert.match(html, /<p class="sec-box-label" aria-hidden="true">Sections<\/p>\n<hr class="nav-rule mast-nav-rule">\n<nav class="sec-nav"/);
+  assert.match(html, /<p class="sec list-empty" role="status" hidden>[\s\S]*<button type="button" class="list-clear">Clear search<\/button><\/p>/);
   assert.equal(html.includes("site-sec"), false);
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
