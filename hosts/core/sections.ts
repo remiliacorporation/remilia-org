@@ -140,7 +140,8 @@ const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = 
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
-  // Index and the wordmark both point at the host's pooled index.
+  // The pooled index: the section row's "All" and the phone menu's
+  // "All posts" both lead there, so the head carries no Index link.
   const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
   // On phones the head is one row: the wordmark and this menu, which holds
   // the sections and the links the wider head spells out.
@@ -163,7 +164,7 @@ export function chromeFor(channel: Channel): Chrome {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
 <nav aria-label="Site">
-<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${isAggregate(channel) ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 <hr class="nav-rule">
 <a class="site-title" href="${indexPath(channel)}">${brand.label}</a>

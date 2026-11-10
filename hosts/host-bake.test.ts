@@ -141,7 +141,8 @@ test("site-head leads with its links and closes on the brand alone", () => {
     /<\/nav>\s*<hr class="nav-rule">\s*<a class="site-title"/,
     "nav row, then rule, then title",
   );
-  assert.match(thought.header, />Index</);
+  // "All" in the section row is the pooled index; the head doesn't repeat it.
+  assert.equal(thought.header.includes(">Index<"), false);
   assert.match(thought.header, /rss\.xml">RSS</);
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
   // The phone head folds the sections and the head's links behind one
@@ -164,18 +165,16 @@ test("site-head leads with its links and closes on the brand alone", () => {
     ],
   );
   assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
-  const index = chromeFor("blog");
-  assert.match(index.header, /aria-current="page">Index</);
   const news = chromeFor("news");
   assert.match(
     news.header,
     /<a class="site-title" href="\/a\/blog\/news">REMILIA<\/a>/,
   );
   assert.equal(news.header.includes("NEWS"), false);
-  // Index is the host's pooled listing on every host.
-  assert.match(news.header, /<a href="\/a\/blog">Index</);
-  assert.match(chromeFor("dev-blog").header, /<a href="\/">Index</);
-  assert.match(chromeFor("net-blog").header, /aria-current="page">Index</);
+  // The phone menu's "All posts" is the host's pooled listing on every host.
+  assert.match(news.header, /<li><a href="\/a\/blog">All posts<\/a><\/li>/);
+  assert.match(chromeFor("dev-blog").header, /<li><a href="\/">All posts<\/a><\/li>/);
+  assert.match(chromeFor("net-blog").header, /<li><a href="\/" aria-current="true">All posts<\/a><\/li>/);
 });
 
 test("org still wears its own brand and pinned light theme", async () => {

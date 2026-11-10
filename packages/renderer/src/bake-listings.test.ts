@@ -196,6 +196,8 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     const tagDir = await readFile(join(outDir, "blog/updates/tags/index.html"), "utf8");
     assert.ok(tagDir.includes('href="/blog/updates/tags/theory"'));
     assert.ok(tagDir.includes('<span class="term-count">9</span>'));
+    // Every page, term directories too, opens on the section row.
+    assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
 
     // Author archives split the same posts by byline.
     const author = await readFile(

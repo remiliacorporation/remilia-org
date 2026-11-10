@@ -1151,6 +1151,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             count: t.posts.length,
           })),
           basePath,
+          sectionNav,
         ),
       }),
     );

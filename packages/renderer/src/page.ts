@@ -579,6 +579,7 @@ export function termIndexMain(
   noun: string,
   terms: { label: string; href: string; count: number }[],
   basePath = "",
+  sectionNav?: string,
 ): string {
   const rows = terms
     .map(
@@ -589,7 +590,7 @@ export function termIndexMain(
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
-<header>
+${mastNav(sectionNav)}<header>
 <h1>Showing all ${esc(noun.toLowerCase())}s</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools">${mastCopy(basePath)}</p>
