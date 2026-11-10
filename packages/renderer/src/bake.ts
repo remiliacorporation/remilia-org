@@ -648,6 +648,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         img(p.coverRef, "w=1200&auto=format"),
       noindex: p.noIndex === true,
       channel,
+      author: p.authors?.map((a) => a.name).join(", "),
       publishedTime: p.publishedAt,
       modifiedTime: p.updatedAt ?? p.publishedAt,
       alternates: [

@@ -44,6 +44,9 @@ export interface PageInput {
   /** Drives host identity, icons, social profiles and alternate formats. */
   channel?: Channel;
 
+  /** The post's bylines; the host's author when absent. */
+  author?: string;
+
   /** Article timestamps; emitted as Open Graph article metadata. */
   publishedTime?: string;
   modifiedTime?: string;
@@ -108,7 +111,7 @@ function discoveryHead(p: PageInput): string {
   const site = siteMetaFor(p.channel);
   const base = CHANNEL_BASEPATH[p.channel];
   const lines: string[] = [
-    `<meta name="author" content="${esc(site.author)}">`,
+    `<meta name="author" content="${esc(p.author?.trim() || site.author)}">`,
     `<meta name="color-scheme" content="light dark">`,
     `<meta name="theme-color" content="${esc(site.themeColor)}">`,
   ];

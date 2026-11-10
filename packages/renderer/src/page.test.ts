@@ -251,6 +251,24 @@ test("article byline can host the section switcher", () => {
   assert.equal(html.includes('class="byline-cat"'), false);
 });
 
+test("a post names its bylines as the page author; other pages name the host", () => {
+  const page = (author?: string) =>
+    htmlPage({
+      title: "Four Notes",
+      description: "d",
+      canonical: "https://remilia.org/blog/thought/four-notes",
+      channel: "thought",
+      author,
+      jsonld: [],
+      chrome: CHROME,
+      mainHtml: "<main id=\"content\"><h1>Four Notes</h1></main>",
+    });
+  assert.ok(page("paultristis").includes('<meta name="author" content="paultristis">'));
+  assert.ok(page("A, B").includes('<meta name="author" content="A, B">'));
+  for (const none of [undefined, "", "  "])
+    assert.ok(page(none).includes('<meta name="author" content="Remigumi-guchi Digital, LLC">'));
+});
+
 test("index filter bar includes category and author dropdowns", () => {
   const other = { ...POST, title: "Memo", url: "/press/memo", category: "News" };
   const html = filterBar([POST, other]);
