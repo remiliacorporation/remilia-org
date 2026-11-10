@@ -388,7 +388,7 @@ test("post dates link to their month archive, keeping the time element", () => {
   assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
 });
 
-test("listing controls share one masthead tools line under the section row", () => {
+test("a listing's mast is the section row and status; its controls sit in a bar above the posts", () => {
   const html = indexMain(
     [POST],
     authorSel(AUTHORS, "/blog/press"),
@@ -398,12 +398,13 @@ test("listing controls share one masthead tools line under the section row", () 
   );
   assert.match(
     html,
-    /<div class="sec mast index-mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<h1/,
+    /<div class="sec mast index-mast list-mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>/,
+    /<div class="article-rest">\n<div class="sec list-tools"><form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>\n<article class="sec post-card"/,
   );
+  assert.equal(html.includes("mast-tools"), false);
   assert.equal(html.includes("site-sec"), false);
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
@@ -468,14 +469,14 @@ test("date dropdown is absent without month archives", () => {
   assert.equal(dateSel([], "/blog/press"), "");
 });
 
-test("date dropdown follows authors in the tools line", () => {
+test("date dropdown follows authors in the tools bar", () => {
   const html = indexMain(
     [POST],
     `${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`,
   );
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/div>/,
+    /<div class="sec list-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/div>/,
   );
 });
 

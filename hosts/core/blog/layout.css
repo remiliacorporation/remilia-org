@@ -54,19 +54,26 @@
     flex-wrap: wrap;
     row-gap: var(--grid);
   }
-  /* The listing controls share one line: search takes what the Author
-     and Date dropdowns leave. */
   .sec.mast.index-mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
   }
-  .index-mast .mast-tools .nav-search {
+  /* Without the section row a listing's mast is its status line alone. */
+  .sec.mast.index-mast.list-mast {
+    min-height: 0;
+  }
+  .sec.mast.list-mast > header {
+    grid-template-rows: var(--mast-title);
+  }
+  /* The listing controls share one line: search takes what the Author
+     and Date dropdowns leave. */
+  .list-tools .nav-search {
     flex: 1 1 0;
     min-width: calc(24 * var(--grid));
   }
-  .index-mast .mast-tools details.sel {
+  .list-tools details.sel {
     flex: 0 1 auto;
   }
-  .index-mast .mast-tools .sel-label {
+  .list-tools .sel-label {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -481,7 +488,8 @@
     flex-direction: column;
     gap: var(--rail-gap);
   }
-  .article-rest > .post-card {
+  .article-rest > .post-card,
+  .article-rest > .list-tools {
     margin-bottom: 0;
   }
   .right-rail .post-nav {

@@ -559,14 +559,13 @@ ${row}
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast">
+<div class="sec mast index-mast list-mast">
 ${mastNav(sectionNav)}<header>
 <h1${filterAttrs}>${heading}</h1>
-<hr class="nav-rule mast-tools-rule">
-<div class="mast-tools">${NAV_SEARCH}${toolsHtml}</div>
 </header>
 </div>
 <div class="article-rest">
+<div class="sec list-tools">${NAV_SEARCH}${toolsHtml}</div>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>
