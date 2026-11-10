@@ -10,7 +10,7 @@ import {
   indexMain,
   type Chrome,
 } from "./page";
-import { authorSel, dateSel, leftRail } from "./nav";
+import { authorSel, dateSel, leftRail, sectionNav } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -235,20 +235,50 @@ test("toc notes are a labeled row, not bold-only chips", () => {
   assert.ok(html.includes('href="#fn-2">[2]</a>'));
 });
 
-test("article byline can host the section switcher", () => {
+const SECTIONS = {
+  cats: [
+    { label: "Updates", href: "/blog/updates" },
+    { label: "Press", href: "/blog/press" },
+    { label: "Thought", href: "/blog/thought" },
+  ],
+  current: "Press",
+  allHref: "/blog",
+};
+
+test("the section row links every section, All first, and marks the one shown", () => {
+  const row = sectionNav(SECTIONS);
+  assert.match(row, /^<nav class="sec-nav" aria-label="Sections">/);
+  assert.deepEqual(
+    [...row.matchAll(/<a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a>/g)].map((m) => [m[1], m[3], Boolean(m[2])]),
+    [
+      ["/blog", "All", false],
+      ["/blog/updates", "Updates", false],
+      ["/blog/press", "Press", true],
+      ["/blog/thought", "Thought", false],
+    ],
+  );
+  // The pooled index marks All.
+  assert.match(sectionNav({ ...SECTIONS, current: "" }), /<a href="\/blog" aria-current="true">All<\/a>/);
+  // A host with one section and no pooled index has nothing to switch to.
+  assert.equal(sectionNav({ cats: [{ label: "News", href: "/a/blog/news" }], current: "News" }), "");
+});
+
+test("the section row heads a post's masthead; the byline keeps its section link", () => {
   const html = articleHtml({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
     byline: "Remilia",
     category: "Press",
+    categoryHref: "/blog/press",
     bodyHtml: "<p>body</p>",
-    sectionSel: `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+    sectionNav: sectionNav(SECTIONS),
   });
   assert.match(
     html,
-    /<div class="byline">[\s\S]*id="site-sec"[\s\S]*class="author"[\s\S]*<\/div>/,
+    /<div class="sec mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<div class="byline">/,
   );
-  assert.equal(html.includes('class="byline-cat"'), false);
+  assert.match(html, /<div class="byline">[\s\S]*<a class="byline-cat" href="\/blog\/press">Press<\/a>[\s\S]*class="author"/);
+  assert.equal(html.includes("<details"), false);
 });
 
 test("a post names its bylines as the page author; other pages name the host", () => {
@@ -358,18 +388,23 @@ test("post dates link to their month archive, keeping the time element", () => {
   assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
 });
 
-test("listing controls share one masthead tools line", () => {
+test("listing controls share one masthead tools line under the section row", () => {
   const html = indexMain(
     [POST],
     authorSel(AUTHORS, "/blog/press"),
     undefined,
     undefined,
-    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+    sectionNav(SECTIONS),
   );
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+    /<div class="sec mast index-mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<h1/,
   );
+  assert.match(
+    html,
+    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>/,
+  );
+  assert.equal(html.includes("site-sec"), false);
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
   assert.equal(html.includes('class="nav-page"'), false);
@@ -433,17 +468,14 @@ test("date dropdown is absent without month archives", () => {
   assert.equal(dateSel([], "/blog/press"), "");
 });
 
-test("date dropdown sits between authors and section in the tools line", () => {
+test("date dropdown follows authors in the tools line", () => {
   const html = indexMain(
     [POST],
     `${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`,
-    undefined,
-    undefined,
-    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
   );
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/div>/,
   );
 });
 

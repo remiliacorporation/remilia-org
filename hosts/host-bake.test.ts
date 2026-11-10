@@ -203,8 +203,7 @@ test("an intentionally empty section still publishes its index", async () => {
       index,
       /<a class="site-title" href="\/blog\/archive">REMILIA CORPORATION<\/a>/,
     );
-    assert.match(index, /id="site-sec"/);
-    assert.match(index, />Archive</);
+    assert.match(index, /<a href="\/blog\/archive" aria-current="true">Archive<\/a>/);
     assert.ok(!index.includes("Post 1"));
   } finally {
     f.close();

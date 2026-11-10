@@ -57,7 +57,7 @@ import {
   emptyRail,
   dateSel,
   authorSel,
-  sectionSel,
+  sectionNav as sectionRow,
   NAV_JS,
   type NavPost,
 } from "./nav";
@@ -649,9 +649,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
     author: bylineOf(p),
   }));
-  // The category dropdown is one shared control — every listing offers the
-  // host's full section set. Options navigate to that section's index (or
-  // the pooled index) instead of filtering a paginated page in place.
+  // One row of section links heads every masthead — every listing and post
+  // offers the host's full section set, the one shown marked.
   const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]];
   const sharedCats = {
     cats: siblings.map((c) => ({
@@ -661,7 +660,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     current: aggregated ? "" : CHANNEL_LABEL[channel],
     allHref: indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]),
   };
-  const sectionNav = sectionSel(sharedCats);
+  const sectionNav = sectionRow(sharedCats);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
@@ -862,7 +861,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
         readingMinutes: readingMinutes(plain),
-        sectionSel: sectionNav,
+        sectionNav,
       }),
     });
     await writePage(outDir, join(dir, p.slug), page);

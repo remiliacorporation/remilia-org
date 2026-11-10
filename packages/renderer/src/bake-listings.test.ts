@@ -223,8 +223,10 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       join(outDir, "blog/updates/post-1/index.html"),
       "utf8",
     );
-    assert.ok(post.includes('id="site-sec"'));
-    assert.ok(post.includes('data-href="/blog/updates"'));
+    assert.ok(post.includes('<a class="byline-cat" href="/blog/updates">Updates</a>'));
+    // The section row heads the post and the listings, this section marked.
+    for (const page of [post, page1, theory])
+      assert.ok(page.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
     assert.ok(post.includes('href="/blog/updates/authors/remilia-jackson"'));
 
     // Every listing is in the sitemap.

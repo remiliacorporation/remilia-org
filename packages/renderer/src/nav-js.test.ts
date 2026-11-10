@@ -310,13 +310,9 @@ function runControls(search = "") {
     option("Charlotte Fang", "Charlotte Fang", "/blog/updates/authors/charlotte-fang"),
     option("minds0n", "minds0n", "/blog/authors/minds0n"),
   ]);
-  const section = dropdown("site-sec", "Updates", "Updates", [
-    option("All posts", "All posts", "/blog"),
-    option("Updates", "Updates", "/blog/updates"),
-  ]);
-  const body = el("body", {}, [author, date, section]);
-  const sels = [author, date, section];
-  const byId: Record<string, Node> = { "post-date": date, "post-author": author, "site-sec": section };
+  const body = el("body", {}, [author, date]);
+  const sels = [author, date];
+  const byId: Record<string, Node> = { "post-date": date, "post-author": author };
   const statusEl = { dataset: { section: "Updates", month: "September 2023" }, textContent: "" };
   const card = { dataset: { title: "Post", excerpt: "", cat: "Updates", author: "" }, hidden: false };
   const windowHooks = new Map<string, ((e: object) => void)[]>();
@@ -383,7 +379,7 @@ function runControls(search = "") {
     return hit;
   };
   const mark = (d: Node) => d.kids[0].kids[1];
-  return { body, date, author, section, year, assigned, replaced, click, find, mark, windowHooks };
+  return { body, date, author, year, assigned, replaced, click, find, mark, windowHooks };
 }
 
 test("choosing a date navigates to that month's archive", () => {
@@ -403,7 +399,7 @@ test("choosing a date navigates to that month's archive", () => {
 
 test("a navigating dropdown's mark toggles its menu instead of clearing", () => {
   const ui = runControls();
-  for (const d of [ui.date, ui.author, ui.section]) {
+  for (const d of [ui.date, ui.author]) {
     const before = { value: d.dataset.value, label: d.kids[0].kids[0].textContent };
     ui.click(ui.mark(d));
     assert.equal(d.open, true, `${d.id} opens from its mark`);
@@ -446,12 +442,12 @@ test("an old ?author= link opens that author's archive", () => {
 test("expanding a year keeps the date dropdown open and selects nothing", () => {
   const ui = runControls();
   ui.date.open = true;
-  ui.section.open = true;
+  ui.author.open = true;
   const summary = ui.year.kids[0];
   ui.click(summary);
   assert.equal(ui.year.open, false, "the year collapses");
   assert.equal(ui.date.open, true, "the dropdown stays open");
-  assert.equal(ui.section.open, false, "other dropdowns still close");
+  assert.equal(ui.author.open, false, "other dropdowns still close");
   ui.click(summary.kids[1]);
   assert.equal(ui.year.open, true, "its caret expands it again");
   ui.click(summary.kids[0]);

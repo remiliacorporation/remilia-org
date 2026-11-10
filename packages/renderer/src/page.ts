@@ -317,6 +317,11 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
+/** The section row and its rule, above a masthead's own rows. */
+function mastNav(nav?: string): string {
+  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
+}
+
 function mastCopy(basePath: string): string {
   return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
 }
@@ -411,15 +416,13 @@ export function articleHtml(input: {
   txtHref?: string;
   /** Whole minutes at 200 words per minute; omitted for short notes. */
   readingMinutes?: number;
-  /** Host section switcher — occupies the byline's center slot. */
-  sectionSel?: string;
+  /** The host's section row, heading the masthead. */
+  sectionNav?: string;
 }): string {
   const date = new Date(input.publishedAt);
-  const cat = input.sectionSel
-    ? input.sectionSel
-    : input.category
-      ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
-      : `<span class="byline-cat"></span>`;
+  const cat = input.category
+    ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
+    : `<span class="byline-cat"></span>`;
   const author = input.byline
     ? input.authorHref
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
@@ -450,7 +453,7 @@ export function articleHtml(input: {
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
-<header>
+${mastNav(input.sectionNav)}<header>
 <div class="byline">${dated}${cat}${author}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
@@ -513,7 +516,7 @@ export function indexMain(
   toolsHtml: string,
   pager?: Pager,
   filter?: { tag?: string; author?: string; month?: string; section?: string },
-  sectionSel?: string,
+  sectionNav?: string,
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
@@ -557,10 +560,10 @@ ${row}
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
-<header>
+${mastNav(sectionNav)}<header>
 <h1${filterAttrs}>${heading}</h1>
 <hr class="nav-rule mast-tools-rule">
-<div class="mast-tools">${NAV_SEARCH}${toolsHtml}${sectionSel ?? ""}</div>
+<div class="mast-tools">${NAV_SEARCH}${toolsHtml}</div>
 </header>
 </div>
 <div class="article-rest">

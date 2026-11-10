@@ -98,22 +98,27 @@ export interface SharedCats {
   allHref?: string;
 }
 
-export function sectionSel(shared: SharedCats): string {
-  const href = (h?: string) => (h ? ` data-href="${esc(h)}"` : "");
-  const current = shared.current || "All posts";
+/**
+ * The host's sections as one row of links, "All" first when the host has a
+ * pooled index, with the section being shown marked. It heads every
+ * listing's and post's masthead.
+ */
+export function sectionNav(shared: SharedCats): string {
   const items = [
-    shared.allHref
-      ? `<li><button type="button" data-value="All posts"${href(shared.allHref)}>All posts</button></li>`
-      : "",
-    ...shared.cats.map(
-      (c) =>
-        `<li><button type="button" data-value="${esc(c.label)}"${href(c.href)}>${esc(c.label)}</button></li>`,
+    ...(shared.allHref
+      ? [{ label: "All", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
-  ].join("");
-  return `<details class="sel site-sec" id="site-sec" data-value="${esc(shared.current)}" aria-label="Section">
-<summary><span class="sel-label">${esc(current)}</span><span class="sel-mark"></span></summary>
-<ul class="sel-menu">${items}</ul>
-</details>`;
+  ];
+  if (items.length < 2) return "";
+  return `<nav class="sec-nav" aria-label="Sections">${items
+    .map(
+      (i) =>
+        `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`,
+    )
+    .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
 }
 
 /** A month the listing has an archive page for. */
@@ -346,7 +351,6 @@ export const NAV_JS = `(() => {
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
-  bindSel(document.getElementById('site-sec'), '');
   bindSel(document.getElementById('post-date'), 'All dates');
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
