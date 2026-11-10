@@ -1,9 +1,11 @@
-import type { BakeOptions, Chrome } from "@remilia/renderer";
+import { headMenu, type BakeOptions, type Chrome } from "@remilia/renderer";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
+  CHANNEL_LABEL,
   CHANNEL_PATH_LABEL,
   HOST_AGGREGATE,
+  HOST_SECTIONS,
   indexPath,
   indexUrl,
   isAggregate,
@@ -140,6 +142,23 @@ export function chromeFor(channel: Channel): Chrome {
   const brand = BRAND[CHANNEL_HOST[channel]];
   // Index and the wordmark both point at the host's pooled index.
   const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
+  // On phones the head is one row: the wordmark and this menu, which holds
+  // the sections and the links the wider head spells out.
+  const menu = headMenu(
+    {
+      cats: HOST_SECTIONS[CHANNEL_HOST[channel]].map((c) => ({
+        label: CHANNEL_LABEL[c],
+        href: indexPath(c),
+      })),
+      current: isAggregate(channel) ? "" : CHANNEL_LABEL[channel],
+      allHref: indexBase,
+    },
+    [
+      { label: brand.root, href: brand.rootUrl },
+      { label: "RSS", href: `${base}/rss.xml` },
+      { label: "Atom", href: `${base}/atom.xml` },
+    ],
+  );
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
@@ -148,6 +167,7 @@ export function chromeFor(channel: Channel): Chrome {
 </nav>
 <hr class="nav-rule">
 <a class="site-title" href="${indexPath(channel)}">${brand.label}</a>
+${menu}
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">

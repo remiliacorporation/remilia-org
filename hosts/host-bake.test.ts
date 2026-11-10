@@ -144,7 +144,26 @@ test("site-head leads with its links and closes on the brand alone", () => {
   assert.match(thought.header, />Index</);
   assert.match(thought.header, /rss\.xml">RSS</);
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
-  assert.equal(thought.header.includes(">Updates</a>"), false);
+  // The phone head folds the sections and the head's links behind one
+  // menu, named for the section shown, this one marked.
+  assert.match(
+    thought.header,
+    /<details class="sel head-menu">\n<summary><span class="sel-label">Thought<\/span>/,
+  );
+  assert.deepEqual(
+    [...thought.header.matchAll(/<li[^>]*><a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a><\/li>/g)].map((m) => [m[3], m[1], Boolean(m[2])]),
+    [
+      ["All posts", "/blog", false],
+      ["Updates", "/blog/updates", false],
+      ["Press", "/blog/press", false],
+      ["Thought", "/blog/thought", true],
+      ["Archive", "/blog/archive", false],
+      ["remilia.org", "https://remilia.org/", false],
+      ["RSS", "/blog/thought/rss.xml", false],
+      ["Atom", "/blog/thought/atom.xml", false],
+    ],
+  );
+  assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
   const index = chromeFor("blog");
   assert.match(index.header, /aria-current="page">Index</);
   const news = chromeFor("news");

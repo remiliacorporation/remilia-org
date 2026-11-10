@@ -121,6 +121,40 @@ export function sectionNav(shared: SharedCats): string {
     .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
 }
 
+/**
+ * The site head's menu on phones, where it is the whole head beside the
+ * wordmark: the section row and the head's own links folded behind one
+ * control, which names the section being shown.
+ */
+export function headMenu(
+  shared: SharedCats,
+  links: { label: string; href: string }[],
+): string {
+  const sections = [
+    ...(shared.allHref
+      ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
+    ),
+  ];
+  const items = [
+    ...sections.map(
+      (i) =>
+        `<li><a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a></li>`,
+    ),
+    ...links.map(
+      (l, n) =>
+        `<li${n === 0 ? ' class="head-menu-site"' : ""}><a href="${esc(l.href)}">${esc(l.label)}</a></li>`,
+    ),
+    `<li class="head-dials"><label class="head-theme" for="theme-pop">Theme</label></li>`,
+  ].join("");
+  return `<details class="sel head-menu">
+<summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
+}
+
 /** A month the listing has an archive page for. */
 export interface DateMonth {
   /** `YYYY-MM`. */
