@@ -1,3 +1,11 @@
+import {
+  CHANNEL_HOST,
+  CHANNEL_LABEL,
+  HOST_AGGREGATE,
+  HOST_SECTIONS,
+  indexPath,
+  type Channel,
+} from "@remilia/seo";
 import { esc } from "./html";
 
 export interface NavPost {
@@ -112,6 +120,22 @@ export interface SharedCats {
   current: string;
   /** Target for the "All posts" item; omit to filter in place. */
   allHref?: string;
+}
+
+/**
+ * The host's full section set, each option opening that section's index. A
+ * pooled listing (`aggregated`) has no current section of its own.
+ */
+export function hostCats(channel: Channel, aggregated = false): SharedCats {
+  const host = CHANNEL_HOST[channel];
+  return {
+    cats: HOST_SECTIONS[host].map((c) => ({
+      label: CHANNEL_LABEL[c],
+      href: indexPath(c),
+    })),
+    current: aggregated ? "" : CHANNEL_LABEL[channel],
+    allHref: indexPath(HOST_AGGREGATE[host]),
+  };
 }
 
 export function sectionSel(shared: SharedCats): string {

@@ -1,5 +1,7 @@
-/* Writing surface inside Studio — scoped copy of blog tokens, not the
-   full page sheets (those assume a * reset, lattice, and rails). */
+/* Writing surface inside Studio. Structure edits a post inside its real page
+   (studio/pageFrame.ts: the renderer's markup, the blog sheet scoped to
+   .blog-page); the compact article below, a scoped copy of the blog tokens,
+   stays for Presentation's side pane. */
 
 @font-face {
   font-family: "Alte Haas Grotesk";
@@ -754,24 +756,58 @@
   visibility: visible;
 }
 
-.blog-post-form [data-testid="field-channel"],
-.blog-post-form [data-testid="field-slug"],
-.blog-post-form [data-testid="field-aliases"],
-.blog-post-form [data-testid="field-publishedAt"],
-.blog-post-form [data-testid="field-excerpt"],
-.blog-post-form [data-testid="field-origin"],
-.blog-post-form [data-testid="field-externalUrl"],
-.blog-post-form [data-testid="field-outlet"],
-.blog-post-form [data-testid="field-archiveSnapshot"],
-.blog-post-form [data-testid="field-authors"],
-.blog-post-form [data-testid="field-tags"],
-.blog-post-form [data-testid="field-featured"],
-.blog-post-form [data-testid="field-coverImage"],
-.blog-post-form [data-testid="field-startsAt"],
-.blog-post-form [data-testid="field-endsAt"],
-.blog-post-form [data-testid="field-locationName"],
-.blog-post-form [data-testid="field-albums"],
-.blog-post-form [data-testid="field-seo"],
-.blog-post-form [data-testid="field-migration"] {
+:is(.blog-post-form, .blog-page) [data-testid="field-channel"],
+:is(.blog-post-form, .blog-page) [data-testid="field-slug"],
+:is(.blog-post-form, .blog-page) [data-testid="field-aliases"],
+:is(.blog-post-form, .blog-page) [data-testid="field-publishedAt"],
+:is(.blog-post-form, .blog-page) [data-testid="field-excerpt"],
+:is(.blog-post-form, .blog-page) [data-testid="field-origin"],
+:is(.blog-post-form, .blog-page) [data-testid="field-externalUrl"],
+:is(.blog-post-form, .blog-page) [data-testid="field-outlet"],
+:is(.blog-post-form, .blog-page) [data-testid="field-archiveSnapshot"],
+:is(.blog-post-form, .blog-page) [data-testid="field-authors"],
+:is(.blog-post-form, .blog-page) [data-testid="field-tags"],
+:is(.blog-post-form, .blog-page) [data-testid="field-featured"],
+:is(.blog-post-form, .blog-page) [data-testid="field-coverImage"],
+:is(.blog-post-form, .blog-page) [data-testid="field-startsAt"],
+:is(.blog-post-form, .blog-page) [data-testid="field-endsAt"],
+:is(.blog-post-form, .blog-page) [data-testid="field-locationName"],
+:is(.blog-post-form, .blog-page) [data-testid="field-albums"],
+:is(.blog-post-form, .blog-page) [data-testid="field-seo"],
+:is(.blog-post-form, .blog-page) [data-testid="field-migration"] {
   display: none;
+}
+
+/* Page editor: these rules only seat the editor in the blog page; the page's
+   look comes from the blog sheet itself. */
+.blog-post-shell.is-page {
+  container: blog-page / inline-size;
+}
+
+/* The sheet puts html's overflow-x: hidden on the frame, which would stop
+   the rails sticking; the watermark is fixed to the window on the site. */
+.blog-post-shell .blog-page {
+  position: relative;
+  overflow-x: clip;
+  min-height: calc(100vh - 8rem);
+}
+
+.blog-post-shell .blog-page .wm {
+  position: absolute;
+}
+
+/* The title takes the mast's h1 type, through whatever wraps the input. */
+.blog-page .sec.mast h1 * {
+  min-height: 0;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  color: inherit;
+}
+
+/* The prose card already pads the text, as it does on the site. */
+.blog-page .blog-pt [data-pt-editor] {
+  padding: 0;
 }

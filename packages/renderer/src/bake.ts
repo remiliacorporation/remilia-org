@@ -5,11 +5,8 @@ import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
   CHANNEL_BASEPATH,
-  CHANNEL_HOST,
   CHANNEL_LABEL,
   CHANNEL_ORIGIN,
-  HOST_AGGREGATE,
-  HOST_SECTIONS,
   atom,
   blogPosting,
   breadcrumbs,
@@ -56,6 +53,7 @@ import {
   emptyRail,
   dateSel,
   filterBar,
+  hostCats,
   sectionSel,
   NAV_JS,
   type NavPost,
@@ -512,15 +510,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   // The category dropdown is one shared control — every listing offers the
   // host's full section set. Options navigate to that section's index (or
   // the pooled index) instead of filtering a paginated page in place.
-  const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]];
-  const sharedCats = {
-    cats: siblings.map((c) => ({
-      label: CHANNEL_LABEL[c],
-      href: indexPath(c),
-    })),
-    current: aggregated ? "" : CHANNEL_LABEL[channel],
-    allHref: indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]),
-  };
+  const sharedCats = hostCats(channel, aggregated);
   const sectionNav = sectionSel(sharedCats);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>

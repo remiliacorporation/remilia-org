@@ -18,7 +18,7 @@ import {
   mergeRedirectBlock,
   type RedirectRule,
 } from "@remilia/renderer";
-import { chromeFor, hostFor } from "./sections";
+import { BLOG_SHEETS, chromeFor, hostFor } from "./sections";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -64,18 +64,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
   // dither); blog/ is the component system, concatenated in a fixed order.
   const stylesheets = [
     join(here, "theme.css"),
-    ...[
-      "base",
-      "chrome",
-      "controls",
-      "index",
-      "nav",
-      "prose",
-      "media",
-      "notes",
-      "layout",
-      "print",
-    ].map((n) => join(here, "blog", `${n}.css`)),
+    ...BLOG_SHEETS.map((n) => join(here, "blog", `${n}.css`)),
   ];
   const token = process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
   const allowEmpty = process.env.ALLOW_EMPTY_BAKE === "1";

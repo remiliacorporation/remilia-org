@@ -393,24 +393,19 @@ export function adjacentHtml(
   return `<nav class="post-adj" aria-label="Adjacent posts">${prev}${next}</nav>`;
 }
 
-export function articleHtml(input: {
-  title: string;
+export interface BylineInput {
   publishedAt: string;
   byline?: string;
   authorHref?: string;
   category?: string;
   categoryHref?: string;
   monthHref?: string;
-  canonical?: string;
-  bodyHtml: string;
-  metaHtml?: string;
-  mdHref?: string;
-  txtHref?: string;
-  /** Whole minutes at 200 words per minute; omitted for short notes. */
-  readingMinutes?: number;
   /** Host section switcher — occupies the byline's center slot. */
   sectionSel?: string;
-}): string {
+}
+
+/** The article byline's three slots: date, section, author. */
+export function bylineHtml(input: BylineInput): string {
   const date = new Date(input.publishedAt);
   const cat = input.sectionSel
     ? input.sectionSel
@@ -422,12 +417,30 @@ export function articleHtml(input: {
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
       : `<span class="author">${esc(input.byline)}</span>`
     : `<span class="author"></span>`;
-  const dated = datedHtml(
-    date.toISOString(),
-    bylineDate(input.publishedAt),
-    input.monthHref,
-    "byline-date",
-  );
+  // An undated draft (only the Studio sees one) keeps the slot empty.
+  const dated = Number.isNaN(date.getTime())
+    ? `<span class="byline-date"></span>`
+    : datedHtml(
+        date.toISOString(),
+        bylineDate(input.publishedAt),
+        input.monthHref,
+        "byline-date",
+      );
+  return `${dated}${cat}${author}`;
+}
+
+export function articleHtml(
+  input: BylineInput & {
+    title: string;
+    canonical?: string;
+    bodyHtml: string;
+    metaHtml?: string;
+    mdHref?: string;
+    txtHref?: string;
+    /** Whole minutes at 200 words per minute; omitted for short notes. */
+    readingMinutes?: number;
+  },
+): string {
   const meta = input.metaHtml
     ? `\n<div class="sec post-meta">${input.metaHtml}</div>`
     : "";
@@ -448,7 +461,7 @@ export function articleHtml(input: {
 <article class="article-body">
 <div class="sec mast">
 <header>
-<div class="byline">${dated}${cat}${author}</div>
+<div class="byline">${bylineHtml(input)}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">

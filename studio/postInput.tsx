@@ -2,8 +2,12 @@ import {
   createContext,
   useContext,
   useEffect,
+  useInsertionEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
+  type MouseEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -15,7 +19,16 @@ import {
   type StringFieldProps,
   type StringInputProps,
 } from "sanity";
-import { CHANNELS } from "../lib/access";
+import { usePresentationParams } from "sanity/presentation";
+import { CHANNELS, type Channel } from "../lib/access";
+import {
+  FRAME_CLASS,
+  PAGE_CSS,
+  frameByline,
+  frameChannel,
+  frameHtml,
+  frameTheme,
+} from "./pageFrame";
 
 const WRITE = new Set(["title", "body", "commentary"]);
 
@@ -75,11 +88,12 @@ function useAuthorNames(authors: unknown): string {
   return names;
 }
 
-function ArticleByline(): ReactNode {
-  const publishedAt = useFormValue(["publishedAt"]);
-  const channel = useFormValue(["channel"]);
-  const authors = useFormValue(["authors"]);
-  const names = useAuthorNames(authors);
+function ArticleByline(props: {
+  publishedAt: unknown;
+  channel: unknown;
+  names: string;
+}): ReactNode {
+  const { publishedAt, channel, names } = props;
   return (
     <div className="blog-article-byline">
       <span className="blog-article-byline-date">{bylineDate(publishedAt)}</span>
@@ -179,7 +193,72 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
   };
 }
 
+/** The page frame's slots the editor fills, found once the frame mounts. */
+interface FrameSlots {
+  byline: HTMLElement;
+  title: HTMLElement;
+  prose: HTMLElement;
+}
+
+let pageCssInjected = false;
+
+function injectPageCss(): void {
+  if (pageCssInjected) return;
+  pageCssInjected = true;
+  const style = document.createElement("style");
+  style.dataset.remilia = "blog-page";
+  style.textContent = PAGE_CSS;
+  document.head.append(style);
+}
+
+/**
+ * The blog's post page, from the renderer, with the editor in place of the
+ * title, byline and body. Links in the frame open the live site in a new tab
+ * rather than leaving the Studio.
+ */
+function PageFrame(props: {
+  channel: Channel;
+  onSlots: (slots: FrameSlots | null) => void;
+}): ReactNode {
+  const ref = useRef<HTMLDivElement>(null);
+  const html = useMemo(() => frameHtml(props.channel), [props.channel]);
+  const { onSlots } = props;
+
+  useInsertionEffect(injectPageCss, []);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    const byline = root?.querySelector<HTMLElement>(".sec.mast .byline");
+    const title = root?.querySelector<HTMLElement>(".sec.mast h1");
+    const prose = root?.querySelector<HTMLElement>(".article-rest .prose");
+    if (!byline || !title || !prose) return onSlots(null);
+    prose.replaceChildren();
+    onSlots({ byline, title, prose });
+    return () => onSlots(null);
+  }, [html, onSlots]);
+
+  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+    const link = (e.target as Element).closest?.("a[href]");
+    if (!link || link.closest(".blog-pt")) return;
+    e.preventDefault();
+    window.open((link as HTMLAnchorElement).href, "_blank", "noopener");
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={FRAME_CLASS}
+      {...frameTheme(props.channel)}
+      onClick={onClick}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
+
 export function PostInput(props: ObjectInputProps): ReactNode {
+  // Presentation shows the real page beside the pane, so the pane keeps the
+  // compact article; everywhere else the post edits inside its page.
+  const page = usePresentationParams(false) === null;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [drawer, setDrawer] = useState<HTMLElement | null>(null);
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
@@ -206,13 +285,61 @@ export function PostInput(props: ObjectInputProps): ReactNode {
     return pinEditorToolbar(shell.current);
   }, []);
 
+  const channelValue = useFormValue(["channel"]);
+  const channel = frameChannel(channelValue);
+  const publishedAt = useFormValue(["publishedAt"]);
+  const names = useAuthorNames(useFormValue(["authors"]));
+  const [slots, setSlots] = useState<FrameSlots | null>(null);
+
+  useEffect(() => {
+    if (!slots) return;
+    slots.byline.innerHTML = frameByline({ channel, publishedAt, names });
+  }, [slots, channel, publishedAt, names]);
+
+  const article = page ? (
+    <>
+      <PageFrame channel={channel} onSlots={setSlots} />
+      {slots
+        ? createPortal(
+            <div className="blog-article-prose blog-pt">
+              {props.renderDefault(props)}
+            </div>,
+            slots.prose,
+          )
+        : null}
+    </>
+  ) : (
+    <div className="blog-post-form">
+      <div className="blog-article">
+        <div className="blog-sec blog-article-mast">
+          <ArticleByline
+            publishedAt={publishedAt}
+            channel={channelValue}
+            names={names}
+          />
+          <hr className="blog-article-rule" />
+          <div className="blog-article-title-slot" ref={setTitleSlot} />
+        </div>
+        <div className="blog-sec blog-article-prose blog-pt">
+          {props.renderDefault(props)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const shellClass = [
+    "blog-post-shell",
+    page ? "is-page" : "",
+    settingsOpen ? "is-settings" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <SettingsRoot.Provider value={drawer}>
-      <TitleRoot.Provider value={titleSlot}>
+      <TitleRoot.Provider value={page ? (slots?.title ?? null) : titleSlot}>
       <div
-        className={
-          settingsOpen ? "blog-post-shell is-settings" : "blog-post-shell"
-        }
+        className={shellClass}
         data-body-len={bodyLen}
         ref={shell}
       >
@@ -227,18 +354,7 @@ export function PostInput(props: ObjectInputProps): ReactNode {
             {settingsOpen ? "Hide settings" : "Settings"}
           </button>
         </div>
-        <div className="blog-post-form">
-          <div className="blog-article">
-            <div className="blog-sec blog-article-mast">
-              <ArticleByline />
-              <hr className="blog-article-rule" />
-              <div className="blog-article-title-slot" ref={setTitleSlot} />
-            </div>
-            <div className="blog-sec blog-article-prose blog-pt">
-              {props.renderDefault(props)}
-            </div>
-          </div>
-        </div>
+        {article}
         <div
           className={
             settingsOpen
