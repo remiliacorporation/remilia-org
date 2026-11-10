@@ -472,7 +472,10 @@ test("the date dropdown still closes on an outside click or Escape", () => {
  * head reduced to what the head-sizing script touches. `resize` changes
  * the width and fires the media query's change listeners.
  */
-function runHeadSizing(width: number): {
+function runHeadSizing(
+  width: number,
+  secBox?: { offsetHeight: number },
+): {
   head: { style: { minHeight: string } };
   mast: { offsetHeight: number };
   resize: (to: number) => void;
@@ -485,7 +488,13 @@ function runHeadSizing(width: number): {
   const document = {
     getElementById: () => null,
     querySelector: (sel: string) =>
-      sel === ".sec.mast" ? mast : sel === ".left-rail .site-head" ? head : null,
+      sel === ".sec-box"
+        ? (secBox ?? null)
+        : sel === ".sec.mast"
+          ? mast
+          : sel === ".left-rail .site-head"
+            ? head
+            : null,
     querySelectorAll: () => [],
     addEventListener: () => {},
     documentElement: { style: {} },
@@ -529,6 +538,11 @@ test("the site head takes the masthead's height wherever it sits beside it", () 
     const { head } = runHeadSizing(width);
     assert.equal(head.style.minHeight, "116px", `at ${width}px`);
   }
+});
+
+test("the site head takes the sections box's height when the page has one", () => {
+  const { head } = runHeadSizing(1280, { offsetHeight: 75 });
+  assert.equal(head.style.minHeight, "75px");
 });
 
 test("the site head keeps its own height once it stacks above the masthead", () => {

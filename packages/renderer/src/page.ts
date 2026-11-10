@@ -317,9 +317,9 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
-/** The section row and its rule, above a masthead's own rows. */
-function mastNav(nav?: string): string {
-  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
+/** The sections box, first in the column, above the masthead. */
+function secBox(nav?: string): string {
+  return nav ? `${nav}\n` : "";
 }
 
 function mastCopy(basePath: string): string {
@@ -451,9 +451,9 @@ export function articleHtml(input: {
     ? `<span class="mast-read">${input.readingMinutes} min read</span>`
     : "";
   return `<main id="content" tabindex="-1" class="article-wrap">
-<article class="article-body">
+${secBox(input.sectionNav)}<article class="article-body">
 <div class="sec mast">
-${mastNav(input.sectionNav)}<header>
+<header>
 <div class="byline">${dated}${cat}${author}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
@@ -558,9 +558,9 @@ ${row}
     })
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
-<article class="article-body">
+${secBox(sectionNav)}<article class="article-body">
 <div class="sec mast index-mast">
-${mastNav(sectionNav)}<header>
+<header>
 <h1${filterAttrs}>${heading}</h1>
 <hr class="nav-rule mast-tools-rule">
 <div class="mast-tools">${NAV_SEARCH}${toolsHtml}</div>
@@ -588,9 +588,9 @@ export function termIndexMain(
     )
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
-<article class="article-body">
+${secBox(sectionNav)}<article class="article-body">
 <div class="sec mast index-mast">
-${mastNav(sectionNav)}<header>
+<header>
 <h1>Showing all ${esc(noun.toLowerCase())}s</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools">${mastCopy(basePath)}</p>

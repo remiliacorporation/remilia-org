@@ -4,13 +4,29 @@
   padding: var(--space-xs);
   --size-base: var(--size-ui);
 }
-/* The section row heads the masthead: its line, a rule, then the mast's
-   own rows, which take whatever height the row is stretched to. */
-.sec.mast:has(> .sec-nav) {
+/* The sections box: built like the theme box — label, rule, then one
+   row at the wordmark's size — so the three boxes atop the page share
+   their height, their rule, and their main line. */
+.sec.sec-box {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: var(--mast-line) var(--border-w) 1fr;
+  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
   row-gap: var(--space-xs);
+  padding: var(--space-xs);
+  --size-base: var(--size-ui);
+  text-align: center;
+}
+.sec-box-label {
+  margin: 0;
+  height: var(--mast-line);
+  line-height: var(--mast-line);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+}
+.sec-box .nav-rule {
+  margin: 0;
+  height: 0;
+  align-self: center;
 }
 .sec-nav {
   display: flex;
@@ -19,14 +35,17 @@
   align-items: center;
   gap: var(--grid);
   min-width: 0;
-  height: var(--mast-line);
-  line-height: var(--mast-line);
+  margin: 0;
+  height: var(--mast-title);
+  line-height: var(--mast-title);
+  /* Every element sets its size from --size-base, so the row sets it. */
+  --size-base: var(--size-brand);
   white-space: nowrap;
 }
 .sec-nav a {
   padding: 0 var(--grid);
   font-weight: var(--weight-strong);
-  color: var(--muted);
+  color: var(--ink);
   text-transform: uppercase;
   text-decoration: none;
 }

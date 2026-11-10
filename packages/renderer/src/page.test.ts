@@ -247,7 +247,10 @@ const SECTIONS = {
 
 test("the section row links every section, All first, and marks the one shown", () => {
   const row = sectionNav(SECTIONS);
-  assert.match(row, /^<nav class="sec-nav" aria-label="Sections">/);
+  assert.match(
+    row,
+    /^<nav class="sec sec-box" aria-labelledby="sec-box-label">\n<p class="sec-box-label" id="sec-box-label">Sections<\/p>\n<hr class="nav-rule">\n<p class="sec-nav">/,
+  );
   assert.deepEqual(
     [...row.matchAll(/<a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a>/g)].map((m) => [m[1], m[3], Boolean(m[2])]),
     [
@@ -263,7 +266,7 @@ test("the section row links every section, All first, and marks the one shown", 
   assert.equal(sectionNav({ cats: [{ label: "News", href: "/a/blog/news" }], current: "News" }), "");
 });
 
-test("the section row heads a post's masthead; the byline keeps its section link", () => {
+test("the sections box sits above a post's masthead; the byline keeps its section link", () => {
   const html = articleHtml({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
@@ -275,7 +278,7 @@ test("the section row heads a post's masthead; the byline keeps its section link
   });
   assert.match(
     html,
-    /<div class="sec mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<div class="byline">/,
+    /<main id="content" tabindex="-1" class="article-wrap">\n<nav class="sec sec-box"[\s\S]*<\/nav>\n<article class="article-body">\n<div class="sec mast">\n<header>\n<div class="byline">/,
   );
   assert.match(html, /<div class="byline">[\s\S]*<a class="byline-cat" href="\/blog\/press">Press<\/a>[\s\S]*class="author"/);
   assert.equal(html.includes("<details"), false);
@@ -388,7 +391,7 @@ test("post dates link to their month archive, keeping the time element", () => {
   assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
 });
 
-test("listing controls share one masthead tools line under the section row", () => {
+test("listing controls share one masthead tools line under the sections box", () => {
   const html = indexMain(
     [POST],
     authorSel(AUTHORS, "/blog/press"),
@@ -398,7 +401,7 @@ test("listing controls share one masthead tools line under the section row", () 
   );
   assert.match(
     html,
-    /<div class="sec mast index-mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<h1/,
+    /<nav class="sec sec-box"[\s\S]*<\/nav>\n<article class="article-body">\n<div class="sec mast index-mast">\n<header>\n<h1/,
   );
   assert.match(
     html,
