@@ -628,6 +628,74 @@ test("the pooled index bakes author archives and every listing offers every auth
   }
 });
 
+test("external coverage is bylined with its outlet, which gets no author archive", async () => {
+  const at = "2024-12-01T12:00:00.000Z";
+  const post = (slug: string, extra: object) => ({
+    ...posts[0],
+    title: slug,
+    slug,
+    publishedAt: at,
+    updatedAt: at,
+    ...extra,
+  });
+  // Coverage is filed under Remilia Jackson's author document, who did not
+  // write it; she has no first-party post anywhere.
+  const filedUnder = { authors: [{ name: "Remilia Jackson" }], origin: "external" };
+  const bySection: Record<string, unknown[]> = {
+    updates: [post("memo", { authors: [{ name: "Charlotte Fang" }] })],
+    archive: [
+      post("forbes-feature", {
+        ...filedUnder,
+        outlet: "Forbes",
+        externalUrl: "https://www.forbes.com/feature",
+        tags: ["Coverage"],
+      }),
+      post("gq-profile", { ...filedUnder, externalUrl: "https://www.gq.com/profile" }),
+    ],
+  };
+  const outDir = await mkdtemp(join(tmpdir(), "bake-outlets-"));
+  const server = await bakeOrg(outDir, bySection);
+  try {
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const card = (html: string, slug: string) => {
+      const at = html.indexOf(`data-title="${slug}"`);
+      return html.slice(at, html.indexOf("</article>", at));
+    };
+
+    // Cards and the post byline name the outlet, or the original's host
+    // when the outlet field is empty, as plain text.
+    for (const page of [await read("blog/index.html"), await read("blog/archive/index.html")]) {
+      assert.ok(card(page, "forbes-feature").includes('<span class="author">Forbes</span>'));
+      assert.ok(card(page, "gq-profile").includes('<span class="author">gq.com</span>'));
+      assert.ok(!page.includes("Remilia Jackson"));
+    }
+    const forbes = await read("blog/archive/forbes-feature/index.html");
+    assert.ok(forbes.includes('<span class="author">Forbes</span>'));
+    assert.ok(forbes.includes('<meta name="author" content="Forbes">'));
+    assert.ok(!forbes.includes('"@type":"Person"'));
+    assert.ok(!forbes.includes("Remilia Jackson"));
+    assert.ok((await read("blog/archive/forbes-feature.md")).includes("Forbes"));
+    assert.ok((await read("blog/archive/tags/coverage/rss.xml")).includes("<dc:creator>Forbes</dc:creator>"));
+
+    // Outlets are not authors: no archive and no place in the Author control.
+    assert.ok(!(await readdir(join(outDir, "blog/archive"))).includes("authors"));
+    assert.deepEqual(await readdir(join(outDir, "blog/authors")), ["charlotte-fang", "index.html"]);
+    for (const page of ["blog/index.html", "blog/archive/index.html", "blog/updates/index.html"]) {
+      const html = await read(page);
+      const sel = html.slice(html.indexOf('id="post-author"'), html.indexOf("</details>", html.indexOf('id="post-author"')));
+      assert.deepEqual(
+        [...sel.matchAll(/data-value="([^"]+)"/g)].map((m) => m[1]),
+        ["Charlotte Fang"],
+        page,
+      );
+    }
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
+  } finally {
+    server.close();
+  }
+});
+
 test("a post shows its cover once and names its bylines in the head and feeds", async () => {
   const cover = "image-0dce8420af0000000000000000000000000000aa-800x400-jpg";
   const other = "image-1ec391b7c70000000000000000000000000000bb-600x300-png";

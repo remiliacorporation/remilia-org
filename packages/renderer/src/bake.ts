@@ -270,6 +270,37 @@ function isExternalArchive(p: FetchedPost, channel: Channel): boolean {
   return channel === "archive" && p.origin === "external" && Boolean(p.externalUrl);
 }
 
+/**
+ * The outlet external coverage is credited to: its `outlet` field, or the
+ * original's host name. Undefined for first-party posts.
+ */
+export function outletOf(p: {
+  origin?: string;
+  outlet?: string;
+  externalUrl?: string;
+}): string | undefined {
+  if (p.origin !== "external") return undefined;
+  const named = p.outlet?.trim();
+  if (named) return named;
+  try {
+    return p.externalUrl
+      ? new URL(p.externalUrl).hostname.replace(/^www\./, "")
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The name a post is bylined with. Coverage written elsewhere names its
+ * outlet, never the author document it was filed under, who did not write
+ * it.
+ */
+function bylineOf(p: FetchedPost): string | undefined {
+  if (p.origin === "external") return outletOf(p);
+  return p.authors?.map((a) => a.name).join(", ") || undefined;
+}
+
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
   return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
 }
@@ -325,7 +356,10 @@ function termArchives(posts: FetchedPost[]): Record<ArchiveKind, ArchiveTerm[]> 
   };
   return {
     tags: termsOf((p) => p.tags ?? []),
-    authors: termsOf((p) => p.authors?.map((a) => a.name) ?? []),
+    // Outlets are not authors: coverage gets no author archive.
+    authors: termsOf((p) =>
+      p.origin === "external" ? [] : (p.authors?.map((a) => a.name) ?? []),
+    ),
     months: termsOf((p) => [monthKey(p.publishedAt)], (key) => key)
       .map((t) => ({ ...t, label: monthLabel(t.slug) }))
       .sort((a, b) => b.slug.localeCompare(a.slug)),
@@ -465,9 +499,19 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const withOrg = (ld: object): object[] => (orgLd ? [ld, orgLd] : [ld]);
 
   const meta = { channel, title: host.title, description: host.description };
+  // A feed item is bylined like its page: coverage names its outlet.
+  const feedPost = (p: FetchedPost) => {
+    const outlet = outletOf(p);
+    return {
+      ...p,
+      channel: postChannel(p),
+      authors:
+        p.origin === "external" ? (outlet ? [{ name: outlet }] : []) : p.authors,
+    };
+  };
   const feedPosts = posts
     .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
-    .map((p) => ({ ...p, channel: postChannel(p) }));
+    .map(feedPost);
   const sitemapEntries: SitemapEntry[] = [
     { loc: indexUrl(channel) },
     // Aggregates only list their own pages — posts live in section sitemaps.
@@ -540,7 +584,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     baked(`${postBase(p)}/months/${monthKey(p.publishedAt)}`);
   const authorHrefFor = (p: FetchedPost): string | undefined => {
     const name = p.authors?.[0]?.name?.trim();
-    if (!name) return undefined;
+    if (!name || p.origin === "external") return undefined;
     const slug = slugify(name);
     return (
       baked(`${postBase(p)}/authors/${slug}`) ??
@@ -586,7 +630,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     monthHref: monthHrefFor(p),
     excerpt: p.excerpt,
     imageUrl: img(p.coverRef, "w=1200&auto=format"),
-    author: p.authors?.map((a) => a.name).join(", "),
+    author: bylineOf(p),
   }));
   // The category dropdown is one shared control — every listing offers the
   // host's full section set. Options navigate to that section's index (or
@@ -732,7 +776,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         img(p.coverRef, "w=1200&auto=format"),
       noindex: p.noIndex === true,
       channel,
-      author: p.authors?.map((a) => a.name).join(", "),
+      author: bylineOf(p),
       publishedTime: p.publishedAt,
       modifiedTime: p.updatedAt ?? p.publishedAt,
       alternates: [
@@ -751,6 +795,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ...withOrg(
           blogPosting({
             ...p,
+            // An outlet is an organization, not one of the post's people.
+            authors: p.origin === "external" ? undefined : p.authors,
             channel,
             canonicalUrl: canonical,
             excerpt: p.seoDescription?.trim() || p.excerpt,
@@ -788,7 +834,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       mainHtml: articleHtml({
         title: p.title,
         publishedAt: p.publishedAt,
-        byline: p.authors?.map((a) => a.name).join(", "),
+        byline: bylineOf(p),
         authorHref: authorHrefFor(p),
         canonical: pageUrl,
         category: CHANNEL_LABEL[channel],
@@ -814,7 +860,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             publishedAt: p.publishedAt,
             excerpt: p.excerpt,
             canonical: pageUrl,
-            author: p.authors?.map((a) => a.name).join(", "),
+            author: bylineOf(p),
             tags: p.tags,
             body,
             assetUrl: (a) =>
@@ -936,7 +982,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           { channel, title: listing.title, description: listing.description },
           listing.posts.flatMap((n) => {
             const post = posts.find((p) => `${basePath}/${p.slug}` === n.url);
-            return post ? [{ ...post, channel }] : [];
+            return post ? [feedPost(post)] : [];
           }),
         ),
       );
