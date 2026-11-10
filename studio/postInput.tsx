@@ -2,12 +2,8 @@ import {
   createContext,
   useContext,
   useEffect,
-  useInsertionEffect,
-  useLayoutEffect,
-  useMemo,
   useRef,
   useState,
-  type MouseEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -20,20 +16,13 @@ import {
   type StringInputProps,
 } from "sanity";
 import { usePresentationParams } from "sanity/presentation";
-import { CHANNELS, type Channel } from "../lib/access";
-import {
-  FRAME_CLASS,
-  PAGE_CSS,
-  frameByline,
-  frameChannel,
-  frameHtml,
-  frameTheme,
-} from "./pageFrame";
+import { CHANNELS } from "../lib/access";
+import { frameChannel } from "./pageFrame";
+import { PostPage, TitleRoot } from "./postPage";
 
 const WRITE = new Set(["title", "body", "commentary"]);
 
 const SettingsRoot = createContext<HTMLElement | null>(null);
-const TitleRoot = createContext<HTMLElement | null>(null);
 
 function bylineDate(iso: unknown): string {
   if (typeof iso !== "string" || !iso) return "";
@@ -193,68 +182,6 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
   };
 }
 
-/** The page frame's slots the editor fills, found once the frame mounts. */
-interface FrameSlots {
-  byline: HTMLElement;
-  title: HTMLElement;
-  prose: HTMLElement;
-}
-
-let pageCssInjected = false;
-
-function injectPageCss(): void {
-  if (pageCssInjected) return;
-  pageCssInjected = true;
-  const style = document.createElement("style");
-  style.dataset.remilia = "blog-page";
-  style.textContent = PAGE_CSS;
-  document.head.append(style);
-}
-
-/**
- * The blog's post page, from the renderer, with the editor in place of the
- * title, byline and body. Links in the frame open the live site in a new tab
- * rather than leaving the Studio.
- */
-function PageFrame(props: {
-  channel: Channel;
-  onSlots: (slots: FrameSlots | null) => void;
-}): ReactNode {
-  const ref = useRef<HTMLDivElement>(null);
-  const html = useMemo(() => frameHtml(props.channel), [props.channel]);
-  const { onSlots } = props;
-
-  useInsertionEffect(injectPageCss, []);
-
-  useLayoutEffect(() => {
-    const root = ref.current;
-    const byline = root?.querySelector<HTMLElement>(".sec.mast .byline");
-    const title = root?.querySelector<HTMLElement>(".sec.mast h1");
-    const prose = root?.querySelector<HTMLElement>(".article-rest .prose");
-    if (!byline || !title || !prose) return onSlots(null);
-    prose.replaceChildren();
-    onSlots({ byline, title, prose });
-    return () => onSlots(null);
-  }, [html, onSlots]);
-
-  const onClick = (e: MouseEvent<HTMLDivElement>) => {
-    const link = (e.target as Element).closest?.("a[href]");
-    if (!link || link.closest(".blog-pt")) return;
-    e.preventDefault();
-    window.open((link as HTMLAnchorElement).href, "_blank", "noopener");
-  };
-
-  return (
-    <div
-      ref={ref}
-      className={FRAME_CLASS}
-      {...frameTheme(props.channel)}
-      onClick={onClick}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
-}
-
 export function PostInput(props: ObjectInputProps): ReactNode {
   // Presentation shows the real page beside the pane, so the pane keeps the
   // compact article; everywhere else the post edits inside its page.
@@ -289,26 +216,12 @@ export function PostInput(props: ObjectInputProps): ReactNode {
   const channel = frameChannel(channelValue);
   const publishedAt = useFormValue(["publishedAt"]);
   const names = useAuthorNames(useFormValue(["authors"]));
-  const [slots, setSlots] = useState<FrameSlots | null>(null);
-
-  useEffect(() => {
-    if (!slots) return;
-    slots.byline.innerHTML = frameByline({ channel, publishedAt, names });
-  }, [slots, channel, publishedAt, names]);
 
   const article = page ? (
-    <>
-      <PageFrame channel={channel} onSlots={setSlots} />
-      {slots
-        ? createPortal(
-            <div className="blog-article-prose blog-pt">
-              {props.renderDefault(props)}
-            </div>,
-            slots.prose,
-          )
-        : null}
-    </>
-  ) : (
+    <PostPage channel={channel} publishedAt={publishedAt} names={names}>
+      {props.renderDefault(props)}
+    </PostPage>
+) : (
     <div className="blog-post-form">
       <div className="blog-article">
         <div className="blog-sec blog-article-mast">
@@ -337,7 +250,7 @@ export function PostInput(props: ObjectInputProps): ReactNode {
 
   return (
     <SettingsRoot.Provider value={drawer}>
-      <TitleRoot.Provider value={page ? (slots?.title ?? null) : titleSlot}>
+      <TitleRoot.Provider value={titleSlot}>
       <div
         className={shellClass}
         data-body-len={bodyLen}
