@@ -105,6 +105,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       token,
       perspective,
       stylesheets,
+      hostPooled: Boolean(spec.aggregate),
     });
     total += result.pages;
     console.log(`baked ${result.pages} pages for ${channel} into ${outDir}`);

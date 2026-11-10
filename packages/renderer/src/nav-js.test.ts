@@ -243,6 +243,14 @@ function el(
 
 function matches(n: Node, sel: string): boolean {
   const inMenu = () => !!n.parent?.closest(".sel-menu");
+  const valued = /^\.sel-menu button\[data-href\]\[data-value="(.*)"\]$/.exec(sel);
+  if (valued)
+    return (
+      n.tag === "button" &&
+      "data-href" in n.attrs &&
+      n.attrs["data-value"] === valued[1] &&
+      inMenu()
+    );
   switch (sel) {
     case ".sel-mark":
     case ".sel-label":
@@ -256,8 +264,6 @@ function matches(n: Node, sel: string): boolean {
       return n.tag === "button" && inMenu();
     case ".sel-menu button[data-href]":
       return n.tag === "button" && "data-href" in n.attrs && inMenu();
-    case ".post-card a.author":
-      return n.tag === "a" && n.cls.includes("author") && !!n.parent?.closest(".post-card");
     case ".post-card":
       return n.cls.includes("post-card");
     default:
@@ -285,7 +291,7 @@ const dropdown = (id: string, value: string, label: string, items: Node[]): Node
  * dispatches like a browser: target up to the window, then a summary's
  * native toggle unless the default was prevented.
  */
-function runControls() {
+function runControls(search = "") {
   const year = el("details", {}, [
     el("summary", {}, [el("span", { cls: "sel-label", text: "2023" }), el("span", { cls: "sel-mark" })]),
     el("ul", { cls: "sel-sub" }, [
@@ -299,9 +305,10 @@ function runControls() {
     option("2024-12", "December 2024", "/blog/updates/months/2024-12"),
     el("li", { cls: "sel-year" }, [year]),
   ]);
-  const author = dropdown("post-author", "Charlotte Fang", "Charlotte Fang", [
-    option("", "All authors"),
-    option("Charlotte Fang", "Charlotte Fang"),
+  const author = dropdown("post-author", "", "All authors", [
+    option("", "All authors", "/blog/updates/months/2023-09"),
+    option("Charlotte Fang", "Charlotte Fang", "/blog/updates/authors/charlotte-fang"),
+    option("minds0n", "minds0n", "/blog/authors/minds0n"),
   ]);
   const section = dropdown("site-sec", "Updates", "Updates", [
     option("All posts", "All posts", "/blog"),
@@ -328,11 +335,12 @@ function runControls() {
     addEventListener: () => {},
     documentElement: { style: {} },
   };
+  const replaced: string[] = [];
   const location = {
     pathname: "/blog/updates/months/2023-09/",
-    search: "",
-    href: "https://remilia.org/blog/updates/months/2023-09/",
-    replace: () => {},
+    search,
+    href: `https://remilia.org/blog/updates/months/2023-09/${search}`,
+    replace: (to: string) => replaced.push(to),
     assign: (to: string) => assigned.push(to),
   };
   new Function(
@@ -375,7 +383,7 @@ function runControls() {
     return hit;
   };
   const mark = (d: Node) => d.kids[0].kids[1];
-  return { body, date, author, section, year, assigned, click, find, mark, windowHooks };
+  return { body, date, author, section, year, assigned, replaced, click, find, mark, windowHooks };
 }
 
 test("choosing a date navigates to that month's archive", () => {
@@ -395,7 +403,7 @@ test("choosing a date navigates to that month's archive", () => {
 
 test("a navigating dropdown's mark toggles its menu instead of clearing", () => {
   const ui = runControls();
-  for (const d of [ui.date, ui.section]) {
+  for (const d of [ui.date, ui.author, ui.section]) {
     const before = { value: d.dataset.value, label: d.kids[0].kids[0].textContent };
     ui.click(ui.mark(d));
     assert.equal(d.open, true, `${d.id} opens from its mark`);
@@ -408,32 +416,31 @@ test("a navigating dropdown's mark toggles its menu instead of clearing", () => 
     assert.equal(d.open, false, `${d.id} closes from its mark`);
   }
   assert.deepEqual(ui.assigned, []);
-  // A filter dropdown still clears in place from its mark.
-  ui.click(ui.mark(ui.author));
-  assert.equal(ui.author.dataset.value, "");
-  assert.equal(ui.author.kids[0].kids[0].textContent, "All authors");
-  assert.equal(ui.author.open, false);
 });
 
-test("a card's author archive link navigates; only the ?author= fallback filters", () => {
+test("choosing an author navigates to the archive the option names", () => {
   const ui = runControls();
-  const cardWith = (href: string) => {
-    const a = el("a", { cls: "author", text: "Charlotte Fang", attrs: { href } });
-    el("article", { cls: "sec post-card" }, [a]);
-    return a;
-  };
-  let prevented = false;
-  const clickLink = (a: Node) => {
-    prevented = false;
-    const e = { target: a, button: 0, preventDefault: () => { prevented = true; }, stopPropagation: () => {} };
-    (ui.windowHooks.get("click") ?? []).forEach((fn) => fn(e));
-  };
-  clickLink(cardWith("/blog/updates/authors/charlotte-fang"));
-  assert.equal(prevented, false, "the archive link is left to the browser");
-  assert.equal(ui.author.dataset.value, "Charlotte Fang", "the filter is not cleared");
-  clickLink(cardWith("?author=Remilia%20Jackson"));
-  assert.equal(prevented, true, "the fallback link filters in place");
-  assert.equal(ui.author.dataset.value, "Remilia Jackson");
+  ui.author.open = true;
+  ui.click(ui.find(ui.author, "Charlotte Fang"));
+  // An author with no posts in this section opens the pooled archive.
+  ui.click(ui.find(ui.author, "minds0n"));
+  ui.click(ui.find(ui.author.kids[1], "All authors"));
+  assert.deepEqual(ui.assigned, [
+    "/blog/updates/authors/charlotte-fang",
+    "/blog/authors/minds0n",
+    "/blog/updates/months/2023-09",
+  ]);
+  assert.equal(ui.author.dataset.value, "", "navigating leaves the value alone");
+});
+
+test("an old ?author= link opens that author's archive", () => {
+  assert.deepEqual(runControls("?author=minds0n").replaced, ["/blog/authors/minds0n"]);
+  assert.deepEqual(
+    runControls("?author=Charlotte%20Fang").replaced,
+    ["/blog/updates/authors/charlotte-fang"],
+  );
+  // A name with no archive leaves the listing as it is.
+  assert.deepEqual(runControls("?author=Nobody").replaced, []);
 });
 
 test("expanding a year keeps the date dropdown open and selects nothing", () => {

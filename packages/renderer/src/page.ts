@@ -477,7 +477,7 @@ export interface IndexCard {
   excerpt: string;
   imageUrl?: string;
   author?: string;
-  /** Author archive; falls back to the client-side filter. */
+  /** Author archive; the name stays plain text without one. */
   authorHref?: string;
   /** Tag archive; falls back to a plain label. */
   categoryHref?: string;
@@ -527,10 +527,10 @@ export function indexMain(
       const img = p.imageUrl
         ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
         : "";
-      const authorHref =
-        p.authorHref ?? `?author=${encodeURIComponent(p.author ?? "")}`;
       const author = p.author
-        ? `<a class="author" href="${esc(authorHref)}">${esc(p.author)}</a>`
+        ? p.authorHref
+          ? `<a class="author" href="${esc(p.authorHref)}">${esc(p.author)}</a>`
+          : `<span class="author">${esc(p.author)}</span>`
         : `<span class="author"></span>`;
       const category = p.categoryHref
         ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`

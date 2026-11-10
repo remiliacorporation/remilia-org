@@ -88,22 +88,6 @@ function catSel(posts: NavPost[]): { css: string; html: string } {
   );
 }
 
-function authorSel(posts: NavPost[]): { css: string; html: string } {
-  const authors = [
-    ...new Set(
-      posts.map((p) => p.author).filter((a): a is string => Boolean(a)),
-    ),
-  ].sort();
-  if (!authors.length) return { css: "", html: "" };
-  return filterSel(
-    "post-author",
-    "Filter authors",
-    "All authors",
-    authors,
-    "data-author",
-  );
-}
-
 /** One shared category control across every listing of the host. */
 export interface SharedCats {
   /** Every sibling category in nav order. `href` navigates; omit to filter. */
@@ -185,11 +169,34 @@ export function dateSel(
 </details>`;
 }
 
-export function filterBar(posts: NavPost[], shared?: SharedCats): string {
-  const cat = shared ? "" : catSel(posts).html;
-  const { html: authors } = authorSel(posts);
-  if (!cat && !authors) return "";
-  return `${cat}${authors}`;
+/** An author with an archive to open: the listing's own, or the pooled one. */
+export interface AuthorOption {
+  label: string;
+  href: string;
+}
+
+/**
+ * Author picker. Like the date control, each option opens an archive: the
+ * author's archive in this listing's section when there is one, otherwise the
+ * host's pooled archive, so a pick never lands on an empty page. `current` is
+ * the author whose archive is shown, "" elsewhere.
+ */
+export function authorSel(
+  authors: AuthorOption[],
+  allHref: string,
+  current = "",
+): string {
+  if (!authors.length) return "";
+  const option = (value: string, href: string, text: string): string =>
+    `<li><button type="button" data-value="${esc(value)}" data-href="${esc(href)}"${value === current ? ' aria-current="page"' : ""}>${esc(text)}</button></li>`;
+  const items = [
+    option("", allHref, "All authors"),
+    ...authors.map((a) => option(a.label, a.href, a.label)),
+  ].join("");
+  return `<details class="sel nav-cat-sel" id="post-author" data-value="${esc(current)}" aria-label="Author">
+<summary><span class="sel-label">${esc(current || "All authors")}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
 }
 
 export function leftRail(
@@ -296,13 +303,11 @@ export const NAV_JS = `(() => {
   const match = (el) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-    const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
     const sc = query
       ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
       : 0;
     const ok = (query ? sc >= 0 : true)
-      && (!catv || el.dataset.cat === catv)
-      && (!author || el.dataset.author === author);
+      && (!catv || el.dataset.cat === catv);
     return { el, sc, show: ok };
   };
   const apply = () => {
@@ -327,7 +332,7 @@ export const NAV_JS = `(() => {
     cards.forEach((c) => { c.hidden = !match(c).show; });
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-      const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
+      const author = statusEl.dataset.author || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;
@@ -343,18 +348,6 @@ export const NAV_JS = `(() => {
   bindSel(auth, 'All authors');
   bindSel(document.getElementById('site-sec'), '');
   bindSel(document.getElementById('post-date'), 'All dates');
-  addEventListener('click', (e) => {
-    const a = e.target.closest('.post-card a.author');
-    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    // Only the ?author= fallback filters in place; an author archive link
-    // navigates like any other link.
-    const v = new URL(a.getAttribute('href'), location.href).searchParams.get('author') || '';
-    if (v && auth) {
-      e.preventDefault();
-      setSel(auth, v, 'All authors');
-      page = 0; apply();
-    }
-  });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
   const tagv = (statusEl && statusEl.dataset.tag) || '';
@@ -375,9 +368,16 @@ export const NAV_JS = `(() => {
     }
     setSel(cat, catParam, 'All posts');
   }
-  if (params.get('author')) setSel(auth, params.get('author'), 'All authors');
-  if (statusEl && statusEl.dataset.author)
-    setSel(auth, statusEl.dataset.author, 'All authors');
+  // Authors are archive pages too; an old ?author= link opens the archive
+  // the dropdown offers for that name.
+  const authorParam = params.get('author');
+  if (authorParam && auth && statusEl && !statusEl.dataset.author) {
+    const b = auth.querySelector('.sel-menu button[data-href][data-value="' + CSS.escape(authorParam) + '"]');
+    if (b) {
+      location.replace(b.getAttribute('data-href'));
+      return;
+    }
+  }
   apply();
 })();
 // <details> has no "only one open" behaviour and no outside dismissal, so a

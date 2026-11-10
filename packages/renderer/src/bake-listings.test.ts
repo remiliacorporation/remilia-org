@@ -133,7 +133,8 @@ async function bakeOrg(
     stylesheets: [],
   };
   await hostStubs(outDir);
-  for (const channel of SECTIONS) await bake({ ...common, channel });
+  for (const channel of SECTIONS)
+    await bake({ ...common, channel, hostPooled: true });
   await bake({
     ...common,
     channel: "blog",
@@ -406,8 +407,8 @@ test("the pooled index bakes month archives across every section", async () => {
     assert.equal(cards(await read("blog/months/2023-11/index.html")), 1);
     assert.equal(cards(await read("blog/months/2022-06/index.html")), 2);
 
-    // Only months holding an indexable post; no feeds; no tag or author
-    // archives on the pooled index.
+    // Only months holding an indexable post; no feeds; no tag archives on
+    // the pooled index.
     const months = await readdir(join(outDir, "blog/months"));
     assert.deepEqual(months.sort(), [
       "2022-06",
@@ -419,7 +420,6 @@ test("the pooled index bakes month archives across every section", async () => {
     assert.ok(!(await readdir(join(outDir, "blog/months/2024-12"))).includes("rss.xml"));
     const pooledRoot = await readdir(join(outDir, "blog"));
     assert.ok(!pooledRoot.includes("tags"));
-    assert.ok(!pooledRoot.includes("authors"));
 
     const dir = await read("blog/months/index.html");
     const rows = [...dir.matchAll(/<li><a href="([^"]+)">([^<]+)<\/a> <span class="term-count">(\d+)<\/span><\/li>/g)]
@@ -514,11 +514,12 @@ test("dates and authors link only to archives that are baked", async () => {
     assert.ok(card(pooled, "updates-1").includes('<a class="byline-date" href="/blog/updates/months/2024-12">'));
     assert.ok(card(pooled, "press-2").includes('<a class="byline-date" href="/blog/press/months/2024-10">'));
 
-    // Authors link to an archive only where the section baked one; the
-    // card falls back to the in-page filter, the byline to plain text.
-    assert.ok(card(pooled, "updates-2").includes('<a class="author" href="?author=Hidden%20Hand">'));
+    // Authors link to their section's archive where it was baked, to the
+    // pooled one otherwise, and stay plain text when neither exists.
+    assert.ok(card(pooled, "updates-2").includes('<span class="author">Hidden Hand</span>'));
     assert.ok(card(pooled, "press-1").includes('<a class="author" href="/blog/press/authors/remilia-jackson">'));
-    assert.ok(card(pooled, "thought-1").includes('<a class="author" href="?author=Charlotte%20Fang">'));
+    assert.ok(card(pooled, "thought-1").includes('<span class="author">Charlotte Fang</span>'));
+    assert.ok(!pooled.includes("?author="));
     const thought = await read("blog/thought/thought-1/index.html");
     assert.ok(!thought.includes("/blog/thought/authors/"));
     assert.ok(!thought.includes("/blog/thought/months/"));
@@ -526,6 +527,100 @@ test("dates and authors link only to archives that are baked", async () => {
     const hand = await read("blog/updates/updates-2/index.html");
     assert.ok(!hand.includes("/blog/updates/authors/hidden-hand"));
     assert.ok(hand.includes('<a class="byline-date" href="/blog/updates/months/2024-12">'));
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
+  } finally {
+    server.close();
+  }
+});
+
+test("the pooled index bakes author archives and every listing offers every author", async () => {
+  const by = (section: string, n: number, day: number, ...names: string[]) => ({
+    ...posts[0],
+    title: `${section} ${n}`,
+    slug: `${section}-${n}`,
+    publishedAt: `2024-12-${String(day).padStart(2, "0")}T12:00:00.000Z`,
+    updatedAt: `2024-12-${String(day).padStart(2, "0")}T12:00:00.000Z`,
+    authors: names.map((name) => ({ name })),
+  });
+  // 22 Updates posts by Remilia Jackson fill page 1 of the pooled index, so
+  // minds0n (Thought) and Charlotte Fang (Press) appear only further on.
+  // A hidden post's author has no archive anywhere; a dangling author
+  // reference dereferences to null.
+  const bySection: Record<string, unknown[]> = {
+    updates: Array.from({ length: 22 }, (_, i) => by("updates", i + 1, 28 - (i % 6), "Remilia Jackson")),
+    press: [by("press", 1, 3, "Charlotte Fang", "Remilia Jackson")],
+    thought: [
+      by("thought", 1, 2, "minds0n"),
+      { ...by("thought", 2, 1, "Hidden Hand"), noIndex: true },
+      { ...by("thought", 3, 1), authors: [null] },
+    ],
+    archive: [],
+  };
+  const outDir = await mkdtemp(join(tmpdir(), "bake-pooled-authors-"));
+  const server = await bakeOrg(outDir, bySection);
+  try {
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const cards = (html: string) =>
+      (html.match(/class="sec post-card"/g) ?? []).length;
+    const options = (html: string) => {
+      const sel = html.slice(html.indexOf('id="post-author"'), html.indexOf("</details>", html.indexOf('id="post-author"')));
+      return [...sel.matchAll(/data-value="([^"]*)" data-href="([^"]+)"/g)].map((m) => [m[1], m[2]]);
+    };
+
+    // One pooled archive per author, across sections, newest first.
+    const rj = await read("blog/authors/remilia-jackson/index.html");
+    assert.equal(cards(rj), 20);
+    assert.equal(cards(await read("blog/authors/remilia-jackson/page/2/index.html")), 3);
+    assert.ok(rj.includes('<h1 data-author="Remilia Jackson">Showing all posts by Remilia Jackson</h1>'));
+    const cf = await read("blog/authors/charlotte-fang/index.html");
+    assert.equal(cards(cf), 1);
+    assert.ok(cf.includes('href="/blog/press/press-1"'));
+    assert.equal(cards(await read("blog/authors/minds0n/index.html")), 1);
+    assert.deepEqual((await readdir(join(outDir, "blog/authors"))).sort(), [
+      "charlotte-fang",
+      "index.html",
+      "minds0n",
+      "remilia-jackson",
+    ]);
+    assert.ok((await read("blog/authors/index.html")).includes('href="/blog/authors/minds0n"'));
+    assert.ok((await read("blog/sitemap.xml")).includes("<loc>https://remilia.org/blog/authors/minds0n</loc>"));
+
+    // The pooled index lists every author on the host, not just page 1's,
+    // and each opens the pooled archive.
+    const all = [
+      ["", "/blog"],
+      ["Charlotte Fang", "/blog/authors/charlotte-fang"],
+      ["minds0n", "/blog/authors/minds0n"],
+      ["Remilia Jackson", "/blog/authors/remilia-jackson"],
+    ];
+    const index = await read("blog/index.html");
+    assert.ok(!index.includes('data-title="thought 1"'), "minds0n is not on page 1");
+    assert.deepEqual(options(index), all);
+    assert.deepEqual(options(await read("blog/months/2024-12/index.html")), [
+      ["", "/blog/months/2024-12"],
+      ...all.slice(1),
+    ]);
+
+    // A section offers the same authors. One with posts here opens the
+    // section's archive; one without would show nothing under the section,
+    // so the pick drops the section for the pooled archive.
+    assert.deepEqual(options(await read("blog/press/index.html")), [
+      ["", "/blog/press"],
+      ["Charlotte Fang", "/blog/press/authors/charlotte-fang"],
+      ["minds0n", "/blog/authors/minds0n"],
+      ["Remilia Jackson", "/blog/press/authors/remilia-jackson"],
+    ]);
+    // An author's archive names them; "All authors" returns to the index.
+    const pressRj = await read("blog/press/authors/remilia-jackson/index.html");
+    assert.ok(pressRj.includes('id="post-author" data-value="Remilia Jackson"'));
+    assert.deepEqual(options(pressRj)[0], ["", "/blog/press"]);
+    assert.ok(rj.includes('id="post-author" data-value="Remilia Jackson"'));
+
+    // A card in a section with no archive for its author links the pooled one.
+    const thoughtIndex = await read("blog/thought/index.html");
+    assert.ok(thoughtIndex.includes('<a class="author" href="/blog/thought/authors/minds0n">'));
+    assert.ok(!thoughtIndex.includes("hidden-hand"));
 
     assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
   } finally {

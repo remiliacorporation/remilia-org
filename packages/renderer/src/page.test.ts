@@ -10,7 +10,7 @@ import {
   indexMain,
   type Chrome,
 } from "./page";
-import { dateSel, filterBar, leftRail } from "./nav";
+import { authorSel, dateSel, leftRail } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -269,14 +269,33 @@ test("a post names its bylines as the page author; other pages name the host", (
     assert.ok(page(none).includes('<meta name="author" content="Remigumi-guchi Digital, LLC">'));
 });
 
-test("index filter bar includes category and author dropdowns", () => {
-  const other = { ...POST, title: "Memo", url: "/press/memo", category: "News" };
-  const html = filterBar([POST, other]);
-  assert.ok(html.includes('id="post-cat"'));
-  assert.ok(html.includes(">All posts</button>"));
-  assert.ok(html.includes('id="post-author"'));
-  assert.ok(html.includes(">All authors</button>"));
-  assert.ok(html.includes(">Remilia</button>"));
+const AUTHORS = [
+  { label: "Charlotte Fang", href: "/blog/press/authors/charlotte-fang" },
+  { label: "minds0n", href: "/blog/authors/minds0n" },
+];
+
+test("the author dropdown opens each author's archive", () => {
+  const html = authorSel(AUTHORS, "/blog/press");
+  assert.match(html, /^<details class="sel nav-cat-sel" id="post-author" data-value="" aria-label="Author">/);
+  assert.match(html, /<span class="sel-label">All authors<\/span>/);
+  assert.deepEqual(
+    [...html.matchAll(/data-href="([^"]+)"[^>]*>([^<]+)</g)].map((m) => [m[1], m[2]]),
+    [
+      ["/blog/press", "All authors"],
+      ["/blog/press/authors/charlotte-fang", "Charlotte Fang"],
+      ["/blog/authors/minds0n", "minds0n"],
+    ],
+  );
+  // On an author's archive it names them and marks their option.
+  const on = authorSel(AUTHORS, "/blog/press", "minds0n");
+  assert.match(on, /data-value="minds0n" aria-label="Author">\n<summary><span class="sel-label">minds0n<\/span>/);
+  assert.ok(on.includes('data-value="minds0n" data-href="/blog/authors/minds0n" aria-current="page">minds0n</button>'));
+  assert.equal((on.match(/aria-current/g) ?? []).length, 1);
+  // No archives, no control.
+  assert.equal(authorSel([], "/blog/press"), "");
+});
+
+test("index listings carry the status line and cards", () => {
   const index = indexMain([POST], "<p>tools</p>");
   const rail = leftRail([POST], "Press", "/press");
   assert.match(index, /Read more: Vaults/);
@@ -342,7 +361,7 @@ test("post dates link to their month archive, keeping the time element", () => {
 test("listing controls share one masthead tools line", () => {
   const html = indexMain(
     [POST],
-    filterBar([POST]),
+    authorSel(AUTHORS, "/blog/press"),
     undefined,
     undefined,
     `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
@@ -417,7 +436,7 @@ test("date dropdown is absent without month archives", () => {
 test("date dropdown sits between authors and section in the tools line", () => {
   const html = indexMain(
     [POST],
-    `${filterBar([POST])}${dateSel(MONTHS, "/blog/updates")}`,
+    `${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`,
     undefined,
     undefined,
     `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,

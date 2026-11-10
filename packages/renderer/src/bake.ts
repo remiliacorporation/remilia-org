@@ -56,7 +56,7 @@ import {
   leftRail,
   emptyRail,
   dateSel,
-  filterBar,
+  authorSel,
   sectionSel,
   NAV_JS,
   type NavPost,
@@ -102,6 +102,13 @@ export interface BakeOptions {
   stylesheets: string[];
   /** Pool posts across these channels — the listing-only aggregate surface. */
   aggregateOf?: Channel[];
+  /**
+   * The host also bakes its pooled index, with an author archive for every
+   * author on the host. A section's Author control then offers every one of
+   * them, opening the pooled archive for an author the section has no
+   * posts by.
+   */
+  hostPooled?: boolean;
 }
 
 interface FetchedPost {
@@ -190,6 +197,11 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
   "migrationSource": migration.source,
   "albums": albums[]->{ title, "slug": slug.current, date, description,
     "images": images[]{ "ref": asset._ref, alt, caption, credit } }
+}`;
+
+// Just enough of a sibling section's posts to know who writes on the host.
+const AUTHORS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] {
+  publishedAt, "noIndex": seo.noIndex, "authors": authors[]->{ name }, origin
 }`;
 
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
@@ -370,6 +382,18 @@ export function indexText(
   return `${head}\n${lines.join("\n\n")}\n`;
 }
 
+/**
+ * A fetched post filed under its section. A reference to a deleted author
+ * document dereferences to null; it names nobody, so it is dropped.
+ */
+function withChannel(p: FetchedPost, channel: Channel): FetchedPost {
+  return {
+    ...p,
+    channel,
+    authors: p.authors?.filter((a) => Boolean(a?.name?.trim())),
+  };
+}
+
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const { channel, chrome, outDir, host } = opts;
   const basePath = CHANNEL_BASEPATH[channel];
@@ -397,13 +421,38 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       (await client.fetch<FetchedPost[]>(POSTS_QUERY, {
         channel: c,
         includeFuture: perspective === "drafts",
-      })).map((p) => ({ ...p, channel: c })),
+      })).map((p) => withChannel(p, c)),
     );
     posts = (await Promise.all(fetches)).flat();
     if (aggregated)
       posts.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
+  }
+  // Every post on the host, for the Author control: the pooled bake already
+  // holds them; a section of a pooled host reads its siblings' bylines.
+  let hostPosts = posts;
+  if (opts.hostPooled && !aggregated) {
+    try {
+      const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]].filter(
+        (c) => c !== channel,
+      );
+      hostPosts = [
+        ...posts,
+        ...(
+          await Promise.all(
+            siblings.map(async (c) =>
+              (await client.fetch<FetchedPost[]>(AUTHORS_QUERY, {
+                channel: c,
+                includeFuture: perspective === "drafts",
+              })).map((p) => withChannel(p, c)),
+            ),
+          )
+        ).flat(),
+      ];
+    } catch (err) {
+      throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
+    }
   }
   const orgDoc = await client.fetch<(OrgInput & { logoRef?: string }) | null>(
     ORG_QUERY,
@@ -458,12 +507,17 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     cards.set(`${postBase(p)}/${p.slug}`, card);
   }
 
-  // This listing's own archives — only months on an aggregate — and, for an
-  // aggregate, the ones each pooled section bakes over the same posts.
+  // This listing's own archives — months and authors on an aggregate — and,
+  // for an aggregate, the ones each pooled section bakes over the same posts.
+  // A section of a pooled host can also link the host's pooled author
+  // archives, which the aggregate bakes over every section's posts.
   const archives = termArchives(posts);
   const ownKinds: readonly ArchiveKind[] = aggregated
-    ? ["months"]
+    ? ["months", "authors"]
     : ARCHIVE_KINDS;
+  const pooledBase =
+    CHANNEL_BASEPATH[HOST_AGGREGATE[CHANNEL_HOST[channel]]];
+  const hostAuthors = termArchives(hostPosts).authors;
   const bakedArchives = new Set([
     ...archivePaths(basePath, archives, ownKinds),
     ...(opts.aggregateOf ?? []).flatMap((c) =>
@@ -473,17 +527,41 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ARCHIVE_KINDS,
       ),
     ),
+    ...(opts.hostPooled && !aggregated
+      ? hostAuthors.map((t) => `${pooledBase}/authors/${t.slug}`)
+      : []),
   ]);
-  // Dates and authors link to the post's section archive only when that
-  // archive is baked; otherwise they render unlinked.
+  // Dates and authors link to the post's section archive when that archive
+  // is baked, an author to the pooled one otherwise, and render unlinked
+  // when neither is.
   const baked = (href: string): string | undefined =>
     bakedArchives.has(href) ? href : undefined;
   const monthHrefFor = (p: FetchedPost): string | undefined =>
     baked(`${postBase(p)}/months/${monthKey(p.publishedAt)}`);
   const authorHrefFor = (p: FetchedPost): string | undefined => {
     const name = p.authors?.[0]?.name?.trim();
-    return name ? baked(`${postBase(p)}/authors/${slugify(name)}`) : undefined;
+    if (!name) return undefined;
+    const slug = slugify(name);
+    return (
+      baked(`${postBase(p)}/authors/${slug}`) ??
+      baked(`${pooledBase}/authors/${slug}`)
+    );
   };
+  // The Author control lists every author on the host with an archive. A
+  // pick keeps this listing's section when the author has posts in it and
+  // otherwise drops it for the pooled archive, so it never opens an empty
+  // page.
+  const authorNav = (current?: string, allHref = indexPath(channel)): string =>
+    authorSel(
+      hostAuthors.flatMap((t) => {
+        const href =
+          baked(`${basePath}/authors/${t.slug}`) ??
+          baked(`${pooledBase}/authors/${t.slug}`);
+        return href ? [{ label: t.label, href }] : [];
+      }),
+      allHref,
+      current,
+    );
   // The date control offers this listing's own month archives — the
   // section's, or the pooled ones on an aggregate.
   const dateNav = (current?: string): string =>
@@ -770,6 +848,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     filter?: { tag?: string; author?: string; month?: string };
     /** The date control; omitted where picking a month would drop a filter. */
     dateNav?: string;
+    /** The author control. */
+    authorNav: string;
   }): Promise<void> => {
     const root = listing.at ? `${basePath}/${listing.at}` : basePath;
     const rootDir = join(
@@ -837,7 +917,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               categoryHref: p.categoryHref,
               monthHref: p.monthHref,
             })),
-            `${filterBar(slice, sharedCats)}${listing.dateNav ?? ""}`,
+            `${listing.authorNav}${listing.dateNav ?? ""}`,
             { page, pages, prevHref, nextHref },
             {
               ...listing.filter,
@@ -868,6 +948,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     description: host.description,
     posts: navPosts,
     dateNav: dateNav(),
+    authorNav: authorNav(),
     trail: [
       { name: site.name, url: `${site.origin}/` },
       { name: host.title, url: indexUrl(channel) },
@@ -887,9 +968,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   });
 
   // Tags, authors and publication months each get a crawlable archive per
-  // term, and a directory page lists the terms. Aggregates bake only the
-  // month archives, pooled across their sections — tag and author archives
-  // live on the sections.
+  // term, and a directory page lists the terms. Aggregates bake the month
+  // and author archives, pooled across their sections — tag archives live
+  // on the sections.
   const navOf = new Map(posts.map((p, i) => [p, navPosts[i]]));
   const termsFor = (at: ArchiveKind) =>
     archives[at].map((t) => ({
@@ -924,7 +1005,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       terms: termsFor("authors"),
       filter: (author) => ({ author }),
       describe: (author) => `Posts by ${author} in ${host.title}.`,
-      feed: true,
+      // A pooled feed would repeat the sections' author feeds.
+      feed: !aggregated,
     },
     {
       at: "months",
@@ -962,6 +1044,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ],
         feed: taxonomy.feed,
         dateNav: taxonomy.dateNav?.(term.slug),
+        // On an author's archive the control names them, and "All authors"
+        // returns to the index; elsewhere it leaves the listing as it is.
+        authorNav:
+          taxonomy.at === "authors"
+            ? authorNav(term.label)
+            : authorNav(undefined, `${basePath}/${taxonomy.at}/${term.slug}`),
       });
 
     const dirUrl = `${CHANNEL_ORIGIN[channel]}${basePath}/${taxonomy.at}`;
