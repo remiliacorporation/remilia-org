@@ -38,6 +38,7 @@ import {
   slugify,
   type LinkCard,
   type PTBlock,
+  bodyShowsImage,
 } from "./pt";
 import { markdownToPost, postToMarkdownFile } from "./md";
 import {
@@ -566,12 +567,17 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           : undefined) ?? b.file?.asset?.url,
       linkCard,
     });
-    const heroBlock = p.coverRef ? { asset: { _ref: p.coverRef } } : undefined;
+    // The cover leads the page unless the body already shows that image —
+    // imported posts often open on it, and it would print twice.
+    const heroBlock =
+      p.coverRef && !bodyShowsImage(body, p.coverRef)
+        ? { asset: { _ref: p.coverRef } }
+        : undefined;
     const heroSrc = heroBlock ? imgUrl(heroBlock) : undefined;
     const heroDims = imageDims(p.coverRef);
     const hero =
       heroBlock && heroSrc
-        ? `${figureHtml({ src: heroSrc, srcset: imgSrcSet(heroBlock), alt: p.coverAlt, width: heroDims?.w, height: heroDims?.h })}\n<hr class="nav-rule">`
+        ? `${figureHtml({ src: heroSrc, srcset: imgSrcSet(heroBlock), alt: p.coverAlt, width: heroDims?.w, height: heroDims?.h, lead: true })}\n<hr class="nav-rule">`
         : "";
     const bodyWithHero = hero ? `${hero}\n${bodyHtml}` : bodyHtml;
     const galleries =

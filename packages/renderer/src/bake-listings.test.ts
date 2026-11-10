@@ -532,3 +532,49 @@ test("dates and authors link only to archives that are baked", async () => {
     server.close();
   }
 });
+
+test("a post shows its cover once and names its bylines in the head and feeds", async () => {
+  const cover = "image-0dce8420af0000000000000000000000000000aa-800x400-jpg";
+  const other = "image-1ec391b7c70000000000000000000000000000bb-600x300-png";
+  const withCover = (slug: string, coverRef: string, first: string) => ({
+    ...posts[0],
+    title: slug,
+    slug,
+    coverImage: { asset: { _ref: coverRef } },
+    coverRef,
+    body: [{ _type: "image", asset: { _ref: first } }, ...posts[0].body],
+    authors: [{ name: "paultristis" }],
+  });
+  const fixture = await fixtureServer([
+    withCover("opens-on-cover", cover, cover),
+    withCover("opens-elsewhere", cover, other),
+  ]);
+  const outDir = await mkdtemp(join(tmpdir(), "bake-cover-"));
+  try {
+    await hostStubs(outDir);
+    await bakeUpdates(outDir, fixture.url);
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    const imgs = (html: string, id: string) =>
+      (html.match(new RegExp(`<img [^>]*src="[^"]*${id}`, "g")) ?? []).length;
+
+    // A body that opens on the cover image shows it once, with no lead.
+    const same = await read("blog/updates/opens-on-cover/index.html");
+    assert.equal(imgs(same, "0dce8420af"), 1);
+    // A body that opens on another image keeps the cover as its lead.
+    const diff = await read("blog/updates/opens-elsewhere/index.html");
+    assert.equal(imgs(diff, "0dce8420af"), 1);
+    assert.equal(imgs(diff, "1ec391b7c7"), 1);
+    const main = diff.slice(diff.indexOf("<main"));
+    assert.ok(main.indexOf("0dce8420af") < main.indexOf("1ec391b7c7"));
+    // The lead loads at once; body images stay lazy.
+    assert.match(main, /<img [^>]*0dce8420af[^>]*fetchpriority="high"/);
+    assert.match(main, /<img [^>]*1ec391b7c7[^>]*loading="lazy"/);
+
+    for (const page of [same, diff])
+      assert.ok(page.includes('<meta name="author" content="paultristis">'));
+    assert.ok((await read("blog/updates/rss.xml")).includes("<dc:creator>paultristis</dc:creator>"));
+    assert.ok((await read("blog/updates/atom.xml")).includes("<author><name>paultristis</name></author>"));
+  } finally {
+    fixture.close();
+  }
+});
