@@ -181,10 +181,23 @@
     z-index: 31;
   }
 }
+/* Beside one rail the column already fills the viewport, so the text
+   keeps the base gutter at the sides there; with both rails it gets more
+   room as the viewport allows. */
+@media (min-width: 824px) and (max-width: 1099px) {
+  :root {
+    --read-pad: var(--gutter);
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --read-pad: calc(2 * var(--space));
+  }
+}
 @media (min-width: 824px) and (max-width: 1099px) {
   .layout {
     display: grid;
-    grid-template-columns: var(--rail) var(--measure);
+    grid-template-columns: var(--rail) var(--column);
     justify-content: center;
     align-items: start;
     column-gap: var(--rail-gap);
@@ -226,8 +239,8 @@
   .article-wrap {
     grid-column: 2;
     grid-row: 1;
-    width: var(--measure);
-    max-width: var(--measure);
+    width: var(--column);
+    max-width: var(--column);
     margin: 0;
   }
   .article-body {
@@ -320,7 +333,7 @@
 @media (min-width: 1100px) {
   .layout {
     display: grid;
-    grid-template-columns: var(--rail) var(--measure) var(--rail);
+    grid-template-columns: var(--rail) var(--column) var(--rail);
     grid-template-rows: auto 1fr;
     justify-content: center;
     column-gap: var(--rail-gap);
@@ -410,8 +423,8 @@
     grid-template-rows: subgrid;
     grid-column: 2;
     grid-row: 1 / -1;
-    width: var(--measure);
-    max-width: var(--measure);
+    width: var(--column);
+    max-width: var(--column);
     margin: 0;
   }
   .article-body {
@@ -595,7 +608,7 @@
 @media (min-width: 824px) and (max-width: 1099px) {
   footer {
     margin-left: calc(
-      50% - (var(--rail) + var(--rail-gap) + var(--measure)) / 2 + var(--rail) +
+      50% - (var(--rail) + var(--rail-gap) + var(--column)) / 2 + var(--rail) +
         var(--rail-gap)
     );
     margin-right: auto;

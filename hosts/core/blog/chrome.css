@@ -1,7 +1,7 @@
 /* blog/chrome — site-head, footer, cite box, skip link */
 
 .site-head {
-  max-width: var(--measure);
+  max-width: var(--column);
   margin: 0 auto;
   padding: var(--space) 0 var(--space-s);
 }
@@ -95,9 +95,9 @@
   color: var(--ink-contrast);
 }
 footer {
-  max-width: var(--measure);
+  max-width: var(--column);
   width: min(
-    var(--measure),
+    var(--column),
     calc(
       100% - 2 * var(--rail-gap) - env(safe-area-inset-left, 0px) -
         env(safe-area-inset-right, 0px)
