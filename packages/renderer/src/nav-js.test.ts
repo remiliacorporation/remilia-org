@@ -42,15 +42,15 @@ function runListing(
   return { replaced, text: statusEl.textContent };
 }
 
-test("an old ?month= link on a section index lands on the month archive", () => {
+test("an old ?month= link on a section index lands on the month archive, slashless", () => {
   assert.equal(
     runListing("/blog/updates/", "?month=2024-12", { section: "Updates" }).replaced,
-    "/blog/updates/months/2024-12/",
+    "/blog/updates/months/2024-12",
   );
   assert.equal(
     runListing("/blog/updates/page/2", "?month=2024-04", { section: "Updates" })
       .replaced,
-    "/blog/updates/months/2024-04/",
+    "/blog/updates/months/2024-04",
   );
 });
 
@@ -74,20 +74,20 @@ test("a malformed or out-of-place ?month= does not redirect", () => {
 test("an old ?month= link on the pooled index lands on the pooled month archive", () => {
   assert.equal(
     runListing("/blog/", "?month=2024-12", {}).replaced,
-    "/blog/months/2024-12/",
+    "/blog/months/2024-12",
   );
   assert.equal(
     runListing("/blog", "?month=2022-06", {}).replaced,
-    "/blog/months/2022-06/",
+    "/blog/months/2022-06",
   );
   assert.equal(
     runListing("/blog/page/3/", "?month=2023-11", {}).replaced,
-    "/blog/months/2023-11/",
+    "/blog/months/2023-11",
   );
 });
 
 test("a month archive keeps its month in the status line", () => {
-  const { replaced, text } = runListing("/blog/updates/months/2024-12/", "", {
+  const { replaced, text } = runListing("/blog/updates/months/2024-12", "", {
     section: "Updates",
     month: "December 2024",
   });

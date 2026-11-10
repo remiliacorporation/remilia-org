@@ -356,7 +356,7 @@ export const NAV_JS = `(() => {
   // section or pooled index land on that listing's month archive instead.
   const monthParam = params.get('month') || '';
   if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && !tagv && !monthv && !statusEl.dataset.author) {
-    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam + '/');
+    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam);
     return;
   }
   const catParam = params.get('cat');

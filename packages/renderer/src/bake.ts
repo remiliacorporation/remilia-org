@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { createClient, type SanityClient } from "@sanity/client";
 import {
   type Channel,
@@ -428,6 +428,23 @@ function withChannel(p: FetchedPost, channel: Channel): FetchedPost {
   };
 }
 
+/**
+ * Writes the page whose URL is the directory `dir` under `outDir` so the URL
+ * answers without a trailing slash: `<dir>.html` is what Netlify serves at
+ * `<dir>`, with a 200 instead of the 301 a bare `<dir>/index.html` draws. The
+ * `index.html` stays beside it so an old slash URL still resolves; Netlify
+ * 301s it to the slashless one. A site root has only its `index.html`.
+ */
+export async function writePage(
+  outDir: string,
+  dir: string,
+  html: string,
+): Promise<void> {
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, "index.html"), html);
+  if (resolve(dir) !== resolve(outDir)) await writeFile(`${dir}.html`, html);
+}
+
 export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const { channel, chrome, outDir, host } = opts;
   const basePath = CHANNEL_BASEPATH[channel];
@@ -848,8 +865,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         sectionSel: sectionNav,
       }),
     });
-    await mkdir(join(dir, p.slug), { recursive: true });
-    await writeFile(join(dir, p.slug, "index.html"), page);
+    await writePage(outDir, join(dir, p.slug), page);
     await writeFile(
       join(dir, `${p.slug}.md`),
       p.body?.length || p.commentary?.length
@@ -925,9 +941,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         page === 1 ? listing.title : `${listing.title} — page ${page}`;
       const pageDir =
         page === 1 ? rootDir : join(rootDir, "page", String(page));
-      await mkdir(pageDir, { recursive: true });
-      await writeFile(
-        join(pageDir, "index.html"),
+      await writePage(
+        outDir,
+        pageDir,
         htmlPage({
           title,
           description: listing.description,
@@ -1103,9 +1119,9 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       outDir,
       ...`${basePath}/${taxonomy.at}`.split("/").filter(Boolean),
     );
-    await mkdir(dirPath, { recursive: true });
-    await writeFile(
-      join(dirPath, "index.html"),
+    await writePage(
+      outDir,
+      dirPath,
       htmlPage({
         title: taxonomy.heading,
         description: `Every ${taxonomy.noun.toLowerCase()} in ${host.title}, with post counts.`,

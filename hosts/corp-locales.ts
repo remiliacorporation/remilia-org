@@ -56,7 +56,7 @@ function pageFor(relativeFile: string): { locale: CorpLocale; route: string } | 
 
 function localePath(locale: CorpLocale, route: string): string {
   const prefix = LOCALES[locale].prefix;
-  return route === "/" ? `${prefix}/` || "/" : `${prefix}${route}`;
+  return route === "/" ? prefix || "/" : `${prefix}${route}`;
 }
 
 function localeHead(locale: CorpLocale, route: string): string {

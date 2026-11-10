@@ -102,6 +102,14 @@ async function bakeUpdates(outDir: string, apiHost: string): Promise<void> {
 
 const SECTIONS = ["updates", "press", "thought", "archive"] as const;
 
+/** A directory's entries, less each page's slashless `<name>.html` twin. */
+async function dirs(path: string): Promise<string[]> {
+  const all = await readdir(path);
+  return all
+    .filter((f) => !(f.endsWith(".html") && all.includes(f.slice(0, -5))))
+    .sort();
+}
+
 /**
  * Bakes every org section and then the pooled index from one fixture that
  * answers each section's query with its own posts, as the host bake does.
@@ -233,6 +241,30 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     const broken = await checkInternalLinks(outDir, ["https://remilia.org"]);
     assert.deepEqual(broken, []);
 
+    // Every page also answers at its slashless URL: `<path>.html` beside
+    // `<path>/index.html`, with the same markup.
+    for (const path of [
+      "blog/updates",
+      "blog/updates/page/2",
+      "blog/updates/post-1",
+      "blog/updates/tags",
+      "blog/updates/tags/theory",
+      "blog/updates/authors/remilia-jackson",
+      "blog/updates/months/2026-09",
+    ])
+      assert.equal(
+        await readFile(join(outDir, `${path}.html`), "utf8"),
+        await readFile(join(outDir, path, "index.html"), "utf8"),
+        path,
+      );
+    // Links, canonicals and the sitemap use the slashless form.
+    for (const html of [page1, page2, theory, author])
+      assert.deepEqual(
+        [...html.matchAll(/(?:href|src)="(\/[^"]*\/|https:\/\/remilia\.org\/[^"]*\/)"/g)].map((m) => m[1]),
+        [],
+      );
+    assert.ok(!sitemap.match(/<loc>[^<]*\/<\/loc>/), "no sitemap URL ends in a slash");
+
     const written = await readdir(join(outDir, "blog", "updates"));
     assert.ok(written.includes("tags"));
     assert.ok(written.includes("authors"));
@@ -306,7 +338,7 @@ test("a section bakes a paginated archive and a directory for each month", async
     assert.ok(nov.includes("Showing all Updates posts from November 2024"));
     assert.equal(cards(await read("blog/updates/months/2024-09/index.html")), 2);
     // No October posts, no October page; a closed month carries no feed.
-    const months = await readdir(join(outDir, "blog/updates/months"));
+    const months = await dirs(join(outDir, "blog/updates/months"));
     assert.deepEqual(months.sort(), ["2024-09", "2024-11", "2024-12", "index.html"]);
     assert.ok(!(await readdir(join(outDir, "blog/updates/months/2024-12"))).includes("rss.xml"));
 
@@ -409,7 +441,7 @@ test("the pooled index bakes month archives across every section", async () => {
 
     // Only months holding an indexable post; no feeds; no tag archives on
     // the pooled index.
-    const months = await readdir(join(outDir, "blog/months"));
+    const months = await dirs(join(outDir, "blog/months"));
     assert.deepEqual(months.sort(), [
       "2022-06",
       "2023-11",
@@ -577,7 +609,7 @@ test("the pooled index bakes author archives and every listing offers every auth
     assert.equal(cards(cf), 1);
     assert.ok(cf.includes('href="/blog/press/press-1"'));
     assert.equal(cards(await read("blog/authors/minds0n/index.html")), 1);
-    assert.deepEqual((await readdir(join(outDir, "blog/authors"))).sort(), [
+    assert.deepEqual(await dirs(join(outDir, "blog/authors")), [
       "charlotte-fang",
       "index.html",
       "minds0n",
@@ -679,7 +711,7 @@ test("external coverage is bylined with its outlet, which gets no author archive
 
     // Outlets are not authors: no archive and no place in the Author control.
     assert.ok(!(await readdir(join(outDir, "blog/archive"))).includes("authors"));
-    assert.deepEqual(await readdir(join(outDir, "blog/authors")), ["charlotte-fang", "index.html"]);
+    assert.deepEqual(await dirs(join(outDir, "blog/authors")), ["charlotte-fang", "index.html"]);
     for (const page of ["blog/index.html", "blog/archive/index.html", "blog/updates/index.html"]) {
       const html = await read(page);
       const sel = html.slice(html.indexOf('id="post-author"'), html.indexOf("</details>", html.indexOf('id="post-author"')));

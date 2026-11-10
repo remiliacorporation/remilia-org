@@ -73,6 +73,7 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
   const { outDir, close } = await bakeSections(COM_POST_SECTIONS);
   try {
     const news = await readFile(join(outDir, "a/blog/news/index.html"), "utf8");
+    assert.equal(await readFile(join(outDir, "a/blog/news.html"), "utf8"), news);
     assert.match(news, /data-scheme="dark"/);
     assert.match(news, /data-hue="30"/);
     assert.match(news, /data-dots="none"/);
@@ -120,6 +121,9 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
     await assert.rejects(() =>
       readFile(join(outDir, "a/blog/news/index.html"))
     );
+    // Sections answer at /updates and /dev-blog without a slash.
+    assert.equal(await readFile(join(outDir, "dev-blog.html"), "utf8"), devblog);
+    await readFile(join(outDir, "updates/post-1.html"), "utf8");
   } finally {
     close();
   }

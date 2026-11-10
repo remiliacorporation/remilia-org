@@ -155,7 +155,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
         legacyUrl: p.legacyUrl,
         canonical: canonicalFor(p.channel, p.slug),
       })),
-      `${indexUrl(aggregate)}/`,
+      indexUrl(aggregate),
     );
     await mergeInto(outDir, "redirects:legacy-host", rules);
     console.log(`redirects: ${rules.length - 3} posts from ${origin}`);
