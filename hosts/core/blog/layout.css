@@ -77,8 +77,12 @@
   .site-head > .nav-rule,
   .left-rail .site-head nav,
   .left-rail .site-head .nav-rule,
-  .sec.sec-box {
+  .sec.mast > .sec-nav,
+  .sec.mast > .mast-nav-rule {
     display: none;
+  }
+  .sec.mast:has(> .sec-nav) {
+    display: block;
   }
   .site-head,
   .left-rail .site-head {
@@ -275,9 +279,6 @@
     max-width: var(--column);
     margin: 0;
   }
-  .sec-box {
-    margin-bottom: var(--rail-gap);
-  }
   .article-body {
     width: 100%;
     max-width: none;
@@ -369,9 +370,7 @@
   .layout {
     display: grid;
     grid-template-columns: var(--rail) var(--column) var(--rail);
-    /* The top bar (site head, sections, theme), the page's own mast
-       beside the rails' first boxes, then the rest. */
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr;
     justify-content: center;
     column-gap: var(--rail-gap);
     row-gap: var(--rail-gap);
@@ -448,8 +447,7 @@
     align-self: stretch;
   }
   .right-rail .post-nav {
-    grid-row: 2 / -1;
-    align-self: start;
+    grid-row: 2;
   }
   .left-rail .toc {
     max-width: var(--toc-rail);
@@ -471,18 +469,14 @@
     max-width: none;
     margin: 0;
   }
-  .sec-box {
+  .sec.mast {
     grid-row: 1;
     align-self: stretch;
-  }
-  .sec.mast {
-    grid-row: 2;
-    align-self: start;
     height: auto;
     display: grid;
   }
   .article-rest {
-    grid-row: 3;
+    grid-row: 2;
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);

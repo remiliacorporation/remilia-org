@@ -99,10 +99,9 @@ export interface SharedCats {
 }
 
 /**
- * The host's sections as a box of its own: a "Sections" label, a rule, and
- * one row of links, "All" first when the host has a pooled index, with the
- * section being shown marked. It sits above every listing's and post's
- * masthead, level with the site head and the theme box.
+ * The host's sections as one row of links, "All" first when the host has a
+ * pooled index, with the section being shown marked. It heads every
+ * listing's and post's masthead.
  */
 export function sectionNav(shared: SharedCats): string {
   const items = [
@@ -114,17 +113,12 @@ export function sectionNav(shared: SharedCats): string {
     ),
   ];
   if (items.length < 2) return "";
-  const links = items
+  return `<nav class="sec-nav" aria-label="Sections">${items
     .map(
       (i) =>
         `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`,
     )
-    .join('<span class="nav-sep" aria-hidden="true">—</span>');
-  return `<nav class="sec sec-box" aria-labelledby="sec-box-label">
-<p class="sec-box-label" id="sec-box-label">Sections</p>
-<hr class="nav-rule">
-<p class="sec-nav">${links}</p>
-</nav>`;
+    .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
 }
 
 /**
@@ -614,13 +608,12 @@ export const NAV_JS = `(() => {
     fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t).then(() => flash(b)));
   });
 })();
-// The site-head sits beside the sections box (or, on a page without one,
-// the masthead) from 824px, in a sticky rail that can't subgrid like
-// .right-rail without breaking its internal scroll, so it stretches to
-// that box's height here.
+// The site-head sits beside the masthead from 824px, in a sticky rail
+// that can't subgrid like .right-rail without breaking its internal
+// scroll, so it stretches to the masthead's height here.
 (() => {
   try {
-    const mast = document.querySelector('.sec-box') || document.querySelector('.sec.mast');
+    const mast = document.querySelector('.sec.mast');
     const head = document.querySelector('.left-rail .site-head');
     if (!mast || !head || typeof ResizeObserver !== 'function') return;
     const mq = matchMedia('(min-width: 824px)');
