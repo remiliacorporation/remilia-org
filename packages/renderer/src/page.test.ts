@@ -10,7 +10,7 @@ import {
   indexMain,
   type Chrome,
 } from "./page";
-import { authorSel, dateSel, leftRail, sectionNav } from "./nav";
+import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -326,12 +326,12 @@ test("the author dropdown opens each author's archive", () => {
 });
 
 test("index listings carry the status line and cards", () => {
-  const index = indexMain([POST], "<p>tools</p>");
+  const index = indexMain([POST]);
   const rail = leftRail([POST], "Press", "/press");
   assert.match(index, /Read more: Vaults/);
   assert.match(index, /08\.01\.26/);
   assert.match(index, />Showing all posts</);
-  const thought = indexMain([POST], "<p>tools</p>", undefined, {
+  const thought = indexMain([POST], undefined, {
     section: "Thought",
     tag: "Essay",
   });
@@ -343,7 +343,7 @@ test("index listings carry the status line and cards", () => {
 });
 
 test("index card stretches its link from an overlay the keyboard skips", () => {
-  const html = indexMain([POST], "<p>tools</p>");
+  const html = indexMain([POST]);
   assert.match(
     html,
     /<article class="sec post-card"[^>]*>\n<a class="card-hit" href="\/press\/vaults" tabindex="-1" aria-hidden="true"><\/a>\n<header>/,
@@ -353,7 +353,7 @@ test("index card stretches its link from an overlay the keyboard skips", () => {
 
 test("post dates link to their month archive, keeping the time element", () => {
   const month = "/press/months/2026-08";
-  const card = indexMain([{ ...POST, monthHref: month }], "");
+  const card = indexMain([{ ...POST, monthHref: month }]);
   assert.ok(
     card.includes(
       `<p class="card-meta"><a class="byline-date" href="${month}"><time datetime="2026-08-01T00:00:00Z">08.01.26</time></a>`,
@@ -385,26 +385,22 @@ test("post dates link to their month archive, keeping the time element", () => {
     ),
   );
   // Without an archive the date stays a plain time.
-  assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
+  assert.ok(indexMain([POST]).includes('<p class="card-meta"><time datetime='));
 });
 
-test("a listing's mast is the section row and status; its controls sit in a bar above the posts", () => {
-  const html = indexMain(
-    [POST],
-    authorSel(AUTHORS, "/blog/press"),
-    undefined,
-    undefined,
-    sectionNav(SECTIONS),
-  );
+test("a listing's mast is the sections box; the empty-search note waits above the cards", () => {
+  const html = indexMain([POST], undefined, undefined, sectionNav(SECTIONS));
   assert.match(
     html,
     /<div class="sec mast index-mast list-mast">\n<p class="sec-box-label"[\s\S]*<\/nav>\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
-    /<div class="article-rest">\n<div class="sec list-tools"><form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/div>\n<p class="sec list-empty"[\s\S]*<\/p>\n<article class="sec post-card"/,
+    /<div class="article-rest">\n<p class="sec list-empty"[\s\S]*<\/p>\n<article class="sec post-card"/,
   );
+  // Search and the filters live in the rail's filter box, not the column.
   assert.equal(html.includes("mast-tools"), false);
+  assert.equal(html.includes('id="post-filter"'), false);
   // The status line is read to screen readers only; the mast shows the
   // sections, and an empty search result waits, hidden, above the cards.
   assert.match(html, /<p class="sec-box-label" aria-hidden="true">Sections<\/p>\n<hr class="nav-rule mast-nav-rule">\n<nav class="sec-nav"/);
@@ -473,14 +469,11 @@ test("date dropdown is absent without month archives", () => {
   assert.equal(dateSel([], "/blog/press"), "");
 });
 
-test("date dropdown follows authors in the tools bar", () => {
-  const html = indexMain(
-    [POST],
-    `${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`,
-  );
+test("the filter box holds search, then Author, then Date, under a FILTER label", () => {
+  const html = filterBox(`${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`);
   assert.match(
     html,
-    /<div class="sec list-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/div>/,
+    /^<section class="filter-box" aria-label="Filter posts">\n<p class="filter-label" aria-hidden="true">Filter<\/p>\n<hr class="nav-rule">\n<form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/section>$/,
   );
 });
 

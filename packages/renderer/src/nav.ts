@@ -155,6 +155,20 @@ export function headMenu(
 </details>`;
 }
 
+/**
+ * A listing's search and its Author and Date dropdowns, in a box of their
+ * own: FILTER, a rule, then the controls. It sits in the left rail under
+ * the site head, or under the theme box where the rails fold into one;
+ * on phones it is one row under the head.
+ */
+export function filterBox(tools: string): string {
+  return `<section class="filter-box" aria-label="Filter posts">
+<p class="filter-label" aria-hidden="true">Filter</p>
+<hr class="nav-rule">
+${NAV_SEARCH}${tools}
+</section>`;
+}
+
 /** A month the listing has an archive page for. */
 export interface DateMonth {
   /** `YYYY-MM`. */

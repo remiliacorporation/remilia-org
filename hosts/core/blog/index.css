@@ -272,8 +272,8 @@
 }
 /* A listing's masthead is the sections box, built like the theme box:
    a label, a rule, then the links on the main line at the wordmark's
-   size. Search and the Author and Date filters sit in a slim bar above
-   the posts. The status line stays for screen readers only. */
+   size. Search and the Author and Date filters sit in the rail's filter
+   box. The status line stays for screen readers only. */
 .sec.mast.list-mast:has(> .sec-nav) {
   grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
 }
@@ -338,33 +338,39 @@
   color: var(--ink-contrast);
   text-decoration: none;
 }
-.sec.list-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+/* A listing's search and filters: FILTER, a rule, then the controls,
+   built like the theme box so the rail's boxes keep one rhythm. */
+.filter-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--space-xs);
   padding: var(--space-xs);
-  margin: 0 0 var(--rail-gap);
+  border: var(--border);
+  background: var(--surface);
   --size-base: var(--size-ui);
-  /* The dropdown menus have to escape the bar. */
-  overflow: visible;
-  z-index: 6;
+  text-align: left;
 }
-.list-tools .nav-search {
-  flex: 1;
-  min-width: 0;
+.filter-label {
+  margin: 0;
+  height: var(--mast-line);
+  line-height: var(--mast-line);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  text-align: center;
+}
+.filter-box .nav-rule {
+  margin: 0;
+  height: 0;
+}
+.filter-box .nav-search {
   display: flex;
 }
-.list-tools .nav-field {
-  width: 100%;
-}
-.list-tools details.sel {
-  flex: none;
-  min-width: calc(24 * var(--grid));
+.filter-box details.sel {
   border: var(--border);
   background: var(--surface);
   color: var(--ink);
 }
-.list-tools details.sel > summary {
+.filter-box details.sel > summary {
   padding: var(--grid) var(--space-xs);
 }
 .index-mast .mast-tools {

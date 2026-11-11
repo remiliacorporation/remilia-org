@@ -513,7 +513,6 @@ ${next}
 
 export function indexMain(
   posts: IndexCard[],
-  toolsHtml: string,
   pager?: Pager,
   filter?: { tag?: string; author?: string; month?: string; section?: string },
   sectionNav?: string,
@@ -565,7 +564,6 @@ ${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr cl
 </header>
 </div>
 <div class="article-rest">
-<div class="sec list-tools">${NAV_SEARCH}${toolsHtml}</div>
 <p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}

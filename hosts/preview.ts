@@ -13,6 +13,7 @@ import {
   leftRail,
   emptyRail,
   authorSel,
+  filterBox,
   NAV_JS,
   portableTextToHtml,
   tocBox,
@@ -376,6 +377,12 @@ await writeFile(
     chrome,
     layoutClass: "is-index",
     leftRail: emptyRail(),
+    citeHtml: filterBox(
+      authorSel(
+        [{ label: "Remilia Jackson", href: "/blog/press/authors/remilia-jackson" }],
+        "/blog/press",
+      ),
+    ),
     bodyEnd: `<script src="/blog/press/nav.js" defer></script>`,
     mainHtml: indexMain(
       navPosts.map((n) => ({
@@ -387,10 +394,6 @@ await writeFile(
         imageUrl: n.imageUrl,
         author: n.author,
       })),
-      authorSel(
-        [{ label: "Remilia Jackson", href: "/blog/press/authors/remilia-jackson" }],
-        "/blog/press",
-      ),
     ),
   }),
 );

@@ -166,6 +166,11 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
 
     // 25 posts at 20 per page: two pages, 20 then 5.
     assert.equal((page1.match(/class="sec post-card"/g) ?? []).length, 20);
+    // The listing's search and filters sit in the left rail's filter box.
+    assert.match(
+      page1,
+      /<div class="left-stack">\n\n<section class="filter-box"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/section>\n<\/div>/,
+    );
     assert.equal((page2.match(/class="sec post-card"/g) ?? []).length, 5);
     assert.ok(page1.includes('rel="next" href="/blog/updates/page/2"'));
     assert.ok(page1.includes("Page 1 of 2"));

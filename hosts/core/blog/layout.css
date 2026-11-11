@@ -5,6 +5,17 @@
   .mast-tools-rule {
     display: none;
   }
+  /* The filter box sits in a sticky rail that scrolls on its own, so an
+     open dropdown unfolds inside the box, pushing the rail longer, rather
+     than floating out of it and being clipped. */
+  .filter-box .sel-menu {
+    position: static;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    border: 0;
+    border-top: var(--border);
+  }
   .sec.mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
   }
@@ -71,16 +82,26 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  /* The listing controls share one line: search takes what the Author
-     and Date dropdowns leave. */
-  .list-tools .nav-search {
+  /* The filter box is one row under the head: search takes what the
+     Author and Date dropdowns leave. */
+  .filter-box {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+  .filter-box .filter-label,
+  .filter-box .nav-rule {
+    display: none;
+  }
+  .filter-box .nav-search {
     flex: 1 1 0;
     min-width: calc(24 * var(--grid));
   }
-  .list-tools details.sel {
+  .filter-box details.sel {
     flex: 0 1 auto;
   }
-  .list-tools .sel-label {
+  .filter-box .sel-label {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -244,6 +265,10 @@
     --read-pad: calc(2 * var(--space));
   }
 }
+/* Beside one column the rails fold into one sticky stack, each box built
+   the same (label, rule, controls) and a gap apart: the site head level
+   with the sections box, the theme box level with the first card, then
+   the filter box on a listing, or the citation and post list on a post. */
 @media (min-width: 824px) and (max-width: 1099px) {
   .layout {
     display: grid;
@@ -496,7 +521,6 @@
     gap: var(--rail-gap);
   }
   .article-rest > .post-card,
-  .article-rest > .list-tools,
   .article-rest > .list-empty {
     margin-bottom: 0;
   }

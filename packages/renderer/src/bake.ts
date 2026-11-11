@@ -57,6 +57,7 @@ import {
   emptyRail,
   dateSel,
   authorSel,
+  filterBox,
   sectionNav as sectionRow,
   NAV_JS,
   type NavPost,
@@ -964,6 +965,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           chrome: chromeStamped,
           layoutClass: "is-index",
           leftRail: emptyRail(),
+          citeHtml: filterBox(`${listing.authorNav}${listing.dateNav ?? ""}`),
           bodyEnd: navScript,
           mainHtml: indexMain(
             slice.map((p) => ({
@@ -978,7 +980,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               categoryHref: p.categoryHref,
               monthHref: p.monthHref,
             })),
-            `${listing.authorNav}${listing.dateNav ?? ""}`,
             { page, pages, prevHref, nextHref },
             {
               ...listing.filter,
