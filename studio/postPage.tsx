@@ -70,6 +70,28 @@ function PageFrame(props: {
     return () => onSlots(null);
   }, [html, onSlots]);
 
+  // Sanity's form container caps the form at 640px plus gutters, which would
+  // hold the page at its phone layout. Lift the cap (and its padding) on the
+  // frame's ancestors up to the pane's scroller, so the page lays out at the
+  // pane's width with the blog background around it, as on the site.
+  useLayoutEffect(() => {
+    const lifted: [HTMLElement, string][] = [];
+    for (
+      let el = ref.current?.parentElement;
+      el && el.dataset.testid !== "document-panel-scroller";
+      el = el.parentElement
+    ) {
+      if (getComputedStyle(el).maxWidth === "none") continue;
+      lifted.push([el, el.style.cssText]);
+      el.style.maxWidth = "none";
+      el.style.paddingInline = "0";
+      el.style.paddingBlock = "0";
+    }
+    return () => {
+      for (const [el, css] of lifted) el.style.cssText = css;
+    };
+  }, []);
+
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     const link = (e.target as Element).closest?.("a[href]");
     if (!link || link.closest(".blog-pt")) return;

@@ -782,6 +782,7 @@
    look comes from the blog sheet itself. */
 .blog-post-shell.is-page {
   container: blog-page / inline-size;
+  margin: 0;
 }
 
 /* The sheet puts html's overflow-x: hidden on the frame, which would stop
