@@ -781,8 +781,9 @@
 
 /* In the margin, a note is placed from the text block it stands beside,
    not from its mark (the site's .fn is relative): a word typed before the
-   mark on its line moves the mark, and the note must not move with it. */
-@container blog-page (min-width: 1100px) {
+   mark on its line moves the mark, and the note must not move with it.
+   The margin starts at MARGIN_FROM (studio/noteStyles.ts). */
+@container blog-page (min-width: 884px) {
   .blog-page .blog-pt-note > .fn {
     position: static;
   }
@@ -847,14 +848,61 @@
   cursor: pointer;
 }
 
-/* Tells the editor when the frame shows both rails, the width from which
-   the site's sheet stands notes in the margin (blog/sidenotes.css). */
+/* Tells the editor when the frame has a margin for the notes. The site
+   needs both rails for that (1100px). A document pane beside the Studio's
+   lists is often narrower, so from 884px (MARGIN_FROM, studio/noteStyles.ts)
+   the editor gives up the left rail: the column stands at the left, and
+   the notes stand in one rail's width beside it. From 1100px the frame is
+   the site's. */
 .blog-page {
   --sidenotes: 0;
 }
-@container blog-page (min-width: 1100px) {
+@container blog-page (min-width: 884px) {
   .blog-page {
     --sidenotes: 1;
+  }
+}
+/* Range syntax, so a fractional pane width (1099.5px) still falls in one
+   layout or the other. The right rail keeps its boxes (the theme box; the
+   post list is out while notes show) at the top of the margin, and the
+   notes start under them, as at 1100px. */
+@container blog-page (884px <= width < 1100px) {
+  .blog-page .layout {
+    display: grid;
+    grid-template-columns: var(--column) var(--rail);
+    justify-content: center;
+    align-items: start;
+    column-gap: var(--rail-gap);
+    width: auto;
+    max-width: none;
+    margin: var(--rail-gap) var(--rail-gap) 0;
+  }
+  .blog-page .layout .side-col {
+    display: contents;
+  }
+  .blog-page .layout .left-rail {
+    display: none;
+  }
+  .blog-page .layout .right-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rail-gap);
+    grid-column: 2;
+    grid-row: 1;
+    width: var(--rail);
+    max-width: var(--rail);
+  }
+  .blog-page .article-wrap {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  /* The site's one-rail footer stands right of a rail it no longer has;
+     here it lines up with the column. */
+  .blog-page footer {
+    margin-left: calc(
+      (100% - var(--column) - var(--rail-gap) - var(--rail)) / 2
+    );
+    margin-right: auto;
   }
 }
 

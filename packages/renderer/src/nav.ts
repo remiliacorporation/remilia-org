@@ -470,7 +470,10 @@ function sidenotes(root, wide, opts) {
     // Notes start under the right rail's boxes: theme, read info, search.
     // The post list's own element may run the rail's whole height; its
     // boxes are what the notes must clear.
-    const boxes = [...root.querySelectorAll('.right-rail > :not(.post-nav), .right-rail > .post-nav > *')];
+    // A box that is not drawn has no place; its rect would read as the
+    // frame's top, which moves with the scroll.
+    const boxes = [...root.querySelectorAll('.right-rail > :not(.post-nav), .right-rail > .post-nav > *')]
+      .filter((el) => !el.getClientRects || el.getClientRects().length > 0);
     const top0 = boxes.reduce((v, el) => Math.max(v, y(el.getBoundingClientRect().bottom)), 0) + between;
     // One pass places every note at a given width and returns the runs.
     // It reads nothing a glide in progress changes: the marks, the text's

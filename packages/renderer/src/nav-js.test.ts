@@ -1001,7 +1001,7 @@ interface FakeNote {
  * second run over the same notes, apart from the width a note is measured
  * at (set and set back within the run, before anything paints).
  */
-function layOut(notes: FakeNote[], wide = true, scroll = 0) {
+function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
   const TOKENS: Record<string, string> = {
     "--grid": "4px",
     "--rail-gap": "12px",
@@ -1100,7 +1100,19 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0) {
               .map((fn) => ({
                 querySelector: () => els[fns.indexOf(fn)],
               }))
-          : [{ getBoundingClientRect: () => rect(0, 100) }],
+          : [
+              { getBoundingClientRect: () => rect(0, 100) },
+              // A box that is not drawn reads as a zero rect at the
+              // viewport's top, wherever the frame is scrolled to.
+              ...(hiddenBox
+                ? [
+                    {
+                      getClientRects: () => [],
+                      getBoundingClientRect: () => ({ top: 0, bottom: 0 }),
+                    },
+                  ]
+                : []),
+            ],
   };
   const stack = new Function(
     "getComputedStyle",
@@ -1178,6 +1190,11 @@ test("a note above the rail's boxes starts under them", () => {
   const [a] = layOut([{ at: 20, height: 30 }]);
   assert.equal(a.top, 100 + 12);
   assert.equal(a.drop, 112 + 16 - 20);
+});
+
+test("a rail box that is not drawn does not hold the notes down", () => {
+  const [a] = layOut([{ at: 300, height: 30 }], true, 2000, true);
+  assert.equal(a.top, 300 - 16);
 });
 
 test("lines that run side by side take separate lanes", () => {
