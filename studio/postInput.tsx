@@ -161,6 +161,19 @@ export function TitleInput(props: StringInputProps): ReactNode {
     el.style.height = `${el.scrollHeight}px`;
   };
   useEffect(resize, [props.value]);
+  // The title takes the mast's display size only once it sits in the page
+  // frame, and its fonts load later still; it measures again whenever the
+  // mast changes width and when the fonts are ready, so a long title shows
+  // every line.
+  useEffect(() => {
+    const el = inner.current;
+    const mast = el?.closest("header") ?? el?.parentElement;
+    if (!mast) return;
+    const sizes = new ResizeObserver(resize);
+    sizes.observe(mast);
+    void document.fonts?.ready.then(resize);
+    return () => sizes.disconnect();
+  }, []);
   return (
     <textarea
       {...props.elementProps}
@@ -209,7 +222,8 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
     tb.style.setProperty("left", `${Math.round(r.left)}px`, "important");
     tb.style.setProperty("width", `${Math.round(r.width)}px`, "important");
     tb.style.setProperty("height", `${Math.round(r.height)}px`, "important");
-    tb.style.setProperty("z-index", "1", "important");
+    // Over the margin notes (z-index up to 30) in the editor's own layer.
+    tb.style.setProperty("z-index", "40", "important");
     tb.style.setProperty("margin", "0", "important");
   };
   pin();
