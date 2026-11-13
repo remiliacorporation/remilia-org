@@ -1,8 +1,8 @@
 // Sidenotes in the page editor: the site's own layout script, run on the
 // page frame. With both rails showing, every note stands in the margin as it
 // does on the site (hosts/core/blog/sidenotes.css places it; this script stacks
-// the notes, cuts a blocked note short, opens the note under the pointer, and
-// routes the lines). The editor marks its selected note open with `fn-pin`.
+// the notes, cuts a blocked note short, opens the note under the pointer or
+// clicked, and routes the lines). The editor keeps a note open with `fn-pin`.
 import { createContext } from "react";
 import { SIDENOTES_JS } from "../packages/renderer/src/nav";
 
@@ -12,6 +12,7 @@ export const SidenotesShown = createContext(false);
 type Stacker = (
   root: Element,
   wide: () => boolean,
+  opts: { signal: AbortSignal },
 ) => (glide?: boolean) => void;
 
 let make: Stacker | undefined;
@@ -19,14 +20,16 @@ let make: Stacker | undefined;
 /**
  * The site's `sidenotes(root, wide)`, built from the source nav.js ships, so
  * the editor and the site place notes with one piece of code. It is page
- * script, not a module, hence `Function`.
+ * script, not a module, hence `Function`. Aborting `signal` removes the
+ * listeners it sets on `root`.
  */
 export function sidenoteStacker(
   root: Element,
   wide: () => boolean,
+  signal: AbortSignal,
 ): (glide?: boolean) => void {
   make ??= new Function(`${SIDENOTES_JS}; return sidenotes;`)() as Stacker;
-  return make(root, wide);
+  return make(root, wide, { signal });
 }
 
 /**

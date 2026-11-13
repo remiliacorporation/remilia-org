@@ -51,6 +51,8 @@
 .fn-note {
   display: none;
   font-style: italic;
+  /* A note is set smaller than the post: 12px on a 16px line. */
+  --size-base: var(--size-ui);
   line-height: var(--leading);
   border: var(--border);
   padding: var(--grid);
@@ -61,6 +63,11 @@
   -webkit-hyphens: auto;
   hyphens: auto;
   user-select: none;
+}
+/* A note stands inside the post's text; its lines keep the note's
+   leading, not the post's (prose.css). */
+.fn-note :where(*) {
+  line-height: var(--leading);
 }
 .fn-note strong {
   flex: none;
@@ -134,7 +141,7 @@
   font-variant-numeric: tabular-nums;
   position: relative;
   font-style: italic;
-  line-height: var(--leading);
+  line-height: var(--leading-prose);
   border: var(--border);
   padding: var(--space-xs);
   background: var(--surface);

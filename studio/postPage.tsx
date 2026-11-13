@@ -31,7 +31,7 @@ interface FrameSlots {
   byline: HTMLElement;
   title: HTMLElement;
   prose: HTMLElement;
-  /** The left rail's stack: the contents box. */
+  /** The left rail's stack: the contents box, then the cite box. */
   stack: HTMLElement | null;
   /** The masthead's tools row, shown on narrow pages. */
   mastTools: HTMLElement | null;
@@ -182,14 +182,8 @@ export function PostPage(props: {
   }, [slots, parts.byline]);
 
   useEffect(() => {
-    if (slots?.stack) slots.stack.innerHTML = parts.toc;
-  }, [slots, parts.toc]);
-
-  // The read info box sits in the right rail, under the theme box.
-  useEffect(() => {
-    const cite = slots?.root.querySelector(".right-rail > .cite-box");
-    if (cite) cite.outerHTML = parts.cite;
-  }, [slots, parts.cite]);
+    if (slots?.stack) slots.stack.innerHTML = `${parts.toc}\n${parts.cite}`;
+  }, [slots, parts.toc, parts.cite]);
 
   useEffect(() => {
     if (slots?.mastTools) slots.mastTools.innerHTML = parts.mastTools;
@@ -210,49 +204,58 @@ export function PostPage(props: {
   }, [slots, parts.adjacent]);
 
   // Notes stand in the margin while the frame shows both rails. The layout
-  // script places them; it runs again when the frame, the text, a note's
-  // state, or the right rail's boxes (the notes start under them) change.
+  // script places them. It runs again when the frame, the text, or the
+  // right rail's boxes (the notes start under them) change size, when the
+  // text or a note changes, and when the note held open (fn-pin) changes;
+  // never for a scroll, a caret move, or a selection. A run that finds the
+  // layout as it stands writes nothing.
   const [margin, setMargin] = useState(false);
   useEffect(() => {
     if (!slots) return;
     const { root, prose } = slots;
     const wide = () => marginShown(root);
-    const stack = sidenoteStacker(root, wide);
+    const done = new AbortController();
+    const stack = sidenoteStacker(root, wide, done.signal);
     let frame = 0;
-    let glide = true;
-    // A change of class alone is a note selected or let go: the layout
-    // glides to it. Anything else (typing, a resize) lands at once.
-    const run = (records?: unknown) => {
-      const classOnly =
-        Array.isArray(records) &&
-        records.every((r: MutationRecord) => r.type === "attributes");
-      glide = glide && classOnly;
+    let glide = false;
+    const run = (open = false) => {
+      glide ||= open;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         setMargin(wide());
         stack(glide);
-        glide = true;
+        glide = false;
       });
     };
     const sizes = new ResizeObserver(() => run());
     sizes.observe(root);
+    sizes.observe(prose);
     const rail = root.querySelector(".right-rail");
     if (rail) sizes.observe(rail);
-    // The script writes inline styles and a data attribute only; this
-    // watches the text and class names, so its own work does not call it
-    // again.
-    const text = new MutationObserver(run);
+    // Sanity changes class names in the text on every caret move; of
+    // those, only a mark's fn-pin moves a note. The script's own writes
+    // are styles and data attributes, which this does not watch.
+    const pinned = (r: MutationRecord) =>
+      r.type === "attributes" &&
+      (r.oldValue ?? "").split(" ").includes("fn-pin") !==
+        (r.target as Element).classList.contains("fn-pin");
+    const text = new MutationObserver((records) => {
+      const pin = records.some(pinned);
+      if (pin || records.some((r) => r.type !== "attributes")) run(pin);
+    });
     text.observe(prose, {
       childList: true,
       subtree: true,
       characterData: true,
       attributes: true,
       attributeFilter: ["class"],
+      attributeOldValue: true,
     });
     void document.fonts?.ready.then(() => run());
     run();
     return () => {
       cancelAnimationFrame(frame);
+      done.abort();
       sizes.disconnect();
       text.disconnect();
     };

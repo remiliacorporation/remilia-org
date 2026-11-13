@@ -98,9 +98,6 @@
     "Noto Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
   --font-mono: monospace;
   --size-base: 16px;
-  /* A post's text beside the rails: a full line of the measure holds about
-     75 characters at this size, against 65 at the base size. */
-  --size-prose: 14px;
   --size-ui: 12px;
   --size-title: 20px;
   --size-display: 28px;
@@ -115,7 +112,10 @@
   --weight-body: normal;
   --weight-strong: bold;
 
-  --measure: 63ch;
+  /* The text's line is this less a gutter each side: 574px, about 80
+     characters of 16px text. Narrower frames set their own
+     (blog/layout.css). */
+  --measure: 624px;
   --gutter: 24px;
   --rail-gap: 12px;
   --rail: 240px;

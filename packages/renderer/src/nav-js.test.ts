@@ -991,11 +991,17 @@ interface FakeNote {
   height: number;
   /** Index of the note this one is nested in. */
   parent?: number;
-  /** Marked open by the page around it (the editor's selected note). */
+  /** Marked open by the page around it (the editor's note being edited). */
   pin?: boolean;
 }
 
-function layOut(notes: FakeNote[], wide = true) {
+/**
+ * `scroll` moves every box up by that much, as scrolling the page or the
+ * editor's pane does. `writes` counts the style and attribute writes of a
+ * second run over the same notes, apart from the width a note is measured
+ * at (set and set back within the run, before anything paints).
+ */
+function layOut(notes: FakeNote[], wide = true, scroll = 0) {
   const TOKENS: Record<string, string> = {
     "--grid": "4px",
     "--rail-gap": "12px",
@@ -1005,9 +1011,9 @@ function layOut(notes: FakeNote[], wide = true) {
     "--size-ui": "16px",
     "--leading": "1",
   };
-  const rect = (top: number, height: number, left = 0, width = 0) => ({
-    top,
-    bottom: top + height,
+  const rect = (at: number, height: number, left = 0, width = 0) => ({
+    top: at - scroll,
+    bottom: at - scroll + height,
     left,
     right: left + width,
     height,
@@ -1018,12 +1024,30 @@ function layOut(notes: FakeNote[], wide = true) {
     style: { paddingBottom: "" },
     getBoundingClientRect: () => rect(0, 5000),
   };
+  let writes = 0;
+  // A style that counts what is written to it.
+  const counted = (): Record<string, string> => {
+    const style: Record<string, string> = {};
+    const api = {
+      getPropertyValue: (k: string) => style[k] ?? "",
+      setProperty: (k: string, v: string) => void (writes++, (style[k] = v)),
+      removeProperty: (k: string) => void (writes++, delete style[k]),
+    };
+    return new Proxy(style, {
+      get: (t, k: string) => (k in api ? api[k as keyof typeof api] : t[k]),
+      set: (t, k: string, v: string) => {
+        if (k !== "width") writes++;
+        t[k] = v;
+        return true;
+      },
+    });
+  };
   const fns: { pin: boolean }[] = [];
   const els = notes.map((note, i) => {
-    const style: Record<string, string> = {};
+    const style = counted();
     const attrs: Record<string, string> = {};
     const sub = note.parent !== undefined;
-    const text = { scrollHeight: note.height, style: { height: "" } };
+    const text = { scrollHeight: note.height, style: counted() };
     // A nested note shares its parent's mark element.
     const fn = sub
       ? fns[note.parent as number]
@@ -1032,15 +1056,13 @@ function layOut(notes: FakeNote[], wide = true) {
           querySelector: () => ({
             getBoundingClientRect: () => rect(note.at - 4, 8),
           }),
+          getAttribute: () => null,
           removeAttribute: () => {},
           setAttribute: () => {},
         };
     fns.push(fn);
     return {
-      style: Object.assign(style, {
-        setProperty: (k: string, v: string) => void (style[k] = v),
-        removeProperty: (k: string) => void delete style[k],
-      }),
+      style,
       attrs,
       text,
       isConnected: true,
@@ -1048,8 +1070,8 @@ function layOut(notes: FakeNote[], wide = true) {
       classList: { contains: (c: string) => c === "fn-sub" && sub },
       getAttribute: (k: string) =>
         k === "data-ref" ? `fndef-${i + 1}` : (attrs[k] ?? null),
-      setAttribute: (k: string, v: string) => void (attrs[k] = v),
-      removeAttribute: (k: string) => void delete attrs[k],
+      setAttribute: (k: string, v: string) => void (writes++, (attrs[k] = v)),
+      removeAttribute: (k: string) => void (writes++, delete attrs[k]),
       closest: (sel: string) => (sel === ".fn" ? fn : column),
       // The note's text, or the reference to a note nested in this one.
       querySelector: (sel: string) => {
@@ -1065,6 +1087,7 @@ function layOut(notes: FakeNote[], wide = true) {
     };
   });
   const root = {
+    getBoundingClientRect: () => rect(0, 5000),
     addEventListener: () => {},
     contains: () => true,
     querySelector: (sel: string) => (sel === ".layout" ? layout : null),
@@ -1088,7 +1111,10 @@ function layOut(notes: FakeNote[], wide = true) {
     0,
   )(root, () => wide);
   stack();
-  return els.map((el) => {
+  writes = 0;
+  stack();
+  const again = writes;
+  const rows = els.map((el) => {
     const top = parseFloat(el.style.top);
     const shown = parseFloat(el.text.style.height);
     return {
@@ -1103,6 +1129,7 @@ function layOut(notes: FakeNote[], wide = true) {
       placed: el.style.top !== undefined && el.style.top !== "",
     };
   });
+  return Object.assign(rows, { writes: again });
 }
 
 test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
@@ -1116,21 +1143,22 @@ test("a sidenote stands at its mark's line, in full, when nothing blocks it", ()
 });
 
 test("a note the next one would block is cut to whole lines, and the next keeps its line", () => {
-  // The next note wants to stand at 384; 4px between leaves 96px: six lines.
+  // The next note wants to stand at 484; 4px between leaves 196px: twelve
+  // whole lines.
   const [a, b] = layOut([
-    { at: 300, height: 200 },
-    { at: 400, height: 40 },
+    { at: 300, height: 240 },
+    { at: 500, height: 40 },
   ]);
-  assert.deepEqual([a.top, a.shown, a.long], [284, 96, true]);
-  assert.deepEqual([b.top, b.drop], [384, 0]);
+  assert.deepEqual([a.top, a.shown, a.long], [284, 192, true]);
+  assert.deepEqual([b.top, b.drop], [484, 0]);
 });
 
-test("a cut note keeps three lines, and the next goes under it", () => {
+test("a cut note keeps eight lines, and the next goes under it", () => {
   const [a, b] = layOut([
     { at: 300, height: 200 },
     { at: 320, height: 40 },
   ]);
-  assert.deepEqual([a.top, a.shown, a.long], [284, 48, true]);
+  assert.deepEqual([a.top, a.shown, a.long], [284, 128, true]);
   assert.equal(b.top, a.bottom + 4);
   // Its line drops from its mark's line to its own first line.
   assert.equal(b.drop, b.top + 16 - 320);
@@ -1172,17 +1200,33 @@ test("a nested note stands under its parent, with a line from its reference", ()
     { at: 30, height: 40, parent: 0 },
     { at: 320, height: 50 },
   ]);
-  // The parent is cut to three lines; the nested note is short enough to
-  // show whole; the next note in the text follows both.
-  assert.deepEqual([rows[0].top, rows[0].shown, rows[0].long], [284, 48, true]);
-  assert.deepEqual([rows[1].top, rows[1].shown, rows[1].long], [336, 40, false]);
+  // The parent is under eight lines, so it shows whole, as does the nested
+  // note; the next note in the text follows both.
+  assert.deepEqual([rows[0].top, rows[0].shown, rows[0].long], [284, 100, false]);
+  assert.deepEqual([rows[1].top, rows[1].shown, rows[1].long], [388, 40, false]);
   assert.equal(rows[2].top, rows[1].bottom + 4);
   // The line runs from the reference, 30 down the parent, to the nested
   // note's first line.
-  assert.equal(rows[1].drop, 336 + 16 - (284 + 30));
+  assert.equal(rows[1].drop, 388 + 16 - (284 + 30));
 });
 
 test("below the wide layout the script places nothing", () => {
   const rows = layOut([{ at: 300, height: 40 }], false);
   assert.equal(rows[0].placed, false);
+});
+
+test("notes hold still: a second run writes nothing, and scrolling moves no note", () => {
+  const notes: FakeNote[] = [
+    { at: 20, height: 30 },
+    { at: 300, height: 200 },
+    { at: 30, height: 40, parent: 1 },
+    { at: 320, height: 50 },
+    { at: 900, height: 60, pin: true },
+  ];
+  const still = layOut(notes);
+  assert.equal(still.writes, 0);
+  const pick = (rows: typeof still) =>
+    rows.map((r) => [r.top, r.shown, r.drop, r.lane, r.long]);
+  for (const scroll of [250, 1700])
+    assert.deepEqual(pick(layOut(notes, true, scroll)), pick(still), `scrolled ${scroll}`);
 });

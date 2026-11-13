@@ -5,7 +5,9 @@
      scale, dither) is defined once in theme.css. */
   --grid: 4px;
   --leading: 1.3334;
-  --leading-prose: 1.5;
+  /* A length, not a ratio, so every line of post text is a whole number
+     of grid steps. */
+  --leading-prose: 24px;
   --leading-tight: 1.2;
 
   --card: 280px;
@@ -25,10 +27,6 @@
   --read-pad: var(--space-l);
   --read-pad-y: var(--space-l);
   --column: calc(var(--measure) + 2 * (var(--read-pad) - var(--gutter)));
-  /* From the text's right edge to a sidenote: the prose box's padding and
-     border, then the gap the rails keep from the column. */
-  /* How long a sidenote takes to open or close. */
-  --fn-glide: 200ms;
 
   --mast-box: calc(
     3 * var(--border-w) + 4 * var(--space-xs) + var(--mast-line) +

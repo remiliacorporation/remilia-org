@@ -1,14 +1,16 @@
 /* blog/sidenotes — notes in the margin, with flowchart lines
 
-   The blog's pages and the Studio's page editor share this sheet and the
-   layout script (SIDENOTES_JS in packages/renderer/src/nav.ts). */
-/* With both rails, every note stands in the margin, in reference order,
-   under the right rail's boxes. The page script (sidenotes, nav.js) puts a
-   note at its mark's line, or under the note above when that place is
-   taken. A note the next one would block is cut short (data-long, the
-   height of .sn-text); pointing at it or its mark, tabbing to the mark, or
-   a click opens it in full (data-on), and the notes below move down. The
-   script also sets the lane each line turns in. */
+   With both rails, every note stands in the margin, in reference order,
+   under the right rail's boxes. The layout script (SIDENOTES_JS in
+   packages/renderer/src/nav.ts) puts a note at its mark's line, or under
+   the note above when that place is taken. A note the next one would
+   block is cut short (data-long, the height of .sn-text); pointing at it
+   or its mark, tabbing to the mark, or a click opens it in full (data-on),
+   and the notes below slide down. The script also sets the lane each line
+   turns in.
+
+   The blog's pages and the Studio's page editor share this sheet and that
+   script. */
 @property --fn-drop {
   syntax: "<length>";
   inherits: true;
@@ -38,6 +40,8 @@
     --size-base: var(--size-ui);
     /* The line's weight; the open note's line is heavier. */
     --fn-w: var(--border-w);
+    /* How long a note takes to open or close. */
+    --fn-glide: 200ms;
   }
   /* Cut the height only: an italic letter at the end of a full line leans
      past the box's edge, and clipping the width shaved it. */
