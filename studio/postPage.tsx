@@ -182,8 +182,15 @@ export function PostPage(props: {
   }, [slots, parts.byline]);
 
   useEffect(() => {
-    if (slots?.stack) slots.stack.innerHTML = `${parts.toc}\n${parts.cite}`;
-  }, [slots, parts.toc, parts.cite]);
+    if (slots?.stack) slots.stack.innerHTML = parts.toc;
+  }, [slots, parts.toc]);
+
+  // The read info box stands in the left rail, under the sections, as on
+  // the site.
+  useEffect(() => {
+    const cite = slots?.root.querySelector(".left-rail > .cite-box");
+    if (cite) cite.outerHTML = parts.cite;
+  }, [slots, parts.cite]);
 
   useEffect(() => {
     if (slots?.mastTools) slots.mastTools.innerHTML = parts.mastTools;

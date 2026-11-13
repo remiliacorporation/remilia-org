@@ -450,19 +450,20 @@
   .right-rail {
     display: contents;
   }
-  /* One stack: the head, the sections, the search box (search and
-     author, then the posts), the theme, the read info, then the contents. */
+  /* One stack, the left rail's boxes then the right's: the head, the
+     sections, the read info, the contents, the theme, then the search box
+     (search and author, then the posts). */
   .left-rail > .sec-box {
     order: 2;
   }
-  .right-rail > .post-nav {
+  .left-rail > .cite-box {
     order: 3;
   }
   .right-rail > .theme-sel {
-    order: 4;
-  }
-  .right-rail > .cite-box {
     order: 5;
+  }
+  .right-rail > .post-nav {
+    order: 6;
   }
   .article-wrap {
     grid-column: 2;
@@ -523,7 +524,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);
-    order: 6;
+    order: 4;
   }
   .left-rail .site-head {
     order: 1;
@@ -567,8 +568,8 @@
     text-align: center;
     z-index: 5;
   }
-  /* The right rail's boxes stack from the top: the theme, then a post's
-     read info. Margin notes start under them. */
+  /* The right rail's boxes stack from the top: the theme, then the search
+     box. Margin notes start under them. */
   .right-rail {
     display: flex;
     flex-direction: column;
@@ -593,23 +594,23 @@
     min-width: 0;
     order: 4;
   }
-  /* Left: the head, the sections, a post's contents. Right: the theme,
-     a post's read info, the search box. */
+  /* Left: the head, the sections, a post's read info, its contents.
+     Right: the theme, then the search box. */
   .left-rail > .sec-box {
     order: 2;
+  }
+  .left-rail > .cite-box {
+    order: 3;
   }
   .right-rail > .theme-sel {
     order: 1;
   }
-  .right-rail > .cite-box {
-    order: 2;
-  }
   .right-rail > .post-nav {
-    order: 3;
+    order: 2;
   }
   .left-rail .site-head,
   .left-rail .toc,
-  .right-rail .cite-box,
+  .left-rail .cite-box,
   .left-rail .left-stack,
   .right-rail .theme-sel,
   .right-rail .post-nav {

@@ -931,13 +931,19 @@
 /* A note written in place (NoteInPlace, studio/portableText.tsx) keeps the
    page's colors: the inverted look is for a note pointed at, and the
    writer needs the editor's own caret, selection, and controls. Its box
-   stands where the note's box stood, in the note's type. */
+   (::after, blog/sidenotes.css) stands where the note's box stood, in the
+   note's type, over the other notes and their lines. */
 .blog-pt-note .fn > .fn-note.fn-edit {
-  background: var(--surface) !important;
   color: var(--ink) !important;
-  z-index: 7;
   cursor: auto;
   user-select: text;
+}
+.blog-pt-note .fn > .fn-note.fn-edit::after {
+  background: var(--surface) !important;
+  z-index: 8;
+}
+.blog-pt-note .fn > .fn-note.fn-edit > * {
+  z-index: 9;
 }
 .blog-pt-note .fn > .fn-note.fn-edit :is(strong, .fn-par, .fn-q) {
   color: var(--ink) !important;
@@ -952,9 +958,6 @@
 .blog-pt-note .fn-edit .fn-edit-form.sn-text {
   height: auto !important;
   overflow: visible !important;
-}
-.blog-pt-note .fn > .fn-note.fn-edit::after {
-  content: none;
 }
 /* Sanity's field label and the editor's page-sized frame have no place
    in a note's box. */

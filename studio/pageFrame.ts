@@ -59,7 +59,7 @@ export function frameHtml(channel: Channel): string {
     channel,
     leftRail: emptyRail(),
     sectionNav: sectionNav(hostCats(channel)),
-    // An empty read info box under the theme box, for `frameParts` to fill.
+    // An empty read info box under the sections, for `frameParts` to fill.
     readHtml: '<aside class="cite-box"></aside>',
     mainHtml: articleHtml({
       title: "",

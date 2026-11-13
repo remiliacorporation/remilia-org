@@ -116,10 +116,11 @@
   margin-top: var(--space-xs);
 }
 /* The quote's rule takes the text's color, so it inverts with the note. */
+/* A thin rule, the text close beside it. */
 .fn-q {
   display: block;
   margin: var(--space-xs) 0;
-  padding-left: var(--space-xs);
+  padding-left: var(--grid);
   border-left: var(--border-w) solid currentColor;
 }
 .fn-q:first-child {
