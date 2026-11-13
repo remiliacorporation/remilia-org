@@ -346,51 +346,74 @@ export const NAV_JS = `(() => {
       page = 0; apply();
     });
   };
-  const score = (query, text) => {
-    query = query.toLowerCase(); text = (text || '').toLowerCase();
-    let qi = 0, s = 0, streak = 0;
-    for (let i = 0; i < text.length && qi < query.length; i++) {
-      if (text[i] === query[qi]) { qi++; streak++; s += streak; } else streak = 0;
-    }
-    return qi === query.length ? s : -1;
-  };
+  // Search is a plain substring match: every word of the query must appear
+  // somewhere in the post's title, excerpt, author or category, whatever its
+  // case, accents or quote style.
+  const norm = (s) => (s || '').toLowerCase().normalize('NFKD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"')
+    .replace(/\\s+/g, ' ').trim();
+  const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
   const match = (el) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-    const sc = query
-      ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
-      : 0;
-    const ok = (query ? sc >= 0 : true)
-      && (!catv || el.dataset.cat === catv);
-    return { el, sc, show: ok };
+    const d = el.dataset;
+    return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
+      && (!catv || d.cat === catv);
+  };
+  // A paginated listing bakes an index of all its posts, so a search covers
+  // every page of it, not only the cards on this one. It loads on the first
+  // query; until it arrives, and if it never does, the cards here filter.
+  const indexUrl = (statusEl && statusEl.dataset.index) || '';
+  const pager = document.querySelector('.pager');
+  const found = [];
+  let index = null, asked = false, failed = false;
+  const load = () => {
+    if (asked) return;
+    asked = true;
+    fetch(indexUrl)
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((rows) => { index = rows.map((r) => [norm(r[0]), r[1]]); apply(); })
+      .catch(() => { failed = true; apply(); });
   };
   const apply = () => {
     const query = q ? q.value.trim() : '';
     if (items.length && list) {
-      const ranked = items.map(match);
-      if (query) ranked.sort((a, b) => b.sc - a.sc);
-      const vis = ranked.filter((r) => r.show);
+      const vis = items.filter(match);
       const pages = Math.max(1, Math.ceil(vis.length / PAGE));
       if (page >= pages) page = pages - 1;
       const from = page * PAGE;
-      const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.el));
-      ranked.forEach((r) => {
-        r.el.hidden = !r.show;
-        r.el.classList.toggle('off-page', r.show && !onPage.has(r.el));
-        if (r.show) list.appendChild(r.el);
+      const onPage = new Set(vis.slice(from, from + PAGE));
+      items.forEach((el) => {
+        const show = vis.includes(el);
+        el.hidden = !show;
+        el.classList.toggle('off-page', show && !onPage.has(el));
       });
       if (status) status.textContent = (page + 1) + ' / ' + pages;
       if (prev) prev.disabled = page <= 0;
       if (next) next.disabled = page >= pages - 1;
     }
-    cards.forEach((c) => { c.hidden = !match(c).show; });
-    // The listing has no status line; a search that hides every card says
-    // so, with a way back.
+    const wide = !!query && !!indexUrl && !failed;
+    if (wide && !index) load();
+    const hits = wide && index ? index.filter((r) => has(query, r[0])) : null;
+    found.splice(0).forEach((el) => el.remove());
+    if (hits && hits.length && emptyEl) {
+      const t = document.createElement('template');
+      t.innerHTML = hits.map((r) => r[1]).join('');
+      found.push(...t.content.children);
+      emptyEl.after(...found);
+    }
+    cards.forEach((c) => { c.hidden = hits ? true : !match(c); });
+    // A search leaves this page's place in the listing, so its pager goes.
+    if (pager) pager.hidden = wide;
+    // The listing has no status line; a search that finds nothing says so,
+    // with a way back. While the index is still loading it stays quiet.
     if (emptyEl) {
-      const none = cards.length > 0 && cards.every((c) => c.hidden);
+      const none = hits ? !hits.length
+        : !wide && cards.length > 0 && cards.every((c) => c.hidden);
       emptyEl.hidden = !none;
       const text = emptyEl.querySelector('.list-empty-text');
-      if (none && text) text.textContent = query ? 'No posts match \u201C' + query + '\u201D.' : 'No posts match.';
+      if (none && text) text.textContent = query ? 'No posts match “' + query + '”.' : 'No posts match.';
     }
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');

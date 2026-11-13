@@ -8,6 +8,7 @@ import {
   notFoundHtml,
   tocBox,
   indexMain,
+  cardHtml,
   type Chrome,
 } from "./page";
 import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
@@ -514,4 +515,12 @@ test("JSON-LD cannot close its script element", () => {
     JSON.parse(block!).headline,
     "</script><script>alert(1)</script>",
   );
+});
+
+test("a listing names its search index, and a card renders the same alone", () => {
+  const html = indexMain([POST], undefined, { index: "/blog/updates/search.json" });
+  assert.ok(html.includes(' data-index="/blog/updates/search.json">Showing all posts</h1>'));
+  assert.ok(!indexMain([POST]).includes("data-index"));
+  assert.ok(html.includes(cardHtml(POST)));
+  assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
 });

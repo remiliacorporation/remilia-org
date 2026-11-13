@@ -185,6 +185,19 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       "page 1 must declare rel=next in the head",
     );
 
+    // A paginated listing bakes a search index of every post it holds, each
+    // with the card its page shows; a one-page listing has none.
+    const index = JSON.parse(
+      await readFile(join(outDir, "blog/updates/search.json"), "utf8"),
+    ) as [string, string][];
+    assert.equal(index.length, 25);
+    assert.ok(page1.includes(' data-index="/blog/updates/search.json"'));
+    assert.ok(page2.includes(' data-index="/blog/updates/search.json"'));
+    assert.ok(page1.includes(index[0][1]), "page 1 shows the first indexed card");
+    assert.ok(page2.includes(index[24][1]), "page 2 shows the last indexed card");
+    assert.ok(index.every(([text, card]) => text && card.startsWith("<article ")));
+    await assert.rejects(readFile(join(outDir, "blog/updates/tags/theory/search.json")));
+
     // Tag archives: Theory holds every third post, Notes the rest.
     const theory = await readFile(
       join(outDir, "blog/updates/tags/theory/index.html"),
@@ -327,7 +340,7 @@ test("a section bakes a paginated archive and a directory for each month", async
     );
     assert.ok(
       dec1.includes(
-        '<h1 data-month="December 2024" data-section="Updates">Showing all Updates posts from December 2024</h1>',
+        '<h1 data-month="December 2024" data-section="Updates" data-index="/blog/updates/months/2024-12/search.json">Showing all Updates posts from December 2024</h1>',
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Updates</title>"));
@@ -429,7 +442,7 @@ test("the pooled index bakes month archives across every section", async () => {
     assert.equal(cards(dec2), 2);
     assert.ok(
       dec1.includes(
-        '<h1 data-month="December 2024">Showing all posts from December 2024</h1>',
+        '<h1 data-month="December 2024" data-index="/blog/months/2024-12/search.json">Showing all posts from December 2024</h1>',
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Blog</title>"));
@@ -613,7 +626,7 @@ test("the pooled index bakes author archives and every listing offers every auth
     const rj = await read("blog/authors/remilia-jackson/index.html");
     assert.equal(cards(rj), 20);
     assert.equal(cards(await read("blog/authors/remilia-jackson/page/2/index.html")), 3);
-    assert.ok(rj.includes('<h1 data-author="Remilia Jackson">Showing all posts by Remilia Jackson</h1>'));
+    assert.ok(rj.includes('<h1 data-author="Remilia Jackson" data-index="/blog/authors/remilia-jackson/search.json">Showing all posts by Remilia Jackson</h1>'));
     const cf = await read("blog/authors/charlotte-fang/index.html");
     assert.equal(cards(cf), 1);
     assert.ok(cf.includes('href="/blog/press/press-1"'));

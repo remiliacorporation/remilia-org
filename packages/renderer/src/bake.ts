@@ -49,6 +49,8 @@ import {
   tocBox,
   adjacentHtml,
   indexMain,
+  cardHtml,
+  type IndexCard,
   termIndexMain,
   type Chrome,
 } from "./page";
@@ -919,6 +921,18 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       ...root.split("/").filter(Boolean),
     );
     const pages = Math.max(1, Math.ceil(listing.posts.length / PAGE_SIZE));
+    const card = (p: NavPost): IndexCard => ({
+      title: p.title,
+      url: p.url,
+      date: p.date,
+      category: p.category,
+      excerpt: p.excerpt ?? "",
+      imageUrl: p.imageUrl,
+      author: p.author,
+      authorHref: p.authorHref,
+      categoryHref: p.categoryHref,
+      monthHref: p.monthHref,
+    });
     for (let page = 1; page <= pages; page += 1) {
       const slice = listing.posts.slice(
         (page - 1) * PAGE_SIZE,
@@ -968,22 +982,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           citeHtml: filterBox(`${listing.authorNav}${listing.dateNav ?? ""}`),
           bodyEnd: navScript,
           mainHtml: indexMain(
-            slice.map((p) => ({
-              title: p.title,
-              url: p.url,
-              date: p.date,
-              category: p.category,
-              excerpt: p.excerpt ?? "",
-              imageUrl: p.imageUrl,
-              author: p.author,
-              authorHref: p.authorHref,
-              categoryHref: p.categoryHref,
-              monthHref: p.monthHref,
-            })),
+            slice.map(card),
             { page, pages, prevHref, nextHref },
             {
               ...listing.filter,
               section: aggregated ? undefined : CHANNEL_LABEL[channel],
+              index: pages > 1 ? `${root}/search.json` : undefined,
             },
             sectionNav,
           ),
@@ -991,6 +995,18 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       );
       listingSitemap.push({ loc: canonical });
     }
+    // A listing of more than one page bakes every card with the text search
+    // matches on, so search reaches the posts its other pages hold.
+    if (pages > 1)
+      await writeFile(
+        join(rootDir, "search.json"),
+        JSON.stringify(
+          listing.posts.map((p) => [
+            [p.title, p.excerpt, p.author, p.category].filter(Boolean).join(" "),
+            cardHtml(card(p)),
+          ]),
+        ),
+      );
     if (listing.feed)
       await writeFile(
         join(rootDir, "rss.xml"),

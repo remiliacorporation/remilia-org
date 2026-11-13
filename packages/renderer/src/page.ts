@@ -511,40 +511,28 @@ ${next}
 </nav>`;
 }
 
-export function indexMain(
-  posts: IndexCard[],
-  pager?: Pager,
-  filter?: { tag?: string; author?: string; month?: string; section?: string },
-  sectionNav?: string,
-): string {
-  const tag = filter?.tag ?? "";
-  const authorF = filter?.author ?? "";
-  const month = filter?.month ?? "";
-  const section = filter?.section ?? "";
-  const surface = section ? `${section} posts` : "posts";
-  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
-  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}`;
-  const cards = posts
-    .map((p) => {
-      const img = p.imageUrl
-        ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
-        : "";
-      const author = p.author
-        ? p.authorHref
-          ? `<a class="author" href="${esc(p.authorHref)}">${esc(p.author)}</a>`
-          : `<span class="author">${esc(p.author)}</span>`
-        : `<span class="author"></span>`;
-      const category = p.categoryHref
-        ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
-        : `<span class="byline-cat">${esc(p.category)}</span>`;
-      const row =
-        img || p.excerpt
-          ? `<div class="card-row">
+/** One listing card. The search index carries the same markup, so a card
+ * found by search is the card its own page would show. */
+export function cardHtml(p: IndexCard): string {
+  const img = p.imageUrl
+    ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
+    : "";
+  const author = p.author
+    ? p.authorHref
+      ? `<a class="author" href="${esc(p.authorHref)}">${esc(p.author)}</a>`
+      : `<span class="author">${esc(p.author)}</span>`
+    : `<span class="author"></span>`;
+  const category = p.categoryHref
+    ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
+    : `<span class="byline-cat">${esc(p.category)}</span>`;
+  const row =
+    img || p.excerpt
+      ? `<div class="card-row">
 ${img}
 ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 </div>`
-          : "";
-      return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}">
+      : "";
+  return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}">
 <a class="card-hit" href="${esc(p.url)}" tabindex="-1" aria-hidden="true"></a>
 <header>
 <p class="card-meta">${datedHtml(p.date, bylineDate(p.date), p.monthHref, "byline-date")}${author}</p>
@@ -554,8 +542,29 @@ ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 ${row}
 <p class="card-foot">${category}<a class="card-more" href="${esc(p.url)}" aria-label="Read more: ${esc(p.title)}">Read more</a></p>
 </article>`;
-    })
-    .join("\n");
+}
+
+export function indexMain(
+  posts: IndexCard[],
+  pager?: Pager,
+  filter?: {
+    tag?: string;
+    author?: string;
+    month?: string;
+    section?: string;
+    /** The listing's search index, so search covers every page of it. */
+    index?: string;
+  },
+  sectionNav?: string,
+): string {
+  const tag = filter?.tag ?? "";
+  const authorF = filter?.author ?? "";
+  const month = filter?.month ?? "";
+  const section = filter?.section ?? "";
+  const surface = section ? `${section} posts` : "posts";
+  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}${filter?.index ? ` data-index="${esc(filter.index)}"` : ""}`;
+  const cards = posts.map(cardHtml).join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast list-mast">

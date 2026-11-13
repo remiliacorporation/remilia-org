@@ -750,3 +750,160 @@ test("reduced motion jumps without a glide and still follows a late image", () =
   page.grow(500);
   assert.equal(page.targetTop(), 400);
 });
+
+/**
+ * Runs NAV_JS on page 1 of a listing with a search box and two cards. With
+ * `index` set the heading names a baked search index, which `fetch` answers
+ * with `rows` once `arrive` is called (or rejects when `rows` is null).
+ */
+function runSearch(rows: [string, string][] | null, index = "/blog/search.json") {
+  const hooks = new Map<string, () => void>();
+  const q = {
+    value: "",
+    addEventListener: (type: string, fn: () => void) => hooks.set(type, fn),
+    focus: () => {},
+  };
+  const card = (title: string, author: string) => ({
+    dataset: { title, excerpt: "", cat: "Updates", author },
+    hidden: false,
+  });
+  const cards = [card("Café Day’s “Notes”", "Charlotte Fang"), card("Second post", "minds0n")];
+  const emptyText = { textContent: "No posts match." };
+  const shown: { html: string; gone: boolean }[] = [];
+  const emptyEl = {
+    hidden: true,
+    querySelector: (sel: string) => (sel === ".list-empty-text" ? emptyText : null),
+    after: (...els: { html: string; gone: boolean }[]) => shown.push(...els),
+  };
+  const pager = { hidden: false };
+  const statusEl = { dataset: index ? { index } : {}, textContent: "" };
+  const fetched: string[] = [];
+  let arrive = () => {};
+  const fetch = (url: string) => {
+    fetched.push(url);
+    return new Promise((resolve) => {
+      arrive = () =>
+        resolve(rows ? { ok: true, json: () => rows } : { ok: false, status: 404 });
+    });
+  };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) =>
+      sel === ".index-mast h1"
+        ? statusEl
+        : sel === ".list-empty"
+          ? emptyEl
+          : sel === ".pager"
+            ? pager
+            : null,
+    querySelectorAll: (sel: string) => (sel === ".post-card" ? cards : []),
+    addEventListener: () => {},
+    documentElement: { style: {} },
+    createElement: () => {
+      const children: { html: string; gone: boolean; remove(): void }[] = [];
+      return {
+        content: { children },
+        set innerHTML(html: string) {
+          for (const part of html.split("<article").slice(1)) {
+            const node = { html: `<article${part}`, gone: false, remove() { node.gone = true; } };
+            children.push(node);
+          }
+        },
+      };
+    },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", "fetch", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => ({ matches: true }),
+    fetch,
+  );
+  const type = (value: string) => {
+    q.value = value;
+    hooks.get("input")?.();
+  };
+  const settle = async () => {
+    arrive();
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+  const live = () => shown.filter((n) => !n.gone).map((n) => n.html);
+  return { type, settle, live, cards, emptyEl, emptyText, pager, fetched };
+}
+
+const INDEX: [string, string][] = [
+  ["Café Day’s “Notes” Charlotte Fang Updates", "<article>one</article>"],
+  ["Second post minds0n Updates", "<article>two</article>"],
+  ["A post from page three Charlotte Fang Thought", "<article>three</article>"],
+];
+
+test("a search on a paginated listing finds posts on its other pages", async () => {
+  const ui = runSearch(INDEX);
+  assert.deepEqual(ui.fetched, [], "the index loads only once a search starts");
+  ui.type("page three");
+  await ui.settle();
+  assert.deepEqual(ui.fetched, ["/blog/search.json"]);
+  assert.deepEqual(ui.live(), ["<article>three</article>"]);
+  assert.ok(ui.cards.every((c) => c.hidden), "this page's own cards give way to the hits");
+  assert.equal(ui.pager.hidden, true);
+  assert.equal(ui.emptyEl.hidden, true);
+
+  // A second query reuses the index and replaces the hits, in listing order.
+  ui.type("fang");
+  assert.deepEqual(ui.fetched.length, 1);
+  assert.deepEqual(ui.live(), ["<article>one</article>", "<article>three</article>"]);
+
+  // Clearing the box puts the page back as it was baked.
+  ui.type("");
+  assert.deepEqual(ui.live(), []);
+  assert.ok(ui.cards.every((c) => !c.hidden));
+  assert.equal(ui.pager.hidden, false);
+});
+
+test("search matches whole words in any order, whatever the case, accents or quotes", async () => {
+  const ui = runSearch(INDEX);
+  ui.type("x");
+  await ui.settle();
+  for (const query of ["cafe", "CAFÉ day's", 'notes"  day', "fang cafe", "“notes”"]) {
+    ui.type(query);
+    assert.deepEqual(ui.live(), ["<article>one</article>"], query);
+  }
+  // Every word must appear, and letters must be adjacent: no fuzzy hits.
+  for (const query of ["cafe night", "cfe", "scnd"]) {
+    ui.type(query);
+    assert.deepEqual(ui.live(), [], query);
+    assert.equal(ui.emptyEl.hidden, false, query);
+  }
+  assert.equal(ui.emptyText.textContent, "No posts match “scnd”.");
+});
+
+test("a search says nothing matches only once the whole listing was searched", async () => {
+  const ui = runSearch(INDEX);
+  ui.type("zebra");
+  // The index is still on its way: this page's cards filter, with no verdict.
+  assert.ok(ui.cards.every((c) => c.hidden));
+  assert.equal(ui.emptyEl.hidden, true);
+  await ui.settle();
+  assert.equal(ui.emptyEl.hidden, false);
+});
+
+test("a search falls back to this page's cards when the index does not load", async () => {
+  const ui = runSearch(null);
+  ui.type("second");
+  await ui.settle();
+  assert.deepEqual(ui.cards.map((c) => c.hidden), [true, false]);
+  assert.equal(ui.pager.hidden, false);
+  ui.type("zebra");
+  assert.equal(ui.emptyEl.hidden, false);
+  assert.equal(ui.fetched.length, 1, "a failed index is not asked for again");
+});
+
+test("a one-page listing filters its own cards and fetches nothing", () => {
+  const ui = runSearch(INDEX, "");
+  ui.type("cafe fang");
+  assert.deepEqual(ui.cards.map((c) => c.hidden), [false, true]);
+  assert.deepEqual(ui.fetched, []);
+  assert.equal(ui.pager.hidden, false);
+  ui.type("cfe");
+  assert.equal(ui.emptyEl.hidden, false);
+});
