@@ -103,6 +103,13 @@ h3,
   height: var(--grid);
   background: var(--ink);
 }
+/* A term directory is a table of names and counts, not a bulleted list. */
+.prose ul.term-list {
+  padding-left: 0;
+}
+.prose ul.term-list > li::after {
+  content: none;
+}
 .prose ul > li:has(ul, ol)::before {
   content: "";
   position: absolute;
