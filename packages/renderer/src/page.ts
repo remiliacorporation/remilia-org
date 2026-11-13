@@ -25,11 +25,21 @@ export interface PageInput {
 
   mainHtml: string;
 
+  /**
+   * The search box (`leftRail` in nav.ts): the search with the author
+   * control on its line, then the posts. It closes the right rail, under
+   * the theme box and a post's read info. A page without it has no rails.
+   */
   leftRail?: string;
 
+  /** The host's section links (`sectionNav`): the left rail's box under the site head. */
+  sectionNav?: string;
+
+  /** A post's contents, in the left rail under the section links. */
   tocHtml?: string;
 
-  citeHtml?: string;
+  /** A post's reading time, word count and copy links: the right rail's box. */
+  readHtml?: string;
 
   layoutClass?: string;
 
@@ -179,6 +189,28 @@ function discoveryHead(p: PageInput): string {
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * The resting halftone: three tones, ink below 5/48 of full brightness, paper
+ * from two thirds up, the mid tone between. Equal thirds turned a dark picture
+ * into a solid block, because the dot screen can at most double a pixel's
+ * brightness and a shadow under one sixth never reached the mid tone.
+ */
+function ditherFilter(id: string, paper: number): string {
+  const table = [
+    ...Array<number>(5).fill(0.1),
+    ...Array<number>(27).fill(0.55),
+    ...Array<number>(16).fill(paper),
+  ].join(" ");
+  return `<filter id="${id}" color-interpolation-filters="sRGB">
+<feColorMatrix type="saturate" values="0"/>
+<feComponentTransfer>
+<feFuncR type="discrete" tableValues="${table}"/>
+<feFuncG type="discrete" tableValues="${table}"/>
+<feFuncB type="discrete" tableValues="${table}"/>
+</feComponentTransfer>
+</filter>`;
+}
+
 export function htmlPage(p: PageInput): string {
   const ld = p.jsonld
     .map(
@@ -257,14 +289,7 @@ ${ld}
 </svg>
 </div>
 <svg class="dither-fx" aria-hidden="true" focusable="false">
-<filter id="dither-3" color-interpolation-filters="sRGB">
-<feColorMatrix type="saturate" values="0"/>
-<feComponentTransfer>
-<feFuncR type="discrete" tableValues="0.1 0.55 1"/>
-<feFuncG type="discrete" tableValues="0.1 0.55 1"/>
-<feFuncB type="discrete" tableValues="0.1 0.55 1"/>
-</feComponentTransfer>
-</filter>
+${ditherFilter("dither-3", 1)}
 <filter id="dither-hover" color-interpolation-filters="sRGB">
 <feComponentTransfer result="q">
 <feFuncR type="discrete" tableValues="0.098 0.2 0.4 0.6 0.8 1"/>
@@ -273,14 +298,7 @@ ${ld}
 </feComponentTransfer>
 <feComposite in="q" in2="SourceGraphic" operator="arithmetic" k1="0" k2="0.7" k3="0.3" k4="0"/>
 </filter>
-<filter id="dither-3-dark" color-interpolation-filters="sRGB">
-<feColorMatrix type="saturate" values="0"/>
-<feComponentTransfer>
-<feFuncR type="discrete" tableValues="0.08 0.52 0.22"/>
-<feFuncG type="discrete" tableValues="0.04 0.41 0.21"/>
-<feFuncB type="discrete" tableValues="0.04 0.41 0.21"/>
-</feComponentTransfer>
-</filter>
+${ditherFilter("dither-3-dark", 0.88)}
 <filter id="dither-hover-dark" color-interpolation-filters="sRGB">
 <feComponentTransfer result="q">
 <feFuncR type="discrete" tableValues="0.08 0.16 0.26 0.36 0.44 0.52"/>
@@ -296,13 +314,14 @@ ${
     ? `<div class="side-col">
 <div class="left-rail">
 ${header}
+${p.sectionNav ? `<div class="sec-box">\n${p.sectionNav}\n</div>` : ""}
 <div class="left-stack">
 ${p.tocHtml ?? ""}
-${p.citeHtml ?? ""}
 </div>
 </div>
 <div class="right-rail">
 ${themeSelHtml(theme)}
+${p.readHtml ?? ""}
 ${p.leftRail}
 </div>
 </div>`
@@ -317,9 +336,67 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
-/** The section row and its rule, above a masthead's own rows. */
-function mastNav(nav?: string): string {
-  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
+/**
+ * Advance widths of the masthead title's face (Alte Haas Grotesk Bold), in
+ * thousandths of an em, for the capitals a title is set in. Measured in the
+ * browser from the shipped font; a glyph missing here counts a full em.
+ */
+const TITLE_GLYPHS = new Map<string, number>(
+  (
+    [
+      ["|", 223],
+      ["`", 259],
+      [" !',.:;‘’", 278],
+      ["I", 295],
+      ["()", 296],
+      ["[]{}", 333],
+      ["/\\", 371],
+      ["*-", 407],
+      ["\"“”", 463],
+      ["_–", 500],
+      ["#$0123456789?J", 556],
+      ["FL", 593],
+      ["+<=>^~", 600],
+      ["T", 611],
+      ["V", 630],
+      ["EZÉ", 648],
+      ["S", 649],
+      ["PXY", 667],
+      ["&A", 685],
+      ["B", 704],
+      ["KR", 722],
+      ["CDHNU", 741],
+      ["G", 759],
+      ["OQ", 778],
+      ["@", 800],
+      ["M", 907],
+      ["W", 944],
+      ["%—…", 1000],
+    ] as [string, number][]
+  ).flatMap(([chars, w]) => [...chars].map((c): [string, number] => [c, w])),
+);
+
+/**
+ * A title's width on one line, in ems: its capitals' advances plus the caps
+ * tracking, with a little slack for rounding. The masthead divides its width
+ * by this to find the size at which the title fits one line.
+ */
+export function titleEm(title: string): number {
+  let em = 0;
+  for (const c of title.toUpperCase())
+    em += (TITLE_GLYPHS.get(c) ?? 1000) / 1000 + 0.03;
+  return Math.ceil(em * 1.02 * 100) / 100;
+}
+
+/**
+ * The class that sizes a title to one line: its width rounded up to a whole
+ * em, which the stylesheet turns into a size. A title of 19 ems or less fits
+ * every masthead at display size and takes no class; past 41 ems it is at
+ * the smallest size everywhere and wraps.
+ */
+function titleFit(title: string): string {
+  const em = Math.ceil(titleEm(title));
+  return em <= 19 ? "" : ` class="title-fit-${Math.min(em, 41)}"`;
 }
 
 function bylineDate(iso: string): string {
@@ -439,8 +516,6 @@ export function articleHtml(
     txtHref?: string;
     /** Whole minutes at 200 words per minute; omitted for short notes. */
     readingMinutes?: number;
-    /** The host's section row, heading the masthead. */
-    sectionNav?: string;
   },
 ): string {
   const meta = input.metaHtml
@@ -462,10 +537,10 @@ export function articleHtml(
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
-${mastNav(input.sectionNav)}<header>
+<header>
 <div class="byline">${bylineHtml(input)}</div>
 <hr class="nav-rule">
-<h1>${esc(input.title)}</h1>
+<h1${titleFit(input.title)}>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">—</span> Contents</label>${copy}</p>
 </header>
@@ -521,12 +596,12 @@ ${next}
 }
 
 /**
- * The masthead of a listing or a term directory: the sections box. Its
- * heading names what the page lists, for screen readers only.
+ * The masthead of a listing or a term directory: one line that says what
+ * the page lists, which the page script keeps current with the search.
  */
-function listMast(h1: string, sectionNav?: string): string {
+function listMast(h1: string): string {
   return `<div class="sec mast index-mast list-mast">
-${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
+<header>
 ${h1}
 </header>
 </div>`;
@@ -576,7 +651,6 @@ export function indexMain(
     /** The listing's search index, so search covers every page of it. */
     index?: string;
   },
-  sectionNav?: string,
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
@@ -588,7 +662,7 @@ export function indexMain(
   const cards = posts.map(cardHtml).join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-${listMast(`<h1${filterAttrs}>${heading}</h1>`, sectionNav)}
+${listMast(`<h1${filterAttrs}>${heading}</h1>`)}
 <div class="article-rest">
 <p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
@@ -602,7 +676,6 @@ ${pagerHtml(pager)}
 export function termIndexMain(
   noun: string,
   terms: { label: string; href: string; count: number }[],
-  sectionNav?: string,
 ): string {
   const rows = terms
     .map(
@@ -612,7 +685,7 @@ export function termIndexMain(
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-${listMast(`<h1>Showing all ${esc(noun.toLowerCase())}s</h1>`, sectionNav)}
+${listMast(`<h1>Showing all ${esc(noun.toLowerCase())}s</h1>`)}
 <div class="article-rest">
 <div class="sec">
 <div class="prose">
@@ -641,6 +714,9 @@ export function notFoundHtml(
     recent?: { title: string; url: string; date: string; monthHref?: string }[];
     /** The page script, so the head menu closes and returns focus here too. */
     bodyEnd?: string;
+    /** The search box and the section links, as on every other page. */
+    leftRail?: string;
+    sectionNav?: string;
   } = {},
 ): string {
   const section = input.sectionTitle ?? "this section";
@@ -665,7 +741,8 @@ ${recent
     channel: input.channel,
     chrome,
     // The frame every other page has, so the head keeps its box on a phone.
-    leftRail: emptyRail(),
+    leftRail: input.leftRail ?? emptyRail(),
+    sectionNav: input.sectionNav,
     bodyEnd: input.bodyEnd,
     mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">

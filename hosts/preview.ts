@@ -11,9 +11,8 @@ import {
   htmlPage,
   indexMain,
   leftRail,
-  emptyRail,
   authorSel,
-  filterBox,
+  sectionNav,
   NAV_JS,
   portableTextToHtml,
   tocBox,
@@ -265,13 +264,13 @@ const sharedCats = {
   allHref:
     CHANNEL_HOST[post.channel] === "org" ? CHANNEL_BASEPATH.blog : undefined,
 };
-const rail = leftRail(
-  navPosts,
-  host.title,
+const railAuthor = authorSel(
+  [{ label: "Remilia Jackson", href: "/blog/press/authors/remilia-jackson" }],
   "/blog/press",
-  `/press/${post.slug}`,
-  sharedCats,
 );
+const railFor = (currentUrl?: string): string =>
+  leftRail(navPosts, host.title, "/blog/press", currentUrl, sharedCats, railAuthor);
+const rail = railFor(`/press/${post.slug}`);
 const bodyHtml = portableTextToHtml(BODY, {
   imageUrl: (img) =>
     (
@@ -305,7 +304,7 @@ await mkdir(join(outDir, "blog", "press", post.slug), { recursive: true });
 const css = await Promise.all(
   [
     join(here, "core/theme.css"),
-    ...["base", "chrome", "controls", "index", "nav", "prose", "media", "notes", "layout", "print"].map(
+    ...["base", "chrome", "controls", "index", "nav", "prose", "media", "notes", "sidenotes", "layout", "print"].map(
       (n) => join(here, "core/blog", `${n}.css`),
     ),
   ].map((f) => readFile(f, "utf8")),
@@ -326,8 +325,9 @@ await writeFile(
     channel: post.channel,
     chrome,
     leftRail: rail,
+    sectionNav: sectionNav(sharedCats),
     tocHtml: tocBox(tocItems(extractHeadings(BODY)), footnoteCount(BODY)),
-    citeHtml: citeBox({
+    readHtml: citeBox({
       canonical,
       mdHref: `/press/${post.slug}.md`,
       txtHref: `/press/${post.slug}.txt`,
@@ -376,13 +376,8 @@ await writeFile(
     channel: post.channel,
     chrome,
     layoutClass: "is-index",
-    leftRail: emptyRail(),
-    citeHtml: filterBox(
-      authorSel(
-        [{ label: "Remilia Jackson", href: "/blog/press/authors/remilia-jackson" }],
-        "/blog/press",
-      ),
-    ),
+    leftRail: railFor(),
+    sectionNav: sectionNav(sharedCats),
     bodyEnd: `<script src="/blog/press/nav.js" defer></script>`,
     mainHtml: indexMain(
       navPosts.map((n) => ({

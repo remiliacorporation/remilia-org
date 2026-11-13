@@ -58,13 +58,15 @@ export function frameHtml(channel: Channel): string {
     chrome: chromeFor(channel),
     channel,
     leftRail: emptyRail(),
+    sectionNav: sectionNav(hostCats(channel)),
+    // An empty read info box under the theme box, for `frameParts` to fill.
+    readHtml: '<aside class="cite-box"></aside>',
     mainHtml: articleHtml({
       title: "",
       publishedAt: "",
       bodyHtml: "",
       // Keeps the adjacent links' box in the page, for `frameParts` to fill.
       metaHtml: "<!-- adjacent -->",
-      sectionNav: sectionNav(hostCats(channel)),
     }),
   });
   const body = page.slice(

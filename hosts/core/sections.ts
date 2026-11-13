@@ -153,6 +153,7 @@ export const BLOG_SHEETS = [
   "prose",
   "media",
   "notes",
+  "sidenotes",
   "layout",
   "print",
 ] as const;

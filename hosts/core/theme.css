@@ -101,6 +101,10 @@
   --size-ui: 12px;
   --size-title: 20px;
   --size-display: 28px;
+  /* A long title shrinks to fit one line, no smaller than the first size;
+     one that still cannot fit wraps at the second. */
+  --size-title-min: 18px;
+  --size-title-wrap: 22px;
   /* Rail wordmark: the largest size that sets REMILIA CORPORATION on one
      line in the rail box, 211px once the scrollbar gutter is taken
      (20px runs to 237px, 18px to 213px). */
@@ -213,6 +217,7 @@ html[data-scheme="dark"] {
   --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
   --ink-contrast: oklch(0.13 0.008 var(--hue));
   --focus: #fff;
+  --dither-filter: url(#dither-3-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-scheme="light"]) {
@@ -223,6 +228,7 @@ html[data-scheme="dark"] {
     --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
     --ink-contrast: oklch(0.13 0.008 var(--hue));
     --focus: #fff;
+    --dither-filter: url(#dither-3-dark);
   }
 }
 

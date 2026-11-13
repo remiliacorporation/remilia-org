@@ -56,10 +56,7 @@ import {
 } from "./page";
 import {
   leftRail,
-  emptyRail,
-  dateSel,
   authorSel,
-  filterBox,
   hostCats,
   sectionNav as sectionRow,
   NAV_JS,
@@ -580,18 +577,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       allHref,
       current,
     );
-  // The date control offers this listing's own month archives — the
-  // section's, or the pooled ones on an aggregate.
-  const dateNav = (current?: string): string =>
-    dateSel(
-      archives.months.map((t) => ({
-        key: t.slug,
-        href: `${basePath}/months/${t.slug}`,
-      })),
-      indexPath(channel),
-      current,
-    );
-
   // The card's category is the section it lives under — the index is shared
   // between channels, so the filter dropdown groups by section, not tag.
   const navPosts: NavPost[] = posts.map((p) => ({
@@ -610,6 +595,11 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   // offers the host's full section set, the one shown marked.
   const sharedCats = hostCats(channel, aggregated);
   const sectionNav = sectionRow(sharedCats);
+  // The search box is the same on every page: the search with the author
+  // control on its line, and the section's posts. It closes the right rail;
+  // the section links are the left rail's box.
+  const rail = (currentUrl?: string, author = authorNav()): string =>
+    leftRail(navPosts, host.title, basePath, currentUrl, sharedCats, author);
   const navScript = `<script src="${stamp(`${basePath}/nav.js`, NAV_JS)}" defer></script>`;
   const linkCard = (href: string): LinkCard | undefined =>
     cards.get(href.replace(/\/$/, ""));
@@ -780,15 +770,10 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       ],
       headExtra: `${feedLinks(meta)}${galleryScript}`,
       chrome: chromeStamped,
-      leftRail: leftRail(
-        navPosts,
-        host.title,
-        basePath,
-        `${basePath}/${p.slug}`,
-        sharedCats,
-      ),
+      leftRail: rail(`${basePath}/${p.slug}`),
+      sectionNav,
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
-      citeHtml: citeBox({
+      readHtml: citeBox({
         canonical: pageUrl,
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
@@ -810,7 +795,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,
         readingMinutes: readingMinutes(plain),
-        sectionNav,
       }),
     });
     await writePage(outDir, join(dir, p.slug), page);
@@ -856,8 +840,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     alternates?: { type: string; title: string; href: string }[];
     feed?: boolean;
     filter?: { tag?: string; author?: string; month?: string };
-    /** The date control; omitted where picking a month would drop a filter. */
-    dateNav?: string;
     /** The author control. */
     authorNav: string;
   }): Promise<void> => {
@@ -924,8 +906,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           headExtra: `${feedLinks(meta)}${relLinks}`,
           chrome: chromeStamped,
           layoutClass: "is-index",
-          leftRail: emptyRail(),
-          citeHtml: filterBox(`${listing.authorNav}${listing.dateNav ?? ""}`),
+          leftRail: rail(undefined, listing.authorNav),
+          sectionNav,
           bodyEnd: navScript,
           mainHtml: indexMain(
             slice.map(card),
@@ -935,7 +917,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               section: aggregated ? undefined : CHANNEL_LABEL[channel],
               index: pages > 1 ? `${root}/search.json` : undefined,
             },
-            sectionNav,
           ),
         }),
       );
@@ -971,7 +952,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     title: host.title,
     description: host.description,
     posts: navPosts,
-    dateNav: dateNav(),
     authorNav: authorNav(),
     trail: [
       { name: site.name, url: `${site.origin}/` },
@@ -1010,8 +990,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     filter: (label: string) => { tag?: string; author?: string; month?: string };
     describe: (label: string) => string;
     feed: boolean;
-    /** The date control for a term's archive, if it offers one. */
-    dateNav?: (slug: string) => string;
   }[] = [
     {
       at: "tags",
@@ -1041,7 +1019,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       describe: (month) => `Posts from ${month} in ${host.title}.`,
       // A closed month never gains posts, so its feed would never update.
       feed: false,
-      dateNav,
     },
   ];
 
@@ -1067,7 +1044,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           },
         ],
         feed: taxonomy.feed,
-        dateNav: taxonomy.dateNav?.(term.slug),
         // On an author's archive the control names them, and "All authors"
         // returns to the index; elsewhere it leaves the listing as it is.
         authorNav:
@@ -1105,7 +1081,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         ],
         headExtra: feedLinks(meta),
         chrome: chromeStamped,
-        leftRail: emptyRail(),
+        leftRail: rail(),
+        sectionNav,
         bodyEnd: navScript,
         mainHtml: termIndexMain(
           taxonomy.noun,
@@ -1114,7 +1091,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             href: `${basePath}/${taxonomy.at}/${t.slug}`,
             count: t.posts.length,
           })),
-          sectionNav,
         ),
       }),
     );
@@ -1158,6 +1134,8 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       sectionTitle: host.title,
       channel,
       bodyEnd: navScript,
+      leftRail: rail(),
+      sectionNav,
       recent: navPosts.map((p) => ({
         title: p.title,
         url: p.url,

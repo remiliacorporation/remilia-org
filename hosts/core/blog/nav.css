@@ -340,20 +340,29 @@
   flex: none;
   white-space: nowrap;
 }
+/* The search and the author control share one line: the control is as
+   wide as its label, up to half the line, and the search takes the rest.
+   Both are a text line tall (24px), the least a pointer should have. */
+.nav-page {
+  position: relative;
+  flex-wrap: nowrap;
+}
 .nav-page .nav-search {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   margin: 0;
   display: flex;
 }
 .nav-page .nav-field {
   width: 100%;
+  min-height: var(--space);
 }
 .nav-page details.nav-cat-sel {
-  flex: none;
+  flex: 0 1 auto;
   display: block;
   width: auto;
-  min-width: 96px;
+  min-width: 0;
+  max-width: 50%;
   padding: 0;
   border: var(--border);
   color: var(--ink);
@@ -364,9 +373,66 @@
   display: flex;
   align-items: center;
   flex: 1;
-  padding: var(--grid) var(--space-xs);
+  min-height: var(--space);
+  padding: 0 var(--grid) 0 var(--space-xs);
   box-sizing: border-box;
 }
+.nav-page details.nav-cat-sel .sel-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* The author menu opens across the whole line, under it, so a long name
+   has the box's width and the menu stays inside the rail. */
+.nav-page details#post-author {
+  position: static;
+}
+.nav-page details#post-author > .sel-menu {
+  left: 0;
+  right: 0;
+  top: calc(100% + var(--grid));
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+.nav-page details#post-author .sel-menu button {
+  white-space: normal;
+  min-height: var(--space);
+}
+/* The section links are the left rail's box under the site head: bold
+   caps that wrap to the rail's width, each a text line tall, the section
+   shown inverted. */
+.sec-box {
+  padding: var(--space-xs);
+  border: var(--border);
+  background: var(--surface);
+}
+.sec-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 var(--grid);
+  min-width: 0;
+}
+.sec-nav a {
+  padding: 0 var(--grid);
+  line-height: var(--space);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sec-nav a:hover,
+.sec-nav a:focus-visible,
+.sec-nav a[aria-current] {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
+.sec-nav .nav-sep {
+  display: none;
+}
+
 .nav-page .page-sel {
   display: inline-flex;
   flex: none;
@@ -407,6 +473,9 @@
 }
 .right-rail .post-nav {
   order: 6;
+}
+.post-nav:empty {
+  display: none;
 }
 .right-rail .post-nav {
   padding: 0;
@@ -545,9 +614,6 @@
   background-color: var(--ink);
   color: var(--ink-contrast);
   font-weight: var(--weight-strong);
-}
-.layout.is-index .post-nav {
-  display: none;
 }
 .interlink {
   position: relative;

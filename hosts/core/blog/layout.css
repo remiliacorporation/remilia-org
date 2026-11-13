@@ -5,17 +5,6 @@
   .mast-tools-rule {
     display: none;
   }
-  /* The filter box sits in a sticky rail that scrolls on its own, so an
-     open dropdown unfolds inside the box, pushing the rail longer, rather
-     than floating out of it and being clipped. */
-  .filter-box .sel-menu {
-    position: static;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    border: 0;
-    border-top: var(--border);
-  }
   .sec.mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
   }
@@ -26,6 +15,142 @@
   .sec.mast h1 {
     font-size: var(--size-display);
     line-height: calc(var(--size-display) + var(--grid));
+  }
+  /* A title is set on one line: the bake classes each long title by its
+     width in whole ems, and the size comes down from display until that
+     width fits the mast. The smallest one-line size is still a title, above
+     the body size. A title that cannot fit at that size wraps at a larger,
+     comfortable one: two readable lines beat two lines at the smallest size.
+     The second max() term is the wrap size when the one-line size falls
+     below the floor, and nothing otherwise. Leading follows the size, to a
+     whole pixel, so the site-head stays level with the mast. */
+  .sec.mast > header {
+    container-type: inline-size;
+  }
+  .sec.mast h1[class^="title-fit-"] {
+    --title-one: calc(100cqi / var(--title-em));
+    --title-size: max(
+      min(var(--title-one), var(--size-display)),
+      clamp(
+        0px,
+        (var(--size-title-min) - var(--title-one)) * 1000,
+        var(--size-title-wrap)
+      )
+    );
+    font-size: var(--title-size);
+    line-height: calc(var(--title-size) + var(--grid));
+    line-height: round(
+      up,
+      calc(var(--title-size) + var(--grid)),
+      var(--border-w)
+    );
+  }
+  .title-fit-20 {
+    --title-em: 20;
+  }
+  .title-fit-21 {
+    --title-em: 21;
+  }
+  .title-fit-22 {
+    --title-em: 22;
+  }
+  .title-fit-23 {
+    --title-em: 23;
+  }
+  .title-fit-24 {
+    --title-em: 24;
+  }
+  .title-fit-25 {
+    --title-em: 25;
+  }
+  .title-fit-26 {
+    --title-em: 26;
+  }
+  .title-fit-27 {
+    --title-em: 27;
+  }
+  .title-fit-28 {
+    --title-em: 28;
+  }
+  .title-fit-29 {
+    --title-em: 29;
+  }
+  .title-fit-30 {
+    --title-em: 30;
+  }
+  .title-fit-31 {
+    --title-em: 31;
+  }
+  .title-fit-32 {
+    --title-em: 32;
+  }
+  .title-fit-33 {
+    --title-em: 33;
+  }
+  .title-fit-34 {
+    --title-em: 34;
+  }
+  .title-fit-35 {
+    --title-em: 35;
+  }
+  .title-fit-36 {
+    --title-em: 36;
+  }
+  .title-fit-37 {
+    --title-em: 37;
+  }
+  .title-fit-38 {
+    --title-em: 38;
+  }
+  .title-fit-39 {
+    --title-em: 39;
+  }
+  .title-fit-40 {
+    --title-em: 40;
+  }
+  .title-fit-41 {
+    --title-em: 41;
+  }
+  /* The theme box heads the right rail: one row of swatches, no heading. */
+  .right-rail > .theme-sel {
+    position: relative;
+    padding: var(--space-xs);
+    border: var(--border);
+    background: var(--surface);
+    display: block;
+  }
+  .right-rail > .theme-sel .theme-label,
+  .right-rail > .theme-sel > .disclosure,
+  .right-rail > .theme-sel .nav-rule {
+    display: none;
+  }
+  .right-rail > .theme-sel .theme-controls {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: var(--mast-line);
+    padding: 0;
+    border: 0;
+    gap: var(--grid);
+  }
+  .right-rail > .theme-sel .theme-hues,
+  .right-rail > .theme-sel .theme-dots {
+    height: var(--mast-line);
+  }
+  /* Every masthead is at least as tall as the site head beside it. */
+  .sec.mast {
+    min-height: var(--mast-box);
+  }
+  /* A mast with one line and nothing else (a listing, the 404 page)
+     centers it. */
+  .sec.mast:has(> header > h1:only-child) {
+    display: grid;
+    align-content: center;
+  }
+  .sec.mast > header:has(> h1:only-child) {
+    grid-template-rows: auto;
   }
   /* The site head sits beside the mast from here up. Row 1 and the rule
      stay packed to the top, level with the mast's; the brand row takes
@@ -82,42 +207,13 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  /* The filter box is one row under the head: search takes what the
-     Author and Date dropdowns leave. */
-  .filter-box {
-    order: 2;
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-  }
-  .filter-box .filter-label,
-  .filter-box .nav-rule {
-    display: none;
-  }
-  .filter-box .nav-search {
-    flex: 1 1 0;
-    min-width: calc(24 * var(--grid));
-  }
-  .filter-box details.sel {
-    flex: 0 1 auto;
-  }
-  .filter-box .sel-label {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
   /* The site head is one row: the wordmark, and a menu holding the
-     sections and the head's links, so the masthead drops its section row. */
+     sections and the head's links. */
   .site-head nav,
   .site-head > .nav-rule,
   .left-rail .site-head nav,
-  .left-rail .site-head .nav-rule,
-  .sec.mast > .sec-nav,
-  .sec.mast > .mast-nav-rule {
+  .left-rail .site-head .nav-rule {
     display: none;
-  }
-  .sec.mast:has(> .sec-nav) {
-    display: block;
   }
   .site-head,
   .left-rail .site-head {
@@ -168,19 +264,56 @@
   .right-rail .theme-sel {
     display: contents;
   }
-  .post-nav {
+  /* The head menu holds the sections here. */
+  .sec-box {
     display: none;
   }
   .theme-label,
   .post-nav > .disclosure-label {
     display: none;
   }
+  /* The search box is one row under the head on every page: the search
+     takes what the author control leaves. On a listing the cards answer
+     the search. On a post the matching posts list under the row once
+     there is something in the search. */
+  .right-rail .post-nav:not(:empty) {
+    display: block;
+    order: 2;
+    padding: 0;
+  }
+  .post-nav > .nav-box {
+    display: block;
+    max-width: none;
+  }
+  .post-nav .nav-rule,
+  .post-nav .nav-all,
+  .post-nav .nav-foot {
+    display: none;
+  }
+  .post-nav .nav-page {
+    margin: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    gap: var(--space-xs);
+  }
+  .layout:not(.is-index)
+    .post-nav:has(#post-filter:not(:placeholder-shown))
+    .nav-all {
+    display: block;
+    margin-top: var(--space-xs);
+  }
+  .layout:not(.is-index)
+    .post-nav:has(#post-filter:not(:placeholder-shown))
+    .nav-foot {
+    display: flex;
+  }
   .theme-sel .nav-rule {
     display: none;
   }
   .theme-controls {
     display: none;
-    order: 2;
+    /* Right under the head, above a listing's search row. */
+    order: 1;
     position: static;
     flex-direction: row;
     flex-wrap: wrap;
@@ -275,7 +408,7 @@
 }
 @media (min-width: 1280px) {
   :root {
-    --read-pad: calc(2 * var(--space));
+    --read-pad: calc(3 * var(--space));
   }
 }
 /* Beside one column the rails fold into one sticky stack, each box built
@@ -308,21 +441,28 @@
     max-width: var(--rail);
     max-height: calc(100dvh - 2 * var(--rail-gap));
     overflow: auto;
-    scrollbar-gutter: stable;
+    /* No scrollbar gutter: a reserved gutter made the gap between this
+       stack and the column wider than the column's other side. */
+    scrollbar-width: none;
     z-index: 5;
   }
   .left-rail,
   .right-rail {
     display: contents;
   }
-  .right-rail > .theme-sel {
-    order: 1;
-  }
-  .left-rail > .cite-box {
+  /* One stack: the head, the sections, the search box (search and
+     author, then the posts), the theme, the read info, then the contents. */
+  .left-rail > .sec-box {
     order: 2;
   }
   .right-rail > .post-nav {
     order: 3;
+  }
+  .right-rail > .theme-sel {
+    order: 4;
+  }
+  .right-rail > .cite-box {
+    order: 5;
   }
   .article-wrap {
     grid-column: 2;
@@ -368,29 +508,6 @@
     max-width: none;
     margin: 0;
   }
-  .theme-sel .nav-rule {
-    display: block;
-    margin: 0;
-    height: 0;
-    align-self: center;
-  }
-  .theme-label {
-    height: var(--mast-line);
-    padding: 0;
-    border: 0;
-    cursor: default;
-  }
-  .theme-controls {
-    display: flex;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: var(--mast-title);
-    padding: 0;
-    border: 0;
-    gap: var(--grid);
-  }
   .toc {
     border: var(--border);
     padding: var(--space-xs);
@@ -406,16 +523,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);
-    order: 2;
+    order: 6;
   }
   .left-rail .site-head {
     order: 1;
-  }
-  .right-rail .theme-sel {
-    order: 1;
-  }
-  .right-rail .post-nav {
-    order: 2;
   }
 }
 @media (min-width: 1100px) {
@@ -447,16 +558,21 @@
     max-width: var(--rail);
     max-height: calc(100dvh - 2 * var(--rail-gap));
     overflow: auto;
-    scrollbar-gutter: stable;
+    /* No scrollbar gutter: a reserved gutter made the gap between the
+       rail and the column wider than the gap on the column's right. */
+    scrollbar-width: none;
     margin: 0;
     padding: 0;
     pointer-events: auto;
     text-align: center;
     z-index: 5;
   }
+  /* The right rail's boxes stack from the top: the theme, then a post's
+     read info. Margin notes start under them. */
   .right-rail {
-    display: grid;
-    grid-template-rows: subgrid;
+    display: flex;
+    flex-direction: column;
+    align-self: start;
     grid-column: 3;
     grid-row: 1 / -1;
     gap: var(--rail-gap);
@@ -475,11 +591,25 @@
     flex-direction: column;
     gap: var(--rail-gap);
     min-width: 0;
+    order: 4;
+  }
+  /* Left: the head, the sections, a post's contents. Right: the theme,
+     a post's read info, the search box. */
+  .left-rail > .sec-box {
     order: 2;
+  }
+  .right-rail > .theme-sel {
+    order: 1;
+  }
+  .right-rail > .cite-box {
+    order: 2;
+  }
+  .right-rail > .post-nav {
+    order: 3;
   }
   .left-rail .site-head,
   .left-rail .toc,
-  .left-rail .cite-box,
+  .right-rail .cite-box,
   .left-rail .left-stack,
   .right-rail .theme-sel,
   .right-rail .post-nav {
@@ -491,15 +621,6 @@
     text-wrap: wrap;
     -webkit-hyphens: auto;
     hyphens: auto;
-  }
-  .left-rail .site-head,
-  .right-rail .theme-sel {
-    grid-row: 1;
-    height: auto;
-    align-self: stretch;
-  }
-  .right-rail .post-nav {
-    grid-row: 2;
   }
   .left-rail .toc {
     max-width: var(--toc-rail);
@@ -543,9 +664,10 @@
     align-items: stretch;
   }
   .cite-box {
-    display: block;
+    display: grid;
     text-align: center;
   }
+  /* The read info: a line, a rule, and the copy links. */
   .cite-box .nav-box {
     display: grid;
     grid-template-rows: var(--mast-line) var(--border-w) minmax(
@@ -577,6 +699,7 @@
     height: auto;
     min-height: var(--mast-line);
     line-height: var(--mast-line);
+    align-self: center;
   }
   .post-nav > .disclosure-label {
     display: none;
@@ -586,57 +709,11 @@
     max-width: none;
     margin: 0;
   }
-  .theme-sel {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: 100%;
-    max-width: var(--rail);
-    padding: var(--space-xs);
-    border: var(--border);
-    background: var(--surface);
-    display: grid;
-    /* The swatch row fills what a two-line mast title adds to the row. */
-    grid-template-rows: var(--mast-line) var(--border-w) minmax(
-        var(--mast-title),
-        1fr
-      );
-    row-gap: var(--space-xs);
-  }
-  .theme-sel .nav-rule {
-    display: block;
-    margin: 0;
-    height: 0;
-    align-self: center;
-  }
-  .theme-label {
-    height: var(--mast-line);
-    min-height: 0;
-    line-height: var(--mast-line);
-    padding: 0;
-    border: 0;
-    cursor: default;
-  }
-  .theme-controls {
-    display: flex;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: var(--mast-title);
-    align-self: center;
-    padding: 0;
-    border: 0;
-    gap: var(--grid);
-  }
   .left-rail .site-head nav {
     height: auto;
     min-height: var(--mast-line);
     white-space: normal;
     flex-wrap: wrap;
-  }
-  .theme-sel {
-    align-items: stretch;
   }
   .sec.mast > header {
     align-content: start;
@@ -665,24 +742,47 @@
     display: grid;
   }
 }
-.fn {
-  position: relative;
+/* Beside one column or none, a note opens under its mark on hover or
+   focus; the full notes list at the foot of the post. A note nested in
+   another has no box of its own here: its mark links to the list. */
+@media (max-width: 1099px) {
+  .fn {
+    position: relative;
+  }
+  /* A hit area on the mark's line, so the pointer can cross to the note,
+     which opens right under it. The page script sets how far it runs to
+     each edge of the column; a fixed width past the column made the page
+     scroll sideways on a phone. */
+  .fn:hover::before,
+  .fn:focus-within::before {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--grid));
+    bottom: calc(-1 * var(--space-s));
+    left: calc(-1 * var(--fn-hit-l, var(--space-s)));
+    right: calc(-1 * var(--fn-hit-r, var(--space-s)));
+  }
+  .fn:hover .fn-note:not(.fn-sub),
+  .fn:focus-within .fn-note:not(.fn-sub) {
+    display: flex;
+    gap: var(--grid);
+    align-items: flex-start;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: calc(var(--measure) * 0.75);
+    max-width: min(
+      calc(var(--measure) * 0.75),
+      calc(100vw - 2 * var(--rail-gap))
+    );
+    margin: 0;
+    padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
+    z-index: 30;
+    pointer-events: auto;
+  }
 }
-.fn:hover .fn-note,
-.fn:focus-within .fn-note {
-  display: flex;
-  gap: var(--grid);
-  align-items: flex-start;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: calc(var(--measure) * 0.75);
-  max-width: min(calc(var(--measure) * 0.75), calc(100vw - 2 * var(--rail-gap)));
-  margin: 0;
-  padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
-  z-index: 30;
-  pointer-events: auto;
-}
+/* With both rails the notes stand over the right rail (blog/sidenotes.css),
+   so only the rail's own boxes take the pointer. */
 @media (min-width: 1100px) {
   .right-rail,
   .right-rail .post-nav {
@@ -708,6 +808,43 @@
 @media (max-width: 639px) {
   .post-card:has(.card-thumb) .card-row {
     grid-template-columns: calc(24 * var(--grid)) minmax(0, 1fr);
+  }
+}
+/* On a phone the article has no window: no border around the text and no
+   patterned ground behind it, so the text takes the full width inside a
+   16px gutter. The head, the masthead, listing cards and the footer keep
+   their boxes, on the plain surface. */
+@media (max-width: 639px) {
+  .wm {
+    display: none;
+  }
+  body {
+    background: var(--surface);
+  }
+  .layout,
+  footer {
+    width: min(
+      var(--column),
+      calc(
+        100% - 2 * var(--space-s) - env(safe-area-inset-left, 0px) -
+          env(safe-area-inset-right, 0px)
+      )
+    );
+  }
+  .article-rest > .sec:has(> .prose),
+  .article-rest > .post-meta {
+    border: 0;
+    padding: var(--space-s) 0;
+  }
+  /* Endnote numbers start at the box's edge, so the space left of a
+     number matches the space right of the text. Ten notes or more keep a
+     number column, so every note's text starts on one edge. */
+  .fn-end strong {
+    min-width: 0;
+    text-align: left;
+  }
+  .fn-endnotes:has(> .fn-end:nth-child(10)) .fn-end strong {
+    min-width: 3ch;
   }
 }
 @media (min-width: 640px) {

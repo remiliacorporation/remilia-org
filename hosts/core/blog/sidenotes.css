@@ -9,9 +9,8 @@
    and the notes below slide down. The script also sets the lane each line
    turns in.
 
-   The Studio's page editor uses this sheet and that script today. The
-   blog's own pages still take their sidenotes from blog/layout.css, so
-   this sheet is not in BLOG_SHEETS yet. */
+   The blog's pages and the Studio's page editor share this sheet and that
+   script. */
 @property --fn-drop {
   syntax: "<length>";
   inherits: true;
@@ -49,11 +48,13 @@
   .fn-note .sn-text {
     overflow: visible clip;
   }
+  /* The ellipsis stands on the last line it keeps, over that line's end,
+     so no half-hidden letter shows beside it. */
   .fn-note[data-long]::after {
     content: "\2026";
     position: absolute;
     right: var(--space-xs);
-    bottom: 0;
+    bottom: var(--space-xs);
     padding-left: var(--grid);
     background: var(--surface);
     font-style: normal;

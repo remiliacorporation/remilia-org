@@ -123,9 +123,9 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
 }
 
 /**
- * The host's sections as one row of links, "All" first when the host has a
- * pooled index, with the section being shown marked. It heads every
- * listing's and post's masthead.
+ * The host's sections as links, "All" first when the host has a pooled
+ * index, with the section being shown marked. It is the left rail's box
+ * under the site head, on every page.
  */
 export function sectionNav(shared: SharedCats): string {
   const items = [
@@ -177,20 +177,6 @@ export function headMenu(
 <summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
-}
-
-/**
- * A listing's search and its Author and Date dropdowns, in a box of their
- * own: FILTER, a rule, then the controls. It sits in the left rail under
- * the site head, or under the theme box where the rails fold into one;
- * on phones it is one row under the head.
- */
-export function filterBox(tools: string): string {
-  return `<section class="filter-box" aria-label="Filter posts">
-<p class="filter-label" aria-hidden="true">Filter</p>
-<hr class="nav-rule">
-${NAV_SEARCH}${tools}
-</section>`;
 }
 
 /** A month the listing has an archive page for. */
@@ -276,12 +262,18 @@ export function authorSel(
 </details>`;
 }
 
+/**
+ * The search box, the same on a post, a listing, and a 404: the search
+ * with the author control (`author`, from `authorSel`) on its line, then
+ * the posts a few at a time. It closes the right rail.
+ */
 export function leftRail(
   posts: NavPost[],
   _label: string,
   _indexHref = "/press",
   currentUrl?: string,
   shared?: SharedCats,
+  author = "",
 ): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const { css, html: cat } = shared
@@ -300,7 +292,7 @@ export function leftRail(
 ${css ? `<style>${css}</style>` : ""}
 <div class="nav-page">
 ${NAV_SEARCH}
-${cat}
+${cat}${author}
 </div>
 <hr class="nav-rule">
 <ul class="nav-all">
@@ -328,8 +320,8 @@ export const RAIL_PAGE = 4;
  * The sidenote layout, as page script: `sidenotes(root, wide, opts)` returns
  * the function that places every note under `root` (the document, or the
  * page frame in the Studio's editor) when `wide()` says both rails show, and
- * clears its work when not. The Studio's page editor builds it from this
- * source (studio/sidenotes.ts); the blog's nav.js will run the same source.
+ * clears its work when not. The site's nav.js runs it; the Studio's page
+ * editor builds it from this same source (studio/sidenotes.ts).
  */
 export const SIDENOTES_JS = `// With both rails, notes stand in the margin, in reference order, under
 // the boxes at the head of the right rail. A note stands at its mark's
@@ -712,12 +704,16 @@ export const NAV_JS = `(() => {
     .replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"')
     .replace(/\\s+/g, ' ').trim();
   const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
-  const match = (el) => {
+  // On an author's archive the author control names them, and the rail's
+  // list keeps to their posts. A post by several lists each name.
+  const match = (el, rail) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : '';
+    const authv = rail && auth ? (auth.dataset.value || '') : '';
     const d = el.dataset;
     return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
-      && (!catv || d.cat === catv);
+      && (!catv || d.cat === catv)
+      && (!authv || (d.author || '').split(', ').includes(authv));
   };
   // A paginated listing bakes an index of all its posts, so a search covers
   // every page of it, not only the cards on this one. It loads on the first
@@ -737,7 +733,7 @@ export const NAV_JS = `(() => {
   const apply = () => {
     const query = q ? q.value.trim() : '';
     if (items.length && list) {
-      const vis = items.filter(match);
+      const vis = items.filter((el) => match(el, true));
       const pages = Math.max(1, Math.ceil(vis.length / PAGE));
       if (page >= pages) page = pages - 1;
       const from = page * PAGE;
@@ -793,6 +789,18 @@ export const NAV_JS = `(() => {
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
+  // Beside the column the rail scrolls on its own and would clip the open
+  // author menu, so the rail's box grows to hold the menu while it is open.
+  if (auth) auth.addEventListener('toggle', () => {
+    const box = auth.closest('.nav-box');
+    const menu = auth.querySelector('.sel-menu');
+    if (!box || !menu) return;
+    box.style.minHeight = '';
+    if (!auth.open || !matchMedia('(min-width: 824px)').matches) return;
+    const pad = parseFloat(getComputedStyle(box).paddingBottom) || 0;
+    const need = menu.getBoundingClientRect().bottom - box.getBoundingClientRect().top + pad;
+    if (need > box.offsetHeight) box.style.minHeight = Math.ceil(need) + 'px';
+  });
   bindSel(document.getElementById('post-date'), 'All dates');
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
@@ -984,9 +992,11 @@ export const NAV_JS = `(() => {
       };
       requestAnimationFrame(step);
     };
+    const wide = matchMedia('(min-width: 1100px)');
     const fitNote = (fn) => {
       const note = fn && fn.querySelector('.fn-note');
-      if (!note) return;
+      // From 1100px a note stands in the margin, placed by the stacking pass.
+      if (!note || wide.matches) return;
       note.style.left = '';
       const col = fn.closest('.prose, .article-rest, .article-body');
       if (!col) return;
@@ -994,6 +1004,10 @@ export const NAV_JS = `(() => {
       const fr = fn.getBoundingClientRect();
       const x = Math.max(cr.left, Math.min(fr.left, cr.right - note.offsetWidth - 2));
       note.style.left = x - fr.left + 'px';
+      // The hit area on the mark's line runs to the column's two edges and
+      // no further, so the pointer can cross to the note at a slant.
+      fn.style.setProperty('--fn-hit-l', Math.max(0, fr.left - cr.left) + 'px');
+      fn.style.setProperty('--fn-hit-r', Math.max(0, cr.right - fr.right) + 'px');
     };
     document.addEventListener('pointerover', (e) => {
       const fn = e.target && e.target.closest && e.target.closest('.fn');
@@ -1064,8 +1078,8 @@ export const NAV_JS = `(() => {
   });
 })();
 // The site-head sits beside the masthead from 824px, in a sticky rail
-// that can't subgrid like .right-rail without breaking its internal
-// scroll, so it stretches to the masthead's height here.
+// that can't subgrid without breaking its internal scroll, so it
+// stretches here until it is as tall as the masthead.
 (() => {
   try {
     const mast = document.querySelector('.sec.mast');
@@ -1078,6 +1092,24 @@ export const NAV_JS = `(() => {
     new ResizeObserver(sync).observe(mast);
     if (mq.addEventListener) mq.addEventListener('change', sync);
     sync();
+  } catch (e) {}
+})();
+${SIDENOTES_JS}(() => {
+  try {
+    if (!document.querySelector('.fn .fn-note')) return;
+    const mq = matchMedia('(min-width: 1100px)');
+    const stack = sidenotes(document, () => mq.matches, { links: true });
+    const restack = () => stack();
+    restack();
+    addEventListener('resize', restack, { passive: true });
+    addEventListener('load', restack);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(restack);
+    if (mq.addEventListener) mq.addEventListener('change', restack);
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(restack);
+      for (const el of [document.querySelector('.article-body'), document.querySelector('.right-rail > .post-nav')])
+        if (el) ro.observe(el);
+    }
   } catch (e) {}
 })();
 `;

@@ -4,41 +4,6 @@
   padding: var(--space-xs);
   --size-base: var(--size-ui);
 }
-/* The section row heads the masthead: its line, a rule, then the mast's
-   own rows, which take whatever height the row is stretched to. */
-.sec.mast:has(> .sec-nav) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: var(--mast-line) var(--border-w) 1fr;
-  row-gap: var(--space-xs);
-}
-.sec-nav {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-  gap: var(--grid);
-  min-width: 0;
-  height: var(--mast-line);
-  line-height: var(--mast-line);
-  white-space: nowrap;
-}
-.sec-nav a {
-  padding: 0 var(--grid);
-  font-weight: var(--weight-strong);
-  color: var(--muted);
-  text-transform: uppercase;
-  text-decoration: none;
-}
-.sec-nav a:hover,
-.sec-nav a:focus-visible,
-.sec-nav a[aria-current] {
-  background: var(--ink);
-  color: var(--ink-contrast);
-}
-.sec-nav .nav-sep {
-  color: var(--muted);
-}
 /* base.css clamps .article-body > .sec to level 1, and the cards raise their
    own links to 2 — the mast has to outrank them so an open dropdown covers
    the card list instead of being painted through by it. */
@@ -262,61 +227,15 @@
   align-content: start;
   height: 100%;
 }
+/* A listing's masthead is one line that says what the page lists, set
+   like the wordmark in the site head beside it. A long one wraps. */
 .sec.mast.index-mast h1 {
-  font-size: var(--size-base);
-  font-weight: var(--weight-body);
-  /* A status line, not a title — no caps treatment from .sec.mast h1. */
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: var(--mast-line);
-  height: var(--mast-line);
-  min-height: var(--mast-line);
-  overflow: hidden;
-}
-/* A listing's masthead is the sections box, built like the theme box:
-   a label, a rule, then the links on the main line at the wordmark's
-   size. Search and the Author and Date filters sit in the rail's filter
-   box. The status line stays for screen readers only. */
-.sec.mast.list-mast:has(> .sec-nav) {
-  grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
-}
-.list-mast > .sec-box-label {
-  margin: 0;
-  height: var(--mast-line);
-  line-height: var(--mast-line);
-  font-weight: var(--weight-strong);
-  text-transform: uppercase;
-  text-align: center;
-}
-.list-mast > .mast-nav-rule {
-  margin: 0;
-  height: 0;
-  align-self: center;
-}
-.list-mast > .sec-nav {
-  height: var(--mast-title);
+  font-size: var(--size-brand);
   line-height: var(--mast-title);
-  /* Every element sets its size from --size-base, so the row sets it. */
-  --size-base: var(--size-brand);
-}
-.list-mast > .sec-nav a {
-  color: var(--ink);
-}
-.list-mast > .sec-nav a:hover,
-.list-mast > .sec-nav a:focus-visible,
-.list-mast > .sec-nav a[aria-current] {
-  color: var(--ink-contrast);
-}
-.sec.mast.list-mast > header {
-  position: absolute;
-  width: var(--border-w);
-  height: var(--border-w);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  min-height: var(--mast-title);
+  height: auto;
+  text-align: center;
+  text-wrap: balance;
 }
 .sec.list-empty {
   padding: var(--space-xs);
@@ -340,41 +259,6 @@
   background: var(--ink);
   color: var(--ink-contrast);
   text-decoration: none;
-}
-/* A listing's search and filters: FILTER, a rule, then the controls,
-   built like the theme box so the rail's boxes keep one rhythm. */
-.filter-box {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: var(--space-xs);
-  padding: var(--space-xs);
-  border: var(--border);
-  background: var(--surface);
-  --size-base: var(--size-ui);
-  text-align: left;
-}
-.filter-label {
-  margin: 0;
-  height: var(--mast-line);
-  line-height: var(--mast-line);
-  font-weight: var(--weight-strong);
-  text-transform: uppercase;
-  text-align: center;
-}
-.filter-box .nav-rule {
-  margin: 0;
-  height: 0;
-}
-.filter-box .nav-search {
-  display: flex;
-}
-.filter-box details.sel {
-  border: var(--border);
-  background: var(--surface);
-  color: var(--ink);
-}
-.filter-box details.sel > summary {
-  padding: var(--grid) var(--space-xs);
 }
 .index-mast .mast-tools {
   display: flex;

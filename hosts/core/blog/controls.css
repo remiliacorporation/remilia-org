@@ -41,6 +41,9 @@
   height: var(--mast-title);
   flex: 0 0 auto;
 }
+/* The inputs are unseen and their labels take the clicks. An input still
+   sits somewhere in the row (the dark-mode one lay on the center of the
+   magenta swatch), so it takes no pointer events itself. */
 .theme-hues input,
 .theme-dots input,
 .theme-dark {
@@ -49,6 +52,7 @@
   height: 1px;
   opacity: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 .theme-hues label,
 .theme-dots label,
@@ -187,7 +191,7 @@ html[data-scheme="dark"] .theme-mode::after {
 }
 .left-rail .site-head,
 .left-rail .toc,
-.left-rail .cite-box,
+.right-rail .cite-box,
 .right-rail .theme-sel,
 .right-rail .post-nav,
 .article-wrap {
@@ -195,8 +199,5 @@ html[data-scheme="dark"] .theme-mode::after {
   max-width: none;
   margin-left: 0;
   margin-right: 0;
-}
-.right-rail .theme-sel {
-  order: 2;
 }
 

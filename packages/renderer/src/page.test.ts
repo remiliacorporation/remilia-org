@@ -11,8 +11,9 @@ import {
   cardHtml,
   termIndexMain,
   type Chrome,
+  titleEm,
 } from "./page";
-import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
+import { authorSel, dateSel, leftRail, sectionNav } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -93,6 +94,7 @@ test("page shell emits the fixed semantic structure", () => {
   assert.ok(
     PAGE.includes('<time datetime="2026-08-01T00:00:00.000Z">08.01.26</time>'),
   );
+  // A short title fits at display size and takes no sizing class.
   assert.ok(PAGE.includes("<h1>Vaults</h1>"));
   assert.ok(PAGE.includes('<link rel="stylesheet" href="/blog/blog.css">'));
 });
@@ -167,7 +169,7 @@ test("section 404 without posts still routes somewhere useful", () => {
   assert.ok(nf.includes("/blog/sitemap.xml"));
 });
 
-test("article rails put ToC then cite on the left and post-nav on the right", () => {
+test("article rails put the sections and the ToC on the left; the theme, read info and search on the right", () => {
   const html = htmlPage({
     title: "Vaults — Devblog",
     description: "How vaults work.",
@@ -175,8 +177,9 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
     jsonld: [],
     chrome: CHROME,
     leftRail: `<div class="post-nav">nav</div>`,
+    sectionNav: sectionNav(SECTIONS),
     tocHtml: `<div class="toc">toc</div>`,
-    citeHtml: citeBox({
+    readHtml: citeBox({
       canonical: "https://www.remilia.net/blog/vaults",
       mdHref: "/blog/vaults.md",
       txtHref: "/blog/vaults.txt",
@@ -192,13 +195,17 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
       txtHref: "/blog/vaults.txt",
     }),
   });
+  // The left rail holds the section links, then the contents; the right
+  // rail holds the theme box, the read info, then the search box.
   const left = html.indexOf('class="left-rail"');
+  const secs = html.indexOf('class="sec-box"');
   const toc = html.indexOf('class="toc"');
-  const cite = html.indexOf('class="cite-box"');
   const right = html.indexOf('class="right-rail"');
+  const theme = html.indexOf('class="theme-sel"');
+  const cite = html.indexOf('class="cite-box"');
   const nav = html.indexOf('class="post-nav"');
   assert.ok(
-    left >= 0 && toc > left && cite > toc && cite < right && nav > right,
+    left >= 0 && secs > left && toc > secs && right > toc && theme > right && cite > theme && nav > cite,
   );
   assert.ok(html.includes("3 min read — 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
@@ -206,6 +213,23 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
   assert.ok(html.includes("[URL]"));
   assert.ok(html.includes(">[MD]</button>"));
   assert.ok(html.includes(">[TXT]</button>"));
+});
+
+test("a title's one-line width grows with its length and counts unknown glyphs wide", () => {
+  assert.ok(titleEm("Vaults") < titleEm("Vaults and Rails"));
+  // Set in capitals, so case does not change the width.
+  assert.equal(titleEm("vaults"), titleEm("VAULTS"));
+  // I is the narrowest capital and W the widest; a glyph with no entry is a full em.
+  assert.ok(titleEm("I") < titleEm("W") && titleEm("W") < titleEm("\u4e00"));
+});
+
+test("a long title is classed by its width in whole ems, up to the size where it wraps", () => {
+  const h1 = (title: string) =>
+    /<h1[^>]*>/.exec(articleHtml({ title, publishedAt: "2026-08-01T00:00:00Z", bodyHtml: "" }))?.[0];
+  assert.equal(h1("Vaults"), "<h1>");
+  const long = "KALI/ACC Basilisk: A Survival Horror Eschatology";
+  assert.equal(h1(long), `<h1 class="title-fit-${Math.ceil(titleEm(long))}">`);
+  assert.equal(h1(long.repeat(3)), '<h1 class="title-fit-41">');
 });
 
 test("adjacent posts are older left and newer right", () => {
@@ -267,7 +291,7 @@ test("the section row links every section, All first, and marks the one shown", 
   assert.equal(sectionNav({ cats: [{ label: "News", href: "/a/blog/news" }], current: "News" }), "");
 });
 
-test("the section row heads a post's masthead; the byline keeps its section link", () => {
+test("a post's masthead holds the byline and the title; the author control shares the search's line", () => {
   const html = articleHtml({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
@@ -275,14 +299,17 @@ test("the section row heads a post's masthead; the byline keeps its section link
     category: "Press",
     categoryHref: "/blog/press",
     bodyHtml: "<p>body</p>",
-    sectionNav: sectionNav(SECTIONS),
   });
-  assert.match(
-    html,
-    /<div class="sec mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<div class="byline">/,
-  );
+  assert.match(html, /<div class="sec mast">\n<header>\n<div class="byline">[\s\S]*<\/header>\n<\/div>/);
+  assert.equal(html.includes("sec-nav"), false);
   assert.match(html, /<div class="byline">[\s\S]*<a class="byline-cat" href="\/blog\/press">Press<\/a>[\s\S]*class="author"/);
   assert.equal(html.includes("<details"), false);
+  const rail = leftRail([], "", "/blog/press", undefined, SECTIONS, authorSel(AUTHORS, "/blog/press"));
+  assert.match(
+    rail,
+    /<div class="nav-box">\n\n<div class="nav-page">\n<form class="nav-search"[\s\S]*<\/form>\n<details class="sel nav-cat-sel" id="post-author"[\s\S]*<\/details>\n<\/div>\n<hr class="nav-rule">\n<ul class="nav-all">/,
+  );
+  assert.equal(rail.includes("sec-nav"), false);
 });
 
 test("a post names its bylines as the page author; other pages name the host", () => {
@@ -392,93 +419,29 @@ test("post dates link to their month archive, keeping the time element", () => {
   assert.ok(indexMain([POST]).includes('<p class="card-meta"><time datetime='));
 });
 
-test("a listing's mast is the sections box; the empty-search note waits above the cards", () => {
-  const html = indexMain([POST], undefined, undefined, sectionNav(SECTIONS));
+test("a listing's mast is its status line; the empty-search note waits above the cards", () => {
+  const html = indexMain([POST]);
   assert.match(
     html,
-    /<div class="sec mast index-mast list-mast">\n<p class="sec-box-label"[\s\S]*<\/nav>\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
+    /<div class="sec mast index-mast list-mast">\n<header>\n<h1[^>]*>Showing all posts<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
     /<div class="article-rest">\n<p class="sec list-empty"[\s\S]*<\/p>\n<article class="sec post-card"/,
   );
-  // Search and the filters live in the rail's filter box, not the column.
+  // Search, the author control, and the section links live in the rail's
+  // box, not the column.
   assert.equal(html.includes("mast-tools"), false);
   assert.equal(html.includes('id="post-filter"'), false);
-  // The status line is read to screen readers only; the mast shows the
-  // sections, and an empty search result waits, hidden, above the cards.
-  assert.match(html, /<p class="sec-box-label" aria-hidden="true">Sections<\/p>\n<hr class="nav-rule mast-nav-rule">\n<nav class="sec-nav"/);
+  assert.equal(html.includes("sec-nav"), false);
   assert.match(html, /<p class="sec list-empty" role="status" hidden>[\s\S]*<button type="button" class="list-clear">Clear search<\/button><\/p>/);
   assert.equal(html.includes("site-sec"), false);
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
-  assert.equal(html.includes('class="nav-page"'), false);
-});
-
-const MONTHS = ["2024-12", "2024-04", "2023-11", "2023-09", "2022-06"].map(
-  (key) => ({ key, href: `/blog/updates/months/${key}` }),
-);
-
-/** The menu's direct options and year rows, in order. */
-const menuRows = (html: string): string[] =>
-  [
-    ...html
-      .slice(html.indexOf('<ul class="sel-menu">'))
-      .replace(/<ul class="sel-sub">[\s\S]*?<\/ul>/g, "")
-      .matchAll(/<button [^>]*>([^<]+)<\/button>|<summary><span class="sel-label">([^<]+)<\/span>/g),
-  ].map((m) => m[1] ?? `year ${m[2]}`);
-
-test("date dropdown lists the newest year flat and nests older years", () => {
-  const html = dateSel([...MONTHS].reverse(), "/blog/updates");
-  assert.match(html, /^<details class="sel date-sel" id="post-date" data-value="" aria-label="Date">/);
-  assert.match(html, /<summary><span class="sel-label">All dates<\/span><span class="sel-mark"><\/span><\/summary>/);
-  assert.deepEqual(menuRows(html), [
-    "All dates",
-    "December 2024",
-    "April 2024",
-    "year 2023",
-    "year 2022",
-  ]);
-  // Older years are collapsed native <details> rows holding month names only.
-  const y2023 = html.match(/<li class="sel-year"><details><summary><span class="sel-label">2023<\/span><span class="sel-mark"><\/span><\/summary><ul class="sel-sub">([\s\S]*?)<\/ul><\/details><\/li>/);
-  assert.ok(y2023, "2023 is a collapsed sublist");
-  assert.deepEqual(
-    [...y2023[1].matchAll(/data-href="([^"]+)">([^<]+)</g)].map((m) => [m[1], m[2]]),
-    [
-      ["/blog/updates/months/2023-11", "November"],
-      ["/blog/updates/months/2023-09", "September"],
-    ],
-  );
-  assert.ok(html.includes('<button type="button" data-value="" data-href="/blog/updates" aria-current="page">All dates</button>'));
-  assert.ok(html.includes('<button type="button" data-value="2024-12" data-href="/blog/updates/months/2024-12">December 2024</button>'));
-  assert.equal(html.includes("<details open>"), false);
-  assert.equal(html.includes('class="sel-year"><details class='), false, "the nested year is not a .sel");
-});
-
-test("date dropdown marks the month being shown and opens its year", () => {
-  const html = dateSel(MONTHS, "/blog", "2023-09");
-  assert.match(html, /data-value="2023-09" aria-label="Date">\n<summary><span class="sel-label">September 2023<\/span>/);
-  assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-  assert.ok(html.includes('data-value="2023-09" data-href="/blog/updates/months/2023-09" aria-current="page">September</button>'));
-  assert.ok(html.includes('<details open><summary><span class="sel-label">2023</span>'));
-  assert.ok(html.includes('<details><summary><span class="sel-label">2022</span>'));
-  assert.ok(html.includes('data-value="" data-href="/blog">All dates</button>'));
-
-  const newest = dateSel(MONTHS, "/blog", "2024-04");
-  assert.match(newest, /<span class="sel-label">April 2024<\/span>/);
-  assert.equal(newest.includes("<details open>"), false);
 });
 
 test("date dropdown is absent without month archives", () => {
   assert.equal(dateSel([], "/blog/press"), "");
-});
-
-test("the filter box holds search, then Author, then Date, under a FILTER label", () => {
-  const html = filterBox(`${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`);
-  assert.match(
-    html,
-    /^<section class="filter-box" aria-label="Filter posts">\n<p class="filter-label" aria-hidden="true">Filter<\/p>\n<hr class="nav-rule">\n<form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/section>$/,
-  );
 });
 
 test("gallery renders figures with alt and a dialog lightbox", () => {
@@ -528,13 +491,12 @@ test("a listing names its search index, and a card renders the same alone", () =
   assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
 });
 
-test("a term directory wears the listing mast: sections shown, heading read aloud", () => {
-  const nav = sectionNav(SECTIONS);
-  const html = termIndexMain("Tag", [{ label: "Theory", href: "/blog/tags/theory", count: 3 }], nav);
+test("a term directory wears the listing mast, with its own line", () => {
+  const html = termIndexMain("Tag", [{ label: "Theory", href: "/blog/tags/theory", count: 3 }]);
   const mast = (s: string) => s.slice(s.indexOf('<div class="sec mast'), s.indexOf('<div class="article-rest">'));
   assert.equal(
     mast(html),
-    mast(indexMain([POST], undefined, undefined, nav)).replace("Showing all posts", "Showing all tags"),
+    mast(indexMain([POST])).replace("Showing all posts", "Showing all tags"),
   );
   assert.equal(html.includes("mast-tools"), false);
 });

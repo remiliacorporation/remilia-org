@@ -165,6 +165,23 @@ test("a note holds paragraphs, a block quote, marks, and links, in the box and i
   );
 });
 
+test("two marks side by side have a comma between them, so they do not read as one number", () => {
+  const sep = '<sup class="fn-sep" aria-hidden="true">,</sup>';
+  const html = portableTextToHtml(
+    [
+      block("p1", [span("Two", "a"), note("n1", "One."), note("n2", "Two."), span(" and a space", "b")]),
+      block("p2", [span("then", "c"), note("n3", "Three."), span(" ", "d"), note("n4", "Four.")]),
+      block("p3", [span("apart", "e"), note("n5", "Five."), span(" word", "f"), note("n6", "Six.")]),
+    ],
+    OPTS,
+  );
+  const [p1, p2, p3] = html.split("\n");
+  assert.ok(p1.includes(`</span>${sep}<span class="fn" id="fn-2">`));
+  assert.ok(p2.includes(`</span>${sep}<span class="fn" id="fn-4">`));
+  assert.equal(p3.includes("fn-sep"), false);
+  assert.equal(html.split("fn-sep").length - 1, 2);
+});
+
 test("a note inside a note: one sequence in reading order, linked both ways", () => {
   const inner = note("in", "The inner note.");
   const outer = {
@@ -211,13 +228,20 @@ test("a note inside a note: one sequence in reading order, linked both ways", ()
       '<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text"><span class="fn-par">Outer text<a class="fn-xref" href="#fndef-2" aria-label="Note 2"><sup>2</sup></a> goes on.</span></span></span>',
     ),
   );
+  // The inner note has a margin copy of its own, after the outer one's,
+  // which names the reference it is tied to.
+  assert.ok(
+    html.includes(
+      ' goes on.</span></span></span><span class="fn-note fn-sub" role="note" data-n="2" data-ref="fndef-2"><strong>2:</strong><span class="sn-text"><span class="fn-par">The inner note.</span></span></span></span>',
+    ),
+  );
   const md = portableTextToMarkdown(body);
   assert.ok(md.includes("First[^1] then[^3]"));
   assert.ok(md.includes("[^1]: Outer text[^2] goes on.\n[^2]: The inner note.\n[^3]: The next note."));
 });
 
 
-test("the Studio hook gets a nested note as a margin box of its own, the page does not", () => {
+test("the Studio hook gets a nested note as a margin box of its own, as the page does", () => {
   const inner = note("in", "The inner note.");
   const outer = {
     _type: "footnote",
@@ -243,8 +267,8 @@ test("the Studio hook gets a nested note as a margin box of its own, the page do
     '<span class="fn-note fn-sub" role="note" data-n="2" data-ref="fndef-2"><strong>2:</strong><span class="sn-text"><span class="fn-par">The inner note.</span></span></span>',
   );
   assert.equal(seen["p1/next"].subs, "");
-  // The blog's pages are unchanged: no margin box for a nested note yet.
-  assert.ok(!html.includes("fn-sub"));
+  // The page carries the same box, after the parent's.
+  assert.ok(html.includes(`</span>${seen["p1/out"].subs}</span>`));
 });
 
 test("lowering and lifting are inverse on a stored body", () => {

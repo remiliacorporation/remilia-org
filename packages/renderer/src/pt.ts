@@ -64,9 +64,9 @@ export interface PTOptions {
   linkCard?: (href: string) => LinkCard | undefined;
   /**
    * Called with each note in the text as it renders: its block's key, its
-   * own key, the markup inside its `.fn-note` box, and the margin boxes of
-   * the notes nested in it (`.fn-sub`, whole). The Studio shows that markup
-   * in the editor, so a note looks there as it does on the site.
+   * own key, the markup inside its `.fn-note` box, and the boxes of the
+   * notes nested in it (`.fn-sub`, whole). The Studio shows that markup in
+   * the editor, so a note looks there as it does on the site.
    */
   onNote?: (
     blockKey: string,
@@ -175,8 +175,16 @@ interface RenderState {
   endnotes: string[];
   /** Set while a note's own blocks render: a note in there is a nested note. */
   inNote?: boolean;
-  /** The margin boxes of the notes nested in the note being rendered. */
+  /** The margin copies of the notes nested in the note being rendered. */
   subs?: string[];
+  /**
+   * Old-shape notes with no mark in the text (a block of notes alone), by
+   * number. Such a note is cited only from inside other notes, so it is a
+   * nested note: it gets a margin copy under each note that cites it.
+   */
+  orphans: Map<number, MarkDef>;
+  /** The orphans already copied under the note being rendered. */
+  subSeen?: Set<number>;
   /** The key of the block being rendered, for `onNote`. */
   blockKey?: string;
 }
@@ -223,6 +231,7 @@ function fnTextHtml(text: string, state: RenderState): string {
       .replace(FN_XREF_RE, (m, ...a) => {
         const mm = [m, ...a] as RegExpMatchArray;
         const t = xrefTarget(mm);
+        if (state.fnTargets.has(t)) subNote(t, state);
         return state.fnTargets.has(t)
           ? (mm[4] ?? "") +
               keep(`<a class="fn-xref" href="#fn-${t}"><sup>${t}</sup></a>`)
@@ -239,6 +248,40 @@ function fnTextHtml(text: string, state: RenderState): string {
     return keep(`<span class="fn-par">${s}</span>`);
   };
   return resolve(text.split(/\n+/).map(para).join(""));
+}
+
+/**
+ * The margin copy (fn-sub) of an orphan note, cited as `t` from the note
+ * being rendered. The page script stands it under that note and ties it to
+ * the reference (`.fn-xref[href="#fn-t"]`).
+ */
+function subNote(t: number, state: RenderState): void {
+  const def = state.orphans.get(t);
+  if (!def || !state.subs || !state.subSeen || state.subSeen.has(t)) return;
+  state.subSeen.add(t);
+  const at = state.subs.push("") - 1;
+  const body = fnBodyHtml(def, state, false);
+  state.subs[at] =
+    `<span class="fn-note fn-sub" role="note" data-n="${t}" data-ref="fn-${t}"><strong>${t}:</strong><span class="sn-text">${body}</span></span>`;
+}
+
+/**
+ * A block of notes alone: its children are only empty note-marked spans
+ * and white space. Its notes have no mark in the text (orphans).
+ */
+function notesOnly(block: TextBlock): boolean {
+  const fnKeys = new Set(
+    (block.markDefs ?? []).filter((d) => d._type === "footnote").map((d) => d._key),
+  );
+  return (
+    fnKeys.size > 0 &&
+    block.children.length > 0 &&
+    block.children.every((s) => {
+      if ((s.text ?? "").trim()) return false;
+      const m = s.marks ?? [];
+      return m.length === 0 || m.some((k) => fnKeys.has(k));
+    })
+  );
 }
 
 function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
@@ -301,6 +344,14 @@ function fnBodyHtml(def: MarkDef, state: RenderState, trim = true): string {
   return `${body}${fnImgHtml(def, state)}`;
 }
 
+/**
+ * Two marks with nothing between them read as one number ("23"), so a
+ * superscript comma goes between: a note's closing tags, then the next
+ * note's opening tag. A space alone between two marks gives way to it.
+ */
+const ADJACENT_NOTES = /(<\/span><\/span><\/span>)\s*(?=<span class="fn" id=)/g;
+const FN_SEP = '$1<sup class="fn-sep" aria-hidden="true">,</sup>';
+
 /** A nested note's reference carries its id only in the endnotes copy. */
 const withoutIds = (html: string): string =>
   html.replace(/(<a class="fn-xref") id="fn-[^"]*"/g, "$1");
@@ -313,29 +364,31 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   const slot = state.endnotes.push("") - 1;
   if (state.inNote) {
     // A note inside a note: its reference sits in the parent's text and
-    // links to its own endnote, which links back. Its margin box (fn-sub)
-    // goes to `onNote` after the parent's, in reading order; the layout
-    // script stands it under the parent and ties it to this reference.
+    // links to its own endnote, which links back. Its margin copy
+    // (fn-sub) follows the parent's, in reading order; the page script
+    // stands it under the parent and ties it to this reference.
     const at = state.subs ? state.subs.push("") - 1 : -1;
     const body = fnBodyHtml(def, state);
+    state.endnotes[slot] =
+      `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
     if (state.subs && at >= 0)
       state.subs[at] =
         `<span class="fn-note fn-sub" role="note" data-n="${n}" data-ref="fndef-${id.slice(3)}"><strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span></span>`;
-    state.endnotes[slot] =
-      `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
     return `${inner}<a class="fn-xref" id="${id}" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a>`;
   }
   const subs: string[] = [];
   state.subs = subs;
+  state.subSeen = new Set();
   const body = fnBodyHtml(def, state);
   state.subs = undefined;
+  state.subSeen = undefined;
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
   state.endnotes[slot] =
     `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
   const note = `<strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span>`;
   state.opts.onNote?.(state.blockKey ?? "", def._key, note, subs.join(""));
-  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span></span>`;
+  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span>${subs.join("")}</span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
@@ -421,15 +474,17 @@ export function figureHtml(input: {
 
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   blocks = lowerFootnotes(blocks);
-  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [] };
+  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [], orphans: new Map() };
   {
     let pos = 0;
     const scan = (list: PTBlock[]): void => {
       for (const b of list) {
         if (!isTextBlock(b)) continue;
+        const orphan = list === blocks && !b.listItem && notesOnly(b);
         for (const d of b.markDefs ?? []) {
           if (d._type !== "footnote") continue;
           const n = d.n ?? ++pos;
+          if (orphan) state.orphans.set(n, d);
           state.fnTargets.add(n);
           state.fnTexts.set(n, d.text ?? "");
           if (d.content?.length) scan(d.content);
@@ -502,18 +557,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       }
       // notes-list block: children are only empty fn-marked spans (+ whitespace)
       // — trailing/orphan notes render as a static list, not margin popovers.
-      const fnKeys = new Set(
-        (block.markDefs ?? []).filter((d) => d._type === "footnote").map((d) => d._key),
-      );
-      const onlyNotes =
-        fnKeys.size > 0 &&
-        block.children.length > 0 &&
-        block.children.every((s) => {
-          if ((s.text ?? "").trim()) return false;
-          const m = s.marks ?? [];
-          return m.length === 0 || m.some((k) => fnKeys.has(k));
-        });
-      if (onlyNotes) {
+      if (notesOnly(block)) {
         // orphan notes have no in-text ref — their endnote entry keeps the
         // fn-N id so xrefs resolve; no backlink (nothing to jump back to).
         const ordered: MarkDef[] = [];
@@ -606,5 +650,5 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   }
   closeH2();
 
-  return out.join("\n");
+  return out.join("\n").replace(ADJACENT_NOTES, FN_SEP);
 }

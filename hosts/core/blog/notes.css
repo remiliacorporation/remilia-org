@@ -5,26 +5,48 @@
   user-select: none;
   font-variant-numeric: tabular-nums;
 }
+/* A note opens as a positioned box inside its line. Under text-wrap: pretty
+   that box changes where the line breaks, so the mark moved out from under
+   the pointer and the click missed it. Text that holds a mark wraps plainly. */
+.prose :is(p, li, h2, h3, h4):has(.fn) {
+  text-wrap: wrap;
+}
+/* The number hugs the word before it, so its highlight covers the number
+   alone. */
 .fn-ref {
   position: relative;
   font-weight: var(--weight-strong);
   cursor: pointer;
   text-decoration: none;
-  padding-left: var(--grid);
-}
-.fn:hover::before,
-.fn:focus-within::before {
-  content: "";
-  position: absolute;
-  top: calc(-1 * var(--grid));
-  bottom: calc(-1 * var(--space-s));
-  left: calc(-1 * var(--measure) * 0.75);
-  right: calc(-1 * var(--measure) * 0.75);
 }
 .fn-ref sup,
-.fn-xref sup {
+.fn-xref sup,
+.fn-sep {
   font-size: smaller;
   line-height: 0;
+}
+/* The comma between two marks that stand side by side. */
+.fn-sep {
+  font-weight: var(--weight-strong);
+  user-select: none;
+}
+/* On a phone the number is about 7px wide. An unseen area the size of a
+   text line (24px square) around it takes the tap. Each number sits above
+   every such area, so two marks side by side keep their own taps. */
+@media (pointer: coarse), (max-width: 639px) {
+  .fn-ref::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--space));
+    height: var(--space);
+    transform: translate(-50%, -50%);
+  }
+  .fn-ref sup {
+    position: relative;
+    z-index: 1;
+  }
 }
 .fn-note {
   display: none;
@@ -66,11 +88,14 @@
   max-width: 100%;
   height: auto;
 }
+/* A mark inside a note is a link; the link's underline would show as a
+   dash under the raised number, so it has none. */
 .fn-note .fn-xref,
 .fn-end .fn-xref {
   position: relative;
   z-index: 1;
   font-weight: var(--weight-strong);
+  text-decoration: none;
   user-select: none;
 }
 .fn-hit {
@@ -90,22 +115,35 @@
 .fn-par + .fn-par {
   margin-top: var(--space-xs);
 }
+/* The quote's rule takes the text's color, so it inverts with the note. */
 .fn-q {
   display: block;
-  margin: var(--space-xs) 0 var(--space-xs) var(--space-s);
+  margin: var(--space-xs) 0;
   padding-left: var(--space-xs);
-  border-left: var(--border);
+  border-left: var(--border-w) solid currentColor;
+}
+.fn-q:first-child {
+  margin-top: 0;
+}
+.fn-q:last-child {
+  margin-bottom: 0;
+}
+/* The list of notes keeps the body's rhythm: a paragraph gap above it, a
+   small step between notes and inside each box, and numbers in one column
+   so every note's text starts on the same edge. */
+.fn-endnotes {
+  margin-top: var(--space);
 }
 .fn-end {
   display: flex;
-  gap: var(--grid);
+  gap: var(--space-xs);
   scroll-margin-top: 50vh;
   font-variant-numeric: tabular-nums;
   position: relative;
   font-style: italic;
   line-height: var(--leading-prose);
   border: var(--border);
-  padding: var(--grid);
+  padding: var(--space-xs);
   background: var(--surface);
   text-decoration: none;
   color: inherit;
@@ -134,11 +172,13 @@
   color: var(--ink);
 }
 .fn-end + .fn-end {
-  margin-top: var(--grid);
+  margin-top: var(--space-xs);
 }
 .fn-end strong {
   flex: none;
   margin: 0;
+  min-width: 3ch;
+  text-align: right;
   font-style: normal;
   font-weight: var(--weight-strong);
 }
@@ -148,7 +188,9 @@
   overflow-wrap: break-word;
 }
 .fn-ref:hover,
-.fn:focus-within .fn-ref {
+.fn-ref:hover sup,
+.fn:focus-within .fn-ref,
+.fn:focus-within .fn-ref sup {
   background: var(--ink);
   color: var(--ink-contrast);
   text-decoration: none;
