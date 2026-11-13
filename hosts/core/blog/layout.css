@@ -29,15 +29,31 @@
   }
   /* A title is set on one line: the bake classes each long title by its
      width in whole ems, and the size comes down from display until that
-     width fits the mast. Below the body size the title wraps instead. */
+     width fits the mast. The smallest one-line size is still a title, above
+     the body size. A title that cannot fit at that size wraps at a larger,
+     comfortable one: two readable lines beat two lines at the smallest size.
+     The second max() term is the wrap size when the one-line size falls
+     below the floor, and nothing otherwise. Leading follows the size, to a
+     whole pixel, so the site-head stays level with the mast. */
   .sec.mast > header {
     container-type: inline-size;
   }
   .sec.mast h1[class^="title-fit-"] {
-    font-size: clamp(
-      var(--size-base),
-      calc(100cqi / var(--title-em)),
-      var(--size-display)
+    --title-one: calc(100cqi / var(--title-em));
+    --title-size: max(
+      min(var(--title-one), var(--size-display)),
+      clamp(
+        0px,
+        (var(--size-title-min) - var(--title-one)) * 1000,
+        var(--size-title-wrap)
+      )
+    );
+    font-size: var(--title-size);
+    line-height: calc(var(--title-size) + var(--grid));
+    line-height: round(
+      up,
+      calc(var(--title-size) + var(--grid)),
+      var(--border-w)
     );
   }
   .title-fit-20 {
