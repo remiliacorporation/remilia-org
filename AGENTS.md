@@ -73,9 +73,11 @@ Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access f
 
 `bake:org` proves the credential and requires at least one post in the selected
 dataset perspective before writing files; individual sections may be intentionally
-empty. A missing token (tokenless reads answer empty, not an error), an expired or
-forbidden token (401/403), and a zero-post dataset abort the build, so the previous
-deploy stays live. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
+empty. A missing token, an expired or forbidden token (401/403), and a zero-post
+dataset abort the build, so the previous deploy stays live. The bake asks for a token
+whatever the dataset allows: a private dataset answers a tokenless read empty, not with
+an error, and this dataset answered tokenless reads with its published documents when
+observed on 2026-11-13, so treat everything published as public. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
 never be set in the Netlify environment.
 
 Netlify Deploy Previews bake published content, like production. Their URLs answer
@@ -103,10 +105,12 @@ missing `.md`/`.txt`/`.xml`/`.json` answers in its own format instead of serving
 under a machine-readable URL. `SECTION_PREFIXES` in `lib/paths.ts` is duplicated for the
 Deno runtime; a test in `packages/seo` fails if it drifts from `CHANNEL_BASEPATH`.
 
-Every section bakes tag and author archives (`<section>/tags/<term>/`,
-`<section>/authors/<term>/`) with their own RSS and sitemap entries, plus a term
-directory at `<section>/tags/` and `<section>/authors/`. Listings paginate at 20 posts
-per page (`<section>/page/2/`) with `rel=prev`/`rel=next`.
+Every section bakes tag and author archives (`<section>/tags/<term>`,
+`<section>/authors/<term>`) with their own RSS and sitemap entries, plus a term
+directory at `<section>/tags` and `<section>/authors`. Listings paginate at 20 posts
+per page (`<section>/page/2`) with `rel=prev`/`rel=next`. Page URLs have no trailing
+slash. A listing of more than one page also bakes `search.json`, the index its search
+box loads.
 
 `bake:org` fails on dead internal links once every section is on disk; override with
 `ALLOW_BROKEN_LINKS=1`. Future-dated posts stay out until a bake runs after their date,
