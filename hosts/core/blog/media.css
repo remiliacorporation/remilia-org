@@ -101,6 +101,7 @@
 .gallery figcaption {
   display: table;
   margin: calc(-1 * var(--border-w)) 0 0 auto;
+  text-align: right;
   padding: var(--grid) var(--space-xs);
   border: var(--border);
   background: var(--surface);
