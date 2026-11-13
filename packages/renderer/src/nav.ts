@@ -123,9 +123,9 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
 }
 
 /**
- * The host's sections as one row of links, "All" first when the host has a
- * pooled index, with the section being shown marked. It heads every
- * listing's and post's masthead.
+ * The host's sections as links, "All" first when the host has a pooled
+ * index, with the section being shown marked. It is the left rail's box
+ * under the site head, on every page.
  */
 export function sectionNav(shared: SharedCats): string {
   const items = [
@@ -177,20 +177,6 @@ export function headMenu(
 <summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
-}
-
-/**
- * A listing's search and its Author and Date dropdowns, in a box of their
- * own: FILTER, a rule, then the controls. It sits in the left rail under
- * the site head, or under the theme box where the rails fold into one;
- * on phones it is one row under the head.
- */
-export function filterBox(tools: string): string {
-  return `<section class="filter-box" aria-label="Filter posts">
-<p class="filter-label" aria-hidden="true">Filter</p>
-<hr class="nav-rule">
-${NAV_SEARCH}${tools}
-</section>`;
 }
 
 /** A month the listing has an archive page for. */
@@ -276,12 +262,18 @@ export function authorSel(
 </details>`;
 }
 
+/**
+ * The search box, the same on a post, a listing, and a 404: the search
+ * with the author control (`author`, from `authorSel`) on its line, then
+ * the posts a few at a time. It closes the right rail.
+ */
 export function leftRail(
   posts: NavPost[],
   _label: string,
   _indexHref = "/press",
   currentUrl?: string,
   shared?: SharedCats,
+  author = "",
 ): string {
   const byDate = [...posts].sort((a, b) => b.date.localeCompare(a.date));
   const { css, html: cat } = shared
@@ -300,7 +292,7 @@ export function leftRail(
 ${css ? `<style>${css}</style>` : ""}
 <div class="nav-page">
 ${NAV_SEARCH}
-${cat}
+${cat}${author}
 </div>
 <hr class="nav-rule">
 <ul class="nav-all">
@@ -381,12 +373,16 @@ export const NAV_JS = `(() => {
     .replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"')
     .replace(/\\s+/g, ' ').trim();
   const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
-  const match = (el) => {
+  // On an author's archive the author control names them, and the rail's
+  // list keeps to their posts. A post by several lists each name.
+  const match = (el, rail) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : '';
+    const authv = rail && auth ? (auth.dataset.value || '') : '';
     const d = el.dataset;
     return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
-      && (!catv || d.cat === catv);
+      && (!catv || d.cat === catv)
+      && (!authv || (d.author || '').split(', ').includes(authv));
   };
   // A paginated listing bakes an index of all its posts, so a search covers
   // every page of it, not only the cards on this one. It loads on the first
@@ -406,7 +402,7 @@ export const NAV_JS = `(() => {
   const apply = () => {
     const query = q ? q.value.trim() : '';
     if (items.length && list) {
-      const vis = items.filter(match);
+      const vis = items.filter((el) => match(el, true));
       const pages = Math.max(1, Math.ceil(vis.length / PAGE));
       if (page >= pages) page = pages - 1;
       const from = page * PAGE;
@@ -462,6 +458,18 @@ export const NAV_JS = `(() => {
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
+  // Beside the column the rail scrolls on its own and would clip the open
+  // author menu, so the rail's box grows to hold the menu while it is open.
+  if (auth) auth.addEventListener('toggle', () => {
+    const box = auth.closest('.nav-box');
+    const menu = auth.querySelector('.sel-menu');
+    if (!box || !menu) return;
+    box.style.minHeight = '';
+    if (!auth.open || !matchMedia('(min-width: 824px)').matches) return;
+    const pad = parseFloat(getComputedStyle(box).paddingBottom) || 0;
+    const need = menu.getBoundingClientRect().bottom - box.getBoundingClientRect().top + pad;
+    if (need > box.offsetHeight) box.style.minHeight = Math.ceil(need) + 'px';
+  });
   bindSel(document.getElementById('post-date'), 'All dates');
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
@@ -739,70 +747,60 @@ export const NAV_JS = `(() => {
   });
 })();
 // The site-head sits beside the masthead from 824px, in a sticky rail
-// that can't subgrid like .right-rail without breaking its internal
-// scroll, so it stretches here until it and the swatch row under it,
-// which close one box, are as tall as the masthead.
+// that can't subgrid without breaking its internal scroll, so it
+// stretches here until it is as tall as the masthead.
 (() => {
   try {
     const mast = document.querySelector('.sec.mast');
     const head = document.querySelector('.left-rail .site-head');
     if (!mast || !head || typeof ResizeObserver !== 'function') return;
-    const theme = document.querySelector('.left-rail > .theme-sel');
     const mq = matchMedia('(min-width: 824px)');
     const sync = () => {
-      const row = theme ? theme.offsetHeight : 0;
-      head.style.minHeight = mq.matches ? Math.max(0, mast.offsetHeight - row) + 'px' : '';
+      head.style.minHeight = mq.matches ? mast.offsetHeight + 'px' : '';
     };
     new ResizeObserver(sync).observe(mast);
     if (mq.addEventListener) mq.addEventListener('change', sync);
     sync();
   } catch (e) {}
 })();
-// With both rails, notes stand in the margin: each anchors to its mark's
-// line, in the right rail's column. A note that would overlap the one
-// above, or the box at the head of the rail, drops below it, and
-// --fn-drop draws the elbow back up to the mark's line. A long note rests
-// cut at a whole line (--sn-cut). Pointing at a mark, or tabbing to it,
-// opens its note in full at the mark's line, kept inside the window;
-// pointing at a note opens it where it stands.
+// With both rails, notes stand in the margin, each in full, in reference
+// order, under the boxes at the head of the right rail. A note stands at
+// its mark's line when that place is free; otherwise it goes below the
+// note above. A line ties each note to its place, drawn like a flowchart:
+// out from the column at the mark's line, down a lane in the gap, into the
+// note's left side. A note inside a note stands under its parent, and its
+// line runs on the right: out of the parent at its reference's line, down
+// a lane, into the nested note's right side. Lines whose runs pass each
+// other take separate lanes; when the gap is too narrow for the lanes, the
+// notes give up some width. A stack that runs past the article's end makes
+// the page longer.
 (() => {
   try {
-    const notes = [...document.querySelectorAll('.fn .fn-note')];
+    const notes = [...document.querySelectorAll('.fn > .fn-note')];
     if (!notes.length) return;
     const mq = matchMedia('(min-width: 1100px)');
-    const rest = new Map();
-    let openFn = null;
-    let timer = 0;
-    const settle = (n) => {
-      n.style.maxHeight = '';
-      n.style.overflowY = '';
-      n.style.removeProperty('--sn-up');
-    };
+    const layout = document.querySelector('.layout');
+    const PITCH = 3;
     const clear = () => {
-      clearTimeout(timer);
-      if (openFn) openFn.classList.remove('sn-open');
-      openFn = null;
-      rest.clear();
+      if (layout) layout.style.paddingBottom = '';
       for (const n of notes) {
         n.style.top = '';
         n.style.left = '';
-        n.style.removeProperty('--fn-drop');
+        n.style.width = '';
+        for (const v of ['--fn-drop', '--fn-lane', '--fn-reach']) n.style.removeProperty(v);
         n.removeAttribute('data-drop');
-        n.removeAttribute('data-long');
-        settle(n);
-        const text = n.querySelector('.sn-text');
-        if (text) text.style.removeProperty('--sn-cut');
       }
     };
-    const rise = (n, natural, drop) => {
-      n.style.top = natural + drop + 'px';
-      if (drop > 1) {
-        n.style.setProperty('--fn-drop', drop + 'px');
-        n.setAttribute('data-drop', '');
-      } else {
-        n.style.removeProperty('--fn-drop');
-        n.removeAttribute('data-drop');
-      }
+    // Lanes for runs [from, to] in reference order: a run that starts
+    // while earlier ones are still going takes the next lane out.
+    const lanesFor = (runs) => {
+      let count = 0;
+      runs.forEach((run, i) => {
+        const going = runs.slice(0, i).filter((o) => o.to > run.from);
+        run.lane = going.length ? Math.max(...going.map((o) => o.lane)) + 1 : 0;
+        count = Math.max(count, run.lane + 1);
+      });
+      return count;
     };
     const stack = () => {
       clear();
@@ -810,112 +808,96 @@ export const NAV_JS = `(() => {
       const cs = getComputedStyle(document.documentElement);
       const num = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
       const gap = num('--grid') || 4;
+      const between = num('--rail-gap') || 12;
+      const rail = num('--rail') || 240;
       const tick = num('--space-xs') + (num('--size-ui') * (num('--leading') || 1)) / 2;
-      const box = document.querySelector('.right-rail .cite-box');
-      let floor = box ? box.getBoundingClientRect().bottom + scrollY + gap : 0;
-      const placed = [];
-      for (const n of notes) {
-        const text = n.querySelector('.sn-text');
-        if (!text || text.scrollHeight <= text.clientHeight + 1) continue;
-        n.setAttribute('data-long', '');
-        // The cap is a height; end it on the last whole line inside it.
-        const range = document.createRange();
-        range.selectNodeContents(text);
-        const top = text.getBoundingClientRect().top;
-        const limit = text.clientHeight + 1;
-        let cut = 0;
-        for (const rc of range.getClientRects()) {
-          const bottom = rc.bottom - top;
-          if (rc.height > 0 && bottom <= limit && bottom > cut) cut = bottom;
+      // Notes start under the right rail's boxes: theme, read info, search.
+      const boxes = [...document.querySelectorAll('.right-rail > *')];
+      const top0 = boxes.reduce((y, el) => Math.max(y, el.getBoundingClientRect().bottom + scrollY), 0) + between;
+      // One pass places every note at a given width and returns the runs.
+      const place = (leftExtra, rightExtra) => {
+        const rows = [];
+        const byNote = new Map();
+        let floor = top0;
+        for (const n of notes) {
+          const parent = n.offsetParent;
+          const fn = n.closest('.fn');
+          const sec = n.closest('.sec');
+          if (!parent || !fn || !sec) continue;
+          n.style.width = rail - leftExtra - rightExtra + 'px';
+          const p = parent.getBoundingClientRect();
+          const base = p.top + scrollY;
+          const row = { n, base, sub: n.classList.contains('fn-sub'), h: n.offsetHeight,
+            edge: sec.getBoundingClientRect().right - p.left };
+          if (row.sub) {
+            // Its place is its reference, inside the note it is nested in.
+            const key = n.getAttribute('data-ref');
+            const host = rows.filter((o) => o.n.parentNode === n.parentNode)
+              .find((o) => o.n.querySelector('.fn-xref[href="#' + key + '"]'));
+            const x = host && host.n.querySelector('.fn-xref[href="#' + key + '"]');
+            if (!x) continue;
+            const xr = x.getBoundingClientRect();
+            row.from = host.top + (xr.top + xr.height / 2 - host.n.getBoundingClientRect().top);
+            row.top = floor;
+          } else {
+            const ref = fn.querySelector('.fn-ref');
+            if (!ref) continue;
+            const r = ref.getBoundingClientRect();
+            row.from = base + Math.max(0, r.top - p.top + r.height / 2 - tick) + tick;
+            row.top = Math.max(row.from - tick, floor);
+          }
+          row.to = row.top + tick;
+          floor = row.top + row.h + gap;
+          n.style.top = row.top - base + 'px';
+          rows.push(row);
+          byNote.set(n, row);
         }
-        if (cut > 0) text.style.setProperty('--sn-cut', Math.ceil(cut) + 'px');
-      }
-      for (const n of notes) {
-        const parent = n.offsetParent;
-        const fn = n.closest('.fn');
-        const ref = fn ? fn.querySelector('.fn-ref') : null;
-        const sec = n.closest('.sec');
-        if (!parent || !ref || !sec) continue;
-        const p = parent.getBoundingClientRect();
-        const r = ref.getBoundingClientRect();
-        const natural = Math.max(0, r.top - p.top + r.height / 2 - tick);
-        const naturalAbs = p.top + scrollY + natural;
-        const top = Math.max(naturalAbs, floor);
-        placed.push([n, natural, top - naturalAbs, sec.getBoundingClientRect().right - p.left]);
-        floor = top + n.offsetHeight + gap;
-      }
-      for (const [n, natural, drop, edge] of placed) {
-        n.style.left = edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + num('--rail-gap') + 'px';
-        rest.set(n, [natural, drop]);
-        rise(n, natural, drop);
-      }
-    };
-    const close = (fn) => {
-      fn.classList.remove('sn-open');
-      const n = fn.querySelector('.fn-note');
-      const at = n && rest.get(n);
-      if (!at) return;
-      settle(n);
-      rise(n, at[0], at[1]);
-    };
-    const open = (fn, inPlace) => {
-      clearTimeout(timer);
-      if (openFn === fn) return;
-      if (openFn) close(openFn);
-      openFn = fn;
-      const n = fn.querySelector('.fn-note');
-      const at = n && rest.get(n);
-      if (!at) return;
-      fn.classList.add('sn-open');
-      const edge = 8;
-      const room = innerHeight - edge;
-      if (!inPlace) {
-        rise(n, at[0], 0);
-        const r = n.getBoundingClientRect();
-        const up = Math.min(Math.max(0, r.bottom - room), Math.max(0, r.top - edge));
-        if (up > 0) {
-          n.style.top = at[0] - up + 'px';
-          n.style.setProperty('--sn-up', up + 'px');
+        const left = rows.filter((o) => !o.sub && o.to - o.from > 1);
+        const right = rows.filter((o) => o.sub);
+        return { rows, left, right, L: lanesFor(left), R: lanesFor(right), floor };
+      };
+      let out = place(0, 0);
+      const room = (lanes) => PITCH * (lanes + 1);
+      const leftExtra = Math.min(36, Math.max(0, room(out.L) - between));
+      const rightExtra = out.R ? Math.min(24, room(out.R)) : 0;
+      if (leftExtra || rightExtra) out = place(leftExtra, rightExtra);
+      const leftW = between + leftExtra;
+      const leftPitch = Math.max(2, Math.min(PITCH, Math.floor(leftW / (out.L + 1))));
+      const rightPitch = out.R ? Math.max(2, Math.min(PITCH, Math.floor(rightExtra / (out.R + 1)))) : PITCH;
+      for (const row of out.rows) {
+        const n = row.n;
+        n.style.left = row.edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + leftW + 'px';
+        n.style.setProperty('--fn-reach', leftW + 'px');
+        const drop = row.to - row.from;
+        if (row.sub) {
+          n.setAttribute('data-drop', '');
+          n.style.setProperty('--fn-drop', drop + 'px');
+          // Lane 0 is nearest the notes.
+          n.style.setProperty('--fn-lane', Math.min(rightExtra - 1, rightPitch * ((row.lane % Math.max(1, Math.floor(rightExtra / rightPitch) - 1)) + 1)) + 'px');
+        } else if (drop > 1) {
+          n.setAttribute('data-drop', '');
+          n.style.setProperty('--fn-drop', drop + 'px');
+          // Lane 0 is nearest the notes. A later line turns nearer the
+          // column, so its way out never meets an earlier line's way down.
+          const fit = Math.max(1, Math.floor(leftW / leftPitch) - 1);
+          n.style.setProperty('--fn-lane', Math.max(1, leftW - leftPitch * ((row.lane % fit) + 1)) + 'px');
         }
       }
-      const r = n.getBoundingClientRect();
-      if (r.bottom > room) {
-        n.style.maxHeight = Math.max(120, room - r.top) + 'px';
-        n.style.overflowY = 'auto';
+      // A stack that ends below the page's content makes the page longer.
+      if (layout) {
+        const end = layout.getBoundingClientRect().bottom + scrollY;
+        if (out.floor > end) layout.style.paddingBottom = Math.ceil(out.floor - end) + 'px';
       }
     };
-    const leave = (fn) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (openFn !== fn || fn.matches(':hover') || fn.matches(':focus-within')) return;
-        close(fn);
-        openFn = null;
-      }, 700);
-    };
-    const fnOf = (e) => (mq.matches && e.target && e.target.closest ? e.target.closest('.fn') : null);
-    document.addEventListener('pointerover', (e) => {
-      const fn = fnOf(e);
-      if (fn) open(fn, !!e.target.closest('.fn-note'));
-    });
-    document.addEventListener('pointerout', (e) => {
-      const fn = fnOf(e);
-      if (fn && fn === openFn && !(e.relatedTarget && fn.contains(e.relatedTarget))) leave(fn);
-    });
-    document.addEventListener('focusin', (e) => {
-      const fn = fnOf(e);
-      if (fn) open(fn, false);
-    });
-    document.addEventListener('focusout', (e) => {
-      const fn = fnOf(e);
-      if (fn && fn === openFn) leave(fn);
-    });
     stack();
     addEventListener('resize', stack, { passive: true });
     addEventListener('load', stack);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(stack);
     if (mq.addEventListener) mq.addEventListener('change', stack);
     if (typeof ResizeObserver === 'function') {
-      const body = document.querySelector('.article-body');
-      if (body) new ResizeObserver(() => stack()).observe(body);
+      const ro = new ResizeObserver(() => stack());
+      for (const el of [document.querySelector('.article-body'), document.querySelector('.right-rail > .post-nav')])
+        if (el) ro.observe(el);
     }
   } catch (e) {}
 })();

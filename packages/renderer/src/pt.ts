@@ -169,6 +169,8 @@ interface RenderState {
   endnotes: string[];
   /** Set while a note's own blocks render: a note in there is a nested note. */
   inNote?: boolean;
+  /** The margin copies of the notes nested in the note being rendered. */
+  subs?: string[];
   /** The key of the block being rendered, for `onNote`. */
   blockKey?: string;
 }
@@ -311,21 +313,31 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   const id = fnId(n, state);
   // The note takes its place in the endnotes before the notes inside it.
   const slot = state.endnotes.push("") - 1;
-  const body = fnBodyHtml(def, state);
   if (state.inNote) {
     // A note inside a note: its reference sits in the parent's text and
-    // links to its own endnote, which links back.
+    // links to its own endnote, which links back. Its margin copy
+    // (fn-sub) follows the parent's, in reading order; the page script
+    // stands it under the parent and ties it to this reference.
+    const at = state.subs ? state.subs.push("") - 1 : -1;
+    const body = fnBodyHtml(def, state);
     state.endnotes[slot] =
       `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
+    if (state.subs && at >= 0)
+      state.subs[at] =
+        `<span class="fn-note fn-sub" role="note" data-n="${n}" data-ref="fndef-${id.slice(3)}"><strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span></span>`;
     return `${inner}<a class="fn-xref" id="${id}" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a>`;
   }
+  const subs: string[] = [];
+  state.subs = subs;
+  const body = fnBodyHtml(def, state);
+  state.subs = undefined;
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
   state.endnotes[slot] =
     `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
   const note = `<strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span>`;
   state.opts.onNote?.(state.blockKey ?? "", def._key, note);
-  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span></span>`;
+  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span>${subs.join("")}</span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {

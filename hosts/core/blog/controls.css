@@ -192,15 +192,12 @@ html[data-scheme="dark"] .theme-mode::after {
 .left-rail .site-head,
 .left-rail .toc,
 .right-rail .cite-box,
-.left-rail .theme-sel,
-.left-rail .post-nav,
+.right-rail .theme-sel,
+.right-rail .post-nav,
 .article-wrap {
   width: 100%;
   max-width: none;
   margin-left: 0;
   margin-right: 0;
-}
-.left-rail .theme-sel {
-  order: 2;
 }
 

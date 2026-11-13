@@ -30,7 +30,7 @@ interface FrameSlots {
   byline: HTMLElement;
   title: HTMLElement;
   prose: HTMLElement;
-  /** The left rail's stack: the contents box, then the cite box. */
+  /** The left rail's stack: the contents box. */
   stack: HTMLElement | null;
   /** The masthead's tools row, shown on narrow pages. */
   mastTools: HTMLElement | null;
@@ -181,8 +181,14 @@ export function PostPage(props: {
   }, [slots, parts.byline]);
 
   useEffect(() => {
-    if (slots?.stack) slots.stack.innerHTML = `${parts.toc}\n${parts.cite}`;
-  }, [slots, parts.toc, parts.cite]);
+    if (slots?.stack) slots.stack.innerHTML = parts.toc;
+  }, [slots, parts.toc]);
+
+  // The read info box sits in the right rail, under the theme box.
+  useEffect(() => {
+    const cite = slots?.root.querySelector(".right-rail > .cite-box");
+    if (cite) cite.outerHTML = parts.cite;
+  }, [slots, parts.cite]);
 
   useEffect(() => {
     if (slots?.mastTools) slots.mastTools.innerHTML = parts.mastTools;

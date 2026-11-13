@@ -5,16 +5,12 @@
   .mast-tools-rule {
     display: none;
   }
-  /* The filter box sits in a sticky rail that scrolls on its own, so an
-     open dropdown unfolds inside the box, pushing the rail longer, rather
-     than floating out of it and being clipped. */
-  .filter-box .sel-menu {
-    position: static;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    border: 0;
-    border-top: var(--border);
+  /* Beside the rails a post's text is a size down, so a full line holds
+     about 75 characters in the same column. Paragraphs, lists, quotes,
+     captions and the notes list all take their size from here; a margin
+     note keeps its own. */
+  .prose {
+    --size-base: var(--size-prose);
   }
   .sec.mast > header {
     grid-template-rows: var(--mast-line) var(--border-w) auto;
@@ -122,34 +118,20 @@
   .title-fit-41 {
     --title-em: 41;
   }
-  /* The theme swatches are the site head's last row: one box, with a rule
-     between the wordmark and the swatches, and no heading. */
-  .left-rail > .site-head {
-    border-bottom: 0;
-    padding-bottom: 0;
-  }
-  .left-rail > .theme-sel {
+  /* The theme box heads the right rail: one row of swatches, no heading. */
+  .right-rail > .theme-sel {
     position: relative;
-    margin-top: calc(-1 * var(--rail-gap));
     padding: var(--space-xs);
     border: var(--border);
-    border-top: 0;
     background: var(--surface);
-    display: grid;
-    grid-template-rows: var(--border-w) var(--mast-line);
-    row-gap: var(--space-xs);
+    display: block;
   }
-  .left-rail > .theme-sel .theme-label,
-  .left-rail > .theme-sel > .disclosure {
+  .right-rail > .theme-sel .theme-label,
+  .right-rail > .theme-sel > .disclosure,
+  .right-rail > .theme-sel .nav-rule {
     display: none;
   }
-  .left-rail > .theme-sel .nav-rule {
-    display: block;
-    margin: 0;
-    height: 0;
-    align-self: center;
-  }
-  .left-rail > .theme-sel .theme-controls {
+  .right-rail > .theme-sel .theme-controls {
     display: flex;
     position: static;
     flex-direction: row;
@@ -160,28 +142,22 @@
     border: 0;
     gap: var(--grid);
   }
-  .left-rail > .theme-sel .theme-hues,
-  .left-rail > .theme-sel .theme-dots {
+  .right-rail > .theme-sel .theme-hues,
+  .right-rail > .theme-sel .theme-dots {
     height: var(--mast-line);
   }
-  /* A listing's sections box is as tall as the site head beside it, which
-     the swatch row made one row taller; the links take the spare height. */
+  /* Every masthead is at least as tall as the site head beside it. */
   .sec.mast {
-    min-height: calc(
-      var(--mast-box) + 2 * var(--space-xs) + var(--border-w) +
-        var(--mast-line)
-    );
+    min-height: var(--mast-box);
   }
-  /* A mast with a title and nothing else (the 404 page) centers it. */
-  .sec.mast:not(:has(> .sec-nav)) {
+  /* A mast with one line and nothing else (a listing, the 404 page)
+     centers it. */
+  .sec.mast:has(> header > h1:only-child) {
     display: grid;
     align-content: center;
   }
-  .sec.mast.list-mast:has(> .sec-nav) {
-    grid-template-rows: var(--mast-line) var(--border-w) 1fr;
-  }
-  .list-mast > .sec-nav {
-    align-self: center;
+  .sec.mast > header:has(> h1:only-child) {
+    grid-template-rows: auto;
   }
   /* The site head sits beside the mast from here up. Row 1 and the rule
      stay packed to the top, level with the mast's; the brand row takes
@@ -238,42 +214,13 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  /* The filter box is one row under the head: search takes what the
-     Author and Date dropdowns leave. */
-  .filter-box {
-    order: 2;
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-  }
-  .filter-box .filter-label,
-  .filter-box .nav-rule {
-    display: none;
-  }
-  .filter-box .nav-search {
-    flex: 1 1 0;
-    min-width: calc(24 * var(--grid));
-  }
-  .filter-box details.sel {
-    flex: 0 1 auto;
-  }
-  .filter-box .sel-label {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
   /* The site head is one row: the wordmark, and a menu holding the
-     sections and the head's links, so the masthead drops its section row. */
+     sections and the head's links. */
   .site-head nav,
   .site-head > .nav-rule,
   .left-rail .site-head nav,
-  .left-rail .site-head .nav-rule,
-  .sec.mast > .sec-nav,
-  .sec.mast > .mast-nav-rule {
+  .left-rail .site-head .nav-rule {
     display: none;
-  }
-  .sec.mast:has(> .sec-nav) {
-    display: block;
   }
   .site-head,
   .left-rail .site-head {
@@ -321,22 +268,59 @@
   .cite-box {
     display: none;
   }
-  .left-rail .theme-sel {
+  .right-rail .theme-sel {
     display: contents;
   }
-  .post-nav {
+  /* The head menu holds the sections here. */
+  .sec-box {
     display: none;
   }
   .theme-label,
   .post-nav > .disclosure-label {
     display: none;
   }
+  /* The search box is one row under the head on every page: the search
+     takes what the author control leaves. On a listing the cards answer
+     the search. On a post the matching posts list under the row once
+     there is something in the search. */
+  .right-rail .post-nav:not(:empty) {
+    display: block;
+    order: 2;
+    padding: 0;
+  }
+  .post-nav > .nav-box {
+    display: block;
+    max-width: none;
+  }
+  .post-nav .nav-rule,
+  .post-nav .nav-all,
+  .post-nav .nav-foot {
+    display: none;
+  }
+  .post-nav .nav-page {
+    margin: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    gap: var(--space-xs);
+  }
+  .layout:not(.is-index)
+    .post-nav:has(#post-filter:not(:placeholder-shown))
+    .nav-all {
+    display: block;
+    margin-top: var(--space-xs);
+  }
+  .layout:not(.is-index)
+    .post-nav:has(#post-filter:not(:placeholder-shown))
+    .nav-foot {
+    display: flex;
+  }
   .theme-sel .nav-rule {
     display: none;
   }
   .theme-controls {
     display: none;
-    order: 2;
+    /* Right under the head, above a listing's search row. */
+    order: 1;
     position: static;
     flex-direction: row;
     flex-wrap: wrap;
@@ -460,14 +444,19 @@
   .right-rail {
     display: contents;
   }
-  .left-rail > .theme-sel {
+  /* One stack: the head, the sections, the search box (search and
+     author, then the posts), the theme, the read info, then the contents. */
+  .left-rail > .sec-box {
     order: 2;
   }
-  .right-rail > .cite-box {
+  .right-rail > .post-nav {
     order: 3;
   }
-  .left-rail > .post-nav {
+  .right-rail > .theme-sel {
     order: 4;
+  }
+  .right-rail > .cite-box {
+    order: 5;
   }
   .article-wrap {
     grid-column: 2;
@@ -528,7 +517,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);
-    order: 5;
+    order: 6;
   }
   .left-rail .site-head {
     order: 1;
@@ -572,9 +561,12 @@
     text-align: center;
     z-index: 5;
   }
+  /* The right rail's boxes stack from the top: the theme, then a post's
+     read info. Margin notes start under them. */
   .right-rail {
-    display: grid;
-    grid-template-rows: subgrid;
+    display: flex;
+    flex-direction: column;
+    align-self: start;
     grid-column: 3;
     grid-row: 1 / -1;
     gap: var(--rail-gap);
@@ -595,15 +587,26 @@
     min-width: 0;
     order: 4;
   }
-  .left-rail .post-nav {
+  /* Left: the head, the sections, a post's contents. Right: the theme,
+     a post's read info, the search box. */
+  .left-rail > .sec-box {
+    order: 2;
+  }
+  .right-rail > .theme-sel {
+    order: 1;
+  }
+  .right-rail > .cite-box {
+    order: 2;
+  }
+  .right-rail > .post-nav {
     order: 3;
   }
   .left-rail .site-head,
   .left-rail .toc,
   .right-rail .cite-box,
   .left-rail .left-stack,
-  .left-rail .theme-sel,
-  .left-rail .post-nav {
+  .right-rail .theme-sel,
+  .right-rail .post-nav {
     pointer-events: auto;
     width: 100%;
     max-width: var(--rail);
@@ -612,11 +615,6 @@
     text-wrap: wrap;
     -webkit-hyphens: auto;
     hyphens: auto;
-  }
-  .right-rail .cite-box {
-    grid-row: 1;
-    height: auto;
-    align-self: stretch;
   }
   .left-rail .toc {
     max-width: var(--toc-rail);
@@ -654,7 +652,7 @@
   .article-rest > .list-empty {
     margin-bottom: 0;
   }
-  .left-rail .post-nav {
+  .right-rail .post-nav {
     display: flex;
     padding: 0;
     align-items: stretch;
@@ -663,13 +661,12 @@
     display: grid;
     text-align: center;
   }
-  /* The read info is level with the masthead: its first line and rule sit
-     on the mast's, and the copy links take the rest of the height. */
+  /* The read info: a line, a rule, and the copy links. */
   .cite-box .nav-box {
     display: grid;
     grid-template-rows: var(--mast-line) var(--border-w) minmax(
         var(--mast-line),
-        1fr
+        auto
       );
     row-gap: var(--space-xs);
     padding: var(--space-xs);
@@ -740,7 +737,8 @@
   }
 }
 /* Beside one column or none, a note opens under its mark on hover or
-   focus; the full notes list at the foot of the post. */
+   focus; the full notes list at the foot of the post. A note nested in
+   another has no box of its own here: its mark links to the list. */
 @media (max-width: 1099px) {
   .fn {
     position: relative;
@@ -758,8 +756,8 @@
     left: calc(-1 * var(--fn-hit-l, var(--space-s)));
     right: calc(-1 * var(--fn-hit-r, var(--space-s)));
   }
-  .fn:hover .fn-note,
-  .fn:focus-within .fn-note {
+  .fn:hover .fn-note:not(.fn-sub),
+  .fn:focus-within .fn-note:not(.fn-sub) {
     display: flex;
     gap: var(--grid);
     align-items: flex-start;
@@ -777,11 +775,11 @@
     pointer-events: auto;
   }
 }
-/* With both rails, every note stands in the margin beside its mark, in
-   the right rail's column, tied to the column by a short rule. The page
-   script drops a note that would overlap the one above and draws the
-   elbow (--fn-drop) back up to its line. Pointing at a mark or its note
-   inverts both. */
+/* With both rails, every note stands in the margin, in full, in reference
+   order, under the right rail's boxes. The page script puts a note at its
+   mark's line, or below the note above when that place is taken, and sets
+   the lane each line turns in. Pointing at a mark or its note inverts
+   both. */
 @media (min-width: 1100px) {
   .fn-note {
     display: flex;
@@ -800,81 +798,81 @@
     cursor: text;
     --size-base: var(--size-ui);
   }
+  /* The line from the column to the note, across the gap (--fn-reach).
+     It starts on the column's border and ends on the note's, one border's
+     width into each, so it reads as coming from under the window with no
+     gap at either end. */
   .fn-note::before {
     content: "";
     display: block;
     position: absolute;
     right: 100%;
-    top: calc(
-      var(--space-xs) + var(--size-ui) * var(--leading) / 2 + var(--sn-up, 0px)
-    );
-    width: var(--rail-gap);
+    margin-right: calc(-1 * var(--border-w));
+    top: calc(var(--space-xs) + var(--size-ui) * var(--leading) / 2);
+    width: calc(var(--fn-reach, var(--rail-gap)) + 2 * var(--border-w));
     height: var(--border-w);
     background: var(--ink);
     pointer-events: none;
   }
+  /* A note below its place: the line leaves the column at the mark's
+     line, turns down in its lane (--fn-lane, from the column's edge), and
+     turns into the note. Each part is a border-wide strip of ink. */
   .fn-note[data-drop]::before {
+    --lane: calc(var(--fn-lane, var(--grid)) + var(--border-w));
     top: calc(
       var(--space-xs) + var(--size-ui) * var(--leading) / 2 - var(--fn-drop)
     );
-    height: var(--fn-drop);
-    background: none;
-    border-top: var(--border-w) solid var(--ink);
-    border-right: var(--border-w) solid var(--ink);
+    height: calc(var(--fn-drop) + var(--border-w));
+    background:
+      linear-gradient(var(--ink), var(--ink)) 0 0 /
+        calc(var(--lane) + var(--border-w)) var(--border-w) no-repeat,
+      linear-gradient(var(--ink), var(--ink)) var(--lane) 0 / var(--border-w)
+        100% no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 100% 100% /
+        calc(100% - var(--lane)) var(--border-w) no-repeat;
   }
-  /* A long note shows its first six lines, so the notes after it stay
-     near their own marks. The page script marks it long (data-long) and
-     ends the cut on a whole line (--sn-cut). Pointing at the note or its
-     mark, or tabbing to the mark, opens the whole note over its
-     neighbors; the script holds it open (sn-open) while the pointer
-     crosses from the mark to the note. */
-  .fn-note .sn-text {
-    max-height: var(--sn-cut, calc(6 * var(--size-ui) * var(--leading)));
-    overflow: hidden;
-    /* Cut the height only: an italic letter at the end of a full line
-       leans past the box's edge, and clipping the width shaved it. */
-    overflow: visible clip;
+  /* A note nested in another stands under it, and its line runs on the
+     right: out of the parent's right side at the reference's line, down
+     its lane (--fn-lane, from the notes' right edge), into this note's
+     right side. */
+  .fn-note.fn-sub[data-drop]::before {
+    right: auto;
+    left: 100%;
+    margin-right: 0;
+    margin-left: calc(-1 * var(--border-w));
+    width: calc(var(--fn-lane, var(--grid)) + 2 * var(--border-w));
+    background:
+      linear-gradient(var(--ink), var(--ink)) 0 0 / 100% var(--border-w)
+        no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 100% 0 / var(--border-w) 100%
+        no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 0 100% / 100% var(--border-w)
+        no-repeat;
   }
-  .fn-note[data-long]::after {
-    content: "\2026";
-    position: absolute;
-    right: var(--space-xs);
-    bottom: 0;
-    padding-left: var(--grid);
-    background: var(--surface);
-    font-weight: var(--weight-strong);
-    line-height: var(--mast-line);
-  }
-  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note {
+  :is(.fn:hover, .fn:focus-within) .fn-note {
     z-index: 6;
   }
-  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note .sn-text {
-    max-height: none;
-  }
-  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note[data-long]::after {
-    content: none;
-  }
-  :is(.fn:hover, .fn.sn-open) .fn-ref,
-  :is(.fn:hover, .fn.sn-open) .fn-ref sup,
-  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note {
+  .fn:hover .fn-ref,
+  .fn:hover .fn-ref sup,
+  :is(.fn:hover, .fn:focus-within) .fn-note {
     background: var(--ink);
     color: var(--ink-contrast);
   }
-  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note * {
+  :is(.fn:hover, .fn:focus-within) .fn-note * {
     color: var(--ink-contrast);
   }
-  :is(.fn:hover, .fn.sn-open) .fn-note a:hover,
-  :is(.fn:hover, .fn.sn-open) .fn-note a:hover * {
+  .fn:hover .fn-note a:hover,
+  .fn:hover .fn-note a:hover * {
     background: var(--ink-contrast);
     color: var(--ink);
   }
   .right-rail,
-  .left-rail .post-nav {
+  .right-rail .post-nav {
     pointer-events: none;
   }
-  .left-rail .theme-sel,
-  .left-rail .post-nav .nav-box,
-  .left-rail .post-nav .disclosure-label {
+  .right-rail .theme-sel,
+  .right-rail .post-nav .nav-box,
+  .right-rail .post-nav .disclosure-label {
     pointer-events: auto;
   }
 }

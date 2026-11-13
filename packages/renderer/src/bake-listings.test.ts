@@ -166,11 +166,14 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
 
     // 25 posts at 20 per page: two pages, 20 then 5.
     assert.equal((page1.match(/class="sec post-card"/g) ?? []).length, 20);
-    // The listing's search and filters sit in the left rail's filter box.
+    // The listing's rails are a post's rails: the section links in the
+    // left one, and in the right one the search box, with the author
+    // control on the search's line, then the posts.
     assert.match(
       page1,
-      /<div class="left-stack">\n\n<section class="filter-box"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*<\/section>\n<\/div>/,
+      /<div class="left-rail">[\s\S]*<div class="sec-box">\n<nav class="sec-nav"[\s\S]*<div class="right-rail">[\s\S]*<div class="post-nav rail">[\s\S]*<div class="nav-page">\n<form class="nav-search"[\s\S]*id="post-filter"[\s\S]*<\/form>\n<details class="sel nav-cat-sel" id="post-author"[\s\S]*<\/details>\n<\/div>\n<hr class="nav-rule">\n<ul class="nav-all">/,
     );
+    assert.equal(page1.includes("filter-box"), false);
     assert.equal((page2.match(/class="sec post-card"/g) ?? []).length, 5);
     assert.ok(page1.includes('rel="next" href="/blog/updates/page/2"'));
     assert.ok(page1.includes("Page 1 of 2"));
@@ -248,13 +251,9 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     );
     assert.ok(authorDir.includes('href="/blog/updates/authors/charlotte-fang"'));
 
-    // The date dropdown rides every page of the index, but a tag or author
-    // archive would lose its filter to a month pick, so it has none.
-    for (const page of [page1, page2]) {
-      assert.ok(page.includes('id="post-date" data-value=""'));
-      assert.ok(page.includes('data-href="/blog/updates/months/2026-09">September 2026</button>'));
-    }
-    for (const page of [theory, author, tagDir, authorDir])
+    // No page has a date dropdown: a date on a card or a post opens its
+    // month's archive.
+    for (const page of [page1, page2, theory, author, tagDir, authorDir])
       assert.equal(page.includes('id="post-date"'), false);
 
     // A post's byline points at its section index and author archive.
@@ -363,16 +362,6 @@ test("a section bakes a paginated archive and a directory for each month", async
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Updates</title>"));
-    // The date dropdown names the month shown, on each of its pages.
-    for (const page of [dec1, dec2]) {
-      assert.ok(page.includes('id="post-date" data-value="2024-12"'));
-      assert.ok(page.includes('<span class="sel-label">December 2024</span>'));
-      assert.ok(
-        page.includes(
-          'data-value="2024-12" data-href="/blog/updates/months/2024-12" aria-current="page">December 2024</button>',
-        ),
-      );
-    }
 
     const nov = await read("blog/updates/months/2024-11/index.html");
     assert.equal(cards(nov), 3, "months are UTC calendar months");
@@ -513,17 +502,6 @@ test("the pooled index bakes month archives across every section", async () => {
     ])
       assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
 
-    // The pooled date dropdown offers the pooled months; an older month's
-    // page opens its year.
-    const index = await read("blog/index.html");
-    assert.ok(index.includes('id="post-date" data-value=""'));
-    assert.ok(index.includes('data-href="/blog/months/2024-12">December 2024</button>'));
-    assert.ok(index.includes('data-href="/blog/months/2022-06">June</button>'));
-    assert.equal(index.includes('data-href="/blog/updates/months/'), false);
-    const nov = await read("blog/months/2023-11/index.html");
-    assert.ok(nov.includes('<span class="sel-label">November 2023</span>'));
-    assert.ok(nov.includes('<details open><summary><span class="sel-label">2023</span>'));
-    assert.ok(nov.includes('data-href="/blog/months/2023-11" aria-current="page">November</button>'));
 
     // Section month archives stay per section.
     assert.equal(cards(await read("blog/updates/months/2024-12/index.html")), 12);
@@ -574,7 +552,7 @@ test("dates and authors link only to archives that are baked", async () => {
     const read = (path: string) => readFile(join(outDir, path), "utf8");
     const pooled = await read("blog/index.html");
     const card = (html: string, slug: string) => {
-      const at = html.indexOf(`data-title="${slug.replace("-", " ")}"`);
+      const at = html.indexOf(`post-card" data-title="${slug.replace("-", " ")}"`);
       return html.slice(at, html.indexOf("</article>", at));
     };
 
@@ -668,7 +646,7 @@ test("the pooled index bakes author archives and every listing offers every auth
       ["Remilia Jackson", "/blog/authors/remilia-jackson"],
     ];
     const index = await read("blog/index.html");
-    assert.ok(!index.includes('data-title="thought 1"'), "minds0n is not on page 1");
+    assert.ok(!index.includes('post-card" data-title="thought 1"'), "minds0n is not on page 1");
     assert.deepEqual(options(index), all);
     assert.deepEqual(options(await read("blog/months/2024-12/index.html")), [
       ["", "/blog/months/2024-12"],
@@ -731,7 +709,7 @@ test("external coverage is bylined with its outlet, which gets no author archive
   try {
     const read = (path: string) => readFile(join(outDir, path), "utf8");
     const card = (html: string, slug: string) => {
-      const at = html.indexOf(`data-title="${slug}"`);
+      const at = html.indexOf(`post-card" data-title="${slug}"`);
       return html.slice(at, html.indexOf("</article>", at));
     };
 

@@ -228,6 +228,13 @@ test("a note inside a note: one sequence in reading order, linked both ways", ()
       '<span class="fn-note" role="note" data-n="1"><strong>1:</strong><span class="sn-text"><span class="fn-par">Outer text<a class="fn-xref" href="#fndef-2" aria-label="Note 2"><sup>2</sup></a> goes on.</span></span></span>',
     ),
   );
+  // The inner note has a margin copy of its own, after the outer one's,
+  // which names the reference it is tied to.
+  assert.ok(
+    html.includes(
+      ' goes on.</span></span></span><span class="fn-note fn-sub" role="note" data-n="2" data-ref="fndef-2"><strong>2:</strong><span class="sn-text"><span class="fn-par">The inner note.</span></span></span></span>',
+    ),
+  );
   const md = portableTextToMarkdown(body);
   assert.ok(md.includes("First[^1] then[^3]"));
   assert.ok(md.includes("[^1]: Outer text[^2] goes on.\n[^2]: The inner note.\n[^3]: The next note."));

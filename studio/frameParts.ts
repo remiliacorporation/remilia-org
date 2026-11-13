@@ -228,6 +228,7 @@ export function frameParts(
       categoryHref: indexPath(channel),
       monthHref: monthHref(post.publishedAt),
     }),
+    // No author control: it opens archive pages, which the editor lacks.
     rail: leftRail(navPosts, "", base, here, hostCats(channel)),
     toc: tocBox(
       tocItems(extractHeadings(post.body)),
