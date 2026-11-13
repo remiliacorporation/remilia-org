@@ -304,7 +304,7 @@ await mkdir(join(outDir, "blog", "press", post.slug), { recursive: true });
 const css = await Promise.all(
   [
     join(here, "core/theme.css"),
-    ...["base", "chrome", "controls", "index", "nav", "prose", "media", "notes", "layout", "print"].map(
+    ...["base", "chrome", "controls", "index", "nav", "prose", "media", "notes", "sidenotes", "layout", "print"].map(
       (n) => join(here, "core/blog", `${n}.css`),
     ),
   ].map((f) => readFile(f, "utf8")),

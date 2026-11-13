@@ -219,14 +219,22 @@ export function PostPage(props: {
     const wide = () => marginShown(root);
     const stack = sidenoteStacker(root, wide);
     let frame = 0;
-    const run = () => {
+    let glide = true;
+    // A change of class alone is a note selected or let go: the layout
+    // glides to it. Anything else (typing, a resize) lands at once.
+    const run = (records?: unknown) => {
+      const classOnly =
+        Array.isArray(records) &&
+        records.every((r: MutationRecord) => r.type === "attributes");
+      glide = glide && classOnly;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         setMargin(wide());
-        stack();
+        stack(glide);
+        glide = true;
       });
     };
-    const sizes = new ResizeObserver(run);
+    const sizes = new ResizeObserver(() => run());
     sizes.observe(root);
     const rail = root.querySelector(".right-rail");
     if (rail) sizes.observe(rail);
@@ -241,7 +249,7 @@ export function PostPage(props: {
       attributes: true,
       attributeFilter: ["class"],
     });
-    void document.fonts?.ready.then(run);
+    void document.fonts?.ready.then(() => run());
     run();
     return () => {
       cancelAnimationFrame(frame);

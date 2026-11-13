@@ -17,6 +17,7 @@ const SHEET = [
     "prose",
     "media",
     "notes",
+    "sidenotes",
     "layout",
     "print",
   ].map((n) => `blog/${n}.css`),

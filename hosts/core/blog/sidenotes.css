@@ -1,15 +1,24 @@
 /* blog/sidenotes — notes in the margin, with flowchart lines
 
-   With both rails, every note stands in the margin, in full, in reference
-   order, under the right rail's boxes. The layout script (SIDENOTES_JS in
-   packages/renderer/src/nav.ts) puts a note at its mark's line, or below
-   the note above when that place is taken, and sets the lane each line
-   turns in. Pointing at a mark or its note inverts both; so does the
-   state class fn-on (the editor's selected note).
-
-   The Studio's page editor uses this sheet and that script today. The
-   blog's own pages still take their sidenotes from blog/layout.css, so
-   this sheet is not in BLOG_SHEETS yet. */
+   The blog's pages and the Studio's page editor share this sheet and the
+   layout script (SIDENOTES_JS in packages/renderer/src/nav.ts). */
+/* With both rails, every note stands in the margin, in reference order,
+   under the right rail's boxes. The page script (sidenotes, nav.js) puts a
+   note at its mark's line, or under the note above when that place is
+   taken. A note the next one would block is cut short (data-long, the
+   height of .sn-text); pointing at it or its mark, tabbing to the mark, or
+   a click opens it in full (data-on), and the notes below move down. The
+   script also sets the lane each line turns in. */
+@property --fn-drop {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --fn-lane {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
 @media (min-width: 1100px) {
   .fn-note {
     display: flex;
@@ -27,73 +36,111 @@
     user-select: text;
     cursor: text;
     --size-base: var(--size-ui);
+    /* The line's weight; the open note's line is heavier. */
+    --fn-w: var(--border-w);
   }
-  /* The line from the column to the note, across the gap (--fn-reach).
-     It starts on the column's border and ends on the note's, one border's
+  /* Cut the height only: an italic letter at the end of a full line leans
+     past the box's edge, and clipping the width shaved it. */
+  .fn-note .sn-text {
+    overflow: visible clip;
+  }
+  .fn-note[data-long]::after {
+    content: "\2026";
+    position: absolute;
+    right: var(--space-xs);
+    bottom: 0;
+    padding-left: var(--grid);
+    background: var(--surface);
+    font-style: normal;
+    font-weight: var(--weight-strong);
+    line-height: var(--mast-line);
+  }
+  /* The line from the mark to the note, drawn like a flowchart: out from
+     the column at the mark's line, down its lane (--fn-lane, from the
+     column's edge) by --fn-drop, into the note. A note at its mark's line
+     has no drop, and the three strips are one straight line. The line
+     starts on the column's border and ends on the note's, one border's
      width into each, so it reads as coming from under the window with no
      gap at either end. */
   .fn-note::before {
+    --lane: calc(var(--fn-lane) + var(--border-w));
     content: "";
     display: block;
     position: absolute;
     right: 100%;
     margin-right: calc(-1 * var(--border-w));
-    top: calc(var(--space-xs) + var(--size-ui) * var(--leading) / 2);
-    width: calc(var(--fn-reach, var(--rail-gap)) + 2 * var(--border-w));
-    height: var(--border-w);
-    background: var(--ink);
-    pointer-events: none;
-  }
-  /* A note below its place: the line leaves the column at the mark's
-     line, turns down in its lane (--fn-lane, from the column's edge), and
-     turns into the note. Each part is a border-wide strip of ink. */
-  .fn-note[data-drop]::before {
-    --lane: calc(var(--fn-lane, var(--grid)) + var(--border-w));
     top: calc(
       var(--space-xs) + var(--size-ui) * var(--leading) / 2 - var(--fn-drop)
     );
-    height: calc(var(--fn-drop) + var(--border-w));
+    width: calc(var(--fn-reach, var(--rail-gap)) + 2 * var(--border-w));
+    height: calc(var(--fn-drop) + var(--fn-w));
     background:
       linear-gradient(var(--ink), var(--ink)) 0 0 /
-        calc(var(--lane) + var(--border-w)) var(--border-w) no-repeat,
-      linear-gradient(var(--ink), var(--ink)) var(--lane) 0 / var(--border-w)
-        100% no-repeat,
+        calc(var(--lane) + var(--fn-w)) var(--fn-w) no-repeat,
+      linear-gradient(var(--ink), var(--ink)) var(--lane) 0 / var(--fn-w) 100%
+        no-repeat,
       linear-gradient(var(--ink), var(--ink)) 100% 100% /
-        calc(100% - var(--lane)) var(--border-w) no-repeat;
+        calc(100% - var(--lane)) var(--fn-w) no-repeat;
+    pointer-events: none;
   }
   /* A note nested in another stands under it, and its line runs on the
      right: out of the parent's right side at the reference's line, down
      its lane (--fn-lane, from the notes' right edge), into this note's
      right side. */
-  .fn-note.fn-sub[data-drop]::before {
+  .fn-note.fn-sub::before {
     right: auto;
     left: 100%;
     margin-right: 0;
     margin-left: calc(-1 * var(--border-w));
-    width: calc(var(--fn-lane, var(--grid)) + 2 * var(--border-w));
+    width: calc(var(--fn-lane) + var(--border-w) + var(--fn-w));
     background:
-      linear-gradient(var(--ink), var(--ink)) 0 0 / 100% var(--border-w)
+      linear-gradient(var(--ink), var(--ink)) 0 0 / 100% var(--fn-w) no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 100% 0 / var(--fn-w) 100%
         no-repeat,
-      linear-gradient(var(--ink), var(--ink)) 100% 0 / var(--border-w) 100%
-        no-repeat,
-      linear-gradient(var(--ink), var(--ink)) 0 100% / 100% var(--border-w)
+      linear-gradient(var(--ink), var(--ink)) 0 100% / 100% var(--fn-w)
         no-repeat;
   }
-  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note {
+  /* The open note inverts with its mark, and its line stands out: heavier,
+     with the other lines faint. */
+  .fn-note[data-on] {
     z-index: 6;
+    --fn-w: calc(2 * var(--border-w));
   }
-  :is(.fn:hover, .fn.fn-on) .fn-ref,
-  :is(.fn:hover, .fn.fn-on) .fn-ref sup,
-  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note {
+  .fn-note[data-dim]::before {
+    opacity: 0.3;
+  }
+  .fn[data-on] .fn-ref,
+  .fn[data-on] .fn-ref sup,
+  .fn-note[data-on] {
     background: var(--ink);
     color: var(--ink-contrast);
   }
-  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note * {
+  .fn-note[data-on] * {
     color: var(--ink-contrast);
   }
-  :is(.fn:hover, .fn.fn-on) .fn-note a:hover,
-  :is(.fn:hover, .fn.fn-on) .fn-note a:hover * {
+  .fn-note[data-on][data-long]::after {
+    content: none;
+  }
+  .fn-note[data-on] a:hover,
+  .fn-note[data-on] a:hover * {
     background: var(--ink-contrast);
     color: var(--ink);
+  }
+}
+/* Opening and closing a note glides: the note's height, the notes below,
+   and the lines with them. The script marks the notes while it moves them
+   (data-anim), so a resize or the first layout does not glide. */
+@media (prefers-reduced-motion: no-preference) {
+  .fn-note[data-anim] {
+    transition:
+      top var(--fn-glide) ease,
+      --fn-drop var(--fn-glide) ease,
+      --fn-lane var(--fn-glide) ease;
+  }
+  .fn-note[data-anim] .sn-text {
+    transition: height var(--fn-glide) ease;
+  }
+  .fn-note::before {
+    transition: opacity var(--fn-glide) ease;
   }
 }

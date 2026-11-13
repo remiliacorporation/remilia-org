@@ -979,16 +979,20 @@ test("Escape in an open menu returns focus to its dropdown", () => {
 
 /**
  * Runs the sidenote layout (SIDENOTES_JS) over notes reduced to what it
- * reads: each mark's line, each note's height, the column's right edge, and
- * the foot of the right rail's boxes. Lengths are the sheet's: a 240px
- * rail, a 12px gap, 4px between notes, and a note's first line 16px down.
+ * reads: each mark's line, each note's full text height, the column's right
+ * edge, and the foot of the right rail's boxes. Lengths are the sheet's: a
+ * 240px rail, a 12px gap, 4px between notes, 16px lines, and a note's first
+ * line 16px down. The fake notes have no padding or border.
  */
 interface FakeNote {
   /** The mark's center line; for a nested note, its place in `parent`. */
   at: number;
+  /** The height of the note's whole text. */
   height: number;
   /** Index of the note this one is nested in. */
   parent?: number;
+  /** Marked open by the page around it (the editor's selected note). */
+  pin?: boolean;
 }
 
 function layOut(notes: FakeNote[], wide = true) {
@@ -1014,49 +1018,66 @@ function layOut(notes: FakeNote[], wide = true) {
     style: { paddingBottom: "" },
     getBoundingClientRect: () => rect(0, 5000),
   };
-  const fns: object[] = [];
+  const fns: { pin: boolean }[] = [];
   const els = notes.map((note, i) => {
     const style: Record<string, string> = {};
     const attrs: Record<string, string> = {};
     const sub = note.parent !== undefined;
-    const key = `fndef-${i + 1}`;
-    const el = {
+    const text = { scrollHeight: note.height, style: { height: "" } };
+    // A nested note shares its parent's mark element.
+    const fn = sub
+      ? fns[note.parent as number]
+      : {
+          pin: Boolean(note.pin),
+          querySelector: () => ({
+            getBoundingClientRect: () => rect(note.at - 4, 8),
+          }),
+          removeAttribute: () => {},
+          setAttribute: () => {},
+        };
+    fns.push(fn);
+    return {
       style: Object.assign(style, {
         setProperty: (k: string, v: string) => void (style[k] = v),
         removeProperty: (k: string) => void delete style[k],
       }),
       attrs,
+      text,
+      isConnected: true,
       offsetParent: column,
-      offsetHeight: note.height,
       classList: { contains: (c: string) => c === "fn-sub" && sub },
-      getAttribute: (k: string) => (k === "data-ref" ? key : (attrs[k] ?? null)),
+      getAttribute: (k: string) =>
+        k === "data-ref" ? `fndef-${i + 1}` : (attrs[k] ?? null),
       setAttribute: (k: string, v: string) => void (attrs[k] = v),
       removeAttribute: (k: string) => void delete attrs[k],
       closest: (sel: string) => (sel === ".fn" ? fn : column),
-      // A parent holds the reference to each note nested in it.
+      // The note's text, or the reference to a note nested in this one.
       querySelector: (sel: string) => {
+        if (sel === ".sn-text") return text;
         const child = notes.findIndex(
           (n, j) => n.parent === i && sel.includes(`#fndef-${j + 1}"`),
         );
         if (child < 0) return null;
-        const top = parseFloat(style.top) + notes[child].at;
-        return { getBoundingClientRect: () => rect(top - 4, 8) };
+        return { getBoundingClientRect: () => rect(notes[child].at - 4, 8) };
       },
-      getBoundingClientRect: () => rect(parseFloat(style.top), note.height),
+      // A reference's place is read against its note's own top.
+      getBoundingClientRect: () => rect(0, note.height),
     };
-    // A nested note shares its parent's mark element.
-    const fn: object = sub
-      ? fns[note.parent as number]
-      : { querySelector: () => ({ getBoundingClientRect: () => rect(note.at - 4, 8) }) };
-    fns.push(fn);
-    return el;
   });
   const root = {
+    addEventListener: () => {},
+    contains: () => true,
     querySelector: (sel: string) => (sel === ".layout" ? layout : null),
     querySelectorAll: (sel: string) =>
       sel === ".fn .fn-note"
         ? els
-        : [{ getBoundingClientRect: () => rect(0, 100) }],
+        : sel === ".fn.fn-pin"
+          ? [...new Set(fns)]
+              .filter((fn) => fn.pin)
+              .map((fn) => ({
+                querySelector: () => els[fns.indexOf(fn)],
+              }))
+          : [{ getBoundingClientRect: () => rect(0, 100) }],
   };
   const stack = new Function(
     "getComputedStyle",
@@ -1067,47 +1088,68 @@ function layOut(notes: FakeNote[], wide = true) {
     0,
   )(root, () => wide);
   stack();
-  return els.map((el, i) => ({
-    top: parseFloat(el.style.top),
-    bottom: parseFloat(el.style.top) + notes[i].height,
-    drop: parseFloat(el.style["--fn-drop"] ?? "0"),
-    lane: el.style["--fn-lane"],
-    dropped: "data-drop" in el.attrs,
-    placed: el.style.top !== undefined && el.style.top !== "",
-  }));
+  return els.map((el) => {
+    const top = parseFloat(el.style.top);
+    const shown = parseFloat(el.text.style.height);
+    return {
+      top,
+      /** The height of the text the note shows. */
+      shown,
+      bottom: top + shown,
+      long: "data-long" in el.attrs,
+      on: "data-on" in el.attrs,
+      drop: parseFloat(el.style["--fn-drop"] ?? "0"),
+      lane: el.style["--fn-lane"],
+      placed: el.style.top !== undefined && el.style.top !== "",
+    };
+  });
 }
 
-test("a sidenote stands at its mark's line when the place is free", () => {
+test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
   // The rail's boxes end at 100; notes start 12 under them.
   const [a, b] = layOut([
-    { at: 300, height: 40 },
+    { at: 300, height: 80 },
     { at: 600, height: 40 },
   ]);
-  assert.equal(a.top, 300 - 16);
-  assert.equal(b.top, 600 - 16);
-  assert.equal(a.dropped, false);
-  assert.equal(b.dropped, false);
+  assert.deepEqual([a.top, a.shown, a.long, a.drop], [300 - 16, 80, false, 0]);
+  assert.deepEqual([b.top, b.shown, b.long, b.drop], [600 - 16, 40, false, 0]);
 });
 
-test("sidenotes never overlap: a note goes below the one above, in order", () => {
-  const rows = layOut([
+test("a note the next one would block is cut to whole lines, and the next keeps its line", () => {
+  // The next note wants to stand at 384; 4px between leaves 96px: six lines.
+  const [a, b] = layOut([
     { at: 300, height: 200 },
-    { at: 320, height: 80 },
-    { at: 340, height: 60 },
-    { at: 50, height: 30 },
+    { at: 400, height: 40 },
   ]);
-  for (let i = 1; i < rows.length; i++)
-    assert.equal(rows[i].top, rows[i - 1].bottom + 4, `note ${i + 1}`);
-  // The first keeps its line; the others drop by the distance to theirs.
-  assert.equal(rows[0].dropped, false);
-  assert.equal(rows[1].drop, rows[1].top + 16 - 320);
-  assert.equal(rows[2].drop, rows[2].top + 16 - 340);
+  assert.deepEqual([a.top, a.shown, a.long], [284, 96, true]);
+  assert.deepEqual([b.top, b.drop], [384, 0]);
+});
+
+test("a cut note keeps three lines, and the next goes under it", () => {
+  const [a, b] = layOut([
+    { at: 300, height: 200 },
+    { at: 320, height: 40 },
+  ]);
+  assert.deepEqual([a.top, a.shown, a.long], [284, 48, true]);
+  assert.equal(b.top, a.bottom + 4);
+  // Its line drops from its mark's line to its own first line.
+  assert.equal(b.drop, b.top + 16 - 320);
+});
+
+test("an open note shows in full and the notes below move down", () => {
+  const [a, b] = layOut([
+    { at: 300, height: 200, pin: true },
+    { at: 320, height: 40 },
+  ]);
+  assert.deepEqual([a.shown, a.long, a.on], [200, false, true]);
+  assert.equal(b.top, 284 + 200 + 4);
+  assert.equal(b.on, false);
 });
 
 test("a note above the rail's boxes starts under them", () => {
   const [a] = layOut([{ at: 20, height: 30 }]);
   assert.equal(a.top, 100 + 12);
-  assert.equal(a.dropped, true);
+  assert.equal(a.drop, 112 + 16 - 20);
 });
 
 test("lines that run side by side take separate lanes", () => {
@@ -1117,22 +1159,27 @@ test("lines that run side by side take separate lanes", () => {
     { at: 320, height: 300 },
     { at: 330, height: 300 },
   ]);
-  const lanes = rows.filter((r) => r.dropped).map((r) => r.lane);
+  for (let i = 1; i < rows.length; i++)
+    assert.equal(rows[i].top, rows[i - 1].bottom + 4, `note ${i + 1}`);
+  const lanes = rows.filter((r) => r.drop > 1).map((r) => r.lane);
   assert.equal(lanes.length, 3);
   assert.equal(new Set(lanes).size, 3);
 });
 
-test("a nested note stands under its parent, with a line of its own", () => {
+test("a nested note stands under its parent, with a line from its reference", () => {
   const rows = layOut([
     { at: 300, height: 100 },
     { at: 30, height: 40, parent: 0 },
     { at: 320, height: 50 },
   ]);
-  assert.equal(rows[1].top, rows[0].bottom + 4);
+  // The parent is cut to three lines; the nested note is short enough to
+  // show whole; the next note in the text follows both.
+  assert.deepEqual([rows[0].top, rows[0].shown, rows[0].long], [284, 48, true]);
+  assert.deepEqual([rows[1].top, rows[1].shown, rows[1].long], [336, 40, false]);
   assert.equal(rows[2].top, rows[1].bottom + 4);
-  // Its line runs from its reference, 30 down the parent, to its own line.
-  assert.equal(rows[1].dropped, true);
-  assert.equal(rows[1].drop, rows[1].top + 16 - (rows[0].top + 30));
+  // The line runs from the reference, 30 down the parent, to the nested
+  // note's first line.
+  assert.equal(rows[1].drop, 336 + 16 - (284 + 30));
 });
 
 test("below the wide layout the script places nothing", () => {

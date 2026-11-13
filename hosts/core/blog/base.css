@@ -27,7 +27,8 @@
   --column: calc(var(--measure) + 2 * (var(--read-pad) - var(--gutter)));
   /* From the text's right edge to a sidenote: the prose box's padding and
      border, then the gap the rails keep from the column. */
-  --sidenote-gap: calc(var(--read-pad) + var(--border-w) + var(--rail-gap));
+  /* How long a sidenote takes to open or close. */
+  --fn-glide: 200ms;
 
   --mast-box: calc(
     3 * var(--border-w) + 4 * var(--space-xs) + var(--mast-line) +

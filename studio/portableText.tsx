@@ -258,7 +258,7 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const state = [
     "fn",
     note && !margin ? "fn-pop" : "",
-    picked ? "fn-on" : "",
+    picked ? "fn-pin" : "",
   ]
     .filter(Boolean)
     .join(" ");
