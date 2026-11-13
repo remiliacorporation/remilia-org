@@ -140,3 +140,21 @@ test("a page's .html twin redirects to its slashless URL before the origin is as
     assert.equal(asked, true, path);
   }
 });
+
+test("the retired blog host goes straight to its redirects", async () => {
+  // Ghost's root and /about would otherwise be localized as corporate pages,
+  // and a mixed-case Ghost path recased, before `_redirects` sends them on.
+  const moved = served(301, "");
+  for (const path of ["/", "/about", "/Updates/Old-Post/", "/old-post.html"]) {
+    let asked = false;
+    const response = await notFound(new Request(`https://blog.remilia.org${path}`), {
+      next: () => {
+        asked = true;
+        return Promise.resolve(moved);
+      },
+      geo: { country: { code: "JP" } },
+    });
+    assert.equal(response, moved, path);
+    assert.equal(asked, true, path);
+  }
+});

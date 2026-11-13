@@ -269,7 +269,17 @@ export function PostInput(props: ObjectInputProps): ReactNode {
       if (e.key === "Escape") setSettingsOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // The drawer is the pane's height (editor.css), not the post's.
+    const el = shell.current;
+    const pane = el?.closest("[data-testid='document-panel-scroller']");
+    const sizes = new ResizeObserver(() => {
+      if (el && pane) el.style.setProperty("--pane-h", `${pane.clientHeight}px`);
+    });
+    if (pane) sizes.observe(pane);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      sizes.disconnect();
+    };
   }, [settingsOpen]);
 
   useEffect(() => {

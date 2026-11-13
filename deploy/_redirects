@@ -15,8 +15,9 @@
 #
 # bake:org writes one "bake:redirects:<section>" block per section below:
 # 301s for renamed or moved posts and a section-scoped 404, then a
-# "bake:redirects:legacy-host" block sending every old blog.remilia.org URL to
-# its post, on whichever host it lives now. Path rules are unforced, so a real
+# "bake:redirects:legacy-host" block sending every old blog.remilia.org post
+# URL to its post under remilia.org/blog and every other path on that host to
+# remilia.org/blog. Path rules are unforced, so a real
 # page always wins; host rules are forced. Each block is rebuilt from the
 # published posts every deploy, so what sits inside the markers here is a
 # stale snapshot, not what is live.

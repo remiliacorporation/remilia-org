@@ -191,7 +191,7 @@ html[data-scheme="dark"] .theme-mode::after {
 }
 .left-rail .site-head,
 .left-rail .toc,
-.right-rail .cite-box,
+.left-rail .cite-box,
 .right-rail .theme-sel,
 .right-rail .post-nav,
 .article-wrap {

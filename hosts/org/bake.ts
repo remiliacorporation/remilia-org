@@ -1,8 +1,4 @@
-import {
-  COM_POST_SECTIONS,
-  NET_SECTIONS,
-  ORG_SECTIONS,
-} from "@remilia/seo";
+import { ORG_SECTIONS } from "@remilia/seo";
 import { runHostBake } from "../core/bake-host";
 
 runHostBake({
@@ -18,12 +14,11 @@ runHostBake({
     thought: "/thought",
     archive: "/archive",
   },
-  // blog.remilia.org (Ghost) is a domain alias of this site. Its posts went
-  // to every host, so the rules cover all sections, not just org's.
-  legacyHost: {
-    origin: "https://blog.remilia.org",
-    channels: [...ORG_SECTIONS, ...COM_POST_SECTIONS, ...NET_SECTIONS],
-  },
+  // blog.remilia.org (Ghost) is a domain alias of this site. A post that
+  // moved to remilia.org/blog 301s to it; every other path on that host,
+  // including Ghost posts now filed under remilia.com or blog.remilia.net
+  // sections (not served from this site), lands on remilia.org/blog.
+  legacyHost: { origin: "https://blog.remilia.org", channels: ORG_SECTIONS },
   // The corporate pages ship from this repo too, so every internal link
   // should resolve inside the published tree.
   linkOrigin: "https://remilia.org",

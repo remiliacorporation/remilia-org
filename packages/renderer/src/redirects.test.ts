@@ -4,6 +4,7 @@ import {
   blockBegin,
   blockEnd,
   aliasRules,
+  legacyHostRules,
   mergeRedirectBlock,
   netlifyRedirectLine,
 } from "./redirects";
@@ -157,4 +158,45 @@ test("merging every section twice converges byte for byte", () => {
   assert.equal(pass(first), first, "a second bake must not change the file");
   assert.equal(pass(pass(first)), first, "nor a third");
   assert.ok(first.trimEnd().endsWith("/*    /404.html    404"));
+});
+
+test("an old Ghost post redirects to its new home with or without its slash", () => {
+  const rules = legacyHostRules(
+    "https://blog.remilia.org",
+    [
+      {
+        legacyUrl: "https://blog.remilia.org/jadeposting/",
+        canonical: "https://remilia.org/blog/thought/jadeposting",
+      },
+      // A renamed post keeps the slug Ghost published it under.
+      {
+        legacyUrl: "https://blog.remilia.org/06-2024-london-33reisen-london-2",
+        canonical: "https://remilia.com/a/blog/events/06-2023-london-33reisen-london",
+      },
+      // Imported from elsewhere: not this host's to redirect.
+      {
+        legacyUrl: "https://paragraph.com/@charlemagnefang/dynasty-mindset/",
+        canonical: "https://remilia.org/blog/archive/dynasty-mindset",
+      },
+    ],
+    "https://remilia.org/blog",
+  );
+  assert.deepEqual(rules.map(netlifyRedirectLine), [
+    "https://blog.remilia.org/jadeposting/  https://remilia.org/blog/thought/jadeposting  301!",
+    "https://blog.remilia.org/jadeposting  https://remilia.org/blog/thought/jadeposting  301!",
+    "https://blog.remilia.org/06-2024-london-33reisen-london-2/  https://remilia.com/a/blog/events/06-2023-london-33reisen-london  301!",
+    "https://blog.remilia.org/06-2024-london-33reisen-london-2  https://remilia.com/a/blog/events/06-2023-london-33reisen-london  301!",
+    "https://blog.remilia.org/  https://remilia.org/blog  301!",
+    "https://blog.remilia.org  https://remilia.org/blog  301!",
+    "https://blog.remilia.org/*  https://remilia.org/blog  301!",
+  ]);
+});
+
+test("Ghost's admin, feed, tag and author pages fall back to the blog", () => {
+  const rules = legacyHostRules("https://blog.remilia.org", [], "https://remilia.org/blog");
+  assert.deepEqual(rules.map(netlifyRedirectLine), [
+    "https://blog.remilia.org/  https://remilia.org/blog  301!",
+    "https://blog.remilia.org  https://remilia.org/blog  301!",
+    "https://blog.remilia.org/*  https://remilia.org/blog  301!",
+  ]);
 });

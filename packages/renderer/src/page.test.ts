@@ -169,7 +169,7 @@ test("section 404 without posts still routes somewhere useful", () => {
   assert.ok(nf.includes("/blog/sitemap.xml"));
 });
 
-test("article rails put the sections and the ToC on the left; the theme, read info and search on the right", () => {
+test("article rails put the sections, read info and ToC on the left; the theme and search on the right", () => {
   const html = htmlPage({
     title: "Vaults — Devblog",
     description: "How vaults work.",
@@ -195,8 +195,8 @@ test("article rails put the sections and the ToC on the left; the theme, read in
       txtHref: "/blog/vaults.txt",
     }),
   });
-  // The left rail holds the section links, then the contents; the right
-  // rail holds the theme box, the read info, then the search box.
+  // The left rail holds the section links, the read info, then the
+  // contents; the right rail holds the theme box, then the search box.
   const left = html.indexOf('class="left-rail"');
   const secs = html.indexOf('class="sec-box"');
   const toc = html.indexOf('class="toc"');
@@ -205,7 +205,7 @@ test("article rails put the sections and the ToC on the left; the theme, read in
   const cite = html.indexOf('class="cite-box"');
   const nav = html.indexOf('class="post-nav"');
   assert.ok(
-    left >= 0 && secs > left && toc > secs && right > toc && theme > right && cite > theme && nav > cite,
+    left >= 0 && secs > left && cite > secs && toc > cite && right > toc && theme > right && nav > theme,
   );
   assert.ok(html.includes("3 min read — 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
@@ -254,6 +254,15 @@ test("adjacent posts are older left and newer right", () => {
   );
   assert.ok(oldest.includes("Next Post &gt;&gt;"));
   assert.ok(oldest.includes('href="/press/new"'));
+});
+
+test("a post with notes and no headings gets a contents box with the note row alone", () => {
+  const html = tocBox(undefined, 3);
+  assert.ok(html.includes('<div class="toc">'));
+  assert.ok(html.includes('href="#fn-3">[3]</a>'));
+  assert.ok(!html.includes("<ol>"));
+  assert.equal(tocBox(undefined, 0), "");
+  assert.equal(tocBox("", 0), "");
 });
 
 test("toc notes are a labeled row, not bold-only chips", () => {
