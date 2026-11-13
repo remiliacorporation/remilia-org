@@ -42,15 +42,15 @@ function runListing(
   return { replaced, text: statusEl.textContent };
 }
 
-test("an old ?month= link on a section index lands on the month archive", () => {
+test("an old ?month= link on a section index lands on the month archive, slashless", () => {
   assert.equal(
     runListing("/blog/updates/", "?month=2024-12", { section: "Updates" }).replaced,
-    "/blog/updates/months/2024-12/",
+    "/blog/updates/months/2024-12",
   );
   assert.equal(
     runListing("/blog/updates/page/2", "?month=2024-04", { section: "Updates" })
       .replaced,
-    "/blog/updates/months/2024-04/",
+    "/blog/updates/months/2024-04",
   );
 });
 
@@ -74,20 +74,20 @@ test("a malformed or out-of-place ?month= does not redirect", () => {
 test("an old ?month= link on the pooled index lands on the pooled month archive", () => {
   assert.equal(
     runListing("/blog/", "?month=2024-12", {}).replaced,
-    "/blog/months/2024-12/",
+    "/blog/months/2024-12",
   );
   assert.equal(
     runListing("/blog", "?month=2022-06", {}).replaced,
-    "/blog/months/2022-06/",
+    "/blog/months/2022-06",
   );
   assert.equal(
     runListing("/blog/page/3/", "?month=2023-11", {}).replaced,
-    "/blog/months/2023-11/",
+    "/blog/months/2023-11",
   );
 });
 
 test("a month archive keeps its month in the status line", () => {
-  const { replaced, text } = runListing("/blog/updates/months/2024-12/", "", {
+  const { replaced, text } = runListing("/blog/updates/months/2024-12", "", {
     section: "Updates",
     month: "December 2024",
   });
@@ -243,6 +243,14 @@ function el(
 
 function matches(n: Node, sel: string): boolean {
   const inMenu = () => !!n.parent?.closest(".sel-menu");
+  const valued = /^\.sel-menu button\[data-href\]\[data-value="(.*)"\]$/.exec(sel);
+  if (valued)
+    return (
+      n.tag === "button" &&
+      "data-href" in n.attrs &&
+      n.attrs["data-value"] === valued[1] &&
+      inMenu()
+    );
   switch (sel) {
     case ".sel-mark":
     case ".sel-label":
@@ -256,6 +264,8 @@ function matches(n: Node, sel: string): boolean {
       return n.tag === "button" && inMenu();
     case ".sel-menu button[data-href]":
       return n.tag === "button" && "data-href" in n.attrs && inMenu();
+    case ".post-card":
+      return n.cls.includes("post-card");
     default:
       return false;
   }
@@ -281,7 +291,7 @@ const dropdown = (id: string, value: string, label: string, items: Node[]): Node
  * dispatches like a browser: target up to the window, then a summary's
  * native toggle unless the default was prevented.
  */
-function runControls() {
+function runControls(search = "") {
   const year = el("details", {}, [
     el("summary", {}, [el("span", { cls: "sel-label", text: "2023" }), el("span", { cls: "sel-mark" })]),
     el("ul", { cls: "sel-sub" }, [
@@ -295,17 +305,14 @@ function runControls() {
     option("2024-12", "December 2024", "/blog/updates/months/2024-12"),
     el("li", { cls: "sel-year" }, [year]),
   ]);
-  const author = dropdown("post-author", "Charlotte Fang", "Charlotte Fang", [
-    option("", "All authors"),
-    option("Charlotte Fang", "Charlotte Fang"),
+  const author = dropdown("post-author", "", "All authors", [
+    option("", "All authors", "/blog/updates/months/2023-09"),
+    option("Charlotte Fang", "Charlotte Fang", "/blog/updates/authors/charlotte-fang"),
+    option("minds0n", "minds0n", "/blog/authors/minds0n"),
   ]);
-  const section = dropdown("site-sec", "Updates", "Updates", [
-    option("All posts", "All posts", "/blog"),
-    option("Updates", "Updates", "/blog/updates"),
-  ]);
-  const body = el("body", {}, [author, date, section]);
-  const sels = [author, date, section];
-  const byId: Record<string, Node> = { "post-date": date, "post-author": author, "site-sec": section };
+  const body = el("body", {}, [author, date]);
+  const sels = [author, date];
+  const byId: Record<string, Node> = { "post-date": date, "post-author": author };
   const statusEl = { dataset: { section: "Updates", month: "September 2023" }, textContent: "" };
   const card = { dataset: { title: "Post", excerpt: "", cat: "Updates", author: "" }, hidden: false };
   const windowHooks = new Map<string, ((e: object) => void)[]>();
@@ -324,11 +331,12 @@ function runControls() {
     addEventListener: () => {},
     documentElement: { style: {} },
   };
+  const replaced: string[] = [];
   const location = {
     pathname: "/blog/updates/months/2023-09/",
-    search: "",
-    href: "https://remilia.org/blog/updates/months/2023-09/",
-    replace: () => {},
+    search,
+    href: `https://remilia.org/blog/updates/months/2023-09/${search}`,
+    replace: (to: string) => replaced.push(to),
     assign: (to: string) => assigned.push(to),
   };
   new Function(
@@ -371,7 +379,7 @@ function runControls() {
     return hit;
   };
   const mark = (d: Node) => d.kids[0].kids[1];
-  return { body, date, author, section, year, assigned, click, find, mark, windowHooks };
+  return { body, date, author, year, assigned, replaced, click, find, mark, windowHooks };
 }
 
 test("choosing a date navigates to that month's archive", () => {
@@ -391,7 +399,7 @@ test("choosing a date navigates to that month's archive", () => {
 
 test("a navigating dropdown's mark toggles its menu instead of clearing", () => {
   const ui = runControls();
-  for (const d of [ui.date, ui.section]) {
+  for (const d of [ui.date, ui.author]) {
     const before = { value: d.dataset.value, label: d.kids[0].kids[0].textContent };
     ui.click(ui.mark(d));
     assert.equal(d.open, true, `${d.id} opens from its mark`);
@@ -404,22 +412,42 @@ test("a navigating dropdown's mark toggles its menu instead of clearing", () => 
     assert.equal(d.open, false, `${d.id} closes from its mark`);
   }
   assert.deepEqual(ui.assigned, []);
-  // A filter dropdown still clears in place from its mark.
-  ui.click(ui.mark(ui.author));
-  assert.equal(ui.author.dataset.value, "");
-  assert.equal(ui.author.kids[0].kids[0].textContent, "All authors");
-  assert.equal(ui.author.open, false);
+});
+
+test("choosing an author navigates to the archive the option names", () => {
+  const ui = runControls();
+  ui.author.open = true;
+  ui.click(ui.find(ui.author, "Charlotte Fang"));
+  // An author with no posts in this section opens the pooled archive.
+  ui.click(ui.find(ui.author, "minds0n"));
+  ui.click(ui.find(ui.author.kids[1], "All authors"));
+  assert.deepEqual(ui.assigned, [
+    "/blog/updates/authors/charlotte-fang",
+    "/blog/authors/minds0n",
+    "/blog/updates/months/2023-09",
+  ]);
+  assert.equal(ui.author.dataset.value, "", "navigating leaves the value alone");
+});
+
+test("an old ?author= link opens that author's archive", () => {
+  assert.deepEqual(runControls("?author=minds0n").replaced, ["/blog/authors/minds0n"]);
+  assert.deepEqual(
+    runControls("?author=Charlotte%20Fang").replaced,
+    ["/blog/updates/authors/charlotte-fang"],
+  );
+  // A name with no archive leaves the listing as it is.
+  assert.deepEqual(runControls("?author=Nobody").replaced, []);
 });
 
 test("expanding a year keeps the date dropdown open and selects nothing", () => {
   const ui = runControls();
   ui.date.open = true;
-  ui.section.open = true;
+  ui.author.open = true;
   const summary = ui.year.kids[0];
   ui.click(summary);
   assert.equal(ui.year.open, false, "the year collapses");
   assert.equal(ui.date.open, true, "the dropdown stays open");
-  assert.equal(ui.section.open, false, "other dropdowns still close");
+  assert.equal(ui.author.open, false, "other dropdowns still close");
   ui.click(summary.kids[1]);
   assert.equal(ui.year.open, true, "its caret expands it again");
   ui.click(summary.kids[0]);
@@ -519,4 +547,45 @@ test("the site head follows the masthead across resizes and breakpoints", () => 
   assert.equal(ui.head.style.minHeight, "", "narrowing below 824px");
   ui.resize(1000);
   assert.equal(ui.head.style.minHeight, "84px", "widening back past 824px");
+});
+
+test("a search that hides every card says so and offers to clear it", () => {
+  const hooks = new Map<string, () => void>();
+  const node = () => ({
+    hooks: new Map<string, () => void>(),
+    addEventListener(type: string, fn: () => void) {
+      this.hooks.set(type, fn);
+    },
+  });
+  const q = { ...node(), value: "", focus: () => {} };
+  const text = { textContent: "No posts match." };
+  const clear = node();
+  const empty = {
+    hidden: true,
+    querySelector: (sel: string) => (sel === ".list-empty-text" ? text : sel === ".list-clear" ? clear : null),
+  };
+  const card = { dataset: { title: "Vaults", excerpt: "", cat: "Updates", author: "" }, hidden: false };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) => (sel === ".list-empty" ? empty : null),
+    querySelectorAll: (sel: string) => (sel === ".post-card" ? [card] : []),
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog", replace: () => {} },
+    (type: string, fn: () => void) => hooks.set(type, fn),
+    () => ({ matches: true }),
+  );
+  assert.equal(empty.hidden, true, "hidden while cards show");
+  q.value = "zzz";
+  q.hooks.get("input")?.();
+  assert.equal(card.hidden, true);
+  assert.equal(empty.hidden, false);
+  assert.equal(text.textContent, "No posts match “zzz”.");
+  clear.hooks.get("click")?.();
+  assert.equal(q.value, "");
+  assert.equal(card.hidden, false);
+  assert.equal(empty.hidden, true);
 });

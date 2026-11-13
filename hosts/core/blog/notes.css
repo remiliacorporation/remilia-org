@@ -73,9 +73,6 @@
 .fn-hit:hover {
   background: transparent;
 }
-.fn-end:hover .fn-xref {
-  color: var(--ink-contrast);
-}
 .fn-xref:hover {
   background: var(--ink);
   color: var(--ink-contrast);
@@ -106,12 +103,28 @@
   text-decoration: none;
   color: inherit;
 }
-.fn-end:hover {
+/* The endnote is one back-link (.fn-hit) to its reference: pointing at it
+   or tabbing to it inverts the whole note. The universal rule gives every
+   element its own ink, so each descendant has to flip, not just the box. */
+.fn-end:hover,
+.fn-end:has(> .fn-hit:focus-visible) {
   background: var(--ink);
 }
-.fn-end:hover strong,
-.fn-end:hover .sn-text {
+.fn-end:hover *,
+.fn-end:has(> .fn-hit:focus-visible) * {
   color: var(--ink-contrast);
+}
+/* Links inside the note sit above the back-link, so they open their own
+   target, and invert again against the inverted note. */
+.fn-end .sn-text a {
+  position: relative;
+  z-index: 1;
+}
+.fn-end .sn-text a:hover,
+.fn-end .sn-text a:focus-visible,
+.fn-end .sn-text a:hover * {
+  background: var(--ink-contrast);
+  color: var(--ink);
 }
 .fn-end + .fn-end {
   margin-top: var(--grid);

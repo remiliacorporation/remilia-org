@@ -278,6 +278,28 @@ export function imageDims(
   return m ? { w: +m[1], h: +m[2] } : undefined;
 }
 
+/**
+ * The Sanity asset id behind an image, from its `image-<id>-WxH-fmt` ref or
+ * its `cdn.sanity.io/images/<project>/<dataset>/<id>-WxH.fmt` URL.
+ */
+export function imageAssetId(asset?: {
+  _ref?: string;
+  url?: string;
+}): string | undefined {
+  return (
+    asset?._ref?.match(/^image-([a-f0-9]+)-/)?.[1] ??
+    asset?.url?.match(/cdn\.sanity\.io\/images\/[^/]+\/[^/]+\/([a-f0-9]+)-/)?.[1]
+  );
+}
+
+/** True when a body already shows the image with this asset ref. */
+export function bodyShowsImage(body: PTBlock[], ref?: string): boolean {
+  const id = imageAssetId({ _ref: ref });
+  return (
+    !!id && body.some((b) => isImageBlock(b) && imageAssetId(b.asset) === id)
+  );
+}
+
 export function figureHtml(input: {
   src: string;
   srcset?: string;
@@ -286,6 +308,8 @@ export function figureHtml(input: {
   caption?: string;
   width?: number;
   height?: number;
+  /** The page's lead image loads at once; body images wait for the viewport. */
+  lead?: boolean;
 }): string {
   const caption = input.caption
     ? `<figcaption><a href="${esc(input.src)}">${esc(input.caption)}</a></figcaption>`
@@ -297,7 +321,7 @@ export function figureHtml(input: {
     input.width && input.height
       ? ` width="${input.width}" height="${input.height}"`
       : "";
-  return `<figure><a href="${esc(input.src)}" aria-label="${esc(input.alt || input.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(input.src)}"${responsive}${dims} alt="${esc(input.alt ?? "")}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`;
+  return `<figure><a href="${esc(input.src)}" aria-label="${esc(input.alt || input.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(input.src)}"${responsive}${dims} alt="${esc(input.alt ?? "")}"${input.lead ? ' fetchpriority="high"' : ' loading="lazy"'}><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`;
 }
 
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {

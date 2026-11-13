@@ -96,22 +96,6 @@ function catSel(posts: NavPost[]): { css: string; html: string } {
   );
 }
 
-function authorSel(posts: NavPost[]): { css: string; html: string } {
-  const authors = [
-    ...new Set(
-      posts.map((p) => p.author).filter((a): a is string => Boolean(a)),
-    ),
-  ].sort();
-  if (!authors.length) return { css: "", html: "" };
-  return filterSel(
-    "post-author",
-    "Filter authors",
-    "All authors",
-    authors,
-    "data-author",
-  );
-}
-
 /** One shared category control across every listing of the host. */
 export interface SharedCats {
   /** Every sibling category in nav order. `href` navigates; omit to filter. */
@@ -138,22 +122,75 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
   };
 }
 
-export function sectionSel(shared: SharedCats): string {
-  const href = (h?: string) => (h ? ` data-href="${esc(h)}"` : "");
-  const current = shared.current || "All posts";
+/**
+ * The host's sections as one row of links, "All" first when the host has a
+ * pooled index, with the section being shown marked. It heads every
+ * listing's and post's masthead.
+ */
+export function sectionNav(shared: SharedCats): string {
   const items = [
-    shared.allHref
-      ? `<li><button type="button" data-value="All posts"${href(shared.allHref)}>All posts</button></li>`
-      : "",
-    ...shared.cats.map(
-      (c) =>
-        `<li><button type="button" data-value="${esc(c.label)}"${href(c.href)}>${esc(c.label)}</button></li>`,
+    ...(shared.allHref
+      ? [{ label: "All", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
+  ];
+  if (items.length < 2) return "";
+  return `<nav class="sec-nav" aria-label="Sections">${items
+    .map(
+      (i) =>
+        `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`,
+    )
+    .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
+}
+
+/**
+ * The site head's menu on phones, where it is the whole head beside the
+ * wordmark: the section row and the head's own links folded behind one
+ * control, which names the section being shown.
+ */
+export function headMenu(
+  shared: SharedCats,
+  links: { label: string; href: string }[],
+): string {
+  const sections = [
+    ...(shared.allHref
+      ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
+    ),
+  ];
+  const items = [
+    ...sections.map(
+      (i) =>
+        `<li><a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a></li>`,
+    ),
+    ...links.map(
+      (l, n) =>
+        `<li${n === 0 ? ' class="head-menu-site"' : ""}><a href="${esc(l.href)}">${esc(l.label)}</a></li>`,
+    ),
+    `<li class="head-dials"><label class="head-theme" for="theme-pop">Theme</label></li>`,
   ].join("");
-  return `<details class="sel site-sec" id="site-sec" data-value="${esc(shared.current)}" aria-label="Section">
-<summary><span class="sel-label">${esc(current)}</span><span class="sel-mark"></span></summary>
+  return `<details class="sel head-menu">
+<summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
+}
+
+/**
+ * A listing's search and its Author and Date dropdowns, in a box of their
+ * own: FILTER, a rule, then the controls. It sits in the left rail under
+ * the site head, or under the theme box where the rails fold into one;
+ * on phones it is one row under the head.
+ */
+export function filterBox(tools: string): string {
+  return `<section class="filter-box" aria-label="Filter posts">
+<p class="filter-label" aria-hidden="true">Filter</p>
+<hr class="nav-rule">
+${NAV_SEARCH}${tools}
+</section>`;
 }
 
 /** A month the listing has an archive page for. */
@@ -209,11 +246,34 @@ export function dateSel(
 </details>`;
 }
 
-export function filterBar(posts: NavPost[], shared?: SharedCats): string {
-  const cat = shared ? "" : catSel(posts).html;
-  const { html: authors } = authorSel(posts);
-  if (!cat && !authors) return "";
-  return `${cat}${authors}`;
+/** An author with an archive to open: the listing's own, or the pooled one. */
+export interface AuthorOption {
+  label: string;
+  href: string;
+}
+
+/**
+ * Author picker. Like the date control, each option opens an archive: the
+ * author's archive in this listing's section when there is one, otherwise the
+ * host's pooled archive, so a pick never lands on an empty page. `current` is
+ * the author whose archive is shown, "" elsewhere.
+ */
+export function authorSel(
+  authors: AuthorOption[],
+  allHref: string,
+  current = "",
+): string {
+  if (!authors.length) return "";
+  const option = (value: string, href: string, text: string): string =>
+    `<li><button type="button" data-value="${esc(value)}" data-href="${esc(href)}"${value === current ? ' aria-current="page"' : ""}>${esc(text)}</button></li>`;
+  const items = [
+    option("", allHref, "All authors"),
+    ...authors.map((a) => option(a.label, a.href, a.label)),
+  ].join("");
+  return `<details class="sel nav-cat-sel" id="post-author" data-value="${esc(current)}" aria-label="Author">
+<summary><span class="sel-label">${esc(current || "All authors")}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
 }
 
 export function leftRail(
@@ -271,6 +331,7 @@ export const NAV_JS = `(() => {
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
   const statusEl = document.querySelector('.index-mast h1');
+  const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
   if (!q && !cards.length) return;
   const PAGE = 4;
@@ -320,13 +381,11 @@ export const NAV_JS = `(() => {
   const match = (el) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-    const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
     const sc = query
       ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
       : 0;
     const ok = (query ? sc >= 0 : true)
-      && (!catv || el.dataset.cat === catv)
-      && (!author || el.dataset.author === author);
+      && (!catv || el.dataset.cat === catv);
     return { el, sc, show: ok };
   };
   const apply = () => {
@@ -349,9 +408,17 @@ export const NAV_JS = `(() => {
       if (next) next.disabled = page >= pages - 1;
     }
     cards.forEach((c) => { c.hidden = !match(c).show; });
+    // The listing has no status line; a search that hides every card says
+    // so, with a way back.
+    if (emptyEl) {
+      const none = cards.length > 0 && cards.every((c) => c.hidden);
+      emptyEl.hidden = !none;
+      const text = emptyEl.querySelector('.list-empty-text');
+      if (none && text) text.textContent = query ? 'No posts match \u201C' + query + '\u201D.' : 'No posts match.';
+    }
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-      const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
+      const author = statusEl.dataset.author || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;
@@ -362,21 +429,12 @@ export const NAV_JS = `(() => {
     }
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
+  const clearBtn = emptyEl && emptyEl.querySelector('.list-clear');
+  if (clearBtn && q) clearBtn.addEventListener('click', () => { q.value = ''; page = 0; apply(); q.focus(); });
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
-  bindSel(document.getElementById('site-sec'), '');
   bindSel(document.getElementById('post-date'), 'All dates');
-  addEventListener('click', (e) => {
-    const a = e.target.closest('.post-card a.author');
-    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const v = new URL(a.getAttribute('href'), location.href).searchParams.get('author') || '';
-    if (auth) {
-      e.preventDefault();
-      setSel(auth, v, 'All authors');
-      page = 0; apply();
-    }
-  });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
   const tagv = (statusEl && statusEl.dataset.tag) || '';
@@ -385,7 +443,7 @@ export const NAV_JS = `(() => {
   // section or pooled index land on that listing's month archive instead.
   const monthParam = params.get('month') || '';
   if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && !tagv && !monthv && !statusEl.dataset.author) {
-    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam + '/');
+    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam);
     return;
   }
   const catParam = params.get('cat');
@@ -397,9 +455,16 @@ export const NAV_JS = `(() => {
     }
     setSel(cat, catParam, 'All posts');
   }
-  if (params.get('author')) setSel(auth, params.get('author'), 'All authors');
-  if (statusEl && statusEl.dataset.author)
-    setSel(auth, statusEl.dataset.author, 'All authors');
+  // Authors are archive pages too; an old ?author= link opens the archive
+  // the dropdown offers for that name.
+  const authorParam = params.get('author');
+  if (authorParam && auth && statusEl && !statusEl.dataset.author) {
+    const b = auth.querySelector('.sel-menu button[data-href][data-value="' + CSS.escape(authorParam) + '"]');
+    if (b) {
+      location.replace(b.getAttribute('data-href'));
+      return;
+    }
+  }
   apply();
 })();
 // <details> has no "only one open" behaviour and no outside dismissal, so a
@@ -491,7 +556,9 @@ export const NAV_JS = `(() => {
 })();
 (() => {
   try {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Reduced motion only drops the glide: notes still fit the column and
+    // in-page links still land and release focus.
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.documentElement.style.scrollBehavior = 'auto';
     const yFor = (el) => {
       const raw = getComputedStyle(el).scrollMarginTop;
@@ -501,6 +568,7 @@ export const NAV_JS = `(() => {
     const go = (el) => {
       const to = yFor(el), from = scrollY, d = to - from;
       if (Math.abs(d) < 1) return;
+      if (still) { scrollTo(0, to); return; }
       const t0 = performance.now();
       const step = (now) => {
         const t = Math.min(1, (now - t0) / 200);

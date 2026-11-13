@@ -73,7 +73,7 @@ function corpPage(pathname: string): { locale: CorpLocale; route: string } | und
 function localePath(locale: CorpLocale, route: string): string {
   if (locale === "en") return route;
   const prefix = LOCALE_PREFIXES[locale];
-  return route === "/" ? `${prefix}/` : `${prefix}${route}`;
+  return route === "/" ? prefix || "/" : `${prefix}${route}`;
 }
 
 function acceptedLocale(value: string | null | undefined): CorpLocale | undefined {

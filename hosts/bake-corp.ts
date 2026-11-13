@@ -1,6 +1,6 @@
 
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { localizeCorpChrome } from "./corp-locales";
 
@@ -106,6 +106,10 @@ export async function bakeCorp(srcDir = defaultSrc, outDir = defaultOut): Promis
     );
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, html);
+    // `<page>.html` beside `<page>/index.html` serves `/<page>` without
+    // the trailing-slash redirect, as the blog's pages do.
+    if (rel !== "index.html" && rel.endsWith(`${sep}index.html`))
+      await writeFile(`${dirname(dest)}.html`, html);
     n += 1;
     console.log(`baked ${rel}`);
   }

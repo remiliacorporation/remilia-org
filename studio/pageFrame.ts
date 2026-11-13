@@ -5,9 +5,9 @@ import {
   bylineHtml,
   htmlPage,
 } from "../packages/renderer/src/page";
-import { emptyRail, hostCats, sectionSel } from "../packages/renderer/src/nav";
+import { emptyRail, hostCats, sectionNav } from "../packages/renderer/src/nav";
 import { scopeBlogCss } from "../packages/renderer/src/embed";
-import { siteMetaFor } from "../packages/seo/src/index";
+import { CHANNEL_LABEL, indexPath, siteMetaFor } from "../packages/seo/src/index";
 import { BLOG_SHEETS, chromeFor } from "../hosts/core/sections";
 import { CHANNELS, type Channel } from "../lib/access";
 import emblemUrl from "../deploy/assets/emblem.svg?url";
@@ -61,7 +61,12 @@ export function frameHtml(channel: Channel): string {
     chrome: chromeFor(channel),
     channel,
     leftRail: emptyRail(),
-    mainHtml: articleHtml({ title: "", publishedAt: "", bodyHtml: "" }),
+    mainHtml: articleHtml({
+      title: "",
+      publishedAt: "",
+      bodyHtml: "",
+      sectionNav: sectionNav(hostCats(channel)),
+    }),
   });
   const body = page.slice(
     page.indexOf("<body>") + "<body>".length,
@@ -80,6 +85,7 @@ export function frameByline(input: {
   return bylineHtml({
     publishedAt: typeof input.publishedAt === "string" ? input.publishedAt : "",
     byline: input.names || undefined,
-    sectionSel: sectionSel(hostCats(input.channel)),
+    category: CHANNEL_LABEL[input.channel],
+    categoryHref: indexPath(input.channel),
   });
 }

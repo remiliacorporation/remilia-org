@@ -44,6 +44,9 @@ export interface PageInput {
   /** Drives host identity, icons, social profiles and alternate formats. */
   channel?: Channel;
 
+  /** The post's bylines; the host's author when absent. */
+  author?: string;
+
   /** Article timestamps; emitted as Open Graph article metadata. */
   publishedTime?: string;
   modifiedTime?: string;
@@ -108,7 +111,7 @@ function discoveryHead(p: PageInput): string {
   const site = siteMetaFor(p.channel);
   const base = CHANNEL_BASEPATH[p.channel];
   const lines: string[] = [
-    `<meta name="author" content="${esc(site.author)}">`,
+    `<meta name="author" content="${esc(p.author?.trim() || site.author)}">`,
     `<meta name="color-scheme" content="light dark">`,
     `<meta name="theme-color" content="${esc(site.themeColor)}">`,
   ];
@@ -314,6 +317,11 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
+/** The section row and its rule, above a masthead's own rows. */
+function mastNav(nav?: string): string {
+  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
+}
+
 function mastCopy(basePath: string): string {
   return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
 }
@@ -400,18 +408,14 @@ export interface BylineInput {
   category?: string;
   categoryHref?: string;
   monthHref?: string;
-  /** Host section switcher — occupies the byline's center slot. */
-  sectionSel?: string;
 }
 
 /** The article byline's three slots: date, section, author. */
 export function bylineHtml(input: BylineInput): string {
   const date = new Date(input.publishedAt);
-  const cat = input.sectionSel
-    ? input.sectionSel
-    : input.category
-      ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
-      : `<span class="byline-cat"></span>`;
+  const cat = input.category
+    ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
+    : `<span class="byline-cat"></span>`;
   const author = input.byline
     ? input.authorHref
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
@@ -439,6 +443,8 @@ export function articleHtml(
     txtHref?: string;
     /** Whole minutes at 200 words per minute; omitted for short notes. */
     readingMinutes?: number;
+    /** The host's section row, heading the masthead. */
+    sectionNav?: string;
   },
 ): string {
   const meta = input.metaHtml
@@ -460,7 +466,7 @@ export function articleHtml(
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
-<header>
+${mastNav(input.sectionNav)}<header>
 <div class="byline">${bylineHtml(input)}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
@@ -487,7 +493,7 @@ export interface IndexCard {
   excerpt: string;
   imageUrl?: string;
   author?: string;
-  /** Author archive; falls back to the client-side filter. */
+  /** Author archive; the name stays plain text without one. */
   authorHref?: string;
   /** Tag archive; falls back to a plain label. */
   categoryHref?: string;
@@ -520,10 +526,9 @@ ${next}
 
 export function indexMain(
   posts: IndexCard[],
-  toolsHtml: string,
   pager?: Pager,
   filter?: { tag?: string; author?: string; month?: string; section?: string },
-  sectionSel?: string,
+  sectionNav?: string,
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
@@ -537,10 +542,10 @@ export function indexMain(
       const img = p.imageUrl
         ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
         : "";
-      const authorHref =
-        p.authorHref ?? `?author=${encodeURIComponent(p.author ?? "")}`;
       const author = p.author
-        ? `<a class="author" href="${esc(authorHref)}">${esc(p.author)}</a>`
+        ? p.authorHref
+          ? `<a class="author" href="${esc(p.authorHref)}">${esc(p.author)}</a>`
+          : `<span class="author">${esc(p.author)}</span>`
         : `<span class="author"></span>`;
       const category = p.categoryHref
         ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
@@ -566,14 +571,13 @@ ${row}
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast">
-<header>
+<div class="sec mast index-mast list-mast">
+${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
 <h1${filterAttrs}>${heading}</h1>
-<hr class="nav-rule mast-tools-rule">
-<div class="mast-tools">${NAV_SEARCH}${toolsHtml}${sectionSel ?? ""}</div>
 </header>
 </div>
 <div class="article-rest">
+<p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>
@@ -586,6 +590,7 @@ export function termIndexMain(
   noun: string,
   terms: { label: string; href: string; count: number }[],
   basePath = "",
+  sectionNav?: string,
 ): string {
   const rows = terms
     .map(
@@ -596,7 +601,7 @@ export function termIndexMain(
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast index-mast">
-<header>
+${mastNav(sectionNav)}<header>
 <h1>Showing all ${esc(noun.toLowerCase())}s</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools">${mastCopy(basePath)}</p>

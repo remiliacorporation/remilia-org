@@ -73,6 +73,7 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
   const { outDir, close } = await bakeSections(COM_POST_SECTIONS);
   try {
     const news = await readFile(join(outDir, "a/blog/news/index.html"), "utf8");
+    assert.equal(await readFile(join(outDir, "a/blog/news.html"), "utf8"), news);
     assert.match(news, /data-scheme="dark"/);
     assert.match(news, /data-hue="30"/);
     assert.match(news, /data-dots="none"/);
@@ -120,6 +121,9 @@ test("net bakes only its blog sections, light blue with a sparse lattice", async
     await assert.rejects(() =>
       readFile(join(outDir, "a/blog/news/index.html"))
     );
+    // Sections answer at /updates and /dev-blog without a slash.
+    assert.equal(await readFile(join(outDir, "dev-blog.html"), "utf8"), devblog);
+    await readFile(join(outDir, "updates/post-1.html"), "utf8");
   } finally {
     close();
   }
@@ -137,22 +141,40 @@ test("site-head leads with its links and closes on the brand alone", () => {
     /<\/nav>\s*<hr class="nav-rule">\s*<a class="site-title"/,
     "nav row, then rule, then title",
   );
-  assert.match(thought.header, />Index</);
+  // "All" in the section row is the pooled index; the head doesn't repeat it.
+  assert.equal(thought.header.includes(">Index<"), false);
   assert.match(thought.header, /rss\.xml">RSS</);
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
-  assert.equal(thought.header.includes(">Updates</a>"), false);
-  const index = chromeFor("blog");
-  assert.match(index.header, /aria-current="page">Index</);
+  // The phone head folds the sections and the head's links behind one
+  // menu, named for the section shown, this one marked.
+  assert.match(
+    thought.header,
+    /<details class="sel head-menu">\n<summary><span class="sel-label">Thought<\/span>/,
+  );
+  assert.deepEqual(
+    [...thought.header.matchAll(/<li[^>]*><a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a><\/li>/g)].map((m) => [m[3], m[1], Boolean(m[2])]),
+    [
+      ["All posts", "/blog", false],
+      ["Updates", "/blog/updates", false],
+      ["Press", "/blog/press", false],
+      ["Thought", "/blog/thought", true],
+      ["Archive", "/blog/archive", false],
+      ["remilia.org", "https://remilia.org/", false],
+      ["RSS", "/blog/thought/rss.xml", false],
+      ["Atom", "/blog/thought/atom.xml", false],
+    ],
+  );
+  assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
   const news = chromeFor("news");
   assert.match(
     news.header,
     /<a class="site-title" href="\/a\/blog\/news">REMILIA<\/a>/,
   );
   assert.equal(news.header.includes("NEWS"), false);
-  // Index is the host's pooled listing on every host.
-  assert.match(news.header, /<a href="\/a\/blog">Index</);
-  assert.match(chromeFor("dev-blog").header, /<a href="\/">Index</);
-  assert.match(chromeFor("net-blog").header, /aria-current="page">Index</);
+  // The phone menu's "All posts" is the host's pooled listing on every host.
+  assert.match(news.header, /<li><a href="\/a\/blog">All posts<\/a><\/li>/);
+  assert.match(chromeFor("dev-blog").header, /<li><a href="\/">All posts<\/a><\/li>/);
+  assert.match(chromeFor("net-blog").header, /<li><a href="\/" aria-current="true">All posts<\/a><\/li>/);
 });
 
 test("org still wears its own brand and pinned light theme", async () => {
@@ -199,8 +221,7 @@ test("an intentionally empty section still publishes its index", async () => {
       index,
       /<a class="site-title" href="\/blog\/archive">REMILIA CORPORATION<\/a>/,
     );
-    assert.match(index, /id="site-sec"/);
-    assert.match(index, />Archive</);
+    assert.match(index, /<a href="\/blog\/archive" aria-current="true">Archive<\/a>/);
     assert.ok(!index.includes("Post 1"));
   } finally {
     f.close();

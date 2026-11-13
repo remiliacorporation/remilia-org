@@ -94,6 +94,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       token,
       perspective,
       stylesheets,
+      hostPooled: Boolean(spec.aggregate),
     });
     total += result.pages;
     console.log(`baked ${result.pages} pages for ${channel} into ${outDir}`);
@@ -143,7 +144,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
         legacyUrl: p.legacyUrl,
         canonical: canonicalFor(p.channel, p.slug),
       })),
-      `${indexUrl(aggregate)}/`,
+      indexUrl(aggregate),
     );
     await mergeInto(outDir, "redirects:legacy-host", rules);
     console.log(`redirects: ${rules.length - 3} posts from ${origin}`);

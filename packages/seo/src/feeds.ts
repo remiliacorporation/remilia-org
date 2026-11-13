@@ -1,3 +1,4 @@
+import { siteMetaFor } from "./site";
 import { type Channel, atomUrl, canonicalFor, indexUrl, rssUrl } from "./urls";
 
 const esc = (s: string): string =>
@@ -13,7 +14,12 @@ export interface FeedPost {
   title: string;
   excerpt: string;
   publishedAt: string;
+  /** Bylines; a feed reader shows them as the item's author. */
+  authors?: { name: string }[];
 }
+
+const bylines = (p: FeedPost): string[] =>
+  (p.authors ?? []).map((a) => a.name?.trim()).filter((n): n is string => !!n);
 
 export interface ChannelMeta {
   channel: Channel;
@@ -30,12 +36,12 @@ export function rss(meta: ChannelMeta, posts: FeedPost[]): string {
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <description>${esc(p.excerpt)}</description>
-      <pubDate>${new Date(p.publishedAt).toUTCString()}</pubDate>
+${bylines(p).map((n) => `      <dc:creator>${esc(n)}</dc:creator>\n`).join("")}      <pubDate>${new Date(p.publishedAt).toUTCString()}</pubDate>
     </item>`;
     })
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${esc(meta.title)}</title>
     <link>${indexUrl(meta.channel)}</link>
@@ -64,7 +70,7 @@ export function atom(meta: ChannelMeta, posts: FeedPost[]): string {
     <id>${url}</id>
     <updated>${new Date(p.publishedAt).toISOString()}</updated>
     <summary>${esc(p.excerpt)}</summary>
-  </entry>`;
+${bylines(p).map((n) => `    <author><name>${esc(n)}</name></author>\n`).join("")}  </entry>`;
     })
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -75,6 +81,7 @@ export function atom(meta: ChannelMeta, posts: FeedPost[]): string {
   <link rel="self" type="application/atom+xml" href="${atomUrl(meta.channel)}"/>
   <id>${indexUrl(meta.channel)}</id>
   <updated>${updated}</updated>
+  <author><name>${esc(siteMetaFor(meta.channel).author)}</name></author>
 ${entries}
 </feed>
 `;

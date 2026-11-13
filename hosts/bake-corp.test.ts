@@ -1,9 +1,11 @@
 
 import assert from "node:assert/strict";
-import { join } from "node:path";
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { expandIncludes, layerBounds, stripFxLayer } from "./bake-corp";
+import { bakeCorp, expandIncludes, layerBounds, stripFxLayer } from "./bake-corp";
 import { localizeCorpChrome } from "./corp-locales";
 
 const partialsDir = join(fileURLToPath(new URL(".", import.meta.url)), "../deploy/src/_partials");
@@ -48,6 +50,26 @@ test("corp bake pipeline leaves one ink-treated surface", async () => {
   assert.equal(html.includes("Ghost"), false);
   assert.match(html, /id="h"/);
   assert.match(html, /site\.css/);
+});
+
+test("corp pages answer without a trailing slash", async () => {
+  const src = await mkdtemp(join(tmpdir(), "corp-src-"));
+  const out = await mkdtemp(join(tmpdir(), "corp-out-"));
+  const page = "<!DOCTYPE html><html><head></head><body></body></html>";
+  for (const rel of ["index.html", "about/index.html", "kr/index.html", "kr/careers/seoul/index.html"]) {
+    await mkdir(dirname(join(src, rel)), { recursive: true });
+    await writeFile(join(src, rel), page);
+  }
+  await bakeCorp(src, out);
+  // `/about`, `/kr` and `/kr/careers/seoul` are files; the slash forms
+  // still resolve to their index.html. The root is only index.html.
+  for (const [file, twin] of [
+    ["about.html", "about/index.html"],
+    ["kr.html", "kr/index.html"],
+    ["kr/careers/seoul.html", "kr/careers/seoul/index.html"],
+  ])
+    assert.equal(await readFile(join(out, file), "utf8"), await readFile(join(out, twin), "utf8"));
+  assert.deepEqual((await readdir(out)).sort(), ["about", "about.html", "index.html", "kr", "kr.html"]);
 });
 
 test("corporate locale chrome maps SEO and selectors to equivalent pages", () => {
