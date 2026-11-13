@@ -266,6 +266,17 @@ test("link marks reject executable URL schemes", () => {
   }
 });
 
+test("an image with an executable URL is left out", () => {
+  for (const url of ["javascript:alert(1)", " javascript:alert(1)"]) {
+    const html = portableTextToHtml(
+      [{ _type: "image", asset: { url } }],
+      { imageUrl: (b) => b.asset?.url },
+    );
+    assert.ok(!html.includes("javascript"));
+    assert.ok(!html.includes("<figure"));
+  }
+});
+
 test("an image's asset id reads the same from a ref or a CDN URL", () => {
   const ref = "image-0dce8420af1b2c3d-800x400-jpg";
   const url =

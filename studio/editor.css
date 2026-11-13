@@ -1056,6 +1056,24 @@
   height: 100%;
 }
 
+.blog-preview-frames {
+  position: absolute;
+  inset: 0;
+}
+
+.blog-preview-error {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--card-bg-color, #fff);
+  color: var(--card-fg-color, #000);
+  border-bottom: 1px solid var(--card-border-color, currentColor);
+  font: inherit;
+  font-size: 13px;
+}
+
 .blog-preview-frame {
   position: absolute;
   inset: 0;
