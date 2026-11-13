@@ -373,51 +373,74 @@ export const NAV_JS = `(() => {
       page = 0; apply();
     });
   };
-  const score = (query, text) => {
-    query = query.toLowerCase(); text = (text || '').toLowerCase();
-    let qi = 0, s = 0, streak = 0;
-    for (let i = 0; i < text.length && qi < query.length; i++) {
-      if (text[i] === query[qi]) { qi++; streak++; s += streak; } else streak = 0;
-    }
-    return qi === query.length ? s : -1;
-  };
+  // Search is a plain substring match: every word of the query must appear
+  // somewhere in the post's title, excerpt, author or category, whatever its
+  // case, accents or quote style.
+  const norm = (s) => (s || '').toLowerCase().normalize('NFKD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"')
+    .replace(/\\s+/g, ' ').trim();
+  const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
   const match = (el) => {
     const query = q ? q.value.trim() : '';
     const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-    const sc = query
-      ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
-      : 0;
-    const ok = (query ? sc >= 0 : true)
-      && (!catv || el.dataset.cat === catv);
-    return { el, sc, show: ok };
+    const d = el.dataset;
+    return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
+      && (!catv || d.cat === catv);
+  };
+  // A paginated listing bakes an index of all its posts, so a search covers
+  // every page of it, not only the cards on this one. It loads on the first
+  // query; until it arrives, and if it never does, the cards here filter.
+  const indexUrl = (statusEl && statusEl.dataset.index) || '';
+  const pager = document.querySelector('.pager');
+  const found = [];
+  let index = null, asked = false, failed = false;
+  const load = () => {
+    if (asked) return;
+    asked = true;
+    fetch(indexUrl)
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((rows) => { index = rows.map((r) => [norm(r[0]), r[1]]); apply(); })
+      .catch(() => { failed = true; apply(); });
   };
   const apply = () => {
     const query = q ? q.value.trim() : '';
     if (items.length && list) {
-      const ranked = items.map(match);
-      if (query) ranked.sort((a, b) => b.sc - a.sc);
-      const vis = ranked.filter((r) => r.show);
+      const vis = items.filter(match);
       const pages = Math.max(1, Math.ceil(vis.length / PAGE));
       if (page >= pages) page = pages - 1;
       const from = page * PAGE;
-      const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.el));
-      ranked.forEach((r) => {
-        r.el.hidden = !r.show;
-        r.el.classList.toggle('off-page', r.show && !onPage.has(r.el));
-        if (r.show) list.appendChild(r.el);
+      const onPage = new Set(vis.slice(from, from + PAGE));
+      items.forEach((el) => {
+        const show = vis.includes(el);
+        el.hidden = !show;
+        el.classList.toggle('off-page', show && !onPage.has(el));
       });
       if (status) status.textContent = (page + 1) + ' / ' + pages;
       if (prev) prev.disabled = page <= 0;
       if (next) next.disabled = page >= pages - 1;
     }
-    cards.forEach((c) => { c.hidden = !match(c).show; });
-    // The listing has no status line; a search that hides every card says
-    // so, with a way back.
+    const wide = !!query && !!indexUrl && !failed;
+    if (wide && !index) load();
+    const hits = wide && index ? index.filter((r) => has(query, r[0])) : null;
+    found.splice(0).forEach((el) => el.remove());
+    if (hits && hits.length && emptyEl) {
+      const t = document.createElement('template');
+      t.innerHTML = hits.map((r) => r[1]).join('');
+      found.push(...t.content.children);
+      emptyEl.after(...found);
+    }
+    cards.forEach((c) => { c.hidden = hits ? true : !match(c); });
+    // A search leaves this page's place in the listing, so its pager goes.
+    if (pager) pager.hidden = wide;
+    // The listing has no status line; a search that finds nothing says so,
+    // with a way back. While the index is still loading it stays quiet.
     if (emptyEl) {
-      const none = cards.length > 0 && cards.every((c) => c.hidden);
+      const none = hits ? !hits.length
+        : !wide && cards.length > 0 && cards.every((c) => c.hidden);
       emptyEl.hidden = !none;
       const text = emptyEl.querySelector('.list-empty-text');
-      if (none && text) text.textContent = query ? 'No posts match \u201C' + query + '\u201D.' : 'No posts match.';
+      if (none && text) text.textContent = query ? 'No posts match “' + query + '”.' : 'No posts match.';
     }
     if (statusEl && cards.length) {
       const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
@@ -474,25 +497,39 @@ export const NAV_JS = `(() => {
 // click anywhere closes every .sel but the one clicked, and Escape closes all.
 // A mouse that leaves an open .sel closes it after a beat unless it comes
 // back; touch never leaves, and a keyboard-focused dropdown stays open.
+// Clicking one dropdown while another is open closes the other, and in the
+// filter box that moves the one just opened out from under a still mouse.
+// The browser reports that as the mouse leaving, but the reader has not
+// left: such a dropdown ignores leaves until the mouse moves over it again.
 (() => {
+  const moved = new WeakSet();
   const shut = (keep) => {
+    let closed = false;
     document.querySelectorAll('details.sel[open]').forEach((d) => {
-      if (d !== keep) d.open = false;
+      if (d !== keep) { d.open = false; closed = true; }
     });
+    if (keep && closed) moved.add(keep);
   };
   addEventListener('click', (e) => {
     const t = e.target;
     shut(t && t.closest ? t.closest('details.sel') : null);
   });
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') shut(null);
+    if (e.key !== 'Escape') return;
+    // Focus inside a menu that Escape closes goes back to its dropdown,
+    // not to the top of the page.
+    const t = e.target;
+    const d = t && t.closest ? t.closest('details.sel') : null;
+    const back = d && d.open ? d.querySelector('summary') : null;
+    shut(null);
+    if (back && back.focus) back.focus();
   });
   const LEAVE_MS = 500;
   document.querySelectorAll('details.sel').forEach((d) => {
     let timer = 0;
     const cancel = () => { clearTimeout(timer); timer = 0; };
     d.addEventListener('pointerleave', (e) => {
-      if (e.pointerType !== 'mouse' || !d.open) return;
+      if (e.pointerType !== 'mouse' || !d.open || moved.has(d)) return;
       cancel();
       timer = setTimeout(() => {
         timer = 0;
@@ -500,9 +537,12 @@ export const NAV_JS = `(() => {
       }, LEAVE_MS);
     });
     d.addEventListener('pointerenter', (e) => {
-      if (e.pointerType === 'mouse') cancel();
+      if (e.pointerType === 'mouse') { moved.delete(d); cancel(); }
     });
-    d.addEventListener('toggle', () => { if (!d.open) cancel(); });
+    d.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse') moved.delete(d);
+    });
+    d.addEventListener('toggle', () => { if (!d.open) { moved.delete(d); cancel(); } });
   });
 })();
 (() => {
@@ -568,15 +608,34 @@ export const NAV_JS = `(() => {
       const m = raw.endsWith('%') ? innerHeight * parseFloat(raw) / 100 : parseFloat(raw) || 0;
       return Math.max(0, el.getBoundingClientRect().top + scrollY - m);
     };
+    // A jump follows its target. Lazy images above it take their height
+    // only as they load, so the landing spot moves once the jump starts:
+    // each frame of the glide aims again, and an image above the target
+    // that loads after landing lands the jump once more. The reader's own
+    // scroll, touch or key ends that, so a jump never fights them.
+    let jump = 0;
     const go = (el) => {
-      const to = yFor(el), from = scrollY, d = to - from;
-      if (Math.abs(d) < 1) return;
-      if (still) { scrollTo(0, to); return; }
+      const id = ++jump;
+      const from = scrollY;
+      if (Math.abs(yFor(el) - from) < 1) return;
+      const live = () => id === jump;
+      const land = () => { if (live()) scrollTo(0, yFor(el)); };
+      const quit = () => { if (live()) jump++; };
+      ['wheel', 'touchmove', 'keydown', 'pointerdown'].forEach((type) => {
+        addEventListener(type, quit, { once: true, passive: true });
+      });
+      document.querySelectorAll('img').forEach((img) => {
+        if (img.complete) return;
+        if (!(img.compareDocumentPosition(el) & 4)) return;
+        img.addEventListener('load', land, { once: true });
+      });
+      if (still) { land(); return; }
       const t0 = performance.now();
       const step = (now) => {
+        if (!live()) return;
         const t = Math.min(1, (now - t0) / 200);
         const e = t * t * (3 - 2 * t);
-        scrollTo(0, from + d * e);
+        scrollTo(0, from + (yFor(el) - from) * e);
         if (t < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);

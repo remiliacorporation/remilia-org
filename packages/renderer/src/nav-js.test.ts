@@ -467,6 +467,49 @@ test("the date dropdown still closes on an outside click or Escape", () => {
   assert.equal(ui.date.open, false, "Escape");
 });
 
+test("a dropdown opened while another closes survives the layout shift", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const ui = runControls();
+    const hook = (d: typeof ui.date, type: string) =>
+      d.hooks.get(type)?.forEach((fn) => fn({ pointerType: "mouse" }));
+    ui.click(ui.author.kids[0]);
+    assert.equal(ui.author.open, true);
+    // Author closes, the filter box collapses, and Date slides out from
+    // under the mouse: the browser fires a leave though nobody moved.
+    ui.click(ui.date.kids[0]);
+    assert.equal(ui.author.open, false, "one open at a time");
+    assert.equal(ui.date.open, true);
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(1000);
+    assert.equal(ui.date.open, true, "the shift is not the reader leaving");
+    // Once the mouse is back on it, leaving closes it as usual.
+    hook(ui.date, "pointerenter");
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(500);
+    assert.equal(ui.date.open, false, "a real leave still closes it");
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("a dropdown opened over a mouse that stays on it still closes on leave", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const ui = runControls();
+    const hook = (d: typeof ui.date, type: string) =>
+      d.hooks.get(type)?.forEach((fn) => fn({ pointerType: "mouse" }));
+    ui.click(ui.author.kids[0]);
+    ui.click(ui.date.kids[0]);
+    hook(ui.date, "pointermove");
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(500);
+    assert.equal(ui.date.open, false);
+  } finally {
+    mock.timers.reset();
+  }
+});
+
 /**
  * Runs NAV_JS on an article page at `width`, with the masthead and site
  * head reduced to what the head-sizing script touches. `resize` changes
@@ -588,4 +631,295 @@ test("a search that hides every card says so and offers to clear it", () => {
   assert.equal(q.value, "");
   assert.equal(card.hidden, false);
   assert.equal(empty.hidden, true);
+});
+
+/**
+ * Runs NAV_JS on a post whose target sits below a lazy image that has not
+ * loaded: `grow()` loads it, pushing the target down, as the browser does
+ * when the jump brings the image near the viewport.
+ */
+function runJump(reducedMotion: boolean): {
+  click: () => void;
+  frame: (ms: number) => void;
+  grow: (by: number) => void;
+  input: (type: string) => void;
+  targetTop: () => number;
+} {
+  const MARGIN = 400;
+  let scrollY = 0;
+  let top = 5000;
+  let now = 0;
+  let frames: ((t: number) => void)[] = [];
+  const hooks = new Map<string, ((e: object) => void)[]>();
+  const loads: (() => void)[] = [];
+  const target = { getBoundingClientRect: () => ({ top: top - scrollY }) };
+  const img = {
+    complete: false,
+    compareDocumentPosition: () => 4,
+    addEventListener: (_: string, fn: () => void) => loads.push(fn),
+  };
+  const link = {
+    classList: { contains: () => false },
+    getAttribute: () => "#fndef-3",
+    blur: () => {},
+    closest: (sel: string): object | null =>
+      sel === 'a[href^="#"]' ? link : null,
+  };
+  const env = {
+    document: {
+      getElementById: (id: string) => (id === "fndef-3" ? target : null),
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => (sel === "img" ? [img] : []),
+      addEventListener: () => {},
+      documentElement: { style: {} },
+    },
+    location: { pathname: "/blog/a", search: "", hash: "" },
+    history: { pushState: () => {} },
+    addEventListener: (type: string, fn: (e: object) => void) =>
+      hooks.set(type, [...(hooks.get(type) ?? []), fn]),
+    matchMedia: () => ({ matches: reducedMotion }),
+    getComputedStyle: () => ({ scrollMarginTop: `${MARGIN}px` }),
+    performance: { now: () => now },
+    requestAnimationFrame: (fn: (t: number) => void) => frames.push(fn),
+    scrollTo: (_: number, y: number) => {
+      scrollY = y;
+    },
+    innerHeight: 800,
+    get scrollY() {
+      return scrollY;
+    },
+  };
+  new Function("env", `with (env) { ${NAV_JS} }`)(env);
+  return {
+    click: () =>
+      hooks.get("click")?.forEach((fn) =>
+        fn({ target: link, preventDefault: () => {} }),
+      ),
+    frame: (ms) => {
+      now += ms;
+      const due = frames;
+      frames = [];
+      due.forEach((fn) => fn(now));
+    },
+    grow: (by) => {
+      top += by;
+      img.complete = true;
+      loads.splice(0).forEach((fn) => fn());
+    },
+    input: (type) => hooks.get(type)?.splice(0).forEach((fn) => fn({})),
+    targetTop: () => top - scrollY,
+  };
+}
+
+test("a footnote jump lands on its note when an image above loads mid-jump", () => {
+  const page = runJump(false);
+  page.click();
+  page.frame(100);
+  page.grow(500);
+  page.frame(100);
+  page.frame(16);
+  assert.equal(page.targetTop(), 400, "the note sits at its scroll margin");
+});
+
+test("an image that loads after the landing lands the jump again", () => {
+  const page = runJump(false);
+  page.click();
+  page.frame(200);
+  page.frame(16);
+  assert.equal(page.targetTop(), 400);
+  page.grow(500);
+  assert.equal(page.targetTop(), 400, "followed the note down");
+});
+
+test("the reader's own scroll ends the jump's follow-up", () => {
+  for (const type of ["wheel", "touchmove", "keydown", "pointerdown"]) {
+    const page = runJump(false);
+    page.click();
+    page.frame(200);
+    page.frame(16);
+    page.input(type);
+    page.grow(500);
+    assert.equal(page.targetTop(), 900, `${type} stops it`);
+  }
+});
+
+test("reduced motion jumps without a glide and still follows a late image", () => {
+  const page = runJump(true);
+  page.click();
+  assert.equal(page.targetTop(), 400, "landed with no frames");
+  page.grow(500);
+  assert.equal(page.targetTop(), 400);
+});
+
+/**
+ * Runs NAV_JS on page 1 of a listing with a search box and two cards. With
+ * `index` set the heading names a baked search index, which `fetch` answers
+ * with `rows` once `arrive` is called (or rejects when `rows` is null).
+ */
+function runSearch(rows: [string, string][] | null, index = "/blog/search.json") {
+  const hooks = new Map<string, () => void>();
+  const q = {
+    value: "",
+    addEventListener: (type: string, fn: () => void) => hooks.set(type, fn),
+    focus: () => {},
+  };
+  const card = (title: string, author: string) => ({
+    dataset: { title, excerpt: "", cat: "Updates", author },
+    hidden: false,
+  });
+  const cards = [card("Café Day’s “Notes”", "Charlotte Fang"), card("Second post", "minds0n")];
+  const emptyText = { textContent: "No posts match." };
+  const shown: { html: string; gone: boolean }[] = [];
+  const emptyEl = {
+    hidden: true,
+    querySelector: (sel: string) => (sel === ".list-empty-text" ? emptyText : null),
+    after: (...els: { html: string; gone: boolean }[]) => shown.push(...els),
+  };
+  const pager = { hidden: false };
+  const statusEl = { dataset: index ? { index } : {}, textContent: "" };
+  const fetched: string[] = [];
+  let arrive = () => {};
+  const fetch = (url: string) => {
+    fetched.push(url);
+    return new Promise((resolve) => {
+      arrive = () =>
+        resolve(rows ? { ok: true, json: () => rows } : { ok: false, status: 404 });
+    });
+  };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) =>
+      sel === ".index-mast h1"
+        ? statusEl
+        : sel === ".list-empty"
+          ? emptyEl
+          : sel === ".pager"
+            ? pager
+            : null,
+    querySelectorAll: (sel: string) => (sel === ".post-card" ? cards : []),
+    addEventListener: () => {},
+    documentElement: { style: {} },
+    createElement: () => {
+      const children: { html: string; gone: boolean; remove(): void }[] = [];
+      return {
+        content: { children },
+        set innerHTML(html: string) {
+          for (const part of html.split("<article").slice(1)) {
+            const node = { html: `<article${part}`, gone: false, remove() { node.gone = true; } };
+            children.push(node);
+          }
+        },
+      };
+    },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", "fetch", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => ({ matches: true }),
+    fetch,
+  );
+  const type = (value: string) => {
+    q.value = value;
+    hooks.get("input")?.();
+  };
+  const settle = async () => {
+    arrive();
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+  const live = () => shown.filter((n) => !n.gone).map((n) => n.html);
+  return { type, settle, live, cards, emptyEl, emptyText, pager, fetched };
+}
+
+const INDEX: [string, string][] = [
+  ["Café Day’s “Notes” Charlotte Fang Updates", "<article>one</article>"],
+  ["Second post minds0n Updates", "<article>two</article>"],
+  ["A post from page three Charlotte Fang Thought", "<article>three</article>"],
+];
+
+test("a search on a paginated listing finds posts on its other pages", async () => {
+  const ui = runSearch(INDEX);
+  assert.deepEqual(ui.fetched, [], "the index loads only once a search starts");
+  ui.type("page three");
+  await ui.settle();
+  assert.deepEqual(ui.fetched, ["/blog/search.json"]);
+  assert.deepEqual(ui.live(), ["<article>three</article>"]);
+  assert.ok(ui.cards.every((c) => c.hidden), "this page's own cards give way to the hits");
+  assert.equal(ui.pager.hidden, true);
+  assert.equal(ui.emptyEl.hidden, true);
+
+  // A second query reuses the index and replaces the hits, in listing order.
+  ui.type("fang");
+  assert.deepEqual(ui.fetched.length, 1);
+  assert.deepEqual(ui.live(), ["<article>one</article>", "<article>three</article>"]);
+
+  // Clearing the box puts the page back as it was baked.
+  ui.type("");
+  assert.deepEqual(ui.live(), []);
+  assert.ok(ui.cards.every((c) => !c.hidden));
+  assert.equal(ui.pager.hidden, false);
+});
+
+test("search matches whole words in any order, whatever the case, accents or quotes", async () => {
+  const ui = runSearch(INDEX);
+  ui.type("x");
+  await ui.settle();
+  for (const query of ["cafe", "CAFÉ day's", 'notes"  day', "fang cafe", "“notes”"]) {
+    ui.type(query);
+    assert.deepEqual(ui.live(), ["<article>one</article>"], query);
+  }
+  // Every word must appear, and letters must be adjacent: no fuzzy hits.
+  for (const query of ["cafe night", "cfe", "scnd"]) {
+    ui.type(query);
+    assert.deepEqual(ui.live(), [], query);
+    assert.equal(ui.emptyEl.hidden, false, query);
+  }
+  assert.equal(ui.emptyText.textContent, "No posts match “scnd”.");
+});
+
+test("a search says nothing matches only once the whole listing was searched", async () => {
+  const ui = runSearch(INDEX);
+  ui.type("zebra");
+  // The index is still on its way: this page's cards filter, with no verdict.
+  assert.ok(ui.cards.every((c) => c.hidden));
+  assert.equal(ui.emptyEl.hidden, true);
+  await ui.settle();
+  assert.equal(ui.emptyEl.hidden, false);
+});
+
+test("a search falls back to this page's cards when the index does not load", async () => {
+  const ui = runSearch(null);
+  ui.type("second");
+  await ui.settle();
+  assert.deepEqual(ui.cards.map((c) => c.hidden), [true, false]);
+  assert.equal(ui.pager.hidden, false);
+  ui.type("zebra");
+  assert.equal(ui.emptyEl.hidden, false);
+  assert.equal(ui.fetched.length, 1, "a failed index is not asked for again");
+});
+
+test("a one-page listing filters its own cards and fetches nothing", () => {
+  const ui = runSearch(INDEX, "");
+  ui.type("cafe fang");
+  assert.deepEqual(ui.cards.map((c) => c.hidden), [false, true]);
+  assert.deepEqual(ui.fetched, []);
+  assert.equal(ui.pager.hidden, false);
+  ui.type("cfe");
+  assert.equal(ui.emptyEl.hidden, false);
+});
+
+test("Escape in an open menu returns focus to its dropdown", () => {
+  const ui = runControls();
+  let focused = 0;
+  const summary = ui.author.kids[0] as Node & { focus?: () => void };
+  summary.focus = () => { focused += 1; };
+  ui.click(ui.author.kids[0]);
+  assert.equal(ui.author.open, true);
+  const inMenu = ui.find(ui.author, "minds0n");
+  ui.windowHooks.get("keydown")?.forEach((fn) => fn({ key: "Escape", target: inMenu }));
+  assert.equal(ui.author.open, false);
+  assert.equal(focused, 1);
+  // With the menu already closed, Escape moves focus nowhere.
+  ui.windowHooks.get("keydown")?.forEach((fn) => fn({ key: "Escape", target: inMenu }));
+  assert.equal(focused, 1);
 });

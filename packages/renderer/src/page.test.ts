@@ -8,6 +8,8 @@ import {
   notFoundHtml,
   tocBox,
   indexMain,
+  cardHtml,
+  termIndexMain,
   type Chrome,
 } from "./page";
 import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
@@ -148,6 +150,8 @@ test("section 404 is noindex and offers a way back into the section", () => {
     ],
   });
   assert.ok(nf.includes('content="noindex"'));
+  // The head sits in the left rail, where it is boxed at every width.
+  assert.ok(nf.includes(`<div class="left-rail">\n${CHROME.header}`));
   assert.ok(nf.includes('<a href="/blog/vaults">Vaults</a>'));
   assert.ok(nf.includes('<time datetime="2026-08-01T00:00:00Z">2026-08-01</time>'));
   assert.ok(nf.includes('<a href="/blog">Devblog index</a>'));
@@ -514,4 +518,23 @@ test("JSON-LD cannot close its script element", () => {
     JSON.parse(block!).headline,
     "</script><script>alert(1)</script>",
   );
+});
+
+test("a listing names its search index, and a card renders the same alone", () => {
+  const html = indexMain([POST], undefined, { index: "/blog/updates/search.json" });
+  assert.ok(html.includes(' data-index="/blog/updates/search.json">Showing all posts</h1>'));
+  assert.ok(!indexMain([POST]).includes("data-index"));
+  assert.ok(html.includes(cardHtml(POST)));
+  assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
+});
+
+test("a term directory wears the listing mast: sections shown, heading read aloud", () => {
+  const nav = sectionNav(SECTIONS);
+  const html = termIndexMain("Tag", [{ label: "Theory", href: "/blog/tags/theory", count: 3 }], nav);
+  const mast = (s: string) => s.slice(s.indexOf('<div class="sec mast'), s.indexOf('<div class="article-rest">'));
+  assert.equal(
+    mast(html),
+    mast(indexMain([POST], undefined, undefined, nav)).replace("Showing all posts", "Showing all tags"),
+  );
+  assert.equal(html.includes("mast-tools"), false);
 });

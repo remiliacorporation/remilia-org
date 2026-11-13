@@ -122,6 +122,9 @@
   padding: var(--space-xs);
   text-transform: uppercase;
 }
+.pager[hidden] {
+  display: none;
+}
 .pager .pager-prev {
   justify-self: start;
 }
