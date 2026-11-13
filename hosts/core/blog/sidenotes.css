@@ -53,7 +53,8 @@
   }
   /* The box: border and ground, over every line and under the note's own
      text. Lines sit at 1, boxes at 2, text at 3; the open note's box and
-     text at 4 and 5, over the notes it stands on. */
+     text at 4 and 5, over the notes it stands on, and the note opened
+     last at 6 and 7, over another open note. */
   .fn-note::after {
     content: "";
     position: absolute;
@@ -138,12 +139,21 @@
     padding-bottom: calc(var(--space-xs) + var(--grid));
     --fn-w: calc(2 * var(--border-w));
   }
+  /* An open note takes every hit inside its box, so the pointer on its
+     padding or its foot stays on it and never reaches the note under it. */
   .fn-note[data-on]::after {
     z-index: 4;
     background: var(--ink);
+    pointer-events: auto;
   }
   .fn-note[data-on] > * {
     z-index: 5;
+  }
+  .fn-note[data-on][data-top]::after {
+    z-index: 6;
+  }
+  .fn-note[data-on][data-top] > * {
+    z-index: 7;
   }
   .fn-note[data-dim]::before {
     opacity: 0.3;

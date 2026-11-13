@@ -940,10 +940,10 @@
 }
 .blog-pt-note .fn > .fn-note.fn-edit::after {
   background: var(--surface) !important;
-  z-index: 6;
+  z-index: 8;
 }
 .blog-pt-note .fn > .fn-note.fn-edit > * {
-  z-index: 7;
+  z-index: 9;
 }
 .blog-pt-note .fn > .fn-note.fn-edit :is(strong, .fn-par, .fn-q) {
   color: var(--ink) !important;

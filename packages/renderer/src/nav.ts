@@ -369,10 +369,12 @@ function sidenotes(root, wide, opts) {
   let placed = [];
   let hover = null;
   let pinned = null;
+  // The note opened last, which stands over any other open note.
+  let last = null;
   let timer = 0;
   let glideUntil = 0;
   const VARS = ['--fn-drop', '--fn-lane', '--fn-reach'];
-  const FLAGS = ['data-on', 'data-dim', 'data-long', 'data-anim'];
+  const FLAGS = ['data-on', 'data-top', 'data-dim', 'data-long', 'data-anim'];
   // Writes only what differs, so a layout that has not changed leaves the
   // page alone.
   const put = (el, k, v) => {
@@ -510,16 +512,32 @@ function sidenotes(root, wide, opts) {
       const short = (row) => (row.open ? row.full : Math.min(row.full, LINES * line));
       // A cut ends at the foot of a line of the text as set: a gap between
       // paragraphs puts the lines off the line grid, and a cut on the grid
-      // showed half a line.
+      // showed half a line. The pieces of text are gathered into lines,
+      // tallest first, a piece joining the line its middle falls in, so a
+      // raised reference (a nested note's number) counts as part of its
+      // line and not as a line of its own.
       const snap = (row, h) => {
         const doc = row.text.ownerDocument;
-        if (!doc || !doc.createRange || h >= row.full) return h;
+        if (!doc || !doc.createRange || !doc.createTreeWalker || h >= row.full) return h;
         const r = doc.createRange();
-        r.selectNodeContents(row.text);
         const top = row.text.getBoundingClientRect().top;
+        const bits = [];
+        const walk = doc.createTreeWalker(row.text, 4);
+        for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+          r.selectNodeContents(t);
+          for (const b of r.getClientRects()) if (b.height > 0) bits.push(b);
+        }
+        bits.sort((a, b) => b.height - a.height);
+        const lines = [];
+        for (const b of bits) {
+          const mid = (b.top + b.bottom) / 2;
+          const at = lines.find((o) => mid >= o.top && mid <= o.bottom);
+          if (at) at.foot = Math.max(at.foot, b.bottom);
+          else lines.push({ top: b.top, bottom: b.bottom, foot: b.bottom });
+        }
         let best = 0;
-        for (const b of r.getClientRects()) {
-          const foot = b.bottom - top;
+        for (const o of lines) {
+          const foot = o.foot - top;
           if (foot <= h + 0.5 && foot > best) best = foot;
         }
         return best > line ? Math.min(h, Math.ceil(best)) : h;
@@ -577,6 +595,7 @@ function sidenotes(root, wide, opts) {
       flag(n, 'data-long', !over && row.cut < row.full);
       if (over) out.floor = Math.max(out.floor, row.top + row.full + row.chrome + num('--space-xs'));
       flag(n, 'data-on', on.has(n));
+      flag(n, 'data-top', on.has(n) && n === last);
       flag(n, 'data-dim', on.size > 0 && !on.has(n));
       if (on.has(n) && !row.sub) lit.add(row.fn);
       put(n, '--fn-drop', Math.max(0, row.to - row.from) + 'px');
@@ -611,7 +630,7 @@ function sidenotes(root, wide, opts) {
   const point = (n, ms) => {
     clearTimeout(timer);
     if (n === hover) return;
-    timer = setTimeout(() => { hover = n; stack(true); }, ms);
+    timer = setTimeout(() => { hover = n; if (n) last = n; stack(true); }, ms);
   };
   listen('pointerover', (e) => {
     if (e.pointerType === 'touch') return;
@@ -633,13 +652,15 @@ function sidenotes(root, wide, opts) {
   const pin = (n) => {
     if (n === pinned) return;
     pinned = n;
+    if (n) last = n;
     stack(true);
     // Into view once it has opened, and only if it is off screen.
     if (n) setTimeout(() => { if (pinned === n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest' }); }, GLIDE_MS);
   };
   // A click on a mark opens its note, and a second click closes it; a
-  // click on a note keeps it open; a click anywhere else, or Escape,
-  // closes it.
+  // click on a note keeps it open; a click anywhere else closes it.
+  // Escape closes any open note, one opened by the pointer or the keyboard
+  // focus as well as by a click.
   listen('click', (e) => {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !wide()) return;
     const t = e.target;
@@ -667,7 +688,11 @@ function sidenotes(root, wide, opts) {
     }
   });
   listen('keydown', (e) => {
-    if (e.key === 'Escape' && pinned) pin(null);
+    if (e.key !== 'Escape' || !(hover || pinned)) return;
+    clearTimeout(timer);
+    hover = null;
+    pinned = null;
+    stack(true);
   });
   return stack;
 }
@@ -914,6 +939,13 @@ export const NAV_JS = `(() => {
 })();
 (() => {
   try {
+    // A link in the contents closes the contents on a phone, whether it
+    // goes to a heading or to a note.
+    addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('.toc nav a[href^="#"]');
+      const t = document.getElementById('toc-toggle');
+      if (a && t) t.checked = false;
+    });
     const toc = document.querySelector('.toc nav ol');
     if (!toc) return;
     const hs = document.querySelectorAll('.prose :is(h2,h3)[id]');
@@ -957,11 +989,6 @@ export const NAV_JS = `(() => {
       addEventListener('scroll', on, { passive: true });
     }
     addEventListener('resize', pick, { passive: true });
-    addEventListener('click', (e) => {
-      const a = e.target.closest('.toc nav a[href^="#"]');
-      const t = document.getElementById('toc-toggle');
-      if (a && t) t.checked = false;
-    });
   } catch (e) {}
 })();
 (() => {

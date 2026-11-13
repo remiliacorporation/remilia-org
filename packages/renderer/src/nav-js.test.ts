@@ -1074,7 +1074,13 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
       setAttribute: (k: string, v: string) => void (writes++, (attrs[k] = v)),
       removeAttribute: (k: string) => void (writes++, delete attrs[k]),
       closest: (sel: string) =>
-        sel === ".fn" ? fn : sel === ".fn-note" ? self() : sel === ".fn-xref" ? null : column,
+        sel === ".fn"
+          ? fn
+          : sel === ".fn-note"
+            ? self()
+            : [".fn-xref", ".fn-ref", "a"].includes(sel)
+              ? null
+              : column,
       // The note's text, or the reference to a note nested in this one.
       querySelector: (sel: string) => {
         if (sel === ".sn-text") return text;
@@ -1140,6 +1146,8 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
       bottom: top + shown,
       long: "data-long" in el.attrs,
       on: "data-on" in el.attrs,
+      /** Stands over any other open note. */
+      top_: "data-top" in el.attrs,
       drop: parseFloat(el.style["--fn-drop"] ?? "0"),
       lane: el.style["--fn-lane"],
       placed: el.style.top !== undefined && el.style.top !== "",
@@ -1151,7 +1159,17 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     await new Promise((r) => setTimeout(r, 150));
     return read();
   };
-  return Object.assign(read(), { writes: again, point });
+  /** Clicks note i, which keeps it open. */
+  const click = (i: number) => {
+    listeners.click({ target: els[i], button: 0 });
+    return read();
+  };
+  /** Presses a key anywhere in the page. */
+  const key = (k: string) => {
+    listeners.keydown({ key: k });
+    return read();
+  };
+  return Object.assign(read(), { writes: again, point, click, key });
 }
 
 test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
@@ -1206,6 +1224,43 @@ test("a pointed-at note opens alone, over the notes below, and nothing moves", a
   const third = await rest.point(2);
   assert.deepEqual([third[2].on, third[2].long, third[2].shown], [true, false, 300]);
   assert.equal(third[3].top, rest[3].top);
+});
+
+test("the note opened last stands over another open note", async () => {
+  const rest = layOut([
+    { at: 300, height: 200 },
+    { at: 340, height: 300 },
+    { at: 900, height: 40 },
+  ]);
+  const pinned = rest.click(1);
+  assert.deepEqual([pinned[1].on, pinned[1].top_], [true, true]);
+  // Pointing at the earlier note opens it over the one clicked open.
+  const both = await rest.point(0);
+  assert.deepEqual(
+    both.map((r) => [r.on, r.top_]),
+    [
+      [true, true],
+      [true, false],
+      [false, false],
+    ],
+  );
+});
+
+test("Escape closes a note the pointer or a click opened", async () => {
+  const rest = layOut([
+    { at: 300, height: 200 },
+    { at: 340, height: 300 },
+  ]);
+  await rest.point(0);
+  assert.deepEqual(
+    rest.key("Escape").map((r) => r.on),
+    [false, false],
+  );
+  rest.click(1);
+  assert.deepEqual(
+    rest.key("Escape").map((r) => r.on),
+    [false, false],
+  );
 });
 
 test("a note being written shows in full and the notes below move down", () => {

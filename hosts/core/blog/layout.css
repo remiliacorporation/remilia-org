@@ -568,8 +568,8 @@
     text-align: center;
     z-index: 5;
   }
-  /* The right rail's boxes stack from the top: the theme, then a post's
-     read info. Margin notes start under them. */
+  /* The right rail's boxes stack from the top: the theme, then the search
+     box. Margin notes start under them. */
   .right-rail {
     display: flex;
     flex-direction: column;
