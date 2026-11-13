@@ -781,8 +781,9 @@
 
 /* In the margin, a note is placed from the text block it stands beside,
    not from its mark (the site's .fn is relative): a word typed before the
-   mark on its line moves the mark, and the note must not move with it. */
-@container blog-page (min-width: 1100px) {
+   mark on its line moves the mark, and the note must not move with it.
+   The margin starts at MARGIN_FROM (studio/noteStyles.ts). */
+@container blog-page (min-width: 884px) {
   .blog-page .blog-pt-note > .fn {
     position: static;
   }
@@ -847,14 +848,37 @@
   cursor: pointer;
 }
 
-/* Tells the editor when the frame shows both rails, the width from which
-   the site's sheet stands notes in the margin (blog/sidenotes.css). */
+/* Tells the editor when the frame has a margin for the notes. The site
+   needs both rails for that (1100px). A document pane beside the Studio's
+   lists is often narrower, so from 884px (MARGIN_FROM, studio/noteStyles.ts)
+   the editor gives up the left rail: the column stands at the left, and
+   the notes stand in one rail's width beside it. From 1100px the frame is
+   the site's. */
 .blog-page {
   --sidenotes: 0;
 }
-@container blog-page (min-width: 1100px) {
+@container blog-page (min-width: 884px) {
   .blog-page {
     --sidenotes: 1;
+  }
+}
+@container blog-page (min-width: 884px) and (max-width: 1099px) {
+  .blog-page .layout {
+    display: grid;
+    grid-template-columns: var(--column) var(--rail);
+    justify-content: center;
+    align-items: start;
+    column-gap: var(--rail-gap);
+    width: auto;
+    max-width: none;
+    margin: var(--rail-gap) var(--rail-gap) 0;
+  }
+  .blog-page .side-col {
+    display: none;
+  }
+  .blog-page .article-wrap {
+    grid-column: 1;
+    grid-row: 1;
   }
 }
 
