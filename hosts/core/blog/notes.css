@@ -5,6 +5,12 @@
   user-select: none;
   font-variant-numeric: tabular-nums;
 }
+/* A note opens as a positioned box inside its line. Under text-wrap: pretty
+   that box changes where the line breaks, so the mark moved out from under
+   the pointer and the click missed it. Text that holds a mark wraps plainly. */
+.prose :is(p, li, h2, h3, h4):has(.fn) {
+  text-wrap: wrap;
+}
 .fn-ref {
   position: relative;
   font-weight: var(--weight-strong);
