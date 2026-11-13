@@ -20,6 +20,7 @@ import {
   frameHtml,
   frameTheme,
 } from "./pageFrame";
+import { SidenotesShown, marginShown, sidenoteStacker } from "./sidenotes";
 
 /** Where the post's title field renders (studio/postInput.tsx TitleField). */
 export const TitleRoot = createContext<HTMLElement | null>(null);
@@ -208,6 +209,47 @@ export function PostPage(props: {
     slots.adjacent.style.display = parts.adjacent ? "" : "none";
   }, [slots, parts.adjacent]);
 
+  // Notes stand in the margin while the frame shows both rails. The layout
+  // script places them; it runs again when the frame, the text, a note's
+  // state, or the right rail's boxes (the notes start under them) change.
+  const [margin, setMargin] = useState(false);
+  useEffect(() => {
+    if (!slots) return;
+    const { root, prose } = slots;
+    const wide = () => marginShown(root);
+    const stack = sidenoteStacker(root, wide);
+    let frame = 0;
+    const run = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setMargin(wide());
+        stack();
+      });
+    };
+    const sizes = new ResizeObserver(run);
+    sizes.observe(root);
+    const rail = root.querySelector(".right-rail");
+    if (rail) sizes.observe(rail);
+    // The script writes inline styles and a data attribute only; this
+    // watches the text and class names, so its own work does not call it
+    // again.
+    const text = new MutationObserver(run);
+    text.observe(prose, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    void document.fonts?.ready.then(run);
+    run();
+    return () => {
+      cancelAnimationFrame(frame);
+      sizes.disconnect();
+      text.disconnect();
+    };
+  }, [slots]);
+
   // Links in the frame open the live site in a new tab rather than leaving
   // the Studio; a contents link moves to its heading in the editor.
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -244,7 +286,11 @@ export function PostPage(props: {
       {slots
         ? createPortal(
             <TitleRoot.Provider value={slots.title}>
-              <div className="blog-article-prose blog-pt">{props.children}</div>
+              <SidenotesShown.Provider value={margin}>
+                <div className="blog-article-prose blog-pt">
+                  {props.children}
+                </div>
+              </SidenotesShown.Provider>
             </TitleRoot.Provider>,
             slots.prose,
           )

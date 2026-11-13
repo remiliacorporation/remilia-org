@@ -240,6 +240,37 @@ test("a note inside a note: one sequence in reading order, linked both ways", ()
   assert.ok(md.includes("[^1]: Outer text[^2] goes on.\n[^2]: The inner note.\n[^3]: The next note."));
 });
 
+
+test("the Studio hook gets a nested note as a margin box of its own, as the page does", () => {
+  const inner = note("in", "The inner note.");
+  const outer = {
+    _type: "footnote",
+    _key: "out",
+    content: [block("ob", [span("Outer text", "o1"), inner, span(" goes on.", "o2")])],
+  };
+  const body = [
+    block("p1", [span("First", "s1"), outer, span(" then", "s2"), note("next", "The next note.")]),
+  ];
+  const seen: Record<string, { html: string; subs: string }> = {};
+  const html = portableTextToHtml(body, {
+    ...OPTS,
+    onNote: (blockKey, noteKey, noteHtml, subs) => {
+      seen[`${blockKey}/${noteKey}`] = { html: noteHtml, subs };
+    },
+  });
+  // Only notes in the text itself call the hook; the nested one rides along.
+  assert.deepEqual(Object.keys(seen), ["p1/out", "p1/next"]);
+  // The box ties to the reference in the parent's text by `data-ref`.
+  assert.ok(seen["p1/out"].html.includes('<a class="fn-xref" href="#fndef-2"'));
+  assert.equal(
+    seen["p1/out"].subs,
+    '<span class="fn-note fn-sub" role="note" data-n="2" data-ref="fndef-2"><strong>2:</strong><span class="sn-text"><span class="fn-par">The inner note.</span></span></span>',
+  );
+  assert.equal(seen["p1/next"].subs, "");
+  // The page carries the same box, after the parent's.
+  assert.ok(html.includes(`</span>${seen["p1/out"].subs}</span>`));
+});
+
 test("lowering and lifting are inverse on a stored body", () => {
   const body = [
     block("p1", [span("First", "s1"), note("a", "A"), span(" then", "s2"), note("b", "B"), span("", "s3")]),
