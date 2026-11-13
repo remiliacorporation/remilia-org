@@ -730,19 +730,47 @@ export const NAV_JS = `(() => {
 // With both rails, notes stand in the margin: each anchors to its mark's
 // line, in the right rail's column. A note that would overlap the one
 // above, or the box at the head of the rail, drops below it, and
-// --fn-drop draws the elbow back up to the mark's line.
+// --fn-drop draws the elbow back up to the mark's line. A long note rests
+// cut at a whole line (--sn-cut). Pointing at a mark, or tabbing to it,
+// opens its note in full at the mark's line, kept inside the window;
+// pointing at a note opens it where it stands.
 (() => {
   try {
     const notes = [...document.querySelectorAll('.fn .fn-note')];
     if (!notes.length) return;
     const mq = matchMedia('(min-width: 1100px)');
+    const rest = new Map();
+    let openFn = null;
+    let timer = 0;
+    const settle = (n) => {
+      n.style.maxHeight = '';
+      n.style.overflowY = '';
+      n.style.removeProperty('--sn-up');
+    };
     const clear = () => {
+      clearTimeout(timer);
+      if (openFn) openFn.classList.remove('sn-open');
+      openFn = null;
+      rest.clear();
       for (const n of notes) {
         n.style.top = '';
         n.style.left = '';
         n.style.removeProperty('--fn-drop');
         n.removeAttribute('data-drop');
         n.removeAttribute('data-long');
+        settle(n);
+        const text = n.querySelector('.sn-text');
+        if (text) text.style.removeProperty('--sn-cut');
+      }
+    };
+    const rise = (n, natural, drop) => {
+      n.style.top = natural + drop + 'px';
+      if (drop > 1) {
+        n.style.setProperty('--fn-drop', drop + 'px');
+        n.setAttribute('data-drop', '');
+      } else {
+        n.style.removeProperty('--fn-drop');
+        n.removeAttribute('data-drop');
       }
     };
     const stack = () => {
@@ -757,7 +785,19 @@ export const NAV_JS = `(() => {
       const placed = [];
       for (const n of notes) {
         const text = n.querySelector('.sn-text');
-        if (text && text.scrollHeight > text.clientHeight + 1) n.setAttribute('data-long', '');
+        if (!text || text.scrollHeight <= text.clientHeight + 1) continue;
+        n.setAttribute('data-long', '');
+        // The cap is a height; end it on the last whole line inside it.
+        const range = document.createRange();
+        range.selectNodeContents(text);
+        const top = text.getBoundingClientRect().top;
+        const limit = text.clientHeight + 1;
+        let cut = 0;
+        for (const rc of range.getClientRects()) {
+          const bottom = rc.bottom - top;
+          if (rc.height > 0 && bottom <= limit && bottom > cut) cut = bottom;
+        }
+        if (cut > 0) text.style.setProperty('--sn-cut', Math.ceil(cut) + 'px');
       }
       for (const n of notes) {
         const parent = n.offsetParent;
@@ -775,12 +815,69 @@ export const NAV_JS = `(() => {
       }
       for (const [n, natural, drop, edge] of placed) {
         n.style.left = edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + num('--rail-gap') + 'px';
-        n.style.top = natural + drop + 'px';
-        if (drop <= 1) continue;
-        n.style.setProperty('--fn-drop', drop + 'px');
-        n.setAttribute('data-drop', '');
+        rest.set(n, [natural, drop]);
+        rise(n, natural, drop);
       }
     };
+    const close = (fn) => {
+      fn.classList.remove('sn-open');
+      const n = fn.querySelector('.fn-note');
+      const at = n && rest.get(n);
+      if (!at) return;
+      settle(n);
+      rise(n, at[0], at[1]);
+    };
+    const open = (fn, inPlace) => {
+      clearTimeout(timer);
+      if (openFn === fn) return;
+      if (openFn) close(openFn);
+      openFn = fn;
+      const n = fn.querySelector('.fn-note');
+      const at = n && rest.get(n);
+      if (!at) return;
+      fn.classList.add('sn-open');
+      const edge = 8;
+      const room = innerHeight - edge;
+      if (!inPlace) {
+        rise(n, at[0], 0);
+        const r = n.getBoundingClientRect();
+        const up = Math.min(Math.max(0, r.bottom - room), Math.max(0, r.top - edge));
+        if (up > 0) {
+          n.style.top = at[0] - up + 'px';
+          n.style.setProperty('--sn-up', up + 'px');
+        }
+      }
+      const r = n.getBoundingClientRect();
+      if (r.bottom > room) {
+        n.style.maxHeight = Math.max(120, room - r.top) + 'px';
+        n.style.overflowY = 'auto';
+      }
+    };
+    const leave = (fn) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (openFn !== fn || fn.matches(':hover') || fn.matches(':focus-within')) return;
+        close(fn);
+        openFn = null;
+      }, 250);
+    };
+    const fnOf = (e) => (mq.matches && e.target && e.target.closest ? e.target.closest('.fn') : null);
+    document.addEventListener('pointerover', (e) => {
+      const fn = fnOf(e);
+      if (fn) open(fn, !!e.target.closest('.fn-note'));
+    });
+    document.addEventListener('pointerout', (e) => {
+      const fn = fnOf(e);
+      if (fn && fn === openFn && !(e.relatedTarget && fn.contains(e.relatedTarget))) leave(fn);
+    });
+    document.addEventListener('focusin', (e) => {
+      const fn = fnOf(e);
+      if (fn) open(fn, false);
+    });
+    document.addEventListener('focusout', (e) => {
+      const fn = fnOf(e);
+      if (fn && fn === openFn) leave(fn);
+    });
     stack();
     addEventListener('resize', stack, { passive: true });
     addEventListener('load', stack);

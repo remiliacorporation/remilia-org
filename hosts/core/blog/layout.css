@@ -796,7 +796,9 @@
     display: block;
     position: absolute;
     right: 100%;
-    top: calc(var(--space-xs) + var(--size-ui) * var(--leading) / 2);
+    top: calc(
+      var(--space-xs) + var(--size-ui) * var(--leading) / 2 + var(--sn-up, 0px)
+    );
     width: var(--rail-gap);
     height: var(--border-w);
     background: var(--ink);
@@ -811,12 +813,14 @@
     border-top: var(--border-w) solid var(--ink);
     border-right: var(--border-w) solid var(--ink);
   }
-  /* A long note shows its first lines, so the notes after it stay near
-     their own marks; pointing at it or its mark, or tabbing to the mark,
-     opens the whole note over the ones below. The page script marks a
-     note long (data-long) when its text is cut. */
+  /* A long note shows its first six lines, so the notes after it stay
+     near their own marks. The page script marks it long (data-long) and
+     ends the cut on a whole line (--sn-cut). Pointing at the note or its
+     mark, or tabbing to the mark, opens the whole note over its
+     neighbors; the script holds it open (sn-open) while the pointer
+     crosses from the mark to the note. */
   .fn-note .sn-text {
-    max-height: calc(12 * var(--size-ui) * var(--leading));
+    max-height: var(--sn-cut, calc(6 * var(--size-ui) * var(--leading)));
     overflow: hidden;
   }
   .fn-note[data-long]::after {
@@ -829,31 +833,26 @@
     font-weight: var(--weight-strong);
     line-height: var(--mast-line);
   }
-  .fn:hover .fn-note,
-  .fn:focus-within .fn-note {
+  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note {
     z-index: 6;
   }
-  .fn:hover .fn-note .sn-text,
-  .fn:focus-within .fn-note .sn-text {
+  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note .sn-text {
     max-height: none;
   }
-  .fn:hover .fn-note[data-long]::after,
-  .fn:focus-within .fn-note[data-long]::after {
+  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note[data-long]::after {
     content: none;
   }
-  .fn:hover .fn-ref,
-  .fn:hover .fn-ref sup,
-  .fn:hover .fn-note,
-  .fn:focus-within .fn-note {
+  :is(.fn:hover, .fn.sn-open) .fn-ref,
+  :is(.fn:hover, .fn.sn-open) .fn-ref sup,
+  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note {
     background: var(--ink);
     color: var(--ink-contrast);
   }
-  .fn:hover .fn-note *,
-  .fn:focus-within .fn-note * {
+  :is(.fn:hover, .fn:focus-within, .fn.sn-open) .fn-note * {
     color: var(--ink-contrast);
   }
-  .fn:hover .fn-note a:hover,
-  .fn:hover .fn-note a:hover * {
+  :is(.fn:hover, .fn.sn-open) .fn-note a:hover,
+  :is(.fn:hover, .fn.sn-open) .fn-note a:hover * {
     background: var(--ink-contrast);
     color: var(--ink);
   }
