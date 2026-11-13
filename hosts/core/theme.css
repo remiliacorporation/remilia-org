@@ -97,9 +97,12 @@
   --font-body: "Alte Haas Grotesk", Helvetica, Arial, sans-serif,
     "Noto Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
   --font-mono: monospace;
-  --size-base: 16px;
+  /* Post text: 14px on a 20px line (--leading-prose), on a 75ch measure.
+     The column is about 4% wider than at 16px on 63ch. */
+  --size-base: 14px;
   --size-ui: 12px;
   --size-title: 20px;
+  --size-heading: 18px;
   --size-display: 28px;
   /* Rail wordmark: the largest size that sets REMILIA CORPORATION on one
      line in the rail box, 211px once the scrollbar gutter is taken
@@ -108,7 +111,7 @@
   --weight-body: normal;
   --weight-strong: bold;
 
-  --measure: 63ch;
+  --measure: 75ch;
   --gutter: 24px;
   --rail-gap: 12px;
   --rail: 240px;

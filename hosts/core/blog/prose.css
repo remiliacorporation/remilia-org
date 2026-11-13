@@ -10,6 +10,13 @@ h3,
 .prose {
   overflow-wrap: anywhere;
 }
+/* Every line of post text stands on the 4px grid: the universal rule's
+   ratio (--leading) would put 14px text on an 18.67px line. Rules below
+   and in later sheets that set their own leading still win. */
+.prose,
+.prose :where(*) {
+  line-height: var(--leading-prose);
+}
 .prose a {
   -webkit-hyphens: manual;
   hyphens: manual;
@@ -43,7 +50,7 @@ h3,
   /* More air above a heading than below, so it binds to its own text.
      Each level sets its own top margin below. */
   margin: 0 0 var(--space-xs);
-  line-height: var(--leading-tight);
+  line-height: var(--leading-prose);
   text-wrap: balance;
   hanging-punctuation: first allow-end;
   -webkit-hyphens: auto;
@@ -59,7 +66,8 @@ h3,
 }
 .prose h2 {
   margin-top: var(--space-l);
-  font-size: var(--size-title);
+  font-size: var(--size-heading);
+  line-height: var(--space);
   font-weight: var(--weight-strong);
   text-align: left;
   text-decoration: underline;
@@ -98,7 +106,7 @@ h3,
   content: "";
   position: absolute;
   left: calc(-1 * var(--space-s));
-  top: 5px;
+  top: var(--grid);
   width: var(--grid);
   height: var(--grid);
   background: var(--ink);
@@ -114,8 +122,8 @@ h3,
   content: "";
   position: absolute;
   left: calc(-1 * var(--space-s) + 2px);
-  top: 12px;
-  height: calc(100% + var(--grid) - 12px);
+  top: calc(var(--leading-prose) / 2);
+  height: calc(100% + var(--grid) - var(--leading-prose) / 2);
   border-left: var(--border-w) solid var(--ink);
   opacity: 0.6;
   pointer-events: none;
@@ -220,6 +228,7 @@ h3,
   background: var(--surface);
   font-style: italic;
   font-weight: var(--weight-strong);
+  line-height: var(--leading-prose);
   max-width: 100%;
 }
 .prose figure figcaption a {
