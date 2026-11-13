@@ -740,6 +740,14 @@
   min-height: calc(100vh - 8rem);
 }
 
+/* The editor's toolbar is pinned to the top of the pane from inside the
+   editor's own layer (z-index 1, a Sanity box). The site raises the left
+   rail (z-index 5), which drew the rail over the toolbar once scrolled;
+   here the rail stays in the page's own layer, under the toolbar. */
+.blog-post-shell .blog-page .left-rail {
+  z-index: auto;
+}
+
 .blog-post-shell .blog-page .wm {
   position: absolute;
 }
