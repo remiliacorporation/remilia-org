@@ -190,11 +190,10 @@ function discoveryHead(p: PageInput): string {
 }
 
 /**
- * The resting halftone, in the picture's own colors: each channel takes three
- * tones, ink below 5/48 of full brightness, paper from two thirds up, the mid
- * tone between. Equal thirds turned a dark picture into a solid block, because
- * the dot screen can at most double a pixel's brightness and a shadow under
- * one sixth never reached the mid tone.
+ * The resting halftone: three tones, ink below 5/48 of full brightness, paper
+ * from two thirds up, the mid tone between. Equal thirds turned a dark picture
+ * into a solid block, because the dot screen can at most double a pixel's
+ * brightness and a shadow under one sixth never reached the mid tone.
  */
 function ditherFilter(id: string, paper: number): string {
   const table = [
@@ -203,6 +202,7 @@ function ditherFilter(id: string, paper: number): string {
     ...Array<number>(16).fill(paper),
   ].join(" ");
   return `<filter id="${id}" color-interpolation-filters="sRGB">
+<feColorMatrix type="saturate" values="0"/>
 <feComponentTransfer>
 <feFuncR type="discrete" tableValues="${table}"/>
 <feFuncG type="discrete" tableValues="${table}"/>
