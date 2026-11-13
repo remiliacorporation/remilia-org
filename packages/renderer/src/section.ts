@@ -49,6 +49,7 @@ import {
   PUBLISHED_POSTS,
   bylineOf,
   monthKey,
+  postTitle,
   postPlain,
   readingMinutes,
 } from "./post";
@@ -515,7 +516,7 @@ export function sectionPages(o: SectionInput) {
           ]
         : [];
     return htmlPage({
-      title: p.seoTitle?.trim() || `${p.title} — ${host.title}`,
+      title: p.seoTitle?.trim() || postTitle(p),
       description: p.seoDescription?.trim() || p.excerpt,
       canonical,
       ogImage:
