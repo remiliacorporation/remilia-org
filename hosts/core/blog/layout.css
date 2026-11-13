@@ -252,9 +252,22 @@
     z-index: 31;
   }
 }
-/* Beside one rail the column already fills the viewport, so the text
-   keeps the base gutter at the sides there; with both rails it gets more
-   room as the viewport allows. */
+/* On a phone the column is the screen's width, so the text keeps the
+   base gutter at its sides. Beside one rail the column already fills the
+   viewport, so it keeps that gutter too; from 1100px both rails stand
+   beside it. The full measure (theme.css) and the widest room around the
+   text need 1280px: below that, with one rail or both, the column keeps
+   the measure it had at 63ch, 560px. */
+@media (max-width: 823px) {
+  :root {
+    --read-pad: var(--gutter);
+  }
+}
+@media (min-width: 824px) and (max-width: 1279px) {
+  :root {
+    --measure: 560px;
+  }
+}
 @media (min-width: 824px) and (max-width: 1099px) {
   :root {
     --read-pad: var(--gutter);

@@ -771,6 +771,21 @@
   position: relative;
 }
 
+/* In the margin, a note is placed from the text block it stands beside,
+   not from its mark (the site's .fn is relative): a word typed before the
+   mark on its line moves the mark, and the note must not move with it. */
+@container blog-page (min-width: 1100px) {
+  .blog-page .blog-pt-note > .fn {
+    position: static;
+  }
+
+  /* Sanity's wrapper around the inline note sets position: relative in a
+     style attribute; the note's text block is relative of its own. */
+  .blog-page .blog-pt span:has(> .blog-pt-note) {
+    position: static !important;
+  }
+}
+
 .blog-pt-note > .fn > [data-ui="Card"] {
   padding: 0;
   border-radius: 0;
@@ -867,6 +882,15 @@
   display: block;
   flex: 1;
   min-width: 0;
+}
+/* The layout script measures the form as the note's text (sn-text) and
+   would cut it to a height; the form grows as it is written instead. */
+.blog-pt-note .fn-edit .fn-edit-form.sn-text {
+  height: auto !important;
+  overflow: visible !important;
+}
+.blog-pt-note .fn > .fn-note.fn-edit::after {
+  content: none;
 }
 /* Sanity's field label and the editor's page-sized frame have no place
    in a note's box. */

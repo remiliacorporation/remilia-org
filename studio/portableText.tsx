@@ -3,8 +3,8 @@ import {
   useEffect,
   useInsertionEffect,
   useMemo,
-  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -228,10 +228,38 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
 }
 
 /**
+ * The note being written in its margin box, by its path; one at a time. It
+ * lives outside the notes' components, so a note stays open while the rest
+ * of the post is edited, even if Sanity mounts its mark again.
+ */
+let writing: string | null = null;
+/** True from a click that opens a note until its box takes the caret. */
+let caretPending = false;
+const writers = new Set<() => void>();
+
+function setWriting(id: string | null, caret = false): void {
+  if (writing === id) return;
+  caretPending = caret && id !== null;
+  writing = id;
+  for (const f of writers) f();
+}
+
+function useWriting(): string | null {
+  return useSyncExternalStore(
+    (f) => {
+      writers.add(f);
+      return () => writers.delete(f);
+    },
+    () => writing,
+  );
+}
+
+/**
  * The note's box in the margin while the note is written there. It holds
  * Sanity's own form for the note, so its edits are the form's patches, as
- * in the dialog. Escape, or a click anywhere else on the page, closes it;
- * the box then shows the note as the site draws it again.
+ * in the dialog. It stays open while the rest of the post is edited;
+ * Escape in the note, or opening another note, closes it, and the box then
+ * shows the note as the site draws it again.
  */
 function NoteInPlace(props: {
   n: number | undefined;
@@ -239,13 +267,9 @@ function NoteInPlace(props: {
   children: ReactNode;
 }): ReactNode {
   const [box, setBox] = useState<HTMLElement | null>(null);
-  // Sanity hands a new onClose as the form changes; the effect below must
-  // run once per opening, or it would pull the caret back on every edit.
-  const close = useRef(props.onClose);
-  close.current = props.onClose;
-  const onClose = () => close.current();
   useEffect(() => {
-    if (!box) return;
+    if (!box || !caretPending) return;
+    caretPending = false;
     // The caret goes into the note at once, as the dialog put it there. The
     // note's editor mounts a frame or two after its box.
     let tries = 0;
@@ -254,19 +278,7 @@ function NoteInPlace(props: {
       if (text) text.focus();
       else if (++tries < 30) frame = requestAnimationFrame(focus);
     });
-    // A press anywhere else on the page closes the note. Menus and dialogs
-    // the note's own editor opens stand outside the page, so they do not.
-    const shell = box.closest(".blog-post-shell");
-    const fn = box.closest(".fn");
-    const away = (e: PointerEvent) => {
-      const t = e.target as Node;
-      if (shell?.contains(t) && !fn?.contains(t)) close.current();
-    };
-    document.addEventListener("pointerdown", away, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("pointerdown", away, true);
-    };
+    return () => cancelAnimationFrame(frame);
   }, [box]);
   return (
     <span
@@ -281,12 +293,13 @@ function NoteInPlace(props: {
         if (!e.currentTarget.contains(e.target as Node)) return;
         if (e.key === "Escape" && !e.defaultPrevented) {
           e.stopPropagation();
-          onClose();
+          props.onClose();
         }
       }}
     >
       <strong>{props.n ?? "*"}:</strong>
-      <span className="fn-edit-form">{props.children}</span>
+      {/* sn-text: the layout script measures the note's text here. */}
+      <span className="fn-edit-form sn-text">{props.children}</span>
     </span>
   );
 }
@@ -296,9 +309,10 @@ function NoteInPlace(props: {
  * place in the text (the renderer's `numberFootnotes`, so the editor and the
  * site agree), and the note as the site draws it. In the page frame with
  * both rails showing, every note stands in the margin, as on the site
- * (studio/sidenotes.ts), and a click on the mark or the note opens the note
- * for writing in its own box (NoteInPlace). In a narrower frame the
- * selected note opens under its mark, and a click opens Sanity's dialog.
+ * (studio/sidenotes.ts): a click on the mark opens the note there in full,
+ * and a click on the note opens it for writing in its own box
+ * (NoteInPlace). In a narrower frame the selected note opens under its
+ * mark, and a click on the mark or the note opens Sanity's dialog.
  */
 export function FootnoteInline(props: BlockProps): ReactNode {
   useInsertionEffect(injectNoteCss, []);
@@ -306,14 +320,24 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const root = useFormValue(props.path.slice(0, 1));
   const keys = keysOf(props.path);
   const id = keys.join("/");
+  const me = JSON.stringify(props.path);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
   );
-  // A note in the text itself, opened while its box stands in the margin,
+  // A note in the text itself, written while its box stands in the margin,
   // is written in that box: Sanity's own form for the note (props.children,
   // the input its dialog would hold) renders there instead of the dialog.
-  const inPlace = margin && keys.length === 2 && props.open;
+  // Sanity closes an item when the caret leaves it; the box stays open
+  // until Escape or another note opens (`writing`).
+  const writingNow = useWriting();
+  const top = margin && keys.length === 2;
+  const inPlace = top && (writingNow === me || props.open);
+  // A note Sanity opens itself (a new note from the toolbar) is written in
+  // place too, and stays open like one opened by a click.
+  useEffect(() => {
+    if (top && props.open) setWriting(me, true);
+  }, [top, props.open, me]);
   const picked = (props.selected || props.focused) && !props.open;
   // Only a note in the text itself has a box on the site; a note inside a
   // note shows as its number here, and as its own box under its parent's
@@ -324,10 +348,12 @@ export function FootnoteInline(props: BlockProps): ReactNode {
       : undefined;
   // The site's own class (fn) sits one element in: the note styles are
   // scoped to this mark, and a scoped rule reaches only below its root.
+  // In the margin, the note being written stays open in full (fn-pin, read
+  // by the layout script).
   const state = [
     "fn",
     note && !margin ? "fn-pop" : "",
-    picked || inPlace ? "fn-on" : "",
+    inPlace ? "fn-pin" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -338,10 +364,18 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
+        const t = e.target as Element;
         // A click in the note being written is the writer's own.
-        if ((e.target as Element).closest?.(".fn-edit")) return;
+        if (t.closest?.(".fn-edit")) return;
         // A link in the note's markup must not leave the Studio.
-        if ((e.target as Element).closest?.("a")) e.preventDefault();
+        if (t.closest?.("a")) e.preventDefault();
+        if (note && margin) {
+          // In the margin, a click on the mark opens its note in full there
+          // (the layout script's own click); a click on the note opens it
+          // for writing.
+          if (!t.closest?.(".fn-ref")) setWriting(me, true);
+          return;
+        }
         // After the click has moved the editor's focus: inside a note's
         // dialog, opening at once is undone by that focus change.
         window.setTimeout(() => props.onOpen(), 0);
@@ -359,7 +393,13 @@ export function FootnoteInline(props: BlockProps): ReactNode {
           ),
         })}
         {inPlace ? (
-          <NoteInPlace n={n} onClose={props.onClose}>
+          <NoteInPlace
+            n={n}
+            onClose={() => {
+              setWriting(null);
+              props.onClose();
+            }}
+          >
             {props.children}
           </NoteInPlace>
         ) : note ? (
