@@ -488,7 +488,14 @@ export const NAV_JS = `(() => {
     shut(t && t.closest ? t.closest('details.sel') : null);
   });
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') shut(null);
+    if (e.key !== 'Escape') return;
+    // Focus inside a menu that Escape closes goes back to its dropdown,
+    // not to the top of the page.
+    const t = e.target;
+    const d = t && t.closest ? t.closest('details.sel') : null;
+    const back = d && d.open ? d.querySelector('summary') : null;
+    shut(null);
+    if (back && back.focus) back.focus();
   });
   const LEAVE_MS = 500;
   document.querySelectorAll('details.sel').forEach((d) => {

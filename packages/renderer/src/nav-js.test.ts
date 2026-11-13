@@ -907,3 +907,19 @@ test("a one-page listing filters its own cards and fetches nothing", () => {
   ui.type("cfe");
   assert.equal(ui.emptyEl.hidden, false);
 });
+
+test("Escape in an open menu returns focus to its dropdown", () => {
+  const ui = runControls();
+  let focused = 0;
+  const summary = ui.author.kids[0] as Node & { focus?: () => void };
+  summary.focus = () => { focused += 1; };
+  ui.click(ui.author.kids[0]);
+  assert.equal(ui.author.open, true);
+  const inMenu = ui.find(ui.author, "minds0n");
+  ui.windowHooks.get("keydown")?.forEach((fn) => fn({ key: "Escape", target: inMenu }));
+  assert.equal(ui.author.open, false);
+  assert.equal(focused, 1);
+  // With the menu already closed, Escape moves focus nowhere.
+  ui.windowHooks.get("keydown")?.forEach((fn) => fn({ key: "Escape", target: inMenu }));
+  assert.equal(focused, 1);
+});
