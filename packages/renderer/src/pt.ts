@@ -1,4 +1,5 @@
 import { esc, safeHref } from "./html";
+import { lowerFootnotes } from "./footnotes";
 
 interface Span {
   _type: "span";
@@ -15,6 +16,11 @@ interface MarkDef {
   n?: number;
   /** Image-bodied notes — rendered inside the note. */
   image?: { asset?: { _ref?: string; url?: string }; alt?: string; caption?: string };
+  /**
+   * A note written in the Studio: paragraphs and block quotes, with marks,
+   * links, and notes of its own. Wins over `text` when it has blocks.
+   */
+  content?: PTBlock[];
 }
 
 interface TextBlock {
@@ -56,6 +62,12 @@ export interface PTOptions {
   /** Self-hosted video/file asset URL for `video` blocks. */
   videoUrl?: (v: VideoBlock) => string | undefined;
   linkCard?: (href: string) => LinkCard | undefined;
+  /**
+   * Called with each note in the text as it renders: its block's key, its
+   * own key, and the markup inside its `.fn-note` box. The Studio shows that
+   * markup in the editor, so a note looks there as it does on the site.
+   */
+  onNote?: (blockKey: string, noteKey: string, html: string) => void;
 }
 
 const INTERNAL_HOSTS = /^https?:\/\/(?:[\w-]+\.)*remilia\.(?:org|com|net)\b/;
@@ -126,15 +138,18 @@ export function tocItems(headings: Heading[], minHeadings = 3): string {
     .join("\n");
 }
 
+/** Every note a reader meets: the text's notes and the notes inside them. */
 export function footnoteCount(blocks: PTBlock[]): number {
   let n = 0;
-  for (const b of blocks) {
+  for (const b of lowerFootnotes(blocks)) {
     if (!isTextBlock(b)) continue;
     const defs = b.markDefs ?? [];
     for (const s of b.children) {
       for (const mark of s.marks ?? []) {
         const def = defs.find((d) => d._key === mark);
-        if (def?._type === "footnote") n += 1;
+        if (def?._type !== "footnote") continue;
+        n += 1;
+        if (def.content?.length) n += footnoteCount(def.content);
       }
     }
   }
@@ -152,6 +167,10 @@ interface RenderState {
   fnTexts: Map<number, string>;
   /** pooled endnote entries — every note also lists at the end of the article. */
   endnotes: string[];
+  /** Set while a note's own blocks render: a note in there is a nested note. */
+  inNote?: boolean;
+  /** The key of the block being rendered, for `onNote`. */
+  blockKey?: string;
 }
 
 const FN_GLYPH: Record<string, number> = { "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁰": 0 };
@@ -233,20 +252,72 @@ function fnImgHtml(def: MarkDef, state: RenderState): string {
   return `<img class="fn-img" src="${esc(state.opts.imageUrl({ _type: "image", asset: def.image.asset }) ?? "")}"${dims ? ` width="${dims.w}" height="${dims.h}"` : ""} alt="${esc(def.image.alt ?? def.image.caption ?? "")}" loading="lazy">`;
 }
 
-function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
-  state.count += 1;
-  const n = def.n ?? state.count;
+/** Takes the next free `fn-N` id for a note numbered `n`. */
+function fnId(n: number, state: RenderState): string {
   let id = `fn-${n}`;
   for (let k = 2; state.emitted.has(id); k++) id = `fn-${n}-${k}`;
   state.emitted.add(id);
-  const img = fnImgHtml(def, state);
-  const txt = (def.text ?? "").trim();
+  return id;
+}
+
+/**
+ * A Studio-written note's blocks. A note sits inside a paragraph, so its
+ * paragraphs and quotes are spans (`.fn-par`, `.fn-q`), the same ones the
+ * hand-marked text of an old note becomes.
+ */
+function fnContentHtml(blocks: PTBlock[], state: RenderState): string {
+  const was = state.inNote;
+  state.inNote = true;
+  const out = blocks
+    .filter(isTextBlock)
+    .map((b) => {
+      const inner = b.children
+        .map((s) => spanHtml(s, b.markDefs ?? [], state))
+        .join("");
+      if (!inner) return "";
+      return b.style === "blockquote"
+        ? `<span class="fn-q">${inner}</span>`
+        : `<span class="fn-par">${inner}</span>`;
+    })
+    .join("");
+  state.inNote = was;
+  return out;
+}
+
+/** What a note says: its blocks, or an old note's hand-marked text. */
+function fnBodyHtml(def: MarkDef, state: RenderState, trim = true): string {
+  const text = def.text ?? "";
+  const body = def.content?.length
+    ? fnContentHtml(def.content, state)
+    : fnTextHtml(trim ? text.trim() : text, state);
+  return `${body}${fnImgHtml(def, state)}`;
+}
+
+/** A nested note's reference carries its id only in the endnotes copy. */
+const withoutIds = (html: string): string =>
+  html.replace(/(<a class="fn-xref") id="fn-[^"]*"/g, "$1");
+
+function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
+  state.count += 1;
+  const n = def.n ?? state.count;
+  const id = fnId(n, state);
+  // The note takes its place in the endnotes before the notes inside it.
+  const slot = state.endnotes.push("") - 1;
+  const body = fnBodyHtml(def, state);
+  if (state.inNote) {
+    // A note inside a note: its reference sits in the parent's text and
+    // links to its own endnote, which links back.
+    state.endnotes[slot] =
+      `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
+    return `${inner}<a class="fn-xref" id="${id}" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a>`;
+  }
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
-  state.endnotes.push(
-    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`,
-  );
-  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}"><strong>${n}:</strong><span class="sn-text">${fnTextHtml(txt, state)}${img}</span></span></span>`;
+  state.endnotes[slot] =
+    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
+  const note = `<strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span>`;
+  state.opts.onNote?.(state.blockKey ?? "", def._key, note);
+  return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span></span>`;
 }
 
 function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
@@ -263,7 +334,13 @@ function spanHtml(span: Span, markDefs: MarkDef[], state: RenderState): string {
     else if (mark === "code") html = `<code>${html}</code>`;
     else {
       const def = markDefs.find((d) => d._key === mark);
-      if (def?._type === "link" && def.href) html = linkHtml(def, html, state);
+      if (def?._type === "link" && def.href)
+        html = linkHtml(
+          def,
+          html,
+          // No hover card inside a note: the note is already a hover box.
+          state.inNote ? { ...state, opts: { ...state.opts, linkCard: undefined } } : state,
+        );
       else if (def?._type === "footnote") html = fnHtml(def, html, state);
     }
   }
@@ -325,18 +402,23 @@ export function figureHtml(input: {
 }
 
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
+  blocks = lowerFootnotes(blocks);
   const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [] };
   {
     let pos = 0;
-    for (const b of blocks) {
-      if (!isTextBlock(b)) continue;
-      for (const d of b.markDefs ?? []) {
-        if (d._type !== "footnote") continue;
-        const n = d.n ?? ++pos;
-        state.fnTargets.add(n);
-        state.fnTexts.set(n, d.text ?? "");
+    const scan = (list: PTBlock[]): void => {
+      for (const b of list) {
+        if (!isTextBlock(b)) continue;
+        for (const d of b.markDefs ?? []) {
+          if (d._type !== "footnote") continue;
+          const n = d.n ?? ++pos;
+          state.fnTargets.add(n);
+          state.fnTexts.set(n, d.text ?? "");
+          if (d.content?.length) scan(d.content);
+        }
       }
-    }
+    };
+    scan(blocks);
   }
   const headingIds = new Map<TextBlock, string>();
   const headingList = headingBlocks(blocks);
@@ -370,6 +452,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
 
   for (const block of blocks) {
     if (isTextBlock(block) && block.listItem) {
+      state.blockKey = (block as { _key?: string })._key;
       const tag = block.listItem === "number" ? "ol" : "ul";
       const item = block.children
         .map((s) => spanHtml(s, block.markDefs ?? [], state))
@@ -389,6 +472,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
     }
 
     if (isTextBlock(block)) {
+      state.blockKey = (block as { _key?: string })._key;
       // a lone run of rule characters is an imported <hr>
       if (
         !block.listItem &&
@@ -424,13 +508,10 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
         for (const d of ordered) {
           state.count += 1;
           const n = d.n ?? state.count;
-          let id = `fn-${n}`;
-          for (let k = 2; state.emitted.has(id); k++) id = `fn-${n}-${k}`;
-          state.emitted.add(id);
-          const img = fnImgHtml(d, state);
-          state.endnotes.push(
-            `<div class="fn-end" id="${id}"><strong>${n}.</strong><span class="sn-text">${fnTextHtml(d.text ?? "", state)}${img}</span></div>`,
-          );
+          const id = fnId(n, state);
+          const slot = state.endnotes.push("") - 1;
+          state.endnotes[slot] =
+            `<div class="fn-end" id="${id}"><strong>${n}.</strong><span class="sn-text">${fnBodyHtml(d, state, false)}</span></div>`;
         }
         continue;
       }

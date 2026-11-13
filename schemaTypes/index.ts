@@ -6,6 +6,7 @@ import { album } from "./documents/album";
 import { org } from "./documents/org";
 import { seo } from "./objects/seo";
 import { blockContent } from "./objects/blockContent";
+import { footnote, footnoteContent } from "./objects/footnote";
 
 export const schemaTypes = [
   post,
@@ -17,4 +18,6 @@ export const schemaTypes = [
 
   seo,
   blockContent,
+  footnote,
+  footnoteContent,
 ];

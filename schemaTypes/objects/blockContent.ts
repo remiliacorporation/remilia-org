@@ -2,7 +2,6 @@ import { defineArrayMember, defineType } from "sanity";
 import {
   CodeDecorator,
   DividerBlock,
-  FootnoteAnnotation,
   H2Style,
   H3Style,
   H4Style,
@@ -12,11 +11,17 @@ import {
   QuoteStyle,
   VideoBlock,
 } from "../../studio/portableText";
+import { hasOldFootnotes } from "../../packages/renderer/src/footnotes";
 
 export const blockContent = defineType({
   name: "blockContent",
   title: "Body",
   type: "array",
+  // A note in the old shape (a mark on an empty span) is deleted by the
+  // editor's first keystroke in its paragraph. The text stays locked until
+  // the footnote migration has moved the post's notes
+  // (hosts/maintenance/migrate-footnotes.ts).
+  readOnly: ({ value }) => hasOldFootnotes(value),
   of: [
     defineArrayMember({
       type: "block",
@@ -57,37 +62,10 @@ export const blockContent = defineType({
               },
             ],
           },
-          {
-            name: "footnote",
-            type: "object",
-            title: "Footnote",
-            components: { annotation: FootnoteAnnotation },
-            fields: [
-              {
-                name: "text",
-                type: "text",
-                title: "Footnote text",
-                rows: 3,
-              },
-              {
-                name: "n",
-                type: "number",
-                title: "Note number",
-              },
-              {
-                name: "image",
-                type: "image",
-                hidden: true,
-                options: { hotspot: false },
-                fields: [
-                  { name: "alt", type: "string", title: "Alt text" },
-                  { name: "caption", type: "string", title: "Caption" },
-                ],
-              },
-            ],
-          },
         ],
       },
+      // Footnotes are inline objects (schemaTypes/objects/footnote.ts).
+      of: [defineArrayMember({ type: "footnote" })],
     }),
     defineArrayMember({
       name: "divider",

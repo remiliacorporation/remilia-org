@@ -1,4 +1,7 @@
-import { headMenu, type BakeOptions, type Chrome } from "@remilia/renderer";
+import type { BakeOptions, Chrome } from "@remilia/renderer";
+// Not from the package root: the Studio's page editor imports this file, and
+// the root brings in the bake, whose Node imports throw in a browser.
+import { headMenu } from "../../packages/renderer/src/nav";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
@@ -136,6 +139,23 @@ const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = 
     rootUrl: "https://www.remilia.net/",
   },
 };
+
+/**
+ * The blog component system, concatenated after theme.css in this order. The
+ * bake writes it as blog.css; the Studio's page editor scopes it to its frame.
+ */
+export const BLOG_SHEETS = [
+  "base",
+  "chrome",
+  "controls",
+  "index",
+  "nav",
+  "prose",
+  "media",
+  "notes",
+  "layout",
+  "print",
+] as const;
 
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];

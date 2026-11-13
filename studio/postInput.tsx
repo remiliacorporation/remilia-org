@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -15,12 +16,21 @@ import {
   type StringFieldProps,
   type StringInputProps,
 } from "sanity";
-import { CHANNELS } from "../lib/access";
+import { usePresentationParams } from "sanity/presentation";
+import { CHANNELS, type Channel } from "../lib/access";
+import {
+  FRAME_POSTS_QUERY,
+  frameBody,
+  type FramePost,
+  type FrameRow,
+} from "./frameParts";
+import { hasOldFootnotes } from "../packages/renderer/src/footnotes";
+import { frameChannel } from "./pageFrame";
+import { PostPage, TitleRoot } from "./postPage";
 
 const WRITE = new Set(["title", "body", "commentary"]);
 
 const SettingsRoot = createContext<HTMLElement | null>(null);
-const TitleRoot = createContext<HTMLElement | null>(null);
 
 function bylineDate(iso: unknown): string {
   if (typeof iso !== "string" || !iso) return "";
@@ -47,25 +57,31 @@ function authorIds(authors: unknown): string[] {
     .filter(Boolean);
 }
 
-function useAuthorNames(authors: unknown): string {
+/** The post's author names, in the post's own order, as the bake reads them. */
+function useAuthorNames(authors: unknown): string[] {
   const client = useClient({ apiVersion: "2026-02-01" });
   const key = authorIds(authors).join(",");
-  const [names, setNames] = useState("");
+  const [names, setNames] = useState<string[]>([]);
 
   useEffect(() => {
     const ids = key ? key.split(",") : [];
     if (!ids.length) {
-      setNames("");
+      setNames([]);
       return;
     }
     let cancelled = false;
     client
-      .fetch<string[]>(`*[_id in $ids].name`, { ids })
+      .fetch<{ _id: string; name?: string }[]>(
+        `*[_id in $ids]{ _id, name }`,
+        { ids },
+      )
       .then((rows) => {
-        if (!cancelled) setNames(rows.filter(Boolean).join(", "));
+        if (cancelled) return;
+        const byId = new Map(rows.map((r) => [r._id, r.name?.trim()]));
+        setNames(ids.flatMap((id) => byId.get(id) || []));
       })
       .catch(() => {
-        if (!cancelled) setNames("");
+        if (!cancelled) setNames([]);
       });
     return () => {
       cancelled = true;
@@ -75,11 +91,42 @@ function useAuthorNames(authors: unknown): string {
   return names;
 }
 
-function ArticleByline(): ReactNode {
-  const publishedAt = useFormValue(["publishedAt"]);
-  const channel = useFormValue(["channel"]);
-  const authors = useFormValue(["authors"]);
-  const names = useAuthorNames(authors);
+/**
+ * The section's published posts, for the page's rail and adjacent links:
+ * what the public site lists, read with the editor's own session.
+ */
+function useSectionPosts(channel: Channel): FrameRow[] {
+  const client = useClient({ apiVersion: "2026-02-01" });
+  const [rows, setRows] = useState<FrameRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    client
+      .withConfig({ perspective: "published" })
+      .fetch<FrameRow[]>(FRAME_POSTS_QUERY, { channel, includeFuture: false })
+      .then((found) => {
+        if (!cancelled) setRows(found ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, channel]);
+
+  return rows;
+}
+
+const text = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
+function ArticleByline(props: {
+  publishedAt: unknown;
+  channel: unknown;
+  names: string;
+}): ReactNode {
+  const { publishedAt, channel, names } = props;
   return (
     <div className="blog-article-byline">
       <span className="blog-article-byline-date">{bylineDate(publishedAt)}</span>
@@ -180,12 +227,18 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
 }
 
 export function PostInput(props: ObjectInputProps): ReactNode {
+  // Presentation shows the real page beside the pane, so the pane keeps the
+  // compact article; everywhere else the post edits inside its page.
+  const page = usePresentationParams(false) === null;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [drawer, setDrawer] = useState<HTMLElement | null>(null);
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
   const shell = useRef<HTMLDivElement>(null);
   const body = useFormValue(["body"]);
   const commentary = useFormValue(["commentary"]);
+  // The schema locks a text that still holds old-format notes
+  // (schemaTypes/objects/blockContent.ts); say why.
+  const locked = hasOldFootnotes(body) || hasOldFootnotes(commentary);
   const bodyLen = Array.isArray(body)
     ? body.length
     : Array.isArray(commentary)
@@ -206,13 +259,88 @@ export function PostInput(props: ObjectInputProps): ReactNode {
     return pinEditorToolbar(shell.current);
   }, []);
 
+  const channelValue = useFormValue(["channel"]);
+  const channel = frameChannel(channelValue);
+  const publishedAt = useFormValue(["publishedAt"]);
+  const names = useAuthorNames(useFormValue(["authors"]));
+  const rows = useSectionPosts(channel);
+  const id = text(useFormValue(["_id"]));
+  const title = text(useFormValue(["title"]));
+  const slug = text(useFormValue(["slug", "current"]));
+  const excerpt = text(useFormValue(["excerpt"]));
+  const origin = text(useFormValue(["origin"]));
+  const outlet = text(useFormValue(["outlet"]));
+  const externalUrl = text(useFormValue(["externalUrl"]));
+  const noIndex = useFormValue(["seo", "noIndex"]) === true;
+  const post = useMemo((): FramePost => {
+    // The page shows the commentary on outside coverage, as the bake does.
+    const coverage = channel === "archive" && origin === "external";
+    const written = frameBody(commentary);
+    return {
+      id: id.replace(/^(?:drafts|versions\.[^.]+)\./, ""),
+      title,
+      slug,
+      publishedAt: text(publishedAt),
+      excerpt,
+      authors: names,
+      origin: origin || undefined,
+      outlet: outlet || undefined,
+      externalUrl: externalUrl || undefined,
+      noIndex,
+      body: coverage && written.length ? written : frameBody(body),
+    };
+  }, [
+    channel,
+    id,
+    title,
+    slug,
+    publishedAt,
+    excerpt,
+    names,
+    origin,
+    outlet,
+    externalUrl,
+    noIndex,
+    body,
+    commentary,
+  ]);
+
+  const article = page ? (
+    <PostPage channel={channel} post={post} rows={rows}>
+      {props.renderDefault(props)}
+    </PostPage>
+) : (
+    <div className="blog-post-form">
+      <div className="blog-article">
+        <div className="blog-sec blog-article-mast">
+          <ArticleByline
+            publishedAt={publishedAt}
+            channel={channelValue}
+            names={names.join(", ")}
+          />
+          <hr className="blog-article-rule" />
+          <div className="blog-article-title-slot" ref={setTitleSlot} />
+        </div>
+        <div className="blog-sec blog-article-prose blog-pt">
+          {props.renderDefault(props)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const shellClass = [
+    "blog-post-shell",
+    page ? "is-page" : "",
+    settingsOpen ? "is-settings" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <SettingsRoot.Provider value={drawer}>
       <TitleRoot.Provider value={titleSlot}>
       <div
-        className={
-          settingsOpen ? "blog-post-shell is-settings" : "blog-post-shell"
-        }
+        className={shellClass}
         data-body-len={bodyLen}
         ref={shell}
       >
@@ -227,18 +355,15 @@ export function PostInput(props: ObjectInputProps): ReactNode {
             {settingsOpen ? "Hide settings" : "Settings"}
           </button>
         </div>
-        <div className="blog-post-form">
-          <div className="blog-article">
-            <div className="blog-sec blog-article-mast">
-              <ArticleByline />
-              <hr className="blog-article-rule" />
-              <div className="blog-article-title-slot" ref={setTitleSlot} />
-            </div>
-            <div className="blog-sec blog-article-prose blog-pt">
-              {props.renderDefault(props)}
-            </div>
-          </div>
-        </div>
+        {locked ? (
+          <p className="blog-desk-note" role="status">
+            The text is locked. This post's footnotes are in the old format,
+            and editing a paragraph would delete its notes. Run the footnote
+            migration for this post, then reload. The title and the settings
+            can still be edited.
+          </p>
+        ) : null}
+        {article}
         <div
           className={
             settingsOpen
