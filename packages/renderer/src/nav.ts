@@ -321,6 +321,9 @@ export function emptyRail(): string {
   return `<div class="post-nav rail"></div>`;
 }
 
+/** Posts on one page of the rail's list. */
+export const RAIL_PAGE = 4;
+
 export const NAV_JS = `(() => {
   const q = document.getElementById('post-filter');
   const list = document.querySelector('.post-nav .nav-all');
@@ -334,7 +337,7 @@ export const NAV_JS = `(() => {
   const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
   if (!q && !cards.length) return;
-  const PAGE = 4;
+  const PAGE = ${RAIL_PAGE};
   let page = 0;
   const items = list ? [...list.querySelectorAll('li[data-title]')] : [];
   const params = new URLSearchParams(location.search);

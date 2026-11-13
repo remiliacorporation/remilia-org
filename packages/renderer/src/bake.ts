@@ -63,6 +63,14 @@ import {
   NAV_JS,
   type NavPost,
 } from "./nav";
+import {
+  PUBLISHED_POSTS,
+  bylineOf,
+  monthKey,
+  outletOf,
+  postPlain,
+  readingMinutes,
+} from "./post";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 import {
@@ -180,9 +188,7 @@ function fileUrl(
   return `https://cdn.sanity.io/files/${projectId}/${dataset}/${m[1]}.${m[2]}`;
 }
 
-// Production omits future posts. Draft previews include them so editors can
-// review scheduled content before its publication time.
-const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] | order(publishedAt desc) {
+const POSTS_QUERY = `${PUBLISHED_POSTS} | order(publishedAt desc) {
   title, "slug": slug.current, excerpt, publishedAt, "updatedAt": _updatedAt, body, markdown,
   "coverRef": coverImage.asset._ref,
   "coverAlt": coverImage.alt,
@@ -202,34 +208,12 @@ const POSTS_QUERY = `*[_type == "post" && channel == $channel && defined(publish
 }`;
 
 // Just enough of a sibling section's posts to know who writes on the host.
-const AUTHORS_QUERY = `*[_type == "post" && channel == $channel && defined(publishedAt) && ($includeFuture || publishedAt <= now())] {
+const AUTHORS_QUERY = `${PUBLISHED_POSTS} {
   publishedAt, "noIndex": seo.noIndex, "authors": authors[]->{ name }, origin
 }`;
 
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
   "logoRef": logo.asset._ref }`;
-
-function postPlain(blocks: PTBlock[]): string {
-  return blocks
-    .flatMap((b) =>
-      "children" in b && Array.isArray(b.children) ? b.children : [],
-    )
-    .map((s) =>
-      s && typeof s === "object" && "text" in s ? String(s.text) : "",
-    )
-    .join("");
-}
-
-/**
- * Whole minutes at 200 words per minute, the figure most reading-time
- * estimates use. Returns undefined under a minute, where a label would say
- * less than the words it occupies.
- */
-export function readingMinutes(plain: string): number | undefined {
-  const words = plain.trim().split(/\s+/).filter(Boolean).length;
-  if (words < 200) return undefined;
-  return Math.round(words / 200);
-}
 
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
   if (
@@ -272,45 +256,8 @@ function isExternalArchive(p: FetchedPost, channel: Channel): boolean {
   return channel === "archive" && p.origin === "external" && Boolean(p.externalUrl);
 }
 
-/**
- * The outlet external coverage is credited to: its `outlet` field, or the
- * original's host name. Undefined for first-party posts.
- */
-export function outletOf(p: {
-  origin?: string;
-  outlet?: string;
-  externalUrl?: string;
-}): string | undefined {
-  if (p.origin !== "external") return undefined;
-  const named = p.outlet?.trim();
-  if (named) return named;
-  try {
-    return p.externalUrl
-      ? new URL(p.externalUrl).hostname.replace(/^www\./, "")
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * The name a post is bylined with. Coverage written elsewhere names its
- * outlet, never the author document it was filed under, who did not write
- * it.
- */
-function bylineOf(p: FetchedPost): string | undefined {
-  if (p.origin === "external") return outletOf(p);
-  return p.authors?.map((a) => a.name).join(", ") || undefined;
-}
-
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
   return `${p.title}\n\n${p.publishedAt.slice(0, 10)} — ${canonical}\n\n${p.excerpt}\n\n${postPlain(body)}\n`;
-}
-
-/** The UTC calendar month a timestamp falls in, as `YYYY-MM`. */
-export function monthKey(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 /** `2024-12` → `December 2024`. */
