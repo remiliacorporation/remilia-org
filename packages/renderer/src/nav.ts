@@ -447,11 +447,18 @@ export const NAV_JS = `(() => {
 // click anywhere closes every .sel but the one clicked, and Escape closes all.
 // A mouse that leaves an open .sel closes it after a beat unless it comes
 // back; touch never leaves, and a keyboard-focused dropdown stays open.
+// Clicking one dropdown while another is open closes the other, and in the
+// filter box that moves the one just opened out from under a still mouse.
+// The browser reports that as the mouse leaving, but the reader has not
+// left: such a dropdown ignores leaves until the mouse moves over it again.
 (() => {
+  const moved = new WeakSet();
   const shut = (keep) => {
+    let closed = false;
     document.querySelectorAll('details.sel[open]').forEach((d) => {
-      if (d !== keep) d.open = false;
+      if (d !== keep) { d.open = false; closed = true; }
     });
+    if (keep && closed) moved.add(keep);
   };
   addEventListener('click', (e) => {
     const t = e.target;
@@ -465,7 +472,7 @@ export const NAV_JS = `(() => {
     let timer = 0;
     const cancel = () => { clearTimeout(timer); timer = 0; };
     d.addEventListener('pointerleave', (e) => {
-      if (e.pointerType !== 'mouse' || !d.open) return;
+      if (e.pointerType !== 'mouse' || !d.open || moved.has(d)) return;
       cancel();
       timer = setTimeout(() => {
         timer = 0;
@@ -473,9 +480,12 @@ export const NAV_JS = `(() => {
       }, LEAVE_MS);
     });
     d.addEventListener('pointerenter', (e) => {
-      if (e.pointerType === 'mouse') cancel();
+      if (e.pointerType === 'mouse') { moved.delete(d); cancel(); }
     });
-    d.addEventListener('toggle', () => { if (!d.open) cancel(); });
+    d.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse') moved.delete(d);
+    });
+    d.addEventListener('toggle', () => { if (!d.open) { moved.delete(d); cancel(); } });
   });
 })();
 (() => {

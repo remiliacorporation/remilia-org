@@ -467,6 +467,49 @@ test("the date dropdown still closes on an outside click or Escape", () => {
   assert.equal(ui.date.open, false, "Escape");
 });
 
+test("a dropdown opened while another closes survives the layout shift", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const ui = runControls();
+    const hook = (d: typeof ui.date, type: string) =>
+      d.hooks.get(type)?.forEach((fn) => fn({ pointerType: "mouse" }));
+    ui.click(ui.author.kids[0]);
+    assert.equal(ui.author.open, true);
+    // Author closes, the filter box collapses, and Date slides out from
+    // under the mouse: the browser fires a leave though nobody moved.
+    ui.click(ui.date.kids[0]);
+    assert.equal(ui.author.open, false, "one open at a time");
+    assert.equal(ui.date.open, true);
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(1000);
+    assert.equal(ui.date.open, true, "the shift is not the reader leaving");
+    // Once the mouse is back on it, leaving closes it as usual.
+    hook(ui.date, "pointerenter");
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(500);
+    assert.equal(ui.date.open, false, "a real leave still closes it");
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("a dropdown opened over a mouse that stays on it still closes on leave", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const ui = runControls();
+    const hook = (d: typeof ui.date, type: string) =>
+      d.hooks.get(type)?.forEach((fn) => fn({ pointerType: "mouse" }));
+    ui.click(ui.author.kids[0]);
+    ui.click(ui.date.kids[0]);
+    hook(ui.date, "pointermove");
+    hook(ui.date, "pointerleave");
+    mock.timers.tick(500);
+    assert.equal(ui.date.open, false);
+  } finally {
+    mock.timers.reset();
+  }
+});
+
 /**
  * Runs NAV_JS on an article page at `width`, with the masthead and site
  * head reduced to what the head-sizing script touches. `resize` changes
