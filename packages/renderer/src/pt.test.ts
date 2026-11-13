@@ -177,6 +177,8 @@ test("external links get outlink metadata; Remilia links stay internal", () => {
             title: "Launch",
             description: "We launched.",
             imageUrl: "https://cdn/x.jpg",
+            imageWidth: 1200,
+            imageHeight: 630,
           }
         : undefined,
   });
@@ -193,7 +195,8 @@ test("external links get outlink metadata; Remilia links stay internal", () => {
   assert.ok(
     html.includes('<span class="link-card" role="tooltip"><span class="ht">'),
   );
-  assert.ok(html.includes('src="https://cdn/x.jpg"'));
+  // The card's image holds its box before it loads.
+  assert.ok(html.includes('src="https://cdn/x.jpg" width="1200" height="630"'));
   assert.ok(html.includes("<strong>Launch</strong><span>We launched.</span>"));
 });
 test("footnotes render as one .fn with nested note", () => {

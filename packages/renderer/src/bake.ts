@@ -9,8 +9,8 @@ import {
   CHANNEL_LABEL,
   CHANNEL_ORIGIN,
   HOST_AGGREGATE,
-  HOST_SECTIONS,
   atom,
+  isCoverageChannel,
   blogPosting,
   breadcrumbs,
   canonicalFor,
@@ -114,12 +114,12 @@ export interface BakeOptions {
   /** Pool posts across these channels — the listing-only aggregate surface. */
   aggregateOf?: Channel[];
   /**
-   * The host also bakes its pooled index, with an author archive for every
-   * author on the host. A section's Author control then offers every one of
-   * them, opening the pooled archive for an author the section has no
-   * posts by.
+   * The host also bakes its pooled index over these sections, with an author
+   * archive for every author in them. A section's Author control then offers
+   * its own authors and the pooled ones, opening the pooled archive for an
+   * author the section has no posts by.
    */
-  hostPooled?: boolean;
+  hostPooled?: Channel[];
 }
 
 interface FetchedPost {
@@ -223,7 +223,7 @@ function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
 
 function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
   if (
-    channel === "archive" &&
+    isCoverageChannel(channel) &&
     p.origin === "external" &&
     p.commentary?.length
   ) {
@@ -231,7 +231,7 @@ function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
   }
   if (p.body?.length) return p.body;
   if (p.markdown?.trim()) return markdownToPost(p.markdown, channel).body;
-  if (channel === "archive" && p.origin === "external") {
+  if (isCoverageChannel(channel) && p.origin === "external") {
     const outlet = p.outlet ? ` (${p.outlet})` : "";
     const href = p.externalUrl ?? "#";
     return [
@@ -252,14 +252,14 @@ function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
 }
 
 function postCanonical(p: FetchedPost, channel: Channel): string {
-  if (channel === "archive" && p.origin === "external" && p.externalUrl) {
+  if (isCoverageChannel(channel) && p.origin === "external" && p.externalUrl) {
     return p.externalUrl;
   }
   return canonicalFor(channel, p.slug);
 }
 
-function isExternalArchive(p: FetchedPost, channel: Channel): boolean {
-  return channel === "archive" && p.origin === "external" && Boolean(p.externalUrl);
+function isExternalCoverage(p: FetchedPost, channel: Channel): boolean {
+  return isCoverageChannel(channel) && p.origin === "external" && Boolean(p.externalUrl);
 }
 
 function postText(p: FetchedPost, canonical: string, body: PTBlock[]): string {
@@ -435,14 +435,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }
-  // Every post on the host, for the Author control: the pooled bake already
-  // holds them; a section of a pooled host reads its siblings' bylines.
+  // The posts the Author control draws on: the pooled bake already holds
+  // them; a section of a pooled host adds its pooled siblings' bylines.
   let hostPosts = posts;
   if (opts.hostPooled && !aggregated) {
     try {
-      const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]].filter(
-        (c) => c !== channel,
-      );
+      const siblings = opts.hostPooled.filter((c) => c !== channel);
       hostPosts = [
         ...posts,
         ...(
@@ -482,7 +480,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     };
   };
   const feedPosts = posts
-    .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+    .filter((p) => !p.noIndex && !isExternalCoverage(p, postChannel(p)))
     .map(feedPost);
   const sitemapEntries: SitemapEntry[] = [
     { loc: indexUrl(channel) },
@@ -490,7 +488,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     ...(aggregated
       ? []
       : posts
-          .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+          .filter((p) => !p.noIndex && !isExternalCoverage(p, postChannel(p)))
           .map((p) => ({
             loc: canonicalFor(postChannel(p), p.slug),
             lastmod: p.updatedAt ?? p.publishedAt,
@@ -514,10 +512,13 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
 
   const cards = new Map<string, LinkCard>();
   for (const p of posts) {
+    const coverDims = imageDims(p.coverRef);
     const card: LinkCard = {
       title: p.title,
       description: p.excerpt,
       imageUrl: img(p.coverRef, "w=640&auto=format"),
+      imageWidth: coverDims?.w,
+      imageHeight: coverDims?.h,
     };
     cards.set(canonicalFor(postChannel(p), p.slug), card);
     cards.set(`${postBase(p)}/${p.slug}`, card);
@@ -534,6 +535,14 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   const pooledBase =
     CHANNEL_BASEPATH[HOST_AGGREGATE[CHANNEL_HOST[channel]]];
   const hostAuthors = termArchives(hostPosts).authors;
+  // Authors the pooled index bakes an archive for: those with a post in a
+  // pooled section. A section left out of the pool (org Press) links only
+  // its own author archives.
+  const pooledAuthors = opts.hostPooled
+    ? termArchives(
+        hostPosts.filter((p) => opts.hostPooled?.includes(postChannel(p))),
+      ).authors
+    : [];
   const bakedArchives = new Set([
     ...archivePaths(basePath, archives, ownKinds),
     ...(opts.aggregateOf ?? []).flatMap((c) =>
@@ -544,7 +553,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
       ),
     ),
     ...(opts.hostPooled && !aggregated
-      ? hostAuthors.map((t) => `${pooledBase}/authors/${t.slug}`)
+      ? pooledAuthors.map((t) => `${pooledBase}/authors/${t.slug}`)
       : []),
   ]);
   // Dates and authors link to the post's section archive when that archive

@@ -36,29 +36,31 @@ const SECTION_META: Record<
   },
   press: {
     title: "Remilia Corporation — Press",
-    description: "Org corporate statements from Remilia Corporation.",
-    lead: "Corporate statements only. Brand releases (fashion, product launches) live on remilia.com/a/blog/news.",
+    description:
+      "Remilia Corporation statements, and coverage of Remilia in other outlets.",
+    lead: "Corporate statements, plus press coverage and interviews published elsewhere (snapshot via Firecrawl). Brand releases (fashion, product launches) live on remilia.com/a/blog/news. Press is not listed under All.",
     whenToUse: [
-      "Cite Remilia corporate statements.",
+      "Cite Remilia corporate statements, or find coverage and interviews of Remilia.",
+      "External: canonical is the original URL; archiveSnapshot holds the Firecrawl markdown.",
       "HIKKI Punks / Atelier / FRUiTS / product launches → News.",
     ],
   },
   thought: {
     title: "Remilia Corporation — Thought",
     description: "Org/product thought leadership — theory and NFTs.",
-    lead: "Core Remilia theory and NFT essays — not secondary blog posts.",
+    lead: "Remilia theory and NFT essays, including Charlotte Fang's Substack and Paragraph essays.",
     whenToUse: [
       "Cite Remilia org/product thought leadership.",
-      "Secondary Substack/Paragraph → Archive; company memos → Updates.",
+      "Coverage → Press; company memos → Updates; guides → Archive.",
     ],
   },
   archive: {
     title: "Remilia Corporation — Archive",
-    description: "External coverage (Firecrawl’d) and secondary essays.",
-    lead: "Press coverage & interviews (snapshot via Firecrawl) plus secondary Substack/Paragraph.",
+    description: "Guides and reference pieces kept for the record.",
+    lead: "Explainers and guides on crypto and tech platforms (Urbit, Ethereum and the like), kept for the record.",
     whenToUse: [
-      "Find coverage/interviews of Remilia, or secondary essays kept for the record.",
-      "External: canonical is the original URL; archiveSnapshot holds the Firecrawl markdown.",
+      "Find older Remilia guides and reference pieces.",
+      "Coverage and interviews of Remilia → Press.",
     ],
   },
   news: {
@@ -98,11 +100,11 @@ const SECTION_META: Record<
   blog: {
     title: "Remilia Corporation — Blog",
     description:
-      "Every Remilia Corporation post across Updates, Press, Thought and Archive.",
-    lead: "The whole corporate blog surface: updates, press, thought and archive pooled.",
+      "Remilia Corporation posts across Updates, Thought and Archive.",
+    lead: "The corporate blog pooled: updates, thought and archive. Press releases and coverage list only under Press, at /blog/press.",
     whenToUse: [
-      "Scan everything Remilia Corporation has published in one feed.",
-      "Per-section feeds and archives live under /blog/<section>.",
+      "Scan Remilia Corporation's own writing in one feed.",
+      "Press has its own feeds at /blog/press; per-section feeds and archives live under /blog/<section>.",
     ],
   },
   "com-blog": {

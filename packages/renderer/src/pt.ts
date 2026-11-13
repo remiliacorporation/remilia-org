@@ -51,6 +51,9 @@ export interface LinkCard {
   title: string;
   description: string;
   imageUrl?: string;
+  /** The image's intrinsic size, so the card holds its box before it loads. */
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
 export interface PTOptions {
@@ -291,8 +294,12 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
     return `<a class="outlink" href="${esc(href)}" rel="external noopener">${inner}</a>`;
   const card = state.opts.linkCard?.(href);
   if (!card) return `<a href="${esc(href)}">${inner}</a>`;
+  const dims =
+    card.imageWidth && card.imageHeight
+      ? ` width="${card.imageWidth}" height="${card.imageHeight}"`
+      : "";
   const img = card.imageUrl
-    ? `<span class="ht"><span class="ht-map"><img src="${esc(card.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span>`
+    ? `<span class="ht"><span class="ht-map"><img src="${esc(card.imageUrl)}"${dims} alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span>`
     : "";
   return `<a class="interlink" href="${esc(href)}">${inner}<span class="link-card" role="tooltip">${img}<strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span></a>`;
 }

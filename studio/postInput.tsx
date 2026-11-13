@@ -17,6 +17,7 @@ import {
   type StringInputProps,
 } from "sanity";
 import { usePresentationParams } from "sanity/presentation";
+import { isCoverageChannel } from "../packages/seo/src/urls";
 import { CHANNELS, type Channel } from "../lib/access";
 import {
   FRAME_POSTS_QUERY,
@@ -298,7 +299,7 @@ export function PostInput(props: ObjectInputProps): ReactNode {
   const noIndex = useFormValue(["seo", "noIndex"]) === true;
   const post = useMemo((): FramePost => {
     // The page shows the commentary on outside coverage, as the bake does.
-    const coverage = channel === "archive" && origin === "external";
+    const coverage = isCoverageChannel(channel) && origin === "external";
     const written = frameBody(commentary);
     return {
       id: id.replace(/^(?:drafts|versions\.[^.]+)\./, ""),

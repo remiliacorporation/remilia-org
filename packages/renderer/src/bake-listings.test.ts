@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { bake } from "./bake";
 import { checkInternalLinks } from "./links";
 import type { Chrome } from "./page";
+import { HOST_POOLED, type Channel } from "@remilia/seo";
 
 const CHROME: Chrome = {
   stylesheet: "/blog/updates/blog.css",
@@ -117,6 +118,7 @@ async function dirs(path: string): Promise<string[]> {
 async function bakeOrg(
   outDir: string,
   bySection: Record<string, unknown[]>,
+  pooled: Channel[] = [...SECTIONS],
 ): Promise<Server> {
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://x");
@@ -142,12 +144,12 @@ async function bakeOrg(
   };
   await hostStubs(outDir);
   for (const channel of SECTIONS)
-    await bake({ ...common, channel, hostPooled: true });
+    await bake({ ...common, channel, hostPooled: pooled });
   await bake({
     ...common,
     channel: "blog",
     host: { ...HOST, title: "Remilia Corporation — Blog" },
-    aggregateOf: [...SECTIONS],
+    aggregateOf: pooled,
   });
   return server;
 }
@@ -790,5 +792,84 @@ test("a post shows its cover once and names its bylines in the head and feeds", 
     assert.ok((await read("blog/updates/atom.xml")).includes("<author><name>paultristis</name></author>"));
   } finally {
     fixture.close();
+  }
+});
+
+test("Press lists only under Press: the pooled index, its feeds and archives leave it out", async () => {
+  const at = (day: number) => `2024-12-${String(day).padStart(2, "0")}T12:00:00.000Z`;
+  const post = (slug: string, day: number, extra: object = {}) => ({
+    ...posts[0],
+    title: slug,
+    slug,
+    publishedAt: at(day),
+    updatedAt: at(day),
+    ...extra,
+  });
+  const bySection: Record<string, unknown[]> = {
+    updates: [post("memo", 5, { authors: [{ name: "Charlotte Fang" }] })],
+    press: [
+      post("statement", 4, { authors: [{ name: "Remilia Jackson" }] }),
+      post("forbes-feature", 3, {
+        authors: [{ name: "Remilia Jackson" }],
+        origin: "external",
+        outlet: "Forbes",
+        externalUrl: "https://www.forbes.com/feature",
+        commentary: [
+          { _type: "block", _key: "c", style: "normal", markDefs: [], children: [{ _type: "span", text: "Our note on the Forbes piece.", marks: [] }] },
+        ],
+      }),
+    ],
+    thought: [post("essay", 2, { authors: [{ name: "Charlotte Fang" }] })],
+    archive: [post("guide", 1, { authors: [{ name: "Charlotte Fang" }], origin: "first-party" })],
+  };
+  const outDir = await mkdtemp(join(tmpdir(), "bake-press-apart-"));
+  const server = await bakeOrg(outDir, bySection, HOST_POOLED.org);
+  try {
+    const read = (path: string) => readFile(join(outDir, path), "utf8");
+    // All lists the other sections and none of Press, in its cards, feeds,
+    // search, text maps and month archives.
+    const index = await read("blog/index.html");
+    for (const slug of ["memo", "essay", "guide"])
+      assert.ok(index.includes(`data-title="${slug}"`), slug);
+    for (const file of ["blog/index.html", "blog/rss.xml", "blog/atom.xml", "blog/index.md", "blog/llms.txt", "blog/months/2024-12/index.html"]) {
+      const text = await read(file);
+      assert.ok(!text.includes("/blog/press/statement"), file);
+      assert.ok(!text.includes("forbes-feature"), file);
+    }
+    // Press still bakes its posts, listing and feed, and All stays one click
+    // away in the section row.
+    const press = await read("blog/press/index.html");
+    assert.ok(press.includes('data-title="statement"'));
+    assert.ok(press.includes('data-title="forbes-feature"'));
+    assert.ok((await read("blog/press/rss.xml")).includes("/blog/press/statement"));
+    assert.ok(press.includes('href="/blog"'));
+
+    // Remilia Jackson writes only in Press, so the pooled index has no
+    // archive for her and only Press offers her in the Author control.
+    assert.deepEqual(await dirs(join(outDir, "blog/authors")), ["charlotte-fang", "index.html"]);
+    const authorsOf = (html: string) => {
+      const sel = html.slice(html.indexOf('id="post-author"'), html.indexOf("</details>", html.indexOf('id="post-author"')));
+      return [...sel.matchAll(/data-value="([^"]+)" data-href="([^"]+)"/g)].map((m) => [m[1], m[2]]);
+    };
+    assert.deepEqual(authorsOf(index), [["Charlotte Fang", "/blog/authors/charlotte-fang"]]);
+    assert.deepEqual(authorsOf(await read("blog/updates/index.html")), [["Charlotte Fang", "/blog/updates/authors/charlotte-fang"]]);
+    assert.deepEqual(authorsOf(press), [
+      ["Charlotte Fang", "/blog/authors/charlotte-fang"],
+      ["Remilia Jackson", "/blog/press/authors/remilia-jackson"],
+    ]);
+
+    // Coverage filed in Press reads as it did in Archive: the original is
+    // canonical, the outlet is the byline, our commentary is the body, and
+    // it stays out of the feed and sitemap.
+    const forbes = await read("blog/press/forbes-feature/index.html");
+    assert.ok(forbes.includes('<link rel="canonical" href="https://www.forbes.com/feature">'));
+    assert.ok(forbes.includes('<span class="author">Forbes</span>'));
+    assert.ok(forbes.includes("Our note on the Forbes piece."));
+    assert.ok(!(await read("blog/press/rss.xml")).includes("forbes-feature"));
+    assert.ok(!(await read("blog/press/sitemap.xml")).includes("forbes-feature"));
+
+    assert.deepEqual(await checkInternalLinks(outDir, ["https://remilia.org"]), []);
+  } finally {
+    server.close();
   }
 });
