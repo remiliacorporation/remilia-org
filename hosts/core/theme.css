@@ -108,7 +108,10 @@
   --weight-body: normal;
   --weight-strong: bold;
 
-  --measure: 63ch;
+  /* The text's line is this less a gutter each side: 574px, about 80
+     characters of 16px text. Narrower frames set their own
+     (blog/layout.css). */
+  --measure: 624px;
   --gutter: 24px;
   --rail-gap: 12px;
   --rail: 240px;
