@@ -67,6 +67,7 @@ import {
   bylineOf,
   monthKey,
   outletOf,
+  postTitle,
   postPlain,
   readingMinutes,
 } from "./post";
@@ -723,7 +724,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
           ]
         : [];
     const page = htmlPage({
-      title: p.seoTitle?.trim() || `${p.title} — ${host.title}`,
+      title: p.seoTitle?.trim() || postTitle(p),
       description: p.seoDescription?.trim() || p.excerpt,
       canonical,
       ogImage:
