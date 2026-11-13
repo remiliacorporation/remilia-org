@@ -1167,7 +1167,6 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
             href: `${basePath}/${taxonomy.at}/${t.slug}`,
             count: t.posts.length,
           })),
-          basePath,
           sectionNav,
         ),
       }),

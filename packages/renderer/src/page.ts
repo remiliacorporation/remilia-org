@@ -322,10 +322,6 @@ function mastNav(nav?: string): string {
   return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
 }
 
-function mastCopy(basePath: string): string {
-  return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
-}
-
 function bylineDate(iso: string): string {
   const d = new Date(iso);
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -511,6 +507,18 @@ ${next}
 </nav>`;
 }
 
+/**
+ * The masthead of a listing or a term directory: the sections box. Its
+ * heading names what the page lists, for screen readers only.
+ */
+function listMast(h1: string, sectionNav?: string): string {
+  return `<div class="sec mast index-mast list-mast">
+${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
+${h1}
+</header>
+</div>`;
+}
+
 /** One listing card. The search index carries the same markup, so a card
  * found by search is the card its own page would show. */
 export function cardHtml(p: IndexCard): string {
@@ -567,11 +575,7 @@ export function indexMain(
   const cards = posts.map(cardHtml).join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast list-mast">
-${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
-<h1${filterAttrs}>${heading}</h1>
-</header>
-</div>
+${listMast(`<h1${filterAttrs}>${heading}</h1>`, sectionNav)}
 <div class="article-rest">
 <p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
@@ -585,7 +589,6 @@ ${pagerHtml(pager)}
 export function termIndexMain(
   noun: string,
   terms: { label: string; href: string; count: number }[],
-  basePath = "",
   sectionNav?: string,
 ): string {
   const rows = terms
@@ -596,13 +599,7 @@ export function termIndexMain(
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast">
-${mastNav(sectionNav)}<header>
-<h1>Showing all ${esc(noun.toLowerCase())}s</h1>
-<hr class="nav-rule mast-tools-rule">
-<p class="mast-tools">${mastCopy(basePath)}</p>
-</header>
-</div>
+${listMast(`<h1>Showing all ${esc(noun.toLowerCase())}s</h1>`, sectionNav)}
 <div class="article-rest">
 <div class="sec">
 <div class="prose">

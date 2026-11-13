@@ -9,6 +9,7 @@ import {
   tocBox,
   indexMain,
   cardHtml,
+  termIndexMain,
   type Chrome,
 } from "./page";
 import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
@@ -523,4 +524,15 @@ test("a listing names its search index, and a card renders the same alone", () =
   assert.ok(!indexMain([POST]).includes("data-index"));
   assert.ok(html.includes(cardHtml(POST)));
   assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
+});
+
+test("a term directory wears the listing mast: sections shown, heading read aloud", () => {
+  const nav = sectionNav(SECTIONS);
+  const html = termIndexMain("Tag", [{ label: "Theory", href: "/blog/tags/theory", count: 3 }], nav);
+  const mast = (s: string) => s.slice(s.indexOf('<div class="sec mast'), s.indexOf('<div class="article-rest">'));
+  assert.equal(
+    mast(html),
+    mast(indexMain([POST], undefined, undefined, nav)).replace("Showing all posts", "Showing all tags"),
+  );
+  assert.equal(html.includes("mast-tools"), false);
 });
