@@ -1043,3 +1043,17 @@
 .blog-pt [data-testid="pt-editor"] [data-ui="Card"]:has([data-slate-editor]) {
   background: transparent;
 }
+
+/* The post's Preview tab (studio/postPreview.tsx): the page fills the pane. */
+.blog-preview {
+  position: relative;
+  height: 100%;
+}
+
+.blog-preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

@@ -8,7 +8,7 @@ import {
   tocItems,
   type PTBlock,
 } from "./pt";
-import { cdnUrl } from "./bake";
+import { cdnUrl } from "./section";
 
 const span = (text: string, marks: string[] = []) => ({
   _type: "span" as const,

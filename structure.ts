@@ -1,4 +1,7 @@
-import type { StructureResolver } from "sanity/structure";
+import type {
+  DefaultDocumentNodeResolver,
+  StructureResolver,
+} from "sanity/structure";
 import { DocumentTextIcon } from "@sanity/icons/DocumentText";
 import { ImagesIcon } from "@sanity/icons/Images";
 import { UserIcon } from "@sanity/icons/User";
@@ -7,8 +10,11 @@ import { CaseIcon } from "@sanity/icons/Case";
 import { BookIcon } from "@sanity/icons/Book";
 import { EarthGlobeIcon } from "@sanity/icons/EarthGlobe";
 import { BoltIcon } from "@sanity/icons/Bolt";
+import { EyeOpenIcon } from "@sanity/icons/EyeOpen";
+import { EditIcon } from "@sanity/icons/Edit";
 import type { Channel } from "./lib/access";
 import { SectionCheatsheet } from "./structure/cheatsheet";
+import { PostPreview } from "./studio/postPreview";
 
 type HostSuffix = "Org" | "Com" | "Net";
 
@@ -127,3 +133,15 @@ export const structure: StructureResolver = (S) =>
         .icon(CaseIcon)
         .child(S.document().schemaType("org").documentId("org")),
     ]);
+
+/** A post opens on its form, with a Preview tab showing its page on the site. */
+export const defaultDocumentNode: DefaultDocumentNodeResolver = (
+  S,
+  { schemaType },
+) =>
+  schemaType === "post"
+    ? S.document().views([
+        S.view.form().icon(EditIcon),
+        S.view.component(PostPreview).title("Preview").icon(EyeOpenIcon),
+      ])
+    : S.document();
