@@ -231,9 +231,10 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
  * place in the text (the renderer's `numberFootnotes`, so the editor and the
  * site agree), and the note as the site draws it. In the page frame with
  * both rails showing, every note stands in the margin, as on the site
- * (studio/sidenotes.ts); in a narrower frame the selected note opens under
- * its mark. The note is the site's markup, not an editor: a click on the
- * mark or the note opens Sanity's own dialog, which edits it.
+ * (studio/sidenotes.ts): a click on the mark opens the note there in full,
+ * and a click on the note opens Sanity's own dialog, which edits it. In a
+ * narrower frame the selected note opens under its mark, and a click on
+ * the mark or the note opens the dialog.
  */
 export function FootnoteInline(props: BlockProps): ReactNode {
   useInsertionEffect(injectNoteCss, []);
@@ -255,10 +256,12 @@ export function FootnoteInline(props: BlockProps): ReactNode {
       : undefined;
   // The site's own class (fn) sits one element in: the note styles are
   // scoped to this mark, and a scoped rule reaches only below its root.
+  // In the margin, the note being edited in its dialog stays open in full
+  // (fn-pin, read by the layout script).
   const state = [
     "fn",
     note && !margin ? "fn-pop" : "",
-    picked ? "fn-on" : "",
+    note && margin && props.open ? "fn-pin" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -269,6 +272,10 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
+        // In the margin, a click on the mark opens its note in full there
+        // (the layout script's own click), not the dialog.
+        if (note && margin && (e.target as Element).closest?.(".fn-ref"))
+          return;
         // A link in the note's markup must not leave the Studio.
         if ((e.target as Element).closest?.("a")) e.preventDefault();
         // After the click has moved the editor's focus: inside a note's
