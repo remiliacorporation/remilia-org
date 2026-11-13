@@ -165,11 +165,16 @@
   }
   /* A listing's sections box is as tall as the site head beside it, which
      the swatch row made one row taller; the links take the spare height. */
-  .sec.mast.index-mast {
+  .sec.mast {
     min-height: calc(
       var(--mast-box) + 2 * var(--space-xs) + var(--border-w) +
         var(--mast-line)
     );
+  }
+  /* A mast with a title and nothing else (the 404 page) centers it. */
+  .sec.mast:not(:has(> .sec-nav)) {
+    display: grid;
+    align-content: center;
   }
   .sec.mast.list-mast:has(> .sec-nav) {
     grid-template-rows: var(--mast-line) var(--border-w) 1fr;
