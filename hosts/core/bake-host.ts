@@ -147,7 +147,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       indexUrl(aggregate),
     );
     await mergeInto(outDir, "redirects:legacy-host", rules);
-    console.log(`redirects: ${rules.length - 3} posts from ${origin}`);
+    console.log(`redirects: ${(rules.length - 3) / 2} posts from ${origin}`);
   }
 
   if (spec.movedFrom) {

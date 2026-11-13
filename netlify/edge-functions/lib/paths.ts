@@ -27,6 +27,14 @@ export const SECTION_PREFIXES = [
   "/archive",
 ];
 
+/**
+ * Retired blog hosts served as domain aliases of this site. Their paths are
+ * old URLs that `_redirects` sends elsewhere, never this site's own pages, so
+ * the edge function must not localize, recase or rename them first.
+ * Matches `legacyHost.origin` in `hosts/org/bake.ts`.
+ */
+export const LEGACY_HOSTS = ["blog.remilia.org"];
+
 export type CorpLocale = "en" | "kr" | "jp" | "cn";
 
 export interface LocaleRequest {
