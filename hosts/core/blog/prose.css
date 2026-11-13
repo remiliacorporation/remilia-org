@@ -11,7 +11,7 @@ h3,
   overflow-wrap: anywhere;
 }
 /* Every line of post text stands on the 4px grid: the universal rule's
-   ratio (--leading) would put 14px text on an 18.67px line. Rules below
+   ratio (--leading) would put 16px text on a 21.33px line. Rules below
    and in later sheets that set their own leading still win. */
 .prose,
 .prose :where(*) {
@@ -66,7 +66,7 @@ h3,
 }
 .prose h2 {
   margin-top: var(--space-l);
-  font-size: var(--size-heading);
+  font-size: var(--size-title);
   line-height: var(--space);
   font-weight: var(--weight-strong);
   text-align: left;
@@ -106,7 +106,7 @@ h3,
   content: "";
   position: absolute;
   left: calc(-1 * var(--space-s));
-  top: var(--grid);
+  top: 5px;
   width: var(--grid);
   height: var(--grid);
   background: var(--ink);

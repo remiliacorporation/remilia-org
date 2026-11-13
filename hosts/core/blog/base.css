@@ -6,8 +6,8 @@
   --grid: 4px;
   --leading: 1.3334;
   /* A length, not a ratio, so every line of post text is a whole number
-     of grid steps (5 at 14px type). */
-  --leading-prose: 20px;
+     of grid steps. */
+  --leading-prose: 24px;
   --leading-tight: 1.2;
 
   --card: 280px;
