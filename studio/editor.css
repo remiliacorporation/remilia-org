@@ -862,7 +862,11 @@
     --sidenotes: 1;
   }
 }
-@container blog-page (min-width: 884px) and (max-width: 1099px) {
+/* Range syntax, so a fractional pane width (1099.5px) still falls in one
+   layout or the other. The right rail keeps its boxes (the theme box; the
+   post list is out while notes show) at the top of the margin, and the
+   notes start under them, as at 1100px. */
+@container blog-page (884px <= width < 1100px) {
   .blog-page .layout {
     display: grid;
     grid-template-columns: var(--column) var(--rail);
@@ -873,12 +877,32 @@
     max-width: none;
     margin: var(--rail-gap) var(--rail-gap) 0;
   }
-  .blog-page .side-col {
+  .blog-page .layout .side-col {
+    display: contents;
+  }
+  .blog-page .layout .left-rail {
     display: none;
+  }
+  .blog-page .layout .right-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rail-gap);
+    grid-column: 2;
+    grid-row: 1;
+    width: var(--rail);
+    max-width: var(--rail);
   }
   .blog-page .article-wrap {
     grid-column: 1;
     grid-row: 1;
+  }
+  /* The site's one-rail footer stands right of a rail it no longer has;
+     here it lines up with the column. */
+  .blog-page footer {
+    margin-left: calc(
+      (100% - var(--column) - var(--rail-gap) - var(--rail)) / 2
+    );
+    margin-right: auto;
   }
 }
 
