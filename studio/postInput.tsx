@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -16,7 +17,13 @@ import {
   type StringInputProps,
 } from "sanity";
 import { usePresentationParams } from "sanity/presentation";
-import { CHANNELS } from "../lib/access";
+import { CHANNELS, type Channel } from "../lib/access";
+import {
+  FRAME_POSTS_QUERY,
+  frameBody,
+  type FramePost,
+  type FrameRow,
+} from "./frameParts";
 import { frameChannel } from "./pageFrame";
 import { PostPage, TitleRoot } from "./postPage";
 
@@ -49,25 +56,31 @@ function authorIds(authors: unknown): string[] {
     .filter(Boolean);
 }
 
-function useAuthorNames(authors: unknown): string {
+/** The post's author names, in the post's own order, as the bake reads them. */
+function useAuthorNames(authors: unknown): string[] {
   const client = useClient({ apiVersion: "2026-02-01" });
   const key = authorIds(authors).join(",");
-  const [names, setNames] = useState("");
+  const [names, setNames] = useState<string[]>([]);
 
   useEffect(() => {
     const ids = key ? key.split(",") : [];
     if (!ids.length) {
-      setNames("");
+      setNames([]);
       return;
     }
     let cancelled = false;
     client
-      .fetch<string[]>(`*[_id in $ids].name`, { ids })
+      .fetch<{ _id: string; name?: string }[]>(
+        `*[_id in $ids]{ _id, name }`,
+        { ids },
+      )
       .then((rows) => {
-        if (!cancelled) setNames(rows.filter(Boolean).join(", "));
+        if (cancelled) return;
+        const byId = new Map(rows.map((r) => [r._id, r.name?.trim()]));
+        setNames(ids.flatMap((id) => byId.get(id) || []));
       })
       .catch(() => {
-        if (!cancelled) setNames("");
+        if (!cancelled) setNames([]);
       });
     return () => {
       cancelled = true;
@@ -76,6 +89,36 @@ function useAuthorNames(authors: unknown): string {
 
   return names;
 }
+
+/**
+ * The section's published posts, for the page's rail and adjacent links:
+ * what the public site lists, read with the editor's own session.
+ */
+function useSectionPosts(channel: Channel): FrameRow[] {
+  const client = useClient({ apiVersion: "2026-02-01" });
+  const [rows, setRows] = useState<FrameRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    client
+      .withConfig({ perspective: "published" })
+      .fetch<FrameRow[]>(FRAME_POSTS_QUERY, { channel, includeFuture: false })
+      .then((found) => {
+        if (!cancelled) setRows(found ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, channel]);
+
+  return rows;
+}
+
+const text = (value: unknown): string =>
+  typeof value === "string" ? value : "";
 
 function ArticleByline(props: {
   publishedAt: unknown;
@@ -216,9 +259,50 @@ export function PostInput(props: ObjectInputProps): ReactNode {
   const channel = frameChannel(channelValue);
   const publishedAt = useFormValue(["publishedAt"]);
   const names = useAuthorNames(useFormValue(["authors"]));
+  const rows = useSectionPosts(channel);
+  const id = text(useFormValue(["_id"]));
+  const title = text(useFormValue(["title"]));
+  const slug = text(useFormValue(["slug", "current"]));
+  const excerpt = text(useFormValue(["excerpt"]));
+  const origin = text(useFormValue(["origin"]));
+  const outlet = text(useFormValue(["outlet"]));
+  const externalUrl = text(useFormValue(["externalUrl"]));
+  const noIndex = useFormValue(["seo", "noIndex"]) === true;
+  const post = useMemo((): FramePost => {
+    // The page shows the commentary on outside coverage, as the bake does.
+    const coverage = channel === "archive" && origin === "external";
+    const written = frameBody(commentary);
+    return {
+      id: id.replace(/^(?:drafts|versions\.[^.]+)\./, ""),
+      title,
+      slug,
+      publishedAt: text(publishedAt),
+      excerpt,
+      authors: names,
+      origin: origin || undefined,
+      outlet: outlet || undefined,
+      externalUrl: externalUrl || undefined,
+      noIndex,
+      body: coverage && written.length ? written : frameBody(body),
+    };
+  }, [
+    channel,
+    id,
+    title,
+    slug,
+    publishedAt,
+    excerpt,
+    names,
+    origin,
+    outlet,
+    externalUrl,
+    noIndex,
+    body,
+    commentary,
+  ]);
 
   const article = page ? (
-    <PostPage channel={channel} publishedAt={publishedAt} names={names}>
+    <PostPage channel={channel} post={post} rows={rows}>
       {props.renderDefault(props)}
     </PostPage>
 ) : (
@@ -228,7 +312,7 @@ export function PostInput(props: ObjectInputProps): ReactNode {
           <ArticleByline
             publishedAt={publishedAt}
             channel={channelValue}
-            names={names}
+            names={names.join(", ")}
           />
           <hr className="blog-article-rule" />
           <div className="blog-article-title-slot" ref={setTitleSlot} />

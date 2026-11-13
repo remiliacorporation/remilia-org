@@ -1,13 +1,9 @@
 // The blog page around the post editor: the renderer's own markup and the
 // blog's own stylesheet, so the Studio shows a post the way the site does.
-import {
-  articleHtml,
-  bylineHtml,
-  htmlPage,
-} from "../packages/renderer/src/page";
+import { articleHtml, htmlPage } from "../packages/renderer/src/page";
 import { emptyRail, hostCats, sectionNav } from "../packages/renderer/src/nav";
 import { scopeBlogCss } from "../packages/renderer/src/embed";
-import { CHANNEL_LABEL, indexPath, siteMetaFor } from "../packages/seo/src/index";
+import { siteMetaFor } from "../packages/seo/src/index";
 import { BLOG_SHEETS, chromeFor } from "../hosts/core/sections";
 import { CHANNELS, type Channel } from "../lib/access";
 import emblemUrl from "../deploy/assets/emblem.svg?url";
@@ -49,8 +45,9 @@ export function frameTheme(channel: Channel): Record<string, string> {
 }
 
 /**
- * A post page's `<body>` with an empty title, byline and body: the editor
- * fills those three in place.
+ * A post page's `<body>` with an empty title, byline, body, rails, and
+ * adjacent links: the editor fills the title and body in place, and
+ * `frameParts` (studio/frameParts.ts) renders the rest from the post.
  */
 export function frameHtml(channel: Channel): string {
   const page = htmlPage({
@@ -65,6 +62,8 @@ export function frameHtml(channel: Channel): string {
       title: "",
       publishedAt: "",
       bodyHtml: "",
+      // Keeps the adjacent links' box in the page, for `frameParts` to fill.
+      metaHtml: "<!-- adjacent -->",
       sectionNav: sectionNav(hostCats(channel)),
     }),
   });
@@ -75,17 +74,4 @@ export function frameHtml(channel: Channel): string {
   return body
     .replace(/<a class="skip"[^>]*>[^<]*<\/a>\n?/, "")
     .replaceAll('href="/assets/emblem.svg"', `href="${emblemUrl}"`);
-}
-
-export function frameByline(input: {
-  channel: Channel;
-  publishedAt: unknown;
-  names: string;
-}): string {
-  return bylineHtml({
-    publishedAt: typeof input.publishedAt === "string" ? input.publishedAt : "",
-    byline: input.names || undefined,
-    category: CHANNEL_LABEL[input.channel],
-    categoryHref: indexPath(input.channel),
-  });
 }
