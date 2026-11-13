@@ -335,8 +335,8 @@ export const SIDENOTES_JS = `// With both rails, notes stand in the margin, in r
 // the boxes at the head of the right rail. A note stands at its mark's
 // line when that place is free; otherwise it goes under the note above.
 // A note shows in full while the next note leaves it room; one the next
-// note would block is cut to whole lines (never under three), so the
-// notes after it stay near their marks. Pointing at a note or its mark,
+// note would block is cut to whole lines, never under eight, and the next
+// note goes under it. Pointing at a note or its mark,
 // tabbing to the mark, or a click on the mark opens the note in full, and
 // the notes below slide down. A line ties each note to its place, drawn
 // like a flowchart: out from the column at the mark's line, down a lane
@@ -363,7 +363,7 @@ export const SIDENOTES_JS = `// With both rails, notes stand in the margin, in r
 function sidenotes(root, wide, opts) {
   const layout = root.querySelector('.layout');
   const PITCH = 3;
-  const LINES = 3;
+  const LINES = 8;
   const OPEN_MS = 80;
   const CLOSE_MS = 250;
   const GLIDE_MS = 300;

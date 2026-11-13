@@ -784,6 +784,14 @@
   .blog-page .blog-pt span:has(> .blog-pt-note) {
     position: static !important;
   }
+
+  /* Notes stand under the right rail's boxes. The rail's post list runs
+     about 300px down the margin, past the text's first lines, so the
+     first notes stood far below their marks. While the notes show in the
+     margin, the editor leaves the post list out; the theme box stays. */
+  .blog-page .right-rail > .post-nav {
+    display: none;
+  }
 }
 
 .blog-pt-note > .fn > [data-ui="Card"] {
