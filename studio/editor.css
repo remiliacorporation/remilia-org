@@ -833,7 +833,18 @@
   display: contents;
 }
 
-/* Nothing between the text and the margin may cut a note off. */
+/* Nothing between the text and the margin may cut a note off. Between the
+   frame's prose card and the text, Sanity wraps the editor in boxes that
+   clip (overflow: clip on its cards and boxes, overflow: auto on the
+   editor's scroller, pt-editor__scroller). In the page the pane scrolls,
+   not the editor, which grows with its text; so every box that holds the
+   text shows what stands outside it. Selected by what they hold, not by
+   Sanity's generated class names. */
+.blog-post-shell.is-page .blog-pt div:has([data-pt-editor]),
+.blog-post-shell.is-page .blog-pt [data-testid="pt-editor__scroller"] {
+  overflow: visible !important;
+}
+
 .blog-page .blog-pt [data-testid^="text-block"] {
   overflow: visible;
 }
