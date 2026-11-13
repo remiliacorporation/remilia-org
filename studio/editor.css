@@ -684,11 +684,14 @@
   display: block;
 }
 
+/* The drawer sticks under the desk bar, the pane's height tall, so it opens
+   where the editor is however far the post is scrolled. --pane-h comes from
+   PostInput while the drawer is open. */
 .blog-settings-drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  position: sticky;
+  top: 41px;
+  margin-left: auto;
+  height: calc(var(--pane-h, 100vh) - 41px);
   width: min(400px, 92%);
   overflow: auto;
   padding: 16px;
