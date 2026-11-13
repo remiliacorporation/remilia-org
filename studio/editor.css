@@ -571,11 +571,14 @@
   cursor: pointer;
 }
 
+/* The site's reference (.fn-ref in hosts/core/blog/notes.css): a strong
+   superscript number, one grid step off the text, with tabular figures. */
 .blog-pt-fn sup {
   font-size: smaller;
   line-height: 0;
   font-weight: var(--weight-strong) !important;
-  padding-left: 0.15em;
+  font-variant-numeric: tabular-nums;
+  padding-left: var(--grid);
 }
 
 .blog-pt-annot-edit {
@@ -806,6 +809,29 @@
   text-transform: inherit;
   text-align: inherit;
   color: inherit;
+}
+
+/* In the page, a note or a link is edited in the text column, in the box
+   the site draws a note in (.fn-note). The compact editor's panel, fixed to
+   the window's corner in Studio white, would sit over the right rail. */
+.blog-page .blog-pt-annot-edit {
+  position: static;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  max-height: none;
+  margin: var(--space-xs) 0;
+  padding: var(--grid);
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.blog-page .blog-pt-annot-edit-head button {
+  border: var(--border);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 /* The prose card already pads the text, as it does on the site. */
