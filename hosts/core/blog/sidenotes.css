@@ -48,11 +48,13 @@
   .fn-note .sn-text {
     overflow: visible clip;
   }
+  /* The ellipsis stands on the last line it keeps, over that line's end,
+     so no half-hidden letter shows beside it. */
   .fn-note[data-long]::after {
     content: "\2026";
     position: absolute;
     right: var(--space-xs);
-    bottom: 0;
+    bottom: var(--space-xs);
     padding-left: var(--grid);
     background: var(--surface);
     font-style: normal;
