@@ -914,6 +914,16 @@
     border: 0;
     padding: var(--space-s) 0;
   }
+  /* Endnote numbers start at the box's edge, so the space left of a
+     number matches the space right of the text. Ten notes or more keep a
+     number column, so every note's text starts on one edge. */
+  .fn-end strong {
+    min-width: 0;
+    text-align: left;
+  }
+  .fn-endnotes:has(> .fn-end:nth-child(10)) .fn-end strong {
+    min-width: 3ch;
+  }
 }
 @media (min-width: 640px) {
   .gallery {
