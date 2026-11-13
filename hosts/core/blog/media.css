@@ -1,6 +1,7 @@
 /* blog/media — .ht image treatment, galleries, lightbox.
-   An image shows as a halftone at rest; pointing at it or tabbing to it
-   shows the picture as it was made. On touch, its link opens the picture. */
+   An image shows as a halftone in its own colors at rest; pointing at it or
+   tabbing to it shows the picture as it was made. On touch, its link opens
+   the picture. */
 
 .article-body > .sec:has(.ht) {
   overflow: visible;
@@ -27,16 +28,6 @@
   background: var(--dither-light);
   width: 100%;
 }
-.ht::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--dither-mid);
-  mix-blend-mode: color;
-  opacity: var(--ht-tint, 1);
-  pointer-events: none;
-  z-index: 2;
-}
 .ht-map {
   display: block;
   position: relative;
@@ -49,7 +40,6 @@
   height: auto;
   object-fit: contain;
   object-position: center;
-  filter: var(--ht-img, grayscale(1));
 }
 .ht-ink {
   position: absolute;
@@ -70,22 +60,6 @@
 .post-card:hover .card-thumb .ht-map,
 .post-card:has(:focus-visible) .card-thumb .ht-map {
   filter: var(--ht-map-h, none);
-}
-.prose figure > a:hover .ht::after,
-.prose figure > a:focus-visible .ht::after,
-.gallery figure > a:hover .ht::after,
-.gallery figure > a:focus-visible .ht::after,
-.post-card:hover .card-thumb .ht::after,
-.post-card:has(:focus-visible) .card-thumb .ht::after {
-  opacity: var(--ht-tint-h, 0);
-}
-.prose figure > a:hover .ht img,
-.prose figure > a:focus-visible .ht img,
-.gallery figure > a:hover .ht img,
-.gallery figure > a:focus-visible .ht img,
-.post-card:hover .card-thumb .ht img,
-.post-card:has(:focus-visible) .card-thumb .ht img {
-  filter: var(--ht-img-h, none);
 }
 .prose figure > a:hover .ht-ink,
 .prose figure > a:focus-visible .ht-ink,

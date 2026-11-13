@@ -43,14 +43,14 @@ test("remilia.net serves light blue with a sparse lattice", () => {
   assert.match(html, /id="theme-dots-large"[^>]*checked>/);
 });
 
-test("remilia.org serves pinned light red with a dense lattice", () => {
+test("remilia.org serves pinned dark red with a dense lattice", () => {
   const html = shell("updates");
   assert.match(html, /<html[^>]*data-hue="30"/);
   assert.match(html, /<html[^>]*data-dots="small"/);
-  assert.match(html, /<html[^>]*data-scheme="light"/);
+  assert.match(html, /<html[^>]*data-scheme="dark"/);
   assert.match(html, /id="theme-hue-30"[^>]*checked>/);
   assert.match(html, /id="theme-dots-small"[^>]*checked>/);
-  assert.match(html, /id="theme-dark" class="theme-dark">/);
+  assert.match(html, /id="theme-dark" class="theme-dark" checked>/);
 });
 
 test("no host is left following the reader's OS by accident", () => {
