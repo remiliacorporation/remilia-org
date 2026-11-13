@@ -3,6 +3,7 @@ import {
   useEffect,
   useInsertionEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -227,13 +228,77 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
 }
 
 /**
+ * The note's box in the margin while the note is written there. It holds
+ * Sanity's own form for the note, so its edits are the form's patches, as
+ * in the dialog. Escape, or a click anywhere else on the page, closes it;
+ * the box then shows the note as the site draws it again.
+ */
+function NoteInPlace(props: {
+  n: number | undefined;
+  onClose: () => void;
+  children: ReactNode;
+}): ReactNode {
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  // Sanity hands a new onClose as the form changes; the effect below must
+  // run once per opening, or it would pull the caret back on every edit.
+  const close = useRef(props.onClose);
+  close.current = props.onClose;
+  const onClose = () => close.current();
+  useEffect(() => {
+    if (!box) return;
+    // The caret goes into the note at once, as the dialog put it there. The
+    // note's editor mounts a frame or two after its box.
+    let tries = 0;
+    let frame = requestAnimationFrame(function focus() {
+      const text = box.querySelector<HTMLElement>('[contenteditable="true"]');
+      if (text) text.focus();
+      else if (++tries < 30) frame = requestAnimationFrame(focus);
+    });
+    // A press anywhere else on the page closes the note. Menus and dialogs
+    // the note's own editor opens stand outside the page, so they do not.
+    const shell = box.closest(".blog-post-shell");
+    const fn = box.closest(".fn");
+    const away = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (shell?.contains(t) && !fn?.contains(t)) close.current();
+    };
+    document.addEventListener("pointerdown", away, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", away, true);
+    };
+  }, [box]);
+  return (
+    <span
+      ref={setBox}
+      className="fn-note fn-edit"
+      role="group"
+      aria-label={`Note ${props.n ?? ""}`.trim()}
+      contentEditable={false}
+      onKeyDown={(e) => {
+        // A dialog the note's editor opens is a React child of this box, so
+        // its keys arrive here too; Escape there closes only that dialog.
+        if (!e.currentTarget.contains(e.target as Node)) return;
+        if (e.key === "Escape" && !e.defaultPrevented) {
+          e.stopPropagation();
+          onClose();
+        }
+      }}
+    >
+      <strong>{props.n ?? "*"}:</strong>
+      <span className="fn-edit-form">{props.children}</span>
+    </span>
+  );
+}
+
+/**
  * A footnote in the text: the site's own reference mark, numbered by its
  * place in the text (the renderer's `numberFootnotes`, so the editor and the
  * site agree), and the note as the site draws it. In the page frame with
  * both rails showing, every note stands in the margin, as on the site
- * (studio/sidenotes.ts); in a narrower frame the selected note opens under
- * its mark. The note is the site's markup, not an editor: a click on the
- * mark or the note opens Sanity's own dialog, which edits it.
+ * (studio/sidenotes.ts), and a click on the mark or the note opens the note
+ * for writing in its own box (NoteInPlace). In a narrower frame the
+ * selected note opens under its mark, and a click opens Sanity's dialog.
  */
 export function FootnoteInline(props: BlockProps): ReactNode {
   useInsertionEffect(injectNoteCss, []);
@@ -245,6 +310,10 @@ export function FootnoteInline(props: BlockProps): ReactNode {
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
   );
+  // A note in the text itself, opened while its box stands in the margin,
+  // is written in that box: Sanity's own form for the note (props.children,
+  // the input its dialog would hold) renders there instead of the dialog.
+  const inPlace = margin && keys.length === 2 && props.open;
   const picked = (props.selected || props.focused) && !props.open;
   // Only a note in the text itself has a box on the site; a note inside a
   // note shows as its number here, and as its own box under its parent's
@@ -258,7 +327,7 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const state = [
     "fn",
     note && !margin ? "fn-pop" : "",
-    picked ? "fn-on" : "",
+    picked || inPlace ? "fn-on" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -269,6 +338,8 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
+        // A click in the note being written is the writer's own.
+        if ((e.target as Element).closest?.(".fn-edit")) return;
         // A link in the note's markup must not leave the Studio.
         if ((e.target as Element).closest?.("a")) e.preventDefault();
         // After the click has moved the editor's focus: inside a note's
@@ -279,13 +350,19 @@ export function FootnoteInline(props: BlockProps): ReactNode {
       <span className={state}>
         {props.renderDefault({
           ...props,
+          // Written in place, the note needs no dialog.
+          open: inPlace ? false : props.open,
           renderPreview: () => (
             <span className="fn-ref">
               <sup>{n ?? "*"}</sup>
             </span>
           ),
         })}
-        {note ? (
+        {inPlace ? (
+          <NoteInPlace n={n} onClose={props.onClose}>
+            {props.children}
+          </NoteInPlace>
+        ) : note ? (
           <span
             className="fn-note"
             role="note"
@@ -293,7 +370,7 @@ export function FootnoteInline(props: BlockProps): ReactNode {
             dangerouslySetInnerHTML={{ __html: note.html }}
           />
         ) : null}
-        {note?.subs && margin ? (
+        {note?.subs && margin && !inPlace ? (
           <span
             className="blog-pt-subs"
             contentEditable={false}
