@@ -113,3 +113,30 @@ test("a case-sensitive asset is never rewritten", async () => {
   );
   assert.equal(response, asset);
 });
+
+test("a page's .html twin redirects to its slashless URL before the origin is asked", async () => {
+  let asked = false;
+  const next = () => {
+    asked = true;
+    return Promise.resolve(served(200));
+  };
+  for (const [from, to] of [
+    ["/about.html", "/about"],
+    ["/blog.html?ref=x", "/blog?ref=x"],
+    ["/kr/careers/seoul.html", "/kr/careers/seoul"],
+    ["/blog/updates/page/2.html", "/blog/updates/page/2"],
+  ]) {
+    const response = await notFound(new Request(`https://remilia.org${from}`), { next });
+    assert.equal(response.status, 301, from);
+    assert.equal(response.headers.get("location"), `https://remilia.org${to}`);
+  }
+  assert.equal(asked, false);
+  // The slashless URL, an index file, and a section 404 pass through: the
+  // first is the page itself, and redirecting it would loop.
+  for (const path of ["/about", "/blog/updates/page/2", "/index.html", "/about/index.html", "/blog/404.html", "/.html"]) {
+    asked = false;
+    const response = await notFound(new Request(`https://remilia.org${path}`), { next });
+    assert.equal(response.status, 200, path);
+    assert.equal(asked, true, path);
+  }
+});

@@ -67,7 +67,8 @@ and Netlify Deploy Previews both use Sanity's published perspective.
 
 ## Netlify
 
-`netlify.toml`: `publish = deploy`, `command = "pnpm bake"`.
+`netlify.toml`: `publish = deploy`,
+`command = "pnpm install --prod --frozen-lockfile && pnpm --filter @remilia/hosts bake"`.
 
 Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access for `bake:org`).
 
@@ -99,8 +100,13 @@ in `_redirects`. Unforced, so a real page always wins.
 Each section ends its block with `<section>/*  <section>/404.html  404`, so a miss lands
 on that section's 404 (latest posts + index + maps) rather than the corporate one.
 
+A page past a listing's end (`<section>/page/9`, and the same under `tags`, `authors`
+and `months`) 301s to the listing's first page, so a listing that shrinks leaves no 404.
+
 `netlify/edge-functions/not-found.ts` covers what `_redirects` cannot express:
-mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), and a
+mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), a page's
+`.html` twin 301s to its slashless URL (`/about.html` → `/about`; org only, the com and
+net sites run no edge function), and a
 missing `.md`/`.txt`/`.xml`/`.json` answers in its own format instead of serving HTML
 under a machine-readable URL. `SECTION_PREFIXES` in `lib/paths.ts` is duplicated for the
 Deno runtime; a test in `packages/seo` fails if it drifts from `CHANNEL_BASEPATH`.

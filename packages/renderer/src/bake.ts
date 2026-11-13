@@ -1100,6 +1100,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         headExtra: feedLinks(meta),
         chrome: chromeStamped,
         leftRail: emptyRail(),
+        bodyEnd: navScript,
         mainHtml: termIndexMain(
           taxonomy.noun,
           taxonomy.terms.map((t) => ({
@@ -1150,6 +1151,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     notFoundHtml(chromeStamped, basePath, {
       sectionTitle: host.title,
       channel,
+      bodyEnd: navScript,
       recent: navPosts.map((p) => ({
         title: p.title,
         url: p.url,
@@ -1211,6 +1213,17 @@ async function writeChannelRedirects(
   // Post-level aliases live on the section the post is in — aggregates only
   // need their own 404.
   if (!aggregated) rules.push(...aliasRules(basePath, posts));
+
+  // A listing shrinks when posts move or are unpublished, and a page past
+  // its new end was a real URL once: it lands on the listing's first page.
+  // Unforced, so every page that exists still answers itself.
+  rules.push(
+    { from: `${basePath}/page/:n`, to: basePath || "/" },
+    ...["tags", "authors", "months"].map((kind) => ({
+      from: `${basePath}/${kind}/:term/page/:n`,
+      to: `${basePath}/${kind}/:term`,
+    })),
+  );
 
   // At a site root the section 404 is the site-wide catch-all, which the
   // file already ends on.

@@ -152,6 +152,23 @@ export function caseRedirect(pathname: string): string | undefined {
   return inSection ? lower : undefined;
 }
 
+/**
+ * Every page is baked as `<path>.html` so Netlify answers the slashless
+ * `<path>` with a 200. That file's own name is then a second URL for the same
+ * page. Returns the slashless path such a URL redirects to, or undefined.
+ *
+ * This runs on the request as the reader sent it, before Netlify resolves
+ * `<path>` to the file, so the redirect cannot loop; a `_redirects` rule
+ * cannot do this, because Netlify matches `<path>` and `<path>.html` as one.
+ * An `index.html` is Netlify's own to redirect, and a `404.html` is only
+ * ever served by rewrite.
+ */
+export function twinRedirect(pathname: string): string | undefined {
+  const bare = /^(.*[^/])[.]html$/.exec(pathname)?.[1];
+  if (!bare || /(^|[/])(index|404)$/.test(bare)) return undefined;
+  return bare;
+}
+
 const MACHINE_TYPES: Record<string, string> = {
   ".md": "text/markdown; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
