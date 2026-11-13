@@ -41,6 +41,9 @@
   height: var(--mast-title);
   flex: 0 0 auto;
 }
+/* The inputs are unseen and their labels take the clicks. An input still
+   sits somewhere in the row (the dark-mode one lay on the center of the
+   magenta swatch), so it takes no pointer events itself. */
 .theme-hues input,
 .theme-dots input,
 .theme-dark {
@@ -49,6 +52,7 @@
   height: 1px;
   opacity: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 .theme-hues label,
 .theme-dots label,

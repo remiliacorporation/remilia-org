@@ -139,7 +139,8 @@
     grid-template-rows: var(--border-w) var(--mast-line);
     row-gap: var(--space-xs);
   }
-  .left-rail > .theme-sel .theme-label {
+  .left-rail > .theme-sel .theme-label,
+  .left-rail > .theme-sel > .disclosure {
     display: none;
   }
   .left-rail > .theme-sel .nav-rule {
