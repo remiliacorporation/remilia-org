@@ -859,7 +859,7 @@ export const NAV_JS = `(() => {
         if (openFn !== fn || fn.matches(':hover') || fn.matches(':focus-within')) return;
         close(fn);
         openFn = null;
-      }, 250);
+      }, 700);
     };
     const fnOf = (e) => (mq.matches && e.target && e.target.closest ? e.target.closest('.fn') : null);
     document.addEventListener('pointerover', (e) => {
