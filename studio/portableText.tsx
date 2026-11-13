@@ -1,4 +1,5 @@
 import {
+  useContext,
   useEffect,
   useInsertionEffect,
   useMemo,
@@ -20,6 +21,7 @@ import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
 import { numberFootnotes } from "../packages/renderer/src/footnotes";
 import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
 import { injectNoteCss } from "./noteStyles";
+import { SidenotesShown } from "./sidenotes";
 
 const INTERNAL_HOSTS = /^https?:\/\/(?:[\w-]+\.)*remilia\.(?:org|com|net)\b/;
 
@@ -197,18 +199,25 @@ const keysOf = (path: readonly unknown[]): string[] =>
     seg && typeof seg === "object" && "_key" in seg ? [String(seg._key)] : [],
   );
 
-const previews = new WeakMap<object, Map<string, string>>();
+/** A note's site markup: inside its box, and the boxes nested in it. */
+interface NotePreview {
+  html: string;
+  subs: string;
+}
+
+const previews = new WeakMap<object, Map<string, NotePreview>>();
 
 /** Each note's site markup, by block key and note key, for one body value. */
-function notePreviews(body: unknown): Map<string, string> {
+function notePreviews(body: unknown): Map<string, NotePreview> {
   if (!Array.isArray(body)) return new Map();
   const hit = previews.get(body);
   if (hit) return hit;
-  const out = new Map<string, string>();
+  const out = new Map<string, NotePreview>();
   try {
     portableTextToHtml(body as PTBlock[], {
       imageUrl: () => undefined,
-      onNote: (block, note, html) => out.set(`${block}/${note}`, html),
+      onNote: (block, note, html, subs) =>
+        out.set(`${block}/${note}`, { html, subs }),
     });
   } catch {
     // A half-made block: the number still shows, the preview waits.
@@ -220,11 +229,15 @@ function notePreviews(body: unknown): Map<string, string> {
 /**
  * A footnote in the text: the site's own reference mark, numbered by its
  * place in the text (the renderer's `numberFootnotes`, so the editor and the
- * site agree), and, while it is selected, the note as the site draws it.
- * Sanity's own dialog edits it.
+ * site agree), and the note as the site draws it. In the page frame with
+ * both rails showing, every note stands in the margin, as on the site
+ * (studio/sidenotes.ts); in a narrower frame the selected note opens under
+ * its mark. The note is the site's markup, not an editor: a click on the
+ * mark or the note opens Sanity's own dialog, which edits it.
  */
 export function FootnoteInline(props: BlockProps): ReactNode {
   useInsertionEffect(injectNoteCss, []);
+  const margin = useContext(SidenotesShown);
   const root = useFormValue(props.path.slice(0, 1));
   const keys = keysOf(props.path);
   const id = keys.join("/");
@@ -232,12 +245,23 @@ export function FootnoteInline(props: BlockProps): ReactNode {
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
   );
+  const picked = (props.selected || props.focused) && !props.open;
   // Only a note in the text itself has a box on the site; a note inside a
-  // note shows as its number.
-  const html =
-    keys.length === 2 && (props.selected || props.focused) && !props.open
+  // note shows as its number here, and as its own box under its parent's
+  // in the margin.
+  const note =
+    keys.length === 2 && (margin || picked)
       ? notePreviews(root).get(id)
       : undefined;
+  // The site's own class (fn) sits one element in: the note styles are
+  // scoped to this mark, and a scoped rule reaches only below its root.
+  const state = [
+    "fn",
+    note && !margin ? "fn-pop" : "",
+    picked ? "fn-on" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <span
       className="blog-pt-note"
@@ -245,27 +269,38 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
+        // A link in the note's markup must not leave the Studio.
+        if ((e.target as Element).closest?.("a")) e.preventDefault();
         // After the click has moved the editor's focus: inside a note's
         // dialog, opening at once is undone by that focus change.
         window.setTimeout(() => props.onOpen(), 0);
       }}
     >
-      {props.renderDefault({
-        ...props,
-        renderPreview: () => (
-          <span className="fn-ref">
-            <sup>{n ?? "*"}</sup>
-          </span>
-        ),
-      })}
-      {html ? (
-        <span
-          className="fn-note"
-          role="note"
-          contentEditable={false}
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      ) : null}
+      <span className={state}>
+        {props.renderDefault({
+          ...props,
+          renderPreview: () => (
+            <span className="fn-ref">
+              <sup>{n ?? "*"}</sup>
+            </span>
+          ),
+        })}
+        {note ? (
+          <span
+            className="fn-note"
+            role="note"
+            contentEditable={false}
+            dangerouslySetInnerHTML={{ __html: note.html }}
+          />
+        ) : null}
+        {note?.subs && margin ? (
+          <span
+            className="blog-pt-subs"
+            contentEditable={false}
+            dangerouslySetInnerHTML={{ __html: note.subs }}
+          />
+        ) : null}
+      </span>
     </span>
   );
 }

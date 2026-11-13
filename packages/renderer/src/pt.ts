@@ -64,10 +64,16 @@ export interface PTOptions {
   linkCard?: (href: string) => LinkCard | undefined;
   /**
    * Called with each note in the text as it renders: its block's key, its
-   * own key, and the markup inside its `.fn-note` box. The Studio shows that
-   * markup in the editor, so a note looks there as it does on the site.
+   * own key, the markup inside its `.fn-note` box, and the margin boxes of
+   * the notes nested in it (`.fn-sub`, whole). The Studio shows that markup
+   * in the editor, so a note looks there as it does on the site.
    */
-  onNote?: (blockKey: string, noteKey: string, html: string) => void;
+  onNote?: (
+    blockKey: string,
+    noteKey: string,
+    html: string,
+    subs: string,
+  ) => void;
 }
 
 const INTERNAL_HOSTS = /^https?:\/\/(?:[\w-]+\.)*remilia\.(?:org|com|net)\b/;
@@ -169,6 +175,8 @@ interface RenderState {
   endnotes: string[];
   /** Set while a note's own blocks render: a note in there is a nested note. */
   inNote?: boolean;
+  /** The margin boxes of the notes nested in the note being rendered. */
+  subs?: string[];
   /** The key of the block being rendered, for `onNote`. */
   blockKey?: string;
 }
@@ -303,20 +311,30 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   const id = fnId(n, state);
   // The note takes its place in the endnotes before the notes inside it.
   const slot = state.endnotes.push("") - 1;
-  const body = fnBodyHtml(def, state);
   if (state.inNote) {
     // A note inside a note: its reference sits in the parent's text and
-    // links to its own endnote, which links back.
+    // links to its own endnote, which links back. Its margin box (fn-sub)
+    // goes to `onNote` after the parent's, in reading order; the layout
+    // script stands it under the parent and ties it to this reference.
+    const at = state.subs ? state.subs.push("") - 1 : -1;
+    const body = fnBodyHtml(def, state);
+    if (state.subs && at >= 0)
+      state.subs[at] =
+        `<span class="fn-note fn-sub" role="note" data-n="${n}" data-ref="fndef-${id.slice(3)}"><strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span></span>`;
     state.endnotes[slot] =
       `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
     return `${inner}<a class="fn-xref" id="${id}" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a>`;
   }
+  const subs: string[] = [];
+  state.subs = subs;
+  const body = fnBodyHtml(def, state);
+  state.subs = undefined;
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
   state.endnotes[slot] =
     `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
   const note = `<strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span>`;
-  state.opts.onNote?.(state.blockKey ?? "", def._key, note);
+  state.opts.onNote?.(state.blockKey ?? "", def._key, note, subs.join(""));
   return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span></span>`;
 }
 
