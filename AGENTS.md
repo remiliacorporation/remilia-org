@@ -63,8 +63,7 @@ literature under `deploy/{updates,press,thought,archive}/` is gitignored — do 
 
 Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
 `index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Production bakes
-use Sanity's published perspective; protected Netlify Deploy Previews use the
-drafts perspective and include scheduled posts.
+and Netlify Deploy Previews both use Sanity's published perspective.
 
 ## Netlify
 
@@ -79,10 +78,11 @@ forbidden token (401/403), and a zero-post dataset abort the build, so the previ
 deploy stays live. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
 never be set in the Netlify environment.
 
-Netlify Deploy Previews bake Sanity's `drafts` perspective via
-`SANITY_PERSPECTIVE=drafts`. Keep preview visibility private to the Netlify team;
-production remains public. Draft content must never be exposed on an unprotected
-preview URL.
+Netlify Deploy Previews bake published content, like production. Their URLs answer
+without a login (observed 2026-11-13), and draft content must never be exposed on an
+unprotected preview URL. The bake still honors `SANITY_PERSPECTIVE=drafts`, which also
+includes scheduled posts: set it for the deploy-preview context only after Deploy
+Previews are protected in the Netlify site settings.
 
 Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webhook to a
 Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`
