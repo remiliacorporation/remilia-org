@@ -3,13 +3,16 @@ import {
   useEffect,
   useInsertionEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
+  getPublishedId,
   set,
   useClient,
+  useDocumentOperation,
   useFormValue,
   type BlockAnnotationProps,
   type BlockDecoratorProps,
@@ -21,6 +24,7 @@ import {
 import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
 import { numberFootnotes } from "../packages/renderer/src/footnotes";
 import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
+import { NoteMemory } from "./noteMemory";
 import { injectNoteCss } from "./noteStyles";
 import { SidenotesShown } from "./sidenotes";
 
@@ -195,6 +199,18 @@ export function NoteContentInput(props: ArrayOfObjectsInputProps): ReactNode {
   return <div className="blog-note-edit">{props.renderDefault(props)}</div>;
 }
 
+/** A form path as a patch path: `body[_key=="a"].children[_key=="b"]`. */
+const jsonPath = (path: readonly unknown[]): string =>
+  path
+    .map((seg, i) =>
+      seg && typeof seg === "object" && "_key" in seg
+        ? `[_key==${JSON.stringify(String(seg._key))}]`
+        : typeof seg === "number"
+          ? `[${seg}]`
+          : `${i ? "." : ""}${String(seg)}`,
+    )
+    .join("");
+
 const keysOf = (path: readonly unknown[]): string[] =>
   path.flatMap((seg) =>
     seg && typeof seg === "object" && "_key" in seg ? [String(seg._key)] : [],
@@ -226,6 +242,9 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
   previews.set(body, out);
   return out;
 }
+
+/** Each note's words while its mark is out of the editor (noteMemory.ts). */
+const memory = new NoteMemory();
 
 /**
  * The note being written in its margin box, by its path; one at a time. It
@@ -321,6 +340,28 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const keys = keysOf(props.path);
   const id = keys.join("/");
   const me = JSON.stringify(props.path);
+  // A note that comes back into the editor with no words, as undo then redo
+  // brings it back, gets back the words it had when its mark left
+  // (noteMemory.ts).
+  const docId = useFormValue(["_id"]);
+  const docType = useFormValue(["_type"]);
+  const { patch } = useDocumentOperation(
+    getPublishedId(typeof docId === "string" ? docId : ""),
+    typeof docType === "string" ? docType : "post",
+  );
+  const latest = useRef({ value: props.value as unknown, path: props.path, patch });
+  latest.current = { value: props.value, path: props.path, patch };
+  const key = keys[keys.length - 1] ?? "";
+  useEffect(() => {
+    const content = (v: unknown) =>
+      v && typeof v === "object" ? (v as { content?: unknown }).content : undefined;
+    const words = memory.back(key, content(latest.current.value));
+    if (words)
+      latest.current.patch.execute([
+        { set: { [`${jsonPath(latest.current.path)}.content`]: words } },
+      ]);
+    return () => memory.leave(key, content(latest.current.value));
+  }, [key]);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
@@ -365,8 +406,11 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
         const t = e.target as Element;
-        // A click in the note being written is the writer's own.
-        if (t.closest?.(".fn-edit")) return;
+        // A click in the note being written is the writer's own. A note
+        // nested in that note stands in its box, and a click on its mark
+        // opens it.
+        const box = t.closest?.(".fn-edit");
+        if (box && !box.contains(e.currentTarget)) return;
         // A link in the note's markup must not leave the Studio.
         if (t.closest?.("a")) e.preventDefault();
         if (note && margin) {
