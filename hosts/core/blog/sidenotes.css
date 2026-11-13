@@ -1,0 +1,99 @@
+/* blog/sidenotes — notes in the margin, with flowchart lines
+
+   With both rails, every note stands in the margin, in full, in reference
+   order, under the right rail's boxes. The layout script (SIDENOTES_JS in
+   packages/renderer/src/nav.ts) puts a note at its mark's line, or below
+   the note above when that place is taken, and sets the lane each line
+   turns in. Pointing at a mark or its note inverts both; so does the
+   state class fn-on (the editor's selected note).
+
+   The Studio's page editor uses this sheet and that script today. The
+   blog's own pages still take their sidenotes from blog/layout.css, so
+   this sheet is not in BLOG_SHEETS yet. */
+@media (min-width: 1100px) {
+  .fn-note {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: flex-start;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: var(--rail);
+    max-width: var(--rail);
+    margin: 0;
+    padding: var(--space-xs);
+    z-index: 1;
+    pointer-events: auto;
+    user-select: text;
+    cursor: text;
+    --size-base: var(--size-ui);
+  }
+  /* The line from the column to the note, across the gap (--fn-reach).
+     It starts on the column's border and ends on the note's, one border's
+     width into each, so it reads as coming from under the window with no
+     gap at either end. */
+  .fn-note::before {
+    content: "";
+    display: block;
+    position: absolute;
+    right: 100%;
+    margin-right: calc(-1 * var(--border-w));
+    top: calc(var(--space-xs) + var(--size-ui) * var(--leading) / 2);
+    width: calc(var(--fn-reach, var(--rail-gap)) + 2 * var(--border-w));
+    height: var(--border-w);
+    background: var(--ink);
+    pointer-events: none;
+  }
+  /* A note below its place: the line leaves the column at the mark's
+     line, turns down in its lane (--fn-lane, from the column's edge), and
+     turns into the note. Each part is a border-wide strip of ink. */
+  .fn-note[data-drop]::before {
+    --lane: calc(var(--fn-lane, var(--grid)) + var(--border-w));
+    top: calc(
+      var(--space-xs) + var(--size-ui) * var(--leading) / 2 - var(--fn-drop)
+    );
+    height: calc(var(--fn-drop) + var(--border-w));
+    background:
+      linear-gradient(var(--ink), var(--ink)) 0 0 /
+        calc(var(--lane) + var(--border-w)) var(--border-w) no-repeat,
+      linear-gradient(var(--ink), var(--ink)) var(--lane) 0 / var(--border-w)
+        100% no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 100% 100% /
+        calc(100% - var(--lane)) var(--border-w) no-repeat;
+  }
+  /* A note nested in another stands under it, and its line runs on the
+     right: out of the parent's right side at the reference's line, down
+     its lane (--fn-lane, from the notes' right edge), into this note's
+     right side. */
+  .fn-note.fn-sub[data-drop]::before {
+    right: auto;
+    left: 100%;
+    margin-right: 0;
+    margin-left: calc(-1 * var(--border-w));
+    width: calc(var(--fn-lane, var(--grid)) + 2 * var(--border-w));
+    background:
+      linear-gradient(var(--ink), var(--ink)) 0 0 / 100% var(--border-w)
+        no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 100% 0 / var(--border-w) 100%
+        no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 0 100% / 100% var(--border-w)
+        no-repeat;
+  }
+  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note {
+    z-index: 6;
+  }
+  :is(.fn:hover, .fn.fn-on) .fn-ref,
+  :is(.fn:hover, .fn.fn-on) .fn-ref sup,
+  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note {
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+  :is(.fn:hover, .fn:focus-within, .fn.fn-on) .fn-note * {
+    color: var(--ink-contrast);
+  }
+  :is(.fn:hover, .fn.fn-on) .fn-note a:hover,
+  :is(.fn:hover, .fn.fn-on) .fn-note a:hover * {
+    background: var(--ink-contrast);
+    color: var(--ink);
+  }
+}

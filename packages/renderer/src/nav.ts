@@ -324,6 +324,145 @@ export function emptyRail(): string {
 /** Posts on one page of the rail's list. */
 export const RAIL_PAGE = 4;
 
+/**
+ * The sidenote layout, as page script: `sidenotes(root, wide)` returns the
+ * function that places every note under `root` (the document, or the page
+ * frame in the Studio's editor) when `wide()` says both rails show, and
+ * clears its work when not. The Studio's page editor builds it from this
+ * source (studio/sidenotes.ts); the blog's nav.js will run the same source.
+ */
+export const SIDENOTES_JS = `// With both rails, notes stand in the margin, each in full, in reference
+// order, under the boxes at the head of the right rail. A note stands at
+// its mark's line when that place is free; otherwise it goes below the
+// note above. A line ties each note to its place, drawn like a flowchart:
+// out from the column at the mark's line, down a lane in the gap, into the
+// note's left side. A note inside a note stands under its parent, and its
+// line runs on the right: out of the parent at its reference's line, down
+// a lane, into the nested note's right side. Lines whose runs pass each
+// other take separate lanes; when the gap is too narrow for the lanes, the
+// notes give up some width. A stack that runs past the article's end makes
+// the page longer.
+function sidenotes(root, wide) {
+  const layout = root.querySelector('.layout');
+  let placed = [];
+  const PITCH = 3;
+  const clear = () => {
+    if (layout) layout.style.paddingBottom = '';
+    for (const n of placed) {
+      n.style.top = '';
+      n.style.left = '';
+      n.style.width = '';
+      for (const v of ['--fn-drop', '--fn-lane', '--fn-reach']) n.style.removeProperty(v);
+      n.removeAttribute('data-drop');
+    }
+  };
+  // Lanes for runs [from, to] in reference order: a run that starts
+  // while earlier ones are still going takes the next lane out.
+  const lanesFor = (runs) => {
+    let count = 0;
+    runs.forEach((run, i) => {
+      const going = runs.slice(0, i).filter((o) => o.to > run.from);
+      run.lane = going.length ? Math.max(...going.map((o) => o.lane)) + 1 : 0;
+      count = Math.max(count, run.lane + 1);
+    });
+    return count;
+  };
+  const stack = () => {
+    clear();
+    const notes = [...root.querySelectorAll('.fn .fn-note')];
+    placed = notes;
+    if (!notes.length || !wide()) return;
+    const cs = getComputedStyle(root.documentElement || root);
+    const num = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
+    const gap = num('--grid') || 4;
+    const between = num('--rail-gap') || 12;
+    const rail = num('--rail') || 240;
+    const tick = num('--space-xs') + (num('--size-ui') * (num('--leading') || 1)) / 2;
+    // Notes start under the right rail's boxes: theme, read info, search.
+    // The post list's own element may run the rail's whole height; its
+    // boxes are what the notes must clear.
+    const boxes = [...root.querySelectorAll('.right-rail > :not(.post-nav), .right-rail > .post-nav > *')];
+    const top0 = boxes.reduce((y, el) => Math.max(y, el.getBoundingClientRect().bottom + scrollY), 0) + between;
+    // One pass places every note at a given width and returns the runs.
+    const place = (leftExtra, rightExtra) => {
+      const rows = [];
+      const byNote = new Map();
+      let floor = top0;
+      for (const n of notes) {
+        const parent = n.offsetParent;
+        const fn = n.closest('.fn');
+        const sec = n.closest('.sec');
+        if (!parent || !fn || !sec) continue;
+        n.style.width = rail - leftExtra - rightExtra + 'px';
+        const p = parent.getBoundingClientRect();
+        const base = p.top + scrollY;
+        const row = { n, base, sub: n.classList.contains('fn-sub'), h: n.offsetHeight,
+          edge: sec.getBoundingClientRect().right - p.left };
+        if (row.sub) {
+          // Its place is its reference, inside the note it is nested in.
+          const key = n.getAttribute('data-ref');
+          const host = rows.filter((o) => o.n.closest('.fn') === fn)
+            .find((o) => o.n.querySelector('.fn-xref[href="#' + key + '"]'));
+          const x = host && host.n.querySelector('.fn-xref[href="#' + key + '"]');
+          if (!x) continue;
+          const xr = x.getBoundingClientRect();
+          row.from = host.top + (xr.top + xr.height / 2 - host.n.getBoundingClientRect().top);
+          row.top = floor;
+        } else {
+          const ref = fn.querySelector('.fn-ref');
+          if (!ref) continue;
+          const r = ref.getBoundingClientRect();
+          // The mark's line, wherever the note's own box is measured from.
+          row.from = Math.max(r.top + r.height / 2, sec.getBoundingClientRect().top + tick) + scrollY;
+          row.top = Math.max(row.from - tick, floor);
+        }
+        row.to = row.top + tick;
+        floor = row.top + row.h + gap;
+        n.style.top = row.top - base + 'px';
+        rows.push(row);
+        byNote.set(n, row);
+      }
+      const left = rows.filter((o) => !o.sub && o.to - o.from > 1);
+      const right = rows.filter((o) => o.sub);
+      return { rows, left, right, L: lanesFor(left), R: lanesFor(right), floor };
+    };
+    let out = place(0, 0);
+    const room = (lanes) => PITCH * (lanes + 1);
+    const leftExtra = Math.min(36, Math.max(0, room(out.L) - between));
+    const rightExtra = out.R ? Math.min(24, room(out.R)) : 0;
+    if (leftExtra || rightExtra) out = place(leftExtra, rightExtra);
+    const leftW = between + leftExtra;
+    const leftPitch = Math.max(2, Math.min(PITCH, Math.floor(leftW / (out.L + 1))));
+    const rightPitch = out.R ? Math.max(2, Math.min(PITCH, Math.floor(rightExtra / (out.R + 1)))) : PITCH;
+    for (const row of out.rows) {
+      const n = row.n;
+      n.style.left = row.edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + leftW + 'px';
+      n.style.setProperty('--fn-reach', leftW + 'px');
+      const drop = row.to - row.from;
+      if (row.sub) {
+        n.setAttribute('data-drop', '');
+        n.style.setProperty('--fn-drop', drop + 'px');
+        // Lane 0 is nearest the notes.
+        n.style.setProperty('--fn-lane', Math.min(rightExtra - 1, rightPitch * ((row.lane % Math.max(1, Math.floor(rightExtra / rightPitch) - 1)) + 1)) + 'px');
+      } else if (drop > 1) {
+        n.setAttribute('data-drop', '');
+        n.style.setProperty('--fn-drop', drop + 'px');
+        // Lane 0 is nearest the notes. A later line turns nearer the
+        // column, so its way out never meets an earlier line's way down.
+        const fit = Math.max(1, Math.floor(leftW / leftPitch) - 1);
+        n.style.setProperty('--fn-lane', Math.max(1, leftW - leftPitch * ((row.lane % fit) + 1)) + 'px');
+      }
+    }
+    // A stack that ends below the page's content makes the page longer.
+    if (layout) {
+      const end = layout.getBoundingClientRect().bottom + scrollY;
+      if (out.floor > end) layout.style.paddingBottom = Math.ceil(out.floor - end) + 'px';
+    }
+  };
+  return stack;
+}
+`;
+
 export const NAV_JS = `(() => {
   const q = document.getElementById('post-filter');
   const list = document.querySelector('.post-nav .nav-all');
