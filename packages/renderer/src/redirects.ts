@@ -61,7 +61,9 @@ export function ghostFromUrl(url: string): string {
 /**
  * Rules for a retired blog host pointed at this site (a domain alias): every
  * post that used to live there 301s to its canonical, wherever it lives now,
- * and any other path on that host lands on `fallback` rather than a 404.
+ * with or without its trailing slash, and any other path on that host
+ * (Ghost's admin, feed, tag and author pages included) lands on `fallback`
+ * rather than a 404.
  */
 export function legacyHostRules(
   origin: string,
@@ -71,7 +73,11 @@ export function legacyHostRules(
   const rules: RedirectRule[] = [];
   for (const p of posts) {
     if (!p.legacyUrl?.startsWith(`${origin}/`)) continue;
-    rules.push({ from: ghostFromUrl(p.legacyUrl), to: p.canonical, force: true });
+    const from = ghostFromUrl(p.legacyUrl);
+    rules.push(
+      { from, to: p.canonical, force: true },
+      { from: from.slice(0, -1), to: p.canonical, force: true },
+    );
   }
   rules.push(
     { from: `${origin}/`, to: fallback, force: true },

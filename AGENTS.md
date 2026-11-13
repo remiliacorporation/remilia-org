@@ -103,6 +103,14 @@ on that section's 404 (latest posts + index + maps) rather than the corporate on
 A page past a listing's end (`<section>/page/9`, and the same under `tags`, `authors`
 and `months`) 301s to the listing's first page, so a listing that shrinks leaves no 404.
 
+`blog.remilia.org` (the old Ghost blog) is meant to be a domain alias of the remilia.org
+Netlify site. `bake:org` writes forced host rules for it in `bake:redirects:legacy-host`:
+each Ghost post filed under a remilia.org section 301s from its old URL (with or without
+the trailing slash) to `remilia.org/blog/<section>/<slug>`, matched on the post's
+`migration.legacyUrl`; every other path there (`/`, `/ghost`, `/rss/`, tag and author
+pages, and Ghost posts filed under com or net sections) 301s to `remilia.org/blog`. The
+edge function passes that host straight through to these rules.
+
 `netlify/edge-functions/not-found.ts` covers what `_redirects` cannot express:
 mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), a page's
 `.html` twin 301s to its slashless URL (`/about.html` → `/about`; org only, the com and

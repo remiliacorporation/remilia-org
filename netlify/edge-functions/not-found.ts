@@ -1,5 +1,6 @@
 import {
   caseRedirect,
+  LEGACY_HOSTS,
   localeRedirect,
   machineNotFound,
   twinRedirect,
@@ -32,6 +33,7 @@ export async function notFoundHandler(
   context: EdgeContext,
 ): Promise<Response> {
   const url = new URL(request.url);
+  if (LEGACY_HOSTS.includes(url.hostname)) return context.next();
   if (request.method === "GET" || request.method === "HEAD") {
     const locale = localeRedirect({
       pathname: url.pathname,
