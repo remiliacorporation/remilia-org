@@ -356,7 +356,7 @@ export const NAV_JS = `(() => {
   const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
   const match = (el) => {
     const query = q ? q.value.trim() : '';
-    const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
+    const catv = cat ? (cat.dataset.value || '') : '';
     const d = el.dataset;
     return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
       && (!catv || d.cat === catv);
@@ -393,7 +393,9 @@ export const NAV_JS = `(() => {
       if (prev) prev.disabled = page <= 0;
       if (next) next.disabled = page >= pages - 1;
     }
-    const wide = !!query && !!indexUrl && !failed;
+    // The index holds no categories, so a category dropdown's choice keeps
+    // the search to the cards here.
+    const wide = !!query && !!indexUrl && !failed && !(cat && cat.dataset.value);
     if (wide && !index) load();
     const hits = wide && index ? index.filter((r) => has(query, r[0])) : null;
     found.splice(0).forEach((el) => el.remove());
@@ -416,7 +418,7 @@ export const NAV_JS = `(() => {
       if (none && text) text.textContent = query ? 'No posts match “' + query + '”.' : 'No posts match.';
     }
     if (statusEl && cards.length) {
-      const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
+      const catv = cat ? (cat.dataset.value || '') : '';
       const author = statusEl.dataset.author || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
@@ -586,13 +588,24 @@ export const NAV_JS = `(() => {
     // each frame of the glide aims again, and an image above the target
     // that loads after landing lands the jump once more. The reader's own
     // scroll, touch or key ends that, so a jump never fights them.
+    // So does anything else that moves the page: Back or Forward, a new
+    // hash, or a scroll the jump did not make, such as a scrollbar drag.
     let jump = 0;
+    let at = 0;
+    const move = (y) => { scrollTo(0, y); at = scrollY; };
+    ['popstate', 'hashchange'].forEach((type) => {
+      addEventListener(type, () => { jump++; });
+    });
+    addEventListener('scroll', () => {
+      if (Math.abs(scrollY - at) > 1) jump++;
+    }, { passive: true });
     const go = (el) => {
       const id = ++jump;
       const from = scrollY;
+      at = from;
       if (Math.abs(yFor(el) - from) < 1) return;
       const live = () => id === jump;
-      const land = () => { if (live()) scrollTo(0, yFor(el)); };
+      const land = () => { if (live()) move(yFor(el)); };
       const quit = () => { if (live()) jump++; };
       ['wheel', 'touchmove', 'keydown', 'pointerdown'].forEach((type) => {
         addEventListener(type, quit, { once: true, passive: true });
@@ -608,7 +621,7 @@ export const NAV_JS = `(() => {
         if (!live()) return;
         const t = Math.min(1, (now - t0) / 200);
         const e = t * t * (3 - 2 * t);
-        scrollTo(0, from + (yFor(el) - from) * e);
+        move(from + (yFor(el) - from) * e);
         if (t < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);

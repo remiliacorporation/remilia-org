@@ -643,6 +643,8 @@ function runJump(reducedMotion: boolean): {
   frame: (ms: number) => void;
   grow: (by: number) => void;
   input: (type: string) => void;
+  fire: (type: string) => void;
+  drag: (to: number) => void;
   targetTop: () => number;
 } {
   const MARGIN = 400;
@@ -707,6 +709,11 @@ function runJump(reducedMotion: boolean): {
       loads.splice(0).forEach((fn) => fn());
     },
     input: (type) => hooks.get(type)?.splice(0).forEach((fn) => fn({})),
+    fire: (type) => hooks.get(type)?.forEach((fn) => fn({})),
+    drag: (to) => {
+      scrollY = to;
+      hooks.get("scroll")?.forEach((fn) => fn({}));
+    },
     targetTop: () => top - scrollY,
   };
 }
@@ -741,6 +748,43 @@ test("the reader's own scroll ends the jump's follow-up", () => {
     page.grow(500);
     assert.equal(page.targetTop(), 900, `${type} stops it`);
   }
+});
+
+test("Back, a new hash, or a scrollbar drag ends the jump's follow-up", () => {
+  for (const type of ["popstate", "hashchange"]) {
+    const page = runJump(false);
+    page.click();
+    page.frame(200);
+    page.frame(16);
+    page.fire(type);
+    page.grow(500);
+    assert.equal(page.targetTop(), 900, `${type} stops it`);
+  }
+  // The reader drags the scrollbar up, away from the note, mid-glide and
+  // after landing: no later frame or image pulls the page back.
+  for (const frames of [[100], [200, 16]]) {
+    const page = runJump(false);
+    page.click();
+    frames.forEach((ms) => page.frame(ms));
+    page.drag(1000);
+    page.frame(100);
+    page.grow(500);
+    page.frame(16);
+    assert.equal(page.targetTop(), 4500, "the page stays where the reader put it");
+  }
+});
+
+test("the scroll events of the jump itself do not end it", () => {
+  const page = runJump(false);
+  page.click();
+  page.frame(100);
+  page.fire("scroll");
+  page.frame(100);
+  page.frame(16);
+  page.fire("scroll");
+  assert.equal(page.targetTop(), 400);
+  page.grow(500);
+  assert.equal(page.targetTop(), 400, "still follows a late image");
 });
 
 test("reduced motion jumps without a glide and still follows a late image", () => {
@@ -835,6 +879,7 @@ const INDEX: [string, string][] = [
   ["Café Day’s “Notes” Charlotte Fang Updates", "<article>one</article>"],
   ["Second post minds0n Updates", "<article>two</article>"],
   ["A post from page three Charlotte Fang Thought", "<article>three</article>"],
+  ["Señor Ångström’s naïve résumé Remilia Thought", "<article>four</article>"],
 ];
 
 test("a search on a paginated listing finds posts on its other pages", async () => {
@@ -852,6 +897,9 @@ test("a search on a paginated listing finds posts on its other pages", async () 
   ui.type("fang");
   assert.deepEqual(ui.fetched.length, 1);
   assert.deepEqual(ui.live(), ["<article>one</article>", "<article>three</article>"]);
+  // This page's first card matches too, and the index already holds it:
+  // shown beside the hits it would appear twice.
+  assert.deepEqual(ui.cards.map((c) => c.hidden), [true, true]);
 
   // Clearing the box puts the page back as it was baked.
   ui.type("");
@@ -867,6 +915,11 @@ test("search matches whole words in any order, whatever the case, accents or quo
   for (const query of ["cafe", "CAFÉ day's", 'notes"  day', "fang cafe", "“notes”"]) {
     ui.type(query);
     assert.deepEqual(ui.live(), ["<article>one</article>"], query);
+  }
+  // An accent inside a word does not split it: plain letters find it.
+  for (const query of ["senor", "angstrom naive", "resume", "SEÑOR résumé"]) {
+    ui.type(query);
+    assert.deepEqual(ui.live(), ["<article>four</article>"], query);
   }
   // Every word must appear, and letters must be adjacent: no fuzzy hits.
   for (const query of ["cafe night", "cfe", "scnd"]) {

@@ -626,6 +626,8 @@ export function notFoundHtml(
     sectionTitle?: string;
     channel?: Channel;
     recent?: { title: string; url: string; date: string; monthHref?: string }[];
+    /** The page script, so the head menu closes and returns focus here too. */
+    bodyEnd?: string;
   } = {},
 ): string {
   const section = input.sectionTitle ?? "this section";
@@ -651,6 +653,7 @@ ${recent
     chrome,
     // The frame every other page has, so the head keeps its box on a phone.
     leftRail: emptyRail(),
+    bodyEnd: input.bodyEnd,
     mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">

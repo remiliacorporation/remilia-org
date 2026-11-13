@@ -1,4 +1,9 @@
-import { caseRedirect, localeRedirect, machineNotFound } from "./lib/paths.ts";
+import {
+  caseRedirect,
+  localeRedirect,
+  machineNotFound,
+  twinRedirect,
+} from "./lib/paths.ts";
 
 interface EdgeContext {
   next: () => Promise<Response>;
@@ -59,7 +64,7 @@ export async function notFoundHandler(
   }
 
 
-  const canonical = caseRedirect(url.pathname);
+  const canonical = caseRedirect(url.pathname) ?? twinRedirect(url.pathname);
   if (canonical) {
     url.pathname = canonical;
     return new Response(null, {

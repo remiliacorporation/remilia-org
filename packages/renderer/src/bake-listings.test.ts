@@ -214,6 +214,25 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     const tagDir = await readFile(join(outDir, "blog/updates/tags/index.html"), "utf8");
     assert.ok(tagDir.includes('href="/blog/updates/tags/theory"'));
     assert.ok(tagDir.includes('<span class="term-count">9</span>'));
+    // Directories and the section 404 load the page script like any other
+    // page, so the head menu closes on Escape or an outside click there too.
+    const notFound = await readFile(join(outDir, "blog/updates/404.html"), "utf8");
+    for (const page of [page1, tagDir, notFound])
+      assert.match(page, /<script src="\/blog\/updates\/nav\.js[^"]*" defer><\/script>/);
+    // A page past a listing's end lands on its first page, for the listing
+    // and for each kind of archive; real pages are files and win.
+    const redirects = await readFile(join(outDir, "_redirects"), "utf8");
+    for (const rule of [
+      "/blog/updates/page/:n  /blog/updates  301",
+      "/blog/updates/tags/:term/page/:n  /blog/updates/tags/:term  301",
+      "/blog/updates/authors/:term/page/:n  /blog/updates/authors/:term  301",
+      "/blog/updates/months/:term/page/:n  /blog/updates/months/:term  301",
+    ])
+      assert.ok(redirects.includes(`${rule}\n`), rule);
+    assert.ok(
+      redirects.indexOf("/blog/updates/page/:n") < redirects.indexOf("/blog/updates/*  "),
+      "before the section's catch-all 404",
+    );
     // Every page, term directories too, opens on the section row.
     assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
 
