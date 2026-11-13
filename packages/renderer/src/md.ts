@@ -1,5 +1,6 @@
 import { CHANNEL_BASEPATH, type Channel } from "@remilia/seo";
 import { slugify, type PTBlock } from "./pt";
+import { lowerFootnotes } from "./footnotes";
 
 export interface MdMeta {
   title?: string;
@@ -18,7 +19,14 @@ export interface MdPost {
 }
 
 type Span = { _type: "span"; text: string; marks?: string[] };
-type MarkDef = { _key: string; _type: string; href?: string; text?: string };
+type MarkDef = {
+  _key: string;
+  _type: string;
+  href?: string;
+  text?: string;
+  /** A Studio-written note's blocks; wins over `text`. */
+  content?: PTBlock[];
+};
 
 const CHANNELS = new Set<string>([
   "updates",
@@ -303,14 +311,14 @@ function marksOf(
   em?: boolean;
   code?: boolean;
   href?: string;
-  fn?: string;
+  note?: MarkDef;
 } {
   const out: {
     strong?: boolean;
     em?: boolean;
     code?: boolean;
     href?: string;
-    fn?: string;
+    note?: MarkDef;
   } = {};
   for (const m of span.marks ?? []) {
     if (m === "strong") out.strong = true;
@@ -319,10 +327,35 @@ function marksOf(
     else {
       const d = defs.find((x) => x._key === m);
       if (d?._type === "link") out.href = d.href;
-      if (d?._type === "footnote") out.fn = d.text;
+      if (d?._type === "footnote" && (d.text !== undefined || d.content?.length))
+        out.note = d;
     }
   }
   return out;
+}
+
+/**
+ * A note's Markdown: an old note's text as stored, or a Studio-written
+ * note's paragraphs and quotes, with later paragraphs indented so they stay
+ * inside the definition.
+ */
+function noteToMd(def: MarkDef, fns: string[]): string {
+  if (!def.content?.length) return def.text ?? "";
+  return def.content
+    .flatMap((b) => {
+      if (b._type !== "block") return [];
+      const block = b as {
+        style?: string;
+        children: { text: string; marks?: string[] }[];
+        markDefs?: MarkDef[];
+      };
+      const inner = block.children
+        .map((s) => spanToMd(s, block.markDefs ?? [], fns))
+        .join("");
+      if (!inner) return [];
+      return [block.style === "blockquote" ? `> ${inner}` : inner];
+    })
+    .join("\n\n    ");
 }
 
 function spanToMd(
@@ -341,9 +374,11 @@ function spanToMd(
     );
     t = path ? `[[${path[1]}|${span.text}]]` : `[${span.text}](${m.href})`;
   }
-  if (m.fn !== undefined) {
-    fns.push(m.fn);
-    t += `[^${fns.length}]`;
+  if (m.note) {
+    // The note takes its number before the notes inside it take theirs.
+    const slot = fns.push("") - 1;
+    t += `[^${slot + 1}]`;
+    fns[slot] = noteToMd(m.note, fns);
   }
   return t;
 }
@@ -365,7 +400,7 @@ export function portableTextToMarkdown(
   };
   const resolve = (a?: { url?: string; _ref?: string }) =>
     a ? (a.url ?? (a._ref && assetUrl ? (assetUrl(a) ?? a._ref) : a._ref)) : "";
-  for (const b of blocks) {
+  for (const b of lowerFootnotes(blocks)) {
     if (b._type === "image") {
       flushList();
       const img = b as {

@@ -1,14 +1,25 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useInsertionEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   set,
   useClient,
+  useFormValue,
   type BlockAnnotationProps,
   type BlockDecoratorProps,
   type BlockProps,
   type BlockStyleProps,
+  type ArrayOfObjectsInputProps,
   type StringInputProps,
 } from "sanity";
 import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
+import { numberFootnotes } from "../packages/renderer/src/footnotes";
+import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
+import { injectNoteCss } from "./noteStyles";
 
 const INTERNAL_HOSTS = /^https?:\/\/(?:[\w-]+\.)*remilia\.(?:org|com|net)\b/;
 
@@ -148,57 +159,114 @@ export function LinkHrefInput(props: StringInputProps): ReactNode {
   );
 }
 
+// Sanity shows its own edit box for an annotation; rendering the form here
+// as well put a second, empty copy of it in the text.
 export function LinkAnnotation(props: BlockAnnotationProps): ReactNode {
   const href =
     props.value && typeof props.value.href === "string" ? props.value.href : "";
   const external = isExternalHref(href);
-  const editing = props.open || props.focused;
   return (
-    <>
-      <span
-        className={external ? "blog-pt-outlink" : "blog-pt-link"}
-        title={href || "Link"}
-        onClick={() => props.onOpen()}
-      >
-        {props.textElement}
-      </span>
-      {editing ? (
-        <span className="blog-pt-annot-edit" contentEditable={false}>
-          <span className="blog-pt-annot-edit-head">
-            <strong>Link</strong>
-            <button type="button" onClick={props.onClose}>
-              Close
-            </button>
-          </span>
-          {props.children}
-        </span>
-      ) : null}
-    </>
+    <span
+      className={external ? "blog-pt-outlink" : "blog-pt-link"}
+      title={href || "Link"}
+      onClick={() => props.onOpen()}
+    >
+      {props.textElement}
+    </span>
   );
 }
 
-export function FootnoteAnnotation(props: BlockAnnotationProps): ReactNode {
-  const n =
-    props.value && typeof props.value.n === "number" ? props.value.n : null;
-  const editing = props.open || props.focused;
+/** A paragraph inside a note, in the site's own class (blog/notes.css). */
+export function NoteTextStyle(props: BlockStyleProps): ReactNode {
+  return <div className="fn-par">{props.children}</div>;
+}
+
+/** A block quote inside a note, in the site's own class (blog/notes.css). */
+export function NoteQuoteStyle(props: BlockStyleProps): ReactNode {
+  return <div className="fn-q">{props.children}</div>;
+}
+
+/** The box a note is written in, in the site's note styles. */
+export function NoteContentInput(props: ArrayOfObjectsInputProps): ReactNode {
+  useInsertionEffect(injectNoteCss, []);
+  return <div className="blog-note-edit">{props.renderDefault(props)}</div>;
+}
+
+const keysOf = (path: readonly unknown[]): string[] =>
+  path.flatMap((seg) =>
+    seg && typeof seg === "object" && "_key" in seg ? [String(seg._key)] : [],
+  );
+
+const previews = new WeakMap<object, Map<string, string>>();
+
+/** Each note's site markup, by block key and note key, for one body value. */
+function notePreviews(body: unknown): Map<string, string> {
+  if (!Array.isArray(body)) return new Map();
+  const hit = previews.get(body);
+  if (hit) return hit;
+  const out = new Map<string, string>();
+  try {
+    portableTextToHtml(body as PTBlock[], {
+      imageUrl: () => undefined,
+      onNote: (block, note, html) => out.set(`${block}/${note}`, html),
+    });
+  } catch {
+    // A half-made block: the number still shows, the preview waits.
+  }
+  previews.set(body, out);
+  return out;
+}
+
+/**
+ * A footnote in the text: the site's own reference mark, numbered by its
+ * place in the text (the renderer's `numberFootnotes`, so the editor and the
+ * site agree), and, while it is selected, the note as the site draws it.
+ * Sanity's own dialog edits it.
+ */
+export function FootnoteInline(props: BlockProps): ReactNode {
+  useInsertionEffect(injectNoteCss, []);
+  const root = useFormValue(props.path.slice(0, 1));
+  const keys = keysOf(props.path);
+  const id = keys.join("/");
+  const n = useMemo(
+    () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
+    [root, id],
+  );
+  // Only a note in the text itself has a box on the site; a note inside a
+  // note shows as its number.
+  const html =
+    keys.length === 2 && (props.selected || props.focused) && !props.open
+      ? notePreviews(root).get(id)
+      : undefined;
   return (
-    <>
-      <span className="blog-pt-fn" onClick={() => props.onOpen()}>
-        {props.textElement}
-        <sup>{n ?? "*"}</sup>
-      </span>
-      {editing ? (
-        <span className="blog-pt-annot-edit" contentEditable={false}>
-          <span className="blog-pt-annot-edit-head">
-            <strong>Footnote</strong>
-            <button type="button" onClick={props.onClose}>
-              Close
-            </button>
+    <span
+      className="blog-pt-note"
+      onClick={(e) => {
+        // The note's dialog is a React child of this mark, so a click in the
+        // dialog arrives here too; only a click on the mark itself opens.
+        if (!e.currentTarget.contains(e.target as Node)) return;
+        // After the click has moved the editor's focus: inside a note's
+        // dialog, opening at once is undone by that focus change.
+        window.setTimeout(() => props.onOpen(), 0);
+      }}
+    >
+      {props.renderDefault({
+        ...props,
+        renderPreview: () => (
+          <span className="fn-ref">
+            <sup>{n ?? "*"}</sup>
           </span>
-          {props.children}
-        </span>
+        ),
+      })}
+      {html ? (
+        <span
+          className="fn-note"
+          role="note"
+          contentEditable={false}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
       ) : null}
-    </>
+    </span>
   );
 }
 

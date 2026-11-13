@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readingMinutes } from "./bake";
+import { readingMinutes } from "./post";
 import { portableTextToHtml, type PTBlock } from "./pt";
 import { articleHtml } from "./page";
 
