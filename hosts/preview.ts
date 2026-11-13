@@ -12,7 +12,8 @@ import {
   indexMain,
   leftRail,
   emptyRail,
-  filterBar,
+  authorSel,
+  filterBox,
   NAV_JS,
   portableTextToHtml,
   tocBox,
@@ -336,7 +337,7 @@ await writeFile(
       title: post.title,
       publishedAt: post.publishedAt,
       byline: "Remilia Jackson",
-      authorHref: "/blog/press/?author=Remilia%20Jackson",
+      authorHref: "/blog/press/authors/remilia-jackson",
       canonical,
       category: "Feature",
       categoryHref: "/blog/press/?cat=Feature",
@@ -376,6 +377,12 @@ await writeFile(
     chrome,
     layoutClass: "is-index",
     leftRail: emptyRail(),
+    citeHtml: filterBox(
+      authorSel(
+        [{ label: "Remilia Jackson", href: "/blog/press/authors/remilia-jackson" }],
+        "/blog/press",
+      ),
+    ),
     bodyEnd: `<script src="/blog/press/nav.js" defer></script>`,
     mainHtml: indexMain(
       navPosts.map((n) => ({
@@ -387,7 +394,6 @@ await writeFile(
         imageUrl: n.imageUrl,
         author: n.author,
       })),
-      filterBar(navPosts, sharedCats),
     ),
   }),
 );

@@ -88,22 +88,6 @@ function catSel(posts: NavPost[]): { css: string; html: string } {
   );
 }
 
-function authorSel(posts: NavPost[]): { css: string; html: string } {
-  const authors = [
-    ...new Set(
-      posts.map((p) => p.author).filter((a): a is string => Boolean(a)),
-    ),
-  ].sort();
-  if (!authors.length) return { css: "", html: "" };
-  return filterSel(
-    "post-author",
-    "Filter authors",
-    "All authors",
-    authors,
-    "data-author",
-  );
-}
-
 /** One shared category control across every listing of the host. */
 export interface SharedCats {
   /** Every sibling category in nav order. `href` navigates; omit to filter. */
@@ -114,22 +98,75 @@ export interface SharedCats {
   allHref?: string;
 }
 
-export function sectionSel(shared: SharedCats): string {
-  const href = (h?: string) => (h ? ` data-href="${esc(h)}"` : "");
-  const current = shared.current || "All posts";
+/**
+ * The host's sections as one row of links, "All" first when the host has a
+ * pooled index, with the section being shown marked. It heads every
+ * listing's and post's masthead.
+ */
+export function sectionNav(shared: SharedCats): string {
   const items = [
-    shared.allHref
-      ? `<li><button type="button" data-value="All posts"${href(shared.allHref)}>All posts</button></li>`
-      : "",
-    ...shared.cats.map(
-      (c) =>
-        `<li><button type="button" data-value="${esc(c.label)}"${href(c.href)}>${esc(c.label)}</button></li>`,
+    ...(shared.allHref
+      ? [{ label: "All", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
+  ];
+  if (items.length < 2) return "";
+  return `<nav class="sec-nav" aria-label="Sections">${items
+    .map(
+      (i) =>
+        `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`,
+    )
+    .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
+}
+
+/**
+ * The site head's menu on phones, where it is the whole head beside the
+ * wordmark: the section row and the head's own links folded behind one
+ * control, which names the section being shown.
+ */
+export function headMenu(
+  shared: SharedCats,
+  links: { label: string; href: string }[],
+): string {
+  const sections = [
+    ...(shared.allHref
+      ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
+      : []),
+    ...shared.cats.flatMap((c) =>
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
+    ),
+  ];
+  const items = [
+    ...sections.map(
+      (i) =>
+        `<li><a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a></li>`,
+    ),
+    ...links.map(
+      (l, n) =>
+        `<li${n === 0 ? ' class="head-menu-site"' : ""}><a href="${esc(l.href)}">${esc(l.label)}</a></li>`,
+    ),
+    `<li class="head-dials"><label class="head-theme" for="theme-pop">Theme</label></li>`,
   ].join("");
-  return `<details class="sel site-sec" id="site-sec" data-value="${esc(shared.current)}" aria-label="Section">
-<summary><span class="sel-label">${esc(current)}</span><span class="sel-mark"></span></summary>
+  return `<details class="sel head-menu">
+<summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
+}
+
+/**
+ * A listing's search and its Author and Date dropdowns, in a box of their
+ * own: FILTER, a rule, then the controls. It sits in the left rail under
+ * the site head, or under the theme box where the rails fold into one;
+ * on phones it is one row under the head.
+ */
+export function filterBox(tools: string): string {
+  return `<section class="filter-box" aria-label="Filter posts">
+<p class="filter-label" aria-hidden="true">Filter</p>
+<hr class="nav-rule">
+${NAV_SEARCH}${tools}
+</section>`;
 }
 
 /** A month the listing has an archive page for. */
@@ -185,11 +222,34 @@ export function dateSel(
 </details>`;
 }
 
-export function filterBar(posts: NavPost[], shared?: SharedCats): string {
-  const cat = shared ? "" : catSel(posts).html;
-  const { html: authors } = authorSel(posts);
-  if (!cat && !authors) return "";
-  return `${cat}${authors}`;
+/** An author with an archive to open: the listing's own, or the pooled one. */
+export interface AuthorOption {
+  label: string;
+  href: string;
+}
+
+/**
+ * Author picker. Like the date control, each option opens an archive: the
+ * author's archive in this listing's section when there is one, otherwise the
+ * host's pooled archive, so a pick never lands on an empty page. `current` is
+ * the author whose archive is shown, "" elsewhere.
+ */
+export function authorSel(
+  authors: AuthorOption[],
+  allHref: string,
+  current = "",
+): string {
+  if (!authors.length) return "";
+  const option = (value: string, href: string, text: string): string =>
+    `<li><button type="button" data-value="${esc(value)}" data-href="${esc(href)}"${value === current ? ' aria-current="page"' : ""}>${esc(text)}</button></li>`;
+  const items = [
+    option("", allHref, "All authors"),
+    ...authors.map((a) => option(a.label, a.href, a.label)),
+  ].join("");
+  return `<details class="sel nav-cat-sel" id="post-author" data-value="${esc(current)}" aria-label="Author">
+<summary><span class="sel-label">${esc(current || "All authors")}</span><span class="sel-mark"></span></summary>
+<ul class="sel-menu">${items}</ul>
+</details>`;
 }
 
 export function leftRail(
@@ -247,6 +307,7 @@ export const NAV_JS = `(() => {
   const next = document.querySelector('.nav-next');
   const status = document.querySelector('.nav-status');
   const statusEl = document.querySelector('.index-mast h1');
+  const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
   if (!q && !cards.length) return;
   const PAGE = 4;
@@ -285,49 +346,80 @@ export const NAV_JS = `(() => {
       page = 0; apply();
     });
   };
-  const score = (query, text) => {
-    query = query.toLowerCase(); text = (text || '').toLowerCase();
-    let qi = 0, s = 0, streak = 0;
-    for (let i = 0; i < text.length && qi < query.length; i++) {
-      if (text[i] === query[qi]) { qi++; streak++; s += streak; } else streak = 0;
-    }
-    return qi === query.length ? s : -1;
-  };
+  // Search is a plain substring match: every word of the query must appear
+  // somewhere in the post's title, excerpt, author or category, whatever its
+  // case, accents or quote style.
+  const norm = (s) => (s || '').toLowerCase().normalize('NFKD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"')
+    .replace(/\\s+/g, ' ').trim();
+  const has = (query, text) => norm(query).split(' ').every((w) => text.includes(w));
   const match = (el) => {
     const query = q ? q.value.trim() : '';
-    const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-    const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
-    const sc = query
-      ? Math.max(score(query, el.dataset.title), score(query, el.dataset.excerpt))
-      : 0;
-    const ok = (query ? sc >= 0 : true)
-      && (!catv || el.dataset.cat === catv)
-      && (!author || el.dataset.author === author);
-    return { el, sc, show: ok };
+    const catv = cat ? (cat.dataset.value || '') : '';
+    const d = el.dataset;
+    return has(query, norm([d.title, d.excerpt, d.author, d.cat].join(' ')))
+      && (!catv || d.cat === catv);
+  };
+  // A paginated listing bakes an index of all its posts, so a search covers
+  // every page of it, not only the cards on this one. It loads on the first
+  // query; until it arrives, and if it never does, the cards here filter.
+  const indexUrl = (statusEl && statusEl.dataset.index) || '';
+  const pager = document.querySelector('.pager');
+  const found = [];
+  let index = null, asked = false, failed = false;
+  const load = () => {
+    if (asked) return;
+    asked = true;
+    fetch(indexUrl)
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((rows) => { index = rows.map((r) => [norm(r[0]), r[1]]); apply(); })
+      .catch(() => { failed = true; apply(); });
   };
   const apply = () => {
     const query = q ? q.value.trim() : '';
     if (items.length && list) {
-      const ranked = items.map(match);
-      if (query) ranked.sort((a, b) => b.sc - a.sc);
-      const vis = ranked.filter((r) => r.show);
+      const vis = items.filter(match);
       const pages = Math.max(1, Math.ceil(vis.length / PAGE));
       if (page >= pages) page = pages - 1;
       const from = page * PAGE;
-      const onPage = new Set(vis.slice(from, from + PAGE).map((r) => r.el));
-      ranked.forEach((r) => {
-        r.el.hidden = !r.show;
-        r.el.classList.toggle('off-page', r.show && !onPage.has(r.el));
-        if (r.show) list.appendChild(r.el);
+      const onPage = new Set(vis.slice(from, from + PAGE));
+      items.forEach((el) => {
+        const show = vis.includes(el);
+        el.hidden = !show;
+        el.classList.toggle('off-page', show && !onPage.has(el));
       });
       if (status) status.textContent = (page + 1) + ' / ' + pages;
       if (prev) prev.disabled = page <= 0;
       if (next) next.disabled = page >= pages - 1;
     }
-    cards.forEach((c) => { c.hidden = !match(c).show; });
+    // The index holds no categories, so a category dropdown's choice keeps
+    // the search to the cards here.
+    const wide = !!query && !!indexUrl && !failed && !(cat && cat.dataset.value);
+    if (wide && !index) load();
+    const hits = wide && index ? index.filter((r) => has(query, r[0])) : null;
+    found.splice(0).forEach((el) => el.remove());
+    if (hits && hits.length && emptyEl) {
+      const t = document.createElement('template');
+      t.innerHTML = hits.map((r) => r[1]).join('');
+      found.push(...t.content.children);
+      emptyEl.after(...found);
+    }
+    cards.forEach((c) => { c.hidden = hits ? true : !match(c); });
+    // A search leaves this page's place in the listing, so its pager goes.
+    if (pager) pager.hidden = wide;
+    // The listing has no status line; a search that finds nothing says so,
+    // with a way back. While the index is still loading it stays quiet.
+    if (emptyEl) {
+      const none = hits ? !hits.length
+        : !wide && cards.length > 0 && cards.every((c) => c.hidden);
+      emptyEl.hidden = !none;
+      const text = emptyEl.querySelector('.list-empty-text');
+      if (none && text) text.textContent = query ? 'No posts match “' + query + '”.' : 'No posts match.';
+    }
     if (statusEl && cards.length) {
-      const catv = cat ? (cat.dataset.value || '') : (params.get('cat') || '');
-      const author = auth ? (auth.dataset.value || '') : (params.get('author') || '');
+      const catv = cat ? (cat.dataset.value || '') : '';
+      const author = statusEl.dataset.author || '';
       const section = statusEl.dataset.section || '';
       let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
       if (tagv) t += ' tagged ' + tagv;
@@ -338,21 +430,12 @@ export const NAV_JS = `(() => {
     }
   };
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
+  const clearBtn = emptyEl && emptyEl.querySelector('.list-clear');
+  if (clearBtn && q) clearBtn.addEventListener('click', () => { q.value = ''; page = 0; apply(); q.focus(); });
   if (q) q.addEventListener('input', () => { page = 0; apply(); });
   bindSel(cat, 'All posts');
   bindSel(auth, 'All authors');
-  bindSel(document.getElementById('site-sec'), '');
   bindSel(document.getElementById('post-date'), 'All dates');
-  addEventListener('click', (e) => {
-    const a = e.target.closest('.post-card a.author');
-    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const v = new URL(a.getAttribute('href'), location.href).searchParams.get('author') || '';
-    if (auth) {
-      e.preventDefault();
-      setSel(auth, v, 'All authors');
-      page = 0; apply();
-    }
-  });
   if (prev) prev.addEventListener('click', () => { page--; apply(); });
   if (next) next.addEventListener('click', () => { page++; apply(); });
   const tagv = (statusEl && statusEl.dataset.tag) || '';
@@ -361,7 +444,7 @@ export const NAV_JS = `(() => {
   // section or pooled index land on that listing's month archive instead.
   const monthParam = params.get('month') || '';
   if (/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(monthParam) && statusEl && !tagv && !monthv && !statusEl.dataset.author) {
-    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam + '/');
+    location.replace(location.pathname.replace(/[/]+$/, '').replace(/[/]page[/][0-9]+$/, '') + '/months/' + monthParam);
     return;
   }
   const catParam = params.get('cat');
@@ -373,34 +456,55 @@ export const NAV_JS = `(() => {
     }
     setSel(cat, catParam, 'All posts');
   }
-  if (params.get('author')) setSel(auth, params.get('author'), 'All authors');
-  if (statusEl && statusEl.dataset.author)
-    setSel(auth, statusEl.dataset.author, 'All authors');
+  // Authors are archive pages too; an old ?author= link opens the archive
+  // the dropdown offers for that name.
+  const authorParam = params.get('author');
+  if (authorParam && auth && statusEl && !statusEl.dataset.author) {
+    const b = auth.querySelector('.sel-menu button[data-href][data-value="' + CSS.escape(authorParam) + '"]');
+    if (b) {
+      location.replace(b.getAttribute('data-href'));
+      return;
+    }
+  }
   apply();
 })();
 // <details> has no "only one open" behaviour and no outside dismissal, so a
 // click anywhere closes every .sel but the one clicked, and Escape closes all.
 // A mouse that leaves an open .sel closes it after a beat unless it comes
 // back; touch never leaves, and a keyboard-focused dropdown stays open.
+// Clicking one dropdown while another is open closes the other, and in the
+// filter box that moves the one just opened out from under a still mouse.
+// The browser reports that as the mouse leaving, but the reader has not
+// left: such a dropdown ignores leaves until the mouse moves over it again.
 (() => {
+  const moved = new WeakSet();
   const shut = (keep) => {
+    let closed = false;
     document.querySelectorAll('details.sel[open]').forEach((d) => {
-      if (d !== keep) d.open = false;
+      if (d !== keep) { d.open = false; closed = true; }
     });
+    if (keep && closed) moved.add(keep);
   };
   addEventListener('click', (e) => {
     const t = e.target;
     shut(t && t.closest ? t.closest('details.sel') : null);
   });
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') shut(null);
+    if (e.key !== 'Escape') return;
+    // Focus inside a menu that Escape closes goes back to its dropdown,
+    // not to the top of the page.
+    const t = e.target;
+    const d = t && t.closest ? t.closest('details.sel') : null;
+    const back = d && d.open ? d.querySelector('summary') : null;
+    shut(null);
+    if (back && back.focus) back.focus();
   });
   const LEAVE_MS = 500;
   document.querySelectorAll('details.sel').forEach((d) => {
     let timer = 0;
     const cancel = () => { clearTimeout(timer); timer = 0; };
     d.addEventListener('pointerleave', (e) => {
-      if (e.pointerType !== 'mouse' || !d.open) return;
+      if (e.pointerType !== 'mouse' || !d.open || moved.has(d)) return;
       cancel();
       timer = setTimeout(() => {
         timer = 0;
@@ -408,9 +512,12 @@ export const NAV_JS = `(() => {
       }, LEAVE_MS);
     });
     d.addEventListener('pointerenter', (e) => {
-      if (e.pointerType === 'mouse') cancel();
+      if (e.pointerType === 'mouse') { moved.delete(d); cancel(); }
     });
-    d.addEventListener('toggle', () => { if (!d.open) cancel(); });
+    d.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse') moved.delete(d);
+    });
+    d.addEventListener('toggle', () => { if (!d.open) { moved.delete(d); cancel(); } });
   });
 })();
 (() => {
@@ -467,21 +574,54 @@ export const NAV_JS = `(() => {
 })();
 (() => {
   try {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Reduced motion only drops the glide: notes still fit the column and
+    // in-page links still land and release focus.
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.documentElement.style.scrollBehavior = 'auto';
     const yFor = (el) => {
       const raw = getComputedStyle(el).scrollMarginTop;
       const m = raw.endsWith('%') ? innerHeight * parseFloat(raw) / 100 : parseFloat(raw) || 0;
       return Math.max(0, el.getBoundingClientRect().top + scrollY - m);
     };
+    // A jump follows its target. Lazy images above it take their height
+    // only as they load, so the landing spot moves once the jump starts:
+    // each frame of the glide aims again, and an image above the target
+    // that loads after landing lands the jump once more. The reader's own
+    // scroll, touch or key ends that, so a jump never fights them.
+    // So does anything else that moves the page: Back or Forward, a new
+    // hash, or a scroll the jump did not make, such as a scrollbar drag.
+    let jump = 0;
+    let at = 0;
+    const move = (y) => { scrollTo(0, y); at = scrollY; };
+    ['popstate', 'hashchange'].forEach((type) => {
+      addEventListener(type, () => { jump++; });
+    });
+    addEventListener('scroll', () => {
+      if (Math.abs(scrollY - at) > 1) jump++;
+    }, { passive: true });
     const go = (el) => {
-      const to = yFor(el), from = scrollY, d = to - from;
-      if (Math.abs(d) < 1) return;
+      const id = ++jump;
+      const from = scrollY;
+      at = from;
+      if (Math.abs(yFor(el) - from) < 1) return;
+      const live = () => id === jump;
+      const land = () => { if (live()) move(yFor(el)); };
+      const quit = () => { if (live()) jump++; };
+      ['wheel', 'touchmove', 'keydown', 'pointerdown'].forEach((type) => {
+        addEventListener(type, quit, { once: true, passive: true });
+      });
+      document.querySelectorAll('img').forEach((img) => {
+        if (img.complete) return;
+        if (!(img.compareDocumentPosition(el) & 4)) return;
+        img.addEventListener('load', land, { once: true });
+      });
+      if (still) { land(); return; }
       const t0 = performance.now();
       const step = (now) => {
+        if (!live()) return;
         const t = Math.min(1, (now - t0) / 200);
         const e = t * t * (3 - 2 * t);
-        scrollTo(0, from + d * e);
+        move(from + (yFor(el) - from) * e);
         if (t < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);

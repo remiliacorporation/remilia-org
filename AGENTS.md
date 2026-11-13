@@ -63,26 +63,29 @@ literature under `deploy/{updates,press,thought,archive}/` is gitignored — do 
 
 Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
 `index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Production bakes
-use Sanity's published perspective; protected Netlify Deploy Previews use the
-drafts perspective and include scheduled posts.
+and Netlify Deploy Previews both use Sanity's published perspective.
 
 ## Netlify
 
-`netlify.toml`: `publish = deploy`, `command = "pnpm bake"`.
+`netlify.toml`: `publish = deploy`,
+`command = "pnpm install --prod --frozen-lockfile && pnpm --filter @remilia/hosts bake"`.
 
 Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` in the Netlify site env (read access for `bake:org`).
 
 `bake:org` proves the credential and requires at least one post in the selected
 dataset perspective before writing files; individual sections may be intentionally
-empty. A missing token (tokenless reads answer empty, not an error), an expired or
-forbidden token (401/403), and a zero-post dataset abort the build, so the previous
-deploy stays live. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
+empty. A missing token, an expired or forbidden token (401/403), and a zero-post
+dataset abort the build, so the previous deploy stays live. The bake asks for a token
+whatever the dataset allows: a private dataset answers a tokenless read empty, not with
+an error, and this dataset answered tokenless reads with its published documents when
+observed on 2026-11-13, so treat everything published as public. `ALLOW_EMPTY_BAKE=1` overrides the dataset-wide guard and must
 never be set in the Netlify environment.
 
-Netlify Deploy Previews bake Sanity's `drafts` perspective via
-`SANITY_PERSPECTIVE=drafts`. Keep preview visibility private to the Netlify team;
-production remains public. Draft content must never be exposed on an unprotected
-preview URL.
+Netlify Deploy Previews bake published content, like production. Their URLs answer
+without a login (observed 2026-11-13), and draft content must never be exposed on an
+unprotected preview URL. The bake still honors `SANITY_PERSPECTIVE=drafts`, which also
+includes scheduled posts: set it for the deploy-preview context only after Deploy
+Previews are protected in the Netlify site settings.
 
 Publishing in Studio does not rebuild remilia.org by itself. Wire a Sanity webhook to a
 Netlify build hook (dataset `production`, filter `_type == "post"`), or run `pnpm bake`
@@ -97,16 +100,23 @@ in `_redirects`. Unforced, so a real page always wins.
 Each section ends its block with `<section>/*  <section>/404.html  404`, so a miss lands
 on that section's 404 (latest posts + index + maps) rather than the corporate one.
 
+A page past a listing's end (`<section>/page/9`, and the same under `tags`, `authors`
+and `months`) 301s to the listing's first page, so a listing that shrinks leaves no 404.
+
 `netlify/edge-functions/not-found.ts` covers what `_redirects` cannot express:
-mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), and a
+mixed-case section URLs 301 to lowercase (`/Updates/Post` → `/updates/post`), a page's
+`.html` twin 301s to its slashless URL (`/about.html` → `/about`; org only, the com and
+net sites run no edge function), and a
 missing `.md`/`.txt`/`.xml`/`.json` answers in its own format instead of serving HTML
 under a machine-readable URL. `SECTION_PREFIXES` in `lib/paths.ts` is duplicated for the
 Deno runtime; a test in `packages/seo` fails if it drifts from `CHANNEL_BASEPATH`.
 
-Every section bakes tag and author archives (`<section>/tags/<term>/`,
-`<section>/authors/<term>/`) with their own RSS and sitemap entries, plus a term
-directory at `<section>/tags/` and `<section>/authors/`. Listings paginate at 20 posts
-per page (`<section>/page/2/`) with `rel=prev`/`rel=next`.
+Every section bakes tag and author archives (`<section>/tags/<term>`,
+`<section>/authors/<term>`) with their own RSS and sitemap entries, plus a term
+directory at `<section>/tags` and `<section>/authors`. Listings paginate at 20 posts
+per page (`<section>/page/2`) with `rel=prev`/`rel=next`. Page URLs have no trailing
+slash. A listing of more than one page also bakes `search.json`, the index its search
+box loads.
 
 `bake:org` fails on dead internal links once every section is on disk; override with
 `ALLOW_BROKEN_LINKS=1`. Future-dated posts stay out until a bake runs after their date,

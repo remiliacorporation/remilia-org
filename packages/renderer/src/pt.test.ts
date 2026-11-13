@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  bodyShowsImage,
   extractHeadings,
+  imageAssetId,
   portableTextToHtml,
   tocItems,
   type PTBlock,
@@ -262,4 +264,20 @@ test("link marks reject executable URL schemes", () => {
     );
     assert.match(html, /href="#"/);
   }
+});
+
+test("an image's asset id reads the same from a ref or a CDN URL", () => {
+  const ref = "image-0dce8420af1b2c3d-800x400-jpg";
+  const url =
+    "https://cdn.sanity.io/images/8x9419lh/production/0dce8420af1b2c3d-800x400.jpg?w=1600&auto=format";
+  assert.equal(imageAssetId({ _ref: ref }), "0dce8420af1b2c3d");
+  assert.equal(imageAssetId({ url }), "0dce8420af1b2c3d");
+  assert.equal(imageAssetId({ url: "https://example.com/a.jpg" }), undefined);
+  const body = [
+    { _type: "block", children: [] },
+    { _type: "image", asset: { url } },
+  ];
+  assert.equal(bodyShowsImage(body, ref), true);
+  assert.equal(bodyShowsImage(body, "image-ffff-1x1-png"), false);
+  assert.equal(bodyShowsImage(body, undefined), false);
 });

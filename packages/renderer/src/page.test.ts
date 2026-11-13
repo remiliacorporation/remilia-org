@@ -8,9 +8,11 @@ import {
   notFoundHtml,
   tocBox,
   indexMain,
+  cardHtml,
+  termIndexMain,
   type Chrome,
 } from "./page";
-import { dateSel, filterBar, leftRail } from "./nav";
+import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
 
 import {
@@ -148,6 +150,8 @@ test("section 404 is noindex and offers a way back into the section", () => {
     ],
   });
   assert.ok(nf.includes('content="noindex"'));
+  // The head sits in the left rail, where it is boxed at every width.
+  assert.ok(nf.includes(`<div class="left-rail">\n${CHROME.header}`));
   assert.ok(nf.includes('<a href="/blog/vaults">Vaults</a>'));
   assert.ok(nf.includes('<time datetime="2026-08-01T00:00:00Z">2026-08-01</time>'));
   assert.ok(nf.includes('<a href="/blog">Devblog index</a>'));
@@ -235,36 +239,103 @@ test("toc notes are a labeled row, not bold-only chips", () => {
   assert.ok(html.includes('href="#fn-2">[2]</a>'));
 });
 
-test("article byline can host the section switcher", () => {
+const SECTIONS = {
+  cats: [
+    { label: "Updates", href: "/blog/updates" },
+    { label: "Press", href: "/blog/press" },
+    { label: "Thought", href: "/blog/thought" },
+  ],
+  current: "Press",
+  allHref: "/blog",
+};
+
+test("the section row links every section, All first, and marks the one shown", () => {
+  const row = sectionNav(SECTIONS);
+  assert.match(row, /^<nav class="sec-nav" aria-label="Sections">/);
+  assert.deepEqual(
+    [...row.matchAll(/<a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a>/g)].map((m) => [m[1], m[3], Boolean(m[2])]),
+    [
+      ["/blog", "All", false],
+      ["/blog/updates", "Updates", false],
+      ["/blog/press", "Press", true],
+      ["/blog/thought", "Thought", false],
+    ],
+  );
+  // The pooled index marks All.
+  assert.match(sectionNav({ ...SECTIONS, current: "" }), /<a href="\/blog" aria-current="true">All<\/a>/);
+  // A host with one section and no pooled index has nothing to switch to.
+  assert.equal(sectionNav({ cats: [{ label: "News", href: "/a/blog/news" }], current: "News" }), "");
+});
+
+test("the section row heads a post's masthead; the byline keeps its section link", () => {
   const html = articleHtml({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
     byline: "Remilia",
     category: "Press",
+    categoryHref: "/blog/press",
     bodyHtml: "<p>body</p>",
-    sectionSel: `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+    sectionNav: sectionNav(SECTIONS),
   });
   assert.match(
     html,
-    /<div class="byline">[\s\S]*id="site-sec"[\s\S]*class="author"[\s\S]*<\/div>/,
+    /<div class="sec mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<div class="byline">/,
   );
-  assert.equal(html.includes('class="byline-cat"'), false);
+  assert.match(html, /<div class="byline">[\s\S]*<a class="byline-cat" href="\/blog\/press">Press<\/a>[\s\S]*class="author"/);
+  assert.equal(html.includes("<details"), false);
 });
 
-test("index filter bar includes category and author dropdowns", () => {
-  const other = { ...POST, title: "Memo", url: "/press/memo", category: "News" };
-  const html = filterBar([POST, other]);
-  assert.ok(html.includes('id="post-cat"'));
-  assert.ok(html.includes(">All posts</button>"));
-  assert.ok(html.includes('id="post-author"'));
-  assert.ok(html.includes(">All authors</button>"));
-  assert.ok(html.includes(">Remilia</button>"));
-  const index = indexMain([POST], "<p>tools</p>");
+test("a post names its bylines as the page author; other pages name the host", () => {
+  const page = (author?: string) =>
+    htmlPage({
+      title: "Four Notes",
+      description: "d",
+      canonical: "https://remilia.org/blog/thought/four-notes",
+      channel: "thought",
+      author,
+      jsonld: [],
+      chrome: CHROME,
+      mainHtml: "<main id=\"content\"><h1>Four Notes</h1></main>",
+    });
+  assert.ok(page("paultristis").includes('<meta name="author" content="paultristis">'));
+  assert.ok(page("A, B").includes('<meta name="author" content="A, B">'));
+  for (const none of [undefined, "", "  "])
+    assert.ok(page(none).includes('<meta name="author" content="Remigumi-guchi Digital, LLC">'));
+});
+
+const AUTHORS = [
+  { label: "Charlotte Fang", href: "/blog/press/authors/charlotte-fang" },
+  { label: "minds0n", href: "/blog/authors/minds0n" },
+];
+
+test("the author dropdown opens each author's archive", () => {
+  const html = authorSel(AUTHORS, "/blog/press");
+  assert.match(html, /^<details class="sel nav-cat-sel" id="post-author" data-value="" aria-label="Author">/);
+  assert.match(html, /<span class="sel-label">All authors<\/span>/);
+  assert.deepEqual(
+    [...html.matchAll(/data-href="([^"]+)"[^>]*>([^<]+)</g)].map((m) => [m[1], m[2]]),
+    [
+      ["/blog/press", "All authors"],
+      ["/blog/press/authors/charlotte-fang", "Charlotte Fang"],
+      ["/blog/authors/minds0n", "minds0n"],
+    ],
+  );
+  // On an author's archive it names them and marks their option.
+  const on = authorSel(AUTHORS, "/blog/press", "minds0n");
+  assert.match(on, /data-value="minds0n" aria-label="Author">\n<summary><span class="sel-label">minds0n<\/span>/);
+  assert.ok(on.includes('data-value="minds0n" data-href="/blog/authors/minds0n" aria-current="page">minds0n</button>'));
+  assert.equal((on.match(/aria-current/g) ?? []).length, 1);
+  // No archives, no control.
+  assert.equal(authorSel([], "/blog/press"), "");
+});
+
+test("index listings carry the status line and cards", () => {
+  const index = indexMain([POST]);
   const rail = leftRail([POST], "Press", "/press");
   assert.match(index, /Read more: Vaults/);
   assert.match(index, /08\.01\.26/);
   assert.match(index, />Showing all posts</);
-  const thought = indexMain([POST], "<p>tools</p>", undefined, {
+  const thought = indexMain([POST], undefined, {
     section: "Thought",
     tag: "Essay",
   });
@@ -276,7 +347,7 @@ test("index filter bar includes category and author dropdowns", () => {
 });
 
 test("index card stretches its link from an overlay the keyboard skips", () => {
-  const html = indexMain([POST], "<p>tools</p>");
+  const html = indexMain([POST]);
   assert.match(
     html,
     /<article class="sec post-card"[^>]*>\n<a class="card-hit" href="\/press\/vaults" tabindex="-1" aria-hidden="true"><\/a>\n<header>/,
@@ -286,7 +357,7 @@ test("index card stretches its link from an overlay the keyboard skips", () => {
 
 test("post dates link to their month archive, keeping the time element", () => {
   const month = "/press/months/2026-08";
-  const card = indexMain([{ ...POST, monthHref: month }], "");
+  const card = indexMain([{ ...POST, monthHref: month }]);
   assert.ok(
     card.includes(
       `<p class="card-meta"><a class="byline-date" href="${month}"><time datetime="2026-08-01T00:00:00Z">08.01.26</time></a>`,
@@ -318,21 +389,27 @@ test("post dates link to their month archive, keeping the time element", () => {
     ),
   );
   // Without an archive the date stays a plain time.
-  assert.ok(indexMain([POST], "").includes('<p class="card-meta"><time datetime='));
+  assert.ok(indexMain([POST]).includes('<p class="card-meta"><time datetime='));
 });
 
-test("listing controls share one masthead tools line", () => {
-  const html = indexMain(
-    [POST],
-    filterBar([POST]),
-    undefined,
-    undefined,
-    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
+test("a listing's mast is the sections box; the empty-search note waits above the cards", () => {
+  const html = indexMain([POST], undefined, undefined, sectionNav(SECTIONS));
+  assert.match(
+    html,
+    /<div class="sec mast index-mast list-mast">\n<p class="sec-box-label"[\s\S]*<\/nav>\n<header>\n<h1[^>]*>[^<]*<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+    /<div class="article-rest">\n<p class="sec list-empty"[\s\S]*<\/p>\n<article class="sec post-card"/,
   );
+  // Search and the filters live in the rail's filter box, not the column.
+  assert.equal(html.includes("mast-tools"), false);
+  assert.equal(html.includes('id="post-filter"'), false);
+  // The status line is read to screen readers only; the mast shows the
+  // sections, and an empty search result waits, hidden, above the cards.
+  assert.match(html, /<p class="sec-box-label" aria-hidden="true">Sections<\/p>\n<hr class="nav-rule mast-nav-rule">\n<nav class="sec-nav"/);
+  assert.match(html, /<p class="sec list-empty" role="status" hidden>[\s\S]*<button type="button" class="list-clear">Clear search<\/button><\/p>/);
+  assert.equal(html.includes("site-sec"), false);
   assert.equal(html.includes('class="byline"'), false);
   assert.equal(html.includes("index-tools"), false);
   assert.equal(html.includes('class="nav-page"'), false);
@@ -396,17 +473,11 @@ test("date dropdown is absent without month archives", () => {
   assert.equal(dateSel([], "/blog/press"), "");
 });
 
-test("date dropdown sits between authors and section in the tools line", () => {
-  const html = indexMain(
-    [POST],
-    `${filterBar([POST])}${dateSel(MONTHS, "/blog/updates")}`,
-    undefined,
-    undefined,
-    `<details class="sel site-sec" id="site-sec"><summary>Press</summary></details>`,
-  );
+test("the filter box holds search, then Author, then Date, under a FILTER label", () => {
+  const html = filterBox(`${authorSel(AUTHORS, "/blog/updates")}${dateSel(MONTHS, "/blog/updates")}`);
   assert.match(
     html,
-    /<div class="mast-tools">[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*id="site-sec"[\s\S]*<\/div>/,
+    /^<section class="filter-box" aria-label="Filter posts">\n<p class="filter-label" aria-hidden="true">Filter<\/p>\n<hr class="nav-rule">\n<form class="nav-search"[\s\S]*id="post-filter"[\s\S]*id="post-author"[\s\S]*id="post-date"[\s\S]*<\/section>$/,
   );
 });
 
@@ -447,4 +518,23 @@ test("JSON-LD cannot close its script element", () => {
     JSON.parse(block!).headline,
     "</script><script>alert(1)</script>",
   );
+});
+
+test("a listing names its search index, and a card renders the same alone", () => {
+  const html = indexMain([POST], undefined, { index: "/blog/updates/search.json" });
+  assert.ok(html.includes(' data-index="/blog/updates/search.json">Showing all posts</h1>'));
+  assert.ok(!indexMain([POST]).includes("data-index"));
+  assert.ok(html.includes(cardHtml(POST)));
+  assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
+});
+
+test("a term directory wears the listing mast: sections shown, heading read aloud", () => {
+  const nav = sectionNav(SECTIONS);
+  const html = termIndexMain("Tag", [{ label: "Theory", href: "/blog/tags/theory", count: 3 }], nav);
+  const mast = (s: string) => s.slice(s.indexOf('<div class="sec mast'), s.indexOf('<div class="article-rest">'));
+  assert.equal(
+    mast(html),
+    mast(indexMain([POST], undefined, undefined, nav)).replace("Showing all posts", "Showing all tags"),
+  );
+  assert.equal(html.includes("mast-tools"), false);
 });

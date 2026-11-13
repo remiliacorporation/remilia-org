@@ -18,6 +18,14 @@
   --mast-title: 24px;
   --toc-spy: 24vh;
 
+  /* Room around the reading text: a post's prose box and a listing's
+     cards. The text keeps the measure, so the column widens by whatever
+     the room adds over the base gutter. The breakpoints in layout.css
+     give it more where the viewport has space to spare. */
+  --read-pad: var(--space-l);
+  --read-pad-y: var(--space-l);
+  --column: calc(var(--measure) + 2 * (var(--read-pad) - var(--gutter)));
+
   --mast-box: calc(
     3 * var(--border-w) + 4 * var(--space-xs) + var(--mast-line) +
       var(--mast-title)
@@ -127,7 +135,7 @@ i {
   flex-direction: column;
   gap: var(--rail-gap);
   row-gap: var(--rail-gap);
-  width: var(--measure);
+  width: var(--column);
   max-width: 100%;
   margin: 0 auto;
   padding: 0;
@@ -146,6 +154,10 @@ i {
   padding: var(--space) var(--gutter);
   background: var(--surface);
   border: var(--border);
+}
+.article-rest > .sec:has(> .prose),
+.article-rest > .post-card {
+  padding: var(--read-pad-y) var(--read-pad);
 }
 .sec::before {
   content: "";
@@ -192,7 +204,7 @@ i {
   flex-direction: column;
   gap: var(--rail-gap);
   width: min(
-    var(--measure),
+    var(--column),
     round(
       down,
       calc(

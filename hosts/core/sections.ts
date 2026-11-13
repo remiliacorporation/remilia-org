@@ -1,9 +1,11 @@
-import type { BakeOptions, Chrome } from "@remilia/renderer";
+import { headMenu, type BakeOptions, type Chrome } from "@remilia/renderer";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
+  CHANNEL_LABEL,
   CHANNEL_PATH_LABEL,
   HOST_AGGREGATE,
+  HOST_SECTIONS,
   indexPath,
   indexUrl,
   isAggregate,
@@ -138,16 +140,35 @@ const BRAND: Record<HostId, { label: string; root: string; rootUrl: string }> = 
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
-  // Index and the wordmark both point at the host's pooled index.
+  // The pooled index: the section row's "All" and the phone menu's
+  // "All posts" both lead there, so the head carries no Index link.
   const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
+  // On phones the head is one row: the wordmark and this menu, which holds
+  // the sections and the links the wider head spells out.
+  const menu = headMenu(
+    {
+      cats: HOST_SECTIONS[CHANNEL_HOST[channel]].map((c) => ({
+        label: CHANNEL_LABEL[c],
+        href: indexPath(c),
+      })),
+      current: isAggregate(channel) ? "" : CHANNEL_LABEL[channel],
+      allHref: indexBase,
+    },
+    [
+      { label: brand.root, href: brand.rootUrl },
+      { label: "RSS", href: `${base}/rss.xml` },
+      { label: "Atom", href: `${base}/atom.xml` },
+    ],
+  );
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
 <nav aria-label="Site">
-<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${indexBase}"${isAggregate(channel) ? ' aria-current="page"' : ""}>Index</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
 </nav>
 <hr class="nav-rule">
 <a class="site-title" href="${indexPath(channel)}">${brand.label}</a>
+${menu}
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">

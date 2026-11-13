@@ -1,5 +1,5 @@
 import { THEME_JS } from "./theme";
-import { NAV_SEARCH, datedHtml } from "./nav";
+import { NAV_SEARCH, datedHtml, emptyRail } from "./nav";
 import {
   type Channel,
   CHANNEL_BASEPATH,
@@ -43,6 +43,9 @@ export interface PageInput {
 
   /** Drives host identity, icons, social profiles and alternate formats. */
   channel?: Channel;
+
+  /** The post's bylines; the host's author when absent. */
+  author?: string;
 
   /** Article timestamps; emitted as Open Graph article metadata. */
   publishedTime?: string;
@@ -108,7 +111,7 @@ function discoveryHead(p: PageInput): string {
   const site = siteMetaFor(p.channel);
   const base = CHANNEL_BASEPATH[p.channel];
   const lines: string[] = [
-    `<meta name="author" content="${esc(site.author)}">`,
+    `<meta name="author" content="${esc(p.author?.trim() || site.author)}">`,
     `<meta name="color-scheme" content="light dark">`,
     `<meta name="theme-color" content="${esc(site.themeColor)}">`,
   ];
@@ -314,8 +317,9 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
-function mastCopy(basePath: string): string {
-  return `Copy: <button type="button" class="copy-md" data-src="${esc(basePath)}/index.md">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(basePath)}/index.txt">[TXT]</button>`;
+/** The section row and its rule, above a masthead's own rows. */
+function mastNav(nav?: string): string {
+  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
 }
 
 function bylineDate(iso: string): string {
@@ -408,15 +412,13 @@ export function articleHtml(input: {
   txtHref?: string;
   /** Whole minutes at 200 words per minute; omitted for short notes. */
   readingMinutes?: number;
-  /** Host section switcher — occupies the byline's center slot. */
-  sectionSel?: string;
+  /** The host's section row, heading the masthead. */
+  sectionNav?: string;
 }): string {
   const date = new Date(input.publishedAt);
-  const cat = input.sectionSel
-    ? input.sectionSel
-    : input.category
-      ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
-      : `<span class="byline-cat"></span>`;
+  const cat = input.category
+    ? `<a class="byline-cat" href="${esc(input.categoryHref ?? "#")}">${esc(input.category)}</a>`
+    : `<span class="byline-cat"></span>`;
   const author = input.byline
     ? input.authorHref
       ? `<a class="author" href="${esc(input.authorHref)}">${esc(input.byline)}</a>`
@@ -447,7 +449,7 @@ export function articleHtml(input: {
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
-<header>
+${mastNav(input.sectionNav)}<header>
 <div class="byline">${dated}${cat}${author}</div>
 <hr class="nav-rule">
 <h1>${esc(input.title)}</h1>
@@ -474,7 +476,7 @@ export interface IndexCard {
   excerpt: string;
   imageUrl?: string;
   author?: string;
-  /** Author archive; falls back to the client-side filter. */
+  /** Author archive; the name stays plain text without one. */
   authorHref?: string;
   /** Tag archive; falls back to a plain label. */
   categoryHref?: string;
@@ -505,41 +507,40 @@ ${next}
 </nav>`;
 }
 
-export function indexMain(
-  posts: IndexCard[],
-  toolsHtml: string,
-  pager?: Pager,
-  filter?: { tag?: string; author?: string; month?: string; section?: string },
-  sectionSel?: string,
-): string {
-  const tag = filter?.tag ?? "";
-  const authorF = filter?.author ?? "";
-  const month = filter?.month ?? "";
-  const section = filter?.section ?? "";
-  const surface = section ? `${section} posts` : "posts";
-  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
-  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}`;
-  const cards = posts
-    .map((p) => {
-      const img = p.imageUrl
-        ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
-        : "";
-      const authorHref =
-        p.authorHref ?? `?author=${encodeURIComponent(p.author ?? "")}`;
-      const author = p.author
-        ? `<a class="author" href="${esc(authorHref)}">${esc(p.author)}</a>`
-        : `<span class="author"></span>`;
-      const category = p.categoryHref
-        ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
-        : `<span class="byline-cat">${esc(p.category)}</span>`;
-      const row =
-        img || p.excerpt
-          ? `<div class="card-row">
+/**
+ * The masthead of a listing or a term directory: the sections box. Its
+ * heading names what the page lists, for screen readers only.
+ */
+function listMast(h1: string, sectionNav?: string): string {
+  return `<div class="sec mast index-mast list-mast">
+${sectionNav ? `<p class="sec-box-label" aria-hidden="true">Sections</p>\n<hr class="nav-rule mast-nav-rule">\n${sectionNav}\n` : ""}<header>
+${h1}
+</header>
+</div>`;
+}
+
+/** One listing card. The search index carries the same markup, so a card
+ * found by search is the card its own page would show. */
+export function cardHtml(p: IndexCard): string {
+  const img = p.imageUrl
+    ? `<a class="card-thumb" href="${esc(p.url)}" aria-label="${esc(p.title)}"><span class="ht"><span class="ht-map"><img src="${esc(p.imageUrl)}" alt="" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`
+    : "";
+  const author = p.author
+    ? p.authorHref
+      ? `<a class="author" href="${esc(p.authorHref)}">${esc(p.author)}</a>`
+      : `<span class="author">${esc(p.author)}</span>`
+    : `<span class="author"></span>`;
+  const category = p.categoryHref
+    ? `<a class="byline-cat" href="${esc(p.categoryHref)}">${esc(p.category)}</a>`
+    : `<span class="byline-cat">${esc(p.category)}</span>`;
+  const row =
+    img || p.excerpt
+      ? `<div class="card-row">
 ${img}
 ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 </div>`
-          : "";
-      return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}">
+      : "";
+  return `<article class="sec post-card" data-title="${esc(p.title)}" data-excerpt="${esc(p.excerpt)}" data-cat="${esc(p.category)}" data-author="${esc(p.author ?? "")}">
 <a class="card-hit" href="${esc(p.url)}" tabindex="-1" aria-hidden="true"></a>
 <header>
 <p class="card-meta">${datedHtml(p.date, bylineDate(p.date), p.monthHref, "byline-date")}${author}</p>
@@ -549,18 +550,34 @@ ${p.excerpt ? `<p class="card-ex">${esc(p.excerpt)}</p>` : ""}
 ${row}
 <p class="card-foot">${category}<a class="card-more" href="${esc(p.url)}" aria-label="Read more: ${esc(p.title)}">Read more</a></p>
 </article>`;
-    })
-    .join("\n");
+}
+
+export function indexMain(
+  posts: IndexCard[],
+  pager?: Pager,
+  filter?: {
+    tag?: string;
+    author?: string;
+    month?: string;
+    section?: string;
+    /** The listing's search index, so search covers every page of it. */
+    index?: string;
+  },
+  sectionNav?: string,
+): string {
+  const tag = filter?.tag ?? "";
+  const authorF = filter?.author ?? "";
+  const month = filter?.month ?? "";
+  const section = filter?.section ?? "";
+  const surface = section ? `${section} posts` : "posts";
+  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}${filter?.index ? ` data-index="${esc(filter.index)}"` : ""}`;
+  const cards = posts.map(cardHtml).join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast">
-<header>
-<h1${filterAttrs}>${heading}</h1>
-<hr class="nav-rule mast-tools-rule">
-<div class="mast-tools">${NAV_SEARCH}${toolsHtml}${sectionSel ?? ""}</div>
-</header>
-</div>
+${listMast(`<h1${filterAttrs}>${heading}</h1>`, sectionNav)}
 <div class="article-rest">
+<p class="sec list-empty" role="status" hidden><span class="list-empty-text">No posts match.</span> <button type="button" class="list-clear">Clear search</button></p>
 ${cards || '<section class="sec"><p>No posts published yet.</p></section>'}
 ${pagerHtml(pager)}
 </div>
@@ -572,7 +589,7 @@ ${pagerHtml(pager)}
 export function termIndexMain(
   noun: string,
   terms: { label: string; href: string; count: number }[],
-  basePath = "",
+  sectionNav?: string,
 ): string {
   const rows = terms
     .map(
@@ -582,13 +599,7 @@ export function termIndexMain(
     .join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
-<div class="sec mast index-mast">
-<header>
-<h1>Showing all ${esc(noun.toLowerCase())}s</h1>
-<hr class="nav-rule mast-tools-rule">
-<p class="mast-tools">${mastCopy(basePath)}</p>
-</header>
-</div>
+${listMast(`<h1>Showing all ${esc(noun.toLowerCase())}s</h1>`, sectionNav)}
 <div class="article-rest">
 <div class="sec">
 <div class="prose">
@@ -615,6 +626,8 @@ export function notFoundHtml(
     sectionTitle?: string;
     channel?: Channel;
     recent?: { title: string; url: string; date: string; monthHref?: string }[];
+    /** The page script, so the head menu closes and returns focus here too. */
+    bodyEnd?: string;
   } = {},
 ): string {
   const section = input.sectionTitle ?? "this section";
@@ -638,6 +651,9 @@ ${recent
     noindex: true,
     channel: input.channel,
     chrome,
+    // The frame every other page has, so the head keeps its box on a phone.
+    leftRail: emptyRail(),
+    bodyEnd: input.bodyEnd,
     mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">

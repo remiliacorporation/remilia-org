@@ -85,7 +85,7 @@ test("corporate locale routing honors explicit, saved, browser, then country cho
   );
   assert.deepEqual(
     localeRedirect({ pathname: "/", country: "CN" }),
-    { pathname: "/cn/", locale: "cn", remember: false },
+    { pathname: "/cn", locale: "cn", remember: false },
   );
 });
 

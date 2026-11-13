@@ -10,5 +10,4 @@
   NODE_VERSION = "22"
   NODE_ENV = "production"
 
-[context.deploy-preview.environment]
-  SANITY_PERSPECTIVE = "drafts"
+# Deploy Previews bake published content only; see the root netlify.toml.

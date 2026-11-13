@@ -12,6 +12,7 @@ import {
   imageGallery,
   organization,
   rss,
+  atom,
   sitemap,
   llmsTxt,
   CHANNEL_BASEPATH,
@@ -155,6 +156,26 @@ const POSTS = [
     publishedAt: "2026-08-01T00:00:00Z",
   },
 ];
+
+test("feeds carry each post's bylines, and Atom falls back to the host", () => {
+  const posts = [
+    { ...POSTS[0], authors: [{ name: "Charlotte Fang" }, { name: "A & B" }] },
+    { ...POSTS[0], slug: "unsigned" },
+  ];
+  const meta = { channel: "thought" as const, title: "t", description: "d" };
+  const xml = rss(meta, posts);
+  assert.ok(xml.includes('xmlns:dc="http://purl.org/dc/elements/1.1/"'));
+  assert.ok(xml.includes("<dc:creator>Charlotte Fang</dc:creator>"));
+  assert.ok(xml.includes("<dc:creator>A &amp; B</dc:creator>"));
+  assert.equal((xml.match(/<dc:creator>/g) ?? []).length, 2);
+  const feed = atom(meta, posts);
+  assert.ok(feed.includes("<entry>"));
+  assert.ok(feed.includes("<author><name>Charlotte Fang</name></author>"));
+  // RFC 4287: a feed whose entries may lack an author names one itself.
+  assert.ok(
+    /<\/updated>\n  <author><name>Remigumi-guchi Digital, LLC<\/name><\/author>/.test(feed),
+  );
+});
 
 test("rss escapes entities and uses canonical permalinks", () => {
   const xml = rss(
