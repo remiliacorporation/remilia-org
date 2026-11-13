@@ -541,15 +541,34 @@ export const NAV_JS = `(() => {
       const m = raw.endsWith('%') ? innerHeight * parseFloat(raw) / 100 : parseFloat(raw) || 0;
       return Math.max(0, el.getBoundingClientRect().top + scrollY - m);
     };
+    // A jump follows its target. Lazy images above it take their height
+    // only as they load, so the landing spot moves once the jump starts:
+    // each frame of the glide aims again, and an image above the target
+    // that loads after landing lands the jump once more. The reader's own
+    // scroll, touch or key ends that, so a jump never fights them.
+    let jump = 0;
     const go = (el) => {
-      const to = yFor(el), from = scrollY, d = to - from;
-      if (Math.abs(d) < 1) return;
-      if (still) { scrollTo(0, to); return; }
+      const id = ++jump;
+      const from = scrollY;
+      if (Math.abs(yFor(el) - from) < 1) return;
+      const live = () => id === jump;
+      const land = () => { if (live()) scrollTo(0, yFor(el)); };
+      const quit = () => { if (live()) jump++; };
+      ['wheel', 'touchmove', 'keydown', 'pointerdown'].forEach((type) => {
+        addEventListener(type, quit, { once: true, passive: true });
+      });
+      document.querySelectorAll('img').forEach((img) => {
+        if (img.complete) return;
+        if (!(img.compareDocumentPosition(el) & 4)) return;
+        img.addEventListener('load', land, { once: true });
+      });
+      if (still) { land(); return; }
       const t0 = performance.now();
       const step = (now) => {
+        if (!live()) return;
         const t = Math.min(1, (now - t0) / 200);
         const e = t * t * (3 - 2 * t);
-        scrollTo(0, from + d * e);
+        scrollTo(0, from + (yFor(el) - from) * e);
         if (t < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);

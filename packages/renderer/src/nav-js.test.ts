@@ -589,3 +589,121 @@ test("a search that hides every card says so and offers to clear it", () => {
   assert.equal(card.hidden, false);
   assert.equal(empty.hidden, true);
 });
+
+/**
+ * Runs NAV_JS on a post whose target sits below a lazy image that has not
+ * loaded: `grow()` loads it, pushing the target down, as the browser does
+ * when the jump brings the image near the viewport.
+ */
+function runJump(reducedMotion: boolean): {
+  click: () => void;
+  frame: (ms: number) => void;
+  grow: (by: number) => void;
+  input: (type: string) => void;
+  targetTop: () => number;
+} {
+  const MARGIN = 400;
+  let scrollY = 0;
+  let top = 5000;
+  let now = 0;
+  let frames: ((t: number) => void)[] = [];
+  const hooks = new Map<string, ((e: object) => void)[]>();
+  const loads: (() => void)[] = [];
+  const target = { getBoundingClientRect: () => ({ top: top - scrollY }) };
+  const img = {
+    complete: false,
+    compareDocumentPosition: () => 4,
+    addEventListener: (_: string, fn: () => void) => loads.push(fn),
+  };
+  const link = {
+    classList: { contains: () => false },
+    getAttribute: () => "#fndef-3",
+    blur: () => {},
+    closest: (sel: string): object | null =>
+      sel === 'a[href^="#"]' ? link : null,
+  };
+  const env = {
+    document: {
+      getElementById: (id: string) => (id === "fndef-3" ? target : null),
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => (sel === "img" ? [img] : []),
+      addEventListener: () => {},
+      documentElement: { style: {} },
+    },
+    location: { pathname: "/blog/a", search: "", hash: "" },
+    history: { pushState: () => {} },
+    addEventListener: (type: string, fn: (e: object) => void) =>
+      hooks.set(type, [...(hooks.get(type) ?? []), fn]),
+    matchMedia: () => ({ matches: reducedMotion }),
+    getComputedStyle: () => ({ scrollMarginTop: `${MARGIN}px` }),
+    performance: { now: () => now },
+    requestAnimationFrame: (fn: (t: number) => void) => frames.push(fn),
+    scrollTo: (_: number, y: number) => {
+      scrollY = y;
+    },
+    innerHeight: 800,
+    get scrollY() {
+      return scrollY;
+    },
+  };
+  new Function("env", `with (env) { ${NAV_JS} }`)(env);
+  return {
+    click: () =>
+      hooks.get("click")?.forEach((fn) =>
+        fn({ target: link, preventDefault: () => {} }),
+      ),
+    frame: (ms) => {
+      now += ms;
+      const due = frames;
+      frames = [];
+      due.forEach((fn) => fn(now));
+    },
+    grow: (by) => {
+      top += by;
+      img.complete = true;
+      loads.splice(0).forEach((fn) => fn());
+    },
+    input: (type) => hooks.get(type)?.splice(0).forEach((fn) => fn({})),
+    targetTop: () => top - scrollY,
+  };
+}
+
+test("a footnote jump lands on its note when an image above loads mid-jump", () => {
+  const page = runJump(false);
+  page.click();
+  page.frame(100);
+  page.grow(500);
+  page.frame(100);
+  page.frame(16);
+  assert.equal(page.targetTop(), 400, "the note sits at its scroll margin");
+});
+
+test("an image that loads after the landing lands the jump again", () => {
+  const page = runJump(false);
+  page.click();
+  page.frame(200);
+  page.frame(16);
+  assert.equal(page.targetTop(), 400);
+  page.grow(500);
+  assert.equal(page.targetTop(), 400, "followed the note down");
+});
+
+test("the reader's own scroll ends the jump's follow-up", () => {
+  for (const type of ["wheel", "touchmove", "keydown", "pointerdown"]) {
+    const page = runJump(false);
+    page.click();
+    page.frame(200);
+    page.frame(16);
+    page.input(type);
+    page.grow(500);
+    assert.equal(page.targetTop(), 900, `${type} stops it`);
+  }
+});
+
+test("reduced motion jumps without a glide and still follows a late image", () => {
+  const page = runJump(true);
+  page.click();
+  assert.equal(page.targetTop(), 400, "landed with no frames");
+  page.grow(500);
+  assert.equal(page.targetTop(), 400);
+});
