@@ -458,7 +458,7 @@ function sidenotes(root, wide, opts) {
     const frame = root.documentElement || root;
     const y0 = frame.getBoundingClientRect ? frame.getBoundingClientRect().top : -scrollY;
     const y = (r) => r - y0;
-    // Notes start under the right rail's boxes: theme, read info, search.
+    // Notes start under the right rail's boxes: the theme, the search box.
     // The post list's own element may run the rail's whole height; its
     // boxes are what the notes must clear.
     // A box that is not drawn has no place; its rect would read as the
