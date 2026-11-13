@@ -24,6 +24,24 @@
   font-size: smaller;
   line-height: 0;
 }
+/* On a phone the number is about 7px wide. An unseen area the size of a
+   text line (24px square) around it takes the tap. Each number sits above
+   every such area, so two marks side by side keep their own taps. */
+@media (pointer: coarse), (max-width: 639px) {
+  .fn-ref::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--space));
+    height: var(--space);
+    transform: translate(-50%, -50%);
+  }
+  .fn-ref sup {
+    position: relative;
+    z-index: 1;
+  }
+}
 .fn-note {
   display: none;
   font-style: italic;
