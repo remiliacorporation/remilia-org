@@ -578,11 +578,15 @@
   margin: 0 var(--grid);
   border-bottom: var(--border-w) dotted currentColor;
 }
+/* The entries are set in capitals, like the box's title and the section
+   links; the headings' own text is unchanged. */
 .toc-label {
   order: 3;
   flex: 0 1 auto;
   text-align: right;
   min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
 }
 .toc li a:hover,
 .toc li a:hover::before,

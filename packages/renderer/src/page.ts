@@ -315,13 +315,13 @@ ${
 <div class="left-rail">
 ${header}
 ${p.sectionNav ? `<div class="sec-box">\n${p.sectionNav}\n</div>` : ""}
+${p.readHtml ?? ""}
 <div class="left-stack">
 ${p.tocHtml ?? ""}
 </div>
 </div>
 <div class="right-rail">
 ${themeSelHtml(theme)}
-${p.readHtml ?? ""}
 ${p.leftRail}
 </div>
 </div>`
@@ -407,15 +407,20 @@ function bylineDate(iso: string): string {
   return `${mm}.${dd}.${yy}`;
 }
 
+/**
+ * The contents box: the headings, then the row of note links. A post with
+ * notes and no headings gets the box with the note links alone.
+ */
 export function tocBox(items?: string, noteCount = 0): string {
-  if (!items) return "";
   const notes =
     noteCount > 0
-      ? `\n<hr class="nav-rule">\n<p class="toc-notes">Notes: ${Array.from(
+      ? `<p class="toc-notes">Notes: ${Array.from(
           { length: noteCount },
           (_, i) => `<a class="toc-note" href="#fn-${i + 1}">[${i + 1}]</a>`,
         ).join(" ")}</p>`
       : "";
+  const rows = [items ? `<ol>\n${items}\n</ol>` : "", notes].filter(Boolean);
+  if (!rows.length) return "";
   return `<div class="toc">
 <input type="checkbox" id="toc-toggle" class="disclosure">
 <label for="toc-toggle" class="disclosure-label">Contents</label>
@@ -423,9 +428,7 @@ export function tocBox(items?: string, noteCount = 0): string {
 <nav aria-label="Table of Contents" role="doc-toc">
 <h2>Table of Contents</h2>
 <hr class="nav-rule">
-<ol>
-${items}
-</ol>${notes}
+${rows.join('\n<hr class="nav-rule">\n')}
 </nav>
 </div>`;
 }

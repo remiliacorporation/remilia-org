@@ -1044,6 +1044,7 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
   };
   const fns: { pin: boolean }[] = [];
   const els = notes.map((note, i) => {
+    const self = () => els[i];
     const style = counted();
     const attrs: Record<string, string> = {};
     const sub = note.parent !== undefined;
@@ -1072,7 +1073,8 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
         k === "data-ref" ? `fndef-${i + 1}` : (attrs[k] ?? null),
       setAttribute: (k: string, v: string) => void (writes++, (attrs[k] = v)),
       removeAttribute: (k: string) => void (writes++, delete attrs[k]),
-      closest: (sel: string) => (sel === ".fn" ? fn : column),
+      closest: (sel: string) =>
+        sel === ".fn" ? fn : sel === ".fn-note" ? self() : sel === ".fn-xref" ? null : column,
       // The note's text, or the reference to a note nested in this one.
       querySelector: (sel: string) => {
         if (sel === ".sn-text") return text;
@@ -1086,9 +1088,11 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
       getBoundingClientRect: () => rect(0, note.height),
     };
   });
+  const listeners: Record<string, (e: unknown) => void> = {};
   const root = {
     getBoundingClientRect: () => rect(0, 5000),
-    addEventListener: () => {},
+    addEventListener: (type: string, fn: (e: unknown) => void) =>
+      void (listeners[type] = fn),
     contains: () => true,
     querySelector: (sel: string) => (sel === ".layout" ? layout : null),
     querySelectorAll: (sel: string) =>
@@ -1126,7 +1130,7 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
   writes = 0;
   stack();
   const again = writes;
-  const rows = els.map((el) => {
+  const read = () => els.map((el) => {
     const top = parseFloat(el.style.top);
     const shown = parseFloat(el.text.style.height);
     return {
@@ -1141,7 +1145,13 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
       placed: el.style.top !== undefined && el.style.top !== "",
     };
   });
-  return Object.assign(rows, { writes: again });
+  /** Points at note i, as a mouse would, and waits for it to open. */
+  const point = async (i: number) => {
+    listeners.pointerover({ target: els[i], pointerType: "mouse" });
+    await new Promise((r) => setTimeout(r, 150));
+    return read();
+  };
+  return Object.assign(read(), { writes: again, point });
 }
 
 test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
@@ -1176,7 +1186,29 @@ test("a cut note keeps eight lines, and the next goes under it", () => {
   assert.equal(b.drop, b.top + 16 - 320);
 });
 
-test("an open note shows in full and the notes below move down", () => {
+test("a pointed-at note opens alone, over the notes below, and nothing moves", async () => {
+  const notes = [
+    { at: 300, height: 200 },
+    { at: 320, height: 40, parent: 0 },
+    { at: 340, height: 300 },
+    { at: 900, height: 40 },
+  ];
+  const rest = layOut(notes);
+  // Point at the nested note: it opens; its parent stays cut.
+  const on = await rest.point(1);
+  assert.deepEqual(
+    on.map((r) => r.top),
+    rest.map((r) => r.top),
+  );
+  assert.deepEqual([on[0].on, on[0].long, on[0].shown], [false, true, rest[0].shown]);
+  assert.deepEqual([on[1].on, on[1].shown], [true, 40]);
+  // Point at a cut note: it shows in full, over the next, which stays.
+  const third = await rest.point(2);
+  assert.deepEqual([third[2].on, third[2].long, third[2].shown], [true, false, 300]);
+  assert.equal(third[3].top, rest[3].top);
+});
+
+test("a note being written shows in full and the notes below move down", () => {
   const [a, b] = layOut([
     { at: 300, height: 200, pin: true },
     { at: 320, height: 40 },

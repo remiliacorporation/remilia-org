@@ -328,9 +328,12 @@ export const SIDENOTES_JS = `// With both rails, notes stand in the margin, in r
 // line when that place is free; otherwise it goes under the note above.
 // A note shows in full while the next note leaves it room; one the next
 // note would block is cut to whole lines, never under eight, and the next
-// note goes under it. Pointing at a note or its mark,
-// tabbing to the mark, or a click on the mark opens the note in full, and
-// the notes below slide down. A line ties each note to its place, drawn
+// note goes under it. Pointing at a note or its mark, tabbing to the mark,
+// or a click on the mark opens that note alone in full, over the notes
+// below it, which stay where they are; so the note under the pointer never
+// moves. A note being written in the editor (fn-pin) opens in place, and
+// the notes below move down. Notes run past the rail's width toward the
+// window's edge, keeping a gutter, up to a cap. A line ties each note to its place, drawn
 // like a flowchart: out from the column at the mark's line, down a lane
 // in the gap, into the note's left side. A note inside a note stands
 // under its parent, and its line runs on the right: out of the parent at
@@ -359,6 +362,10 @@ function sidenotes(root, wide, opts) {
   const OPEN_MS = 80;
   const CLOSE_MS = 250;
   const GLIDE_MS = 300;
+  // Notes widen past the rail, up to this many rails, and stop this far
+  // short of the window's (or the frame's) right edge.
+  const WIDEST = 1.5;
+  const GUTTER = 16;
   let placed = [];
   let hover = null;
   let pinned = null;
@@ -406,12 +413,6 @@ function sidenotes(root, wide, opts) {
   };
   const mainOf = (fn) => fn && fn.querySelector('.fn-note:not(.fn-sub)');
   const subOf = (fn, key) => (key && [...fn.querySelectorAll('.fn-note.fn-sub')].find((n) => n.getAttribute('data-ref') === key)) || null;
-  // The note a nested note is cited from.
-  const hostOf = (n) => {
-    const fn = n.closest('.fn');
-    const key = n.getAttribute('data-ref');
-    return [...fn.querySelectorAll('.fn-note')].find((o) => o !== n && o.querySelector('.fn-xref[href="#' + key + '"]')) || null;
-  };
   // The notes that stand out: under the pointer or the keyboard focus,
   // opened by a click, or marked open by the page around them.
   const targets = () => {
@@ -424,16 +425,14 @@ function sidenotes(root, wide, opts) {
     }
     return set;
   };
-  // The notes shown in full: the targets, and the notes their lines come
-  // from, so a nested note's reference shows.
-  const opened = (on) => {
+  // The notes being written: shown in full in the stack, the notes below
+  // moved down.
+  const written = () => {
     const set = new Set();
-    const add = (n) => {
-      if (!n || set.has(n)) return;
-      set.add(n);
-      if (n.classList.contains('fn-sub')) add(hostOf(n));
-    };
-    on.forEach(add);
+    for (const fn of root.querySelectorAll('.fn.fn-pin')) {
+      const n = mainOf(fn);
+      if (n) set.add(n);
+    }
     return set;
   };
   const stack = (glide) => {
@@ -452,7 +451,7 @@ function sidenotes(root, wide, opts) {
     const line = num('--size-ui') * (num('--leading') || 1) || 16;
     const tick = num('--space-xs') + line / 2;
     const on = targets();
-    const open = opened(on);
+    const open = written();
     // Every place below is measured from the top of root, the page or the
     // frame, so where the window or the editor's pane is scrolled to does
     // not enter it.
@@ -467,6 +466,12 @@ function sidenotes(root, wide, opts) {
     const boxes = [...root.querySelectorAll('.right-rail > :not(.post-nav), .right-rail > .post-nav > *')]
       .filter((el) => !el.getClientRects || el.getClientRects().length > 0);
     const top0 = boxes.reduce((v, el) => Math.max(v, y(el.getBoundingClientRect().bottom)), 0) + between;
+    // The notes' right edge: the rail's, or further toward the window's
+    // edge (the frame's, in the editor) where there is room, up to the cap.
+    const sec0 = notes[0].closest('.sec');
+    const start = sec0 ? sec0.getBoundingClientRect().right + between : 0;
+    const limit = (root.documentElement ? root.documentElement.clientWidth : root.getBoundingClientRect().right) - GUTTER;
+    const span = Math.min(rail * WIDEST, Math.max(rail, limit - start));
     // One pass places every note at a given width and returns the runs.
     // It reads nothing a glide in progress changes: the marks, the text's
     // own height, and a reference's place inside its note.
@@ -478,12 +483,14 @@ function sidenotes(root, wide, opts) {
         const sec = n.closest('.sec');
         const text = n.querySelector('.sn-text');
         if (!parent || !fn || !sec || !text) continue;
-        put(n, 'width', rail - leftExtra - rightExtra + 'px');
+        put(n, 'width', span - leftExtra - rightExtra + 'px');
         const p = parent.getBoundingClientRect();
         const box = getComputedStyle(n);
         const row = { n, text, fn, base: y(p.top), sub: n.classList.contains('fn-sub'),
           edge: sec.getBoundingClientRect().right - p.left, full: text.scrollHeight, open: open.has(n),
-          chrome: ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'].reduce((s, k) => s + (parseFloat(box[k]) || 0), 0) };
+          // An open note's deeper foot does not enter the stack: the
+          // padding counted below is the top's, twice.
+          chrome: ['paddingTop', open.has(n) ? 'paddingBottom' : 'paddingTop', 'borderTopWidth', 'borderBottomWidth'].reduce((s, k) => s + (parseFloat(box[k]) || 0), 0) };
         if (row.sub) {
           // Its place is its reference, inside the note it is nested in.
           const key = n.getAttribute('data-ref');
@@ -501,6 +508,22 @@ function sidenotes(root, wide, opts) {
         rows.push(row);
       }
       const short = (row) => (row.open ? row.full : Math.min(row.full, LINES * line));
+      // A cut ends at the foot of a line of the text as set: a gap between
+      // paragraphs puts the lines off the line grid, and a cut on the grid
+      // showed half a line.
+      const snap = (row, h) => {
+        const doc = row.text.ownerDocument;
+        if (!doc || !doc.createRange || h >= row.full) return h;
+        const r = doc.createRange();
+        r.selectNodeContents(row.text);
+        const top = row.text.getBoundingClientRect().top;
+        let best = 0;
+        for (const b of r.getClientRects()) {
+          const foot = b.bottom - top;
+          if (foot <= h + 0.5 && foot > best) best = foot;
+        }
+        return best > line ? Math.min(h, Math.ceil(best)) : h;
+      };
       let floor = top0;
       rows.forEach((row, i) => {
         row.top = row.sub ? floor : Math.max(row.ideal, floor);
@@ -513,7 +536,7 @@ function sidenotes(root, wide, opts) {
           for (; k < rows.length && rows[k].sub; k++) need += short(rows[k]) + rows[k].chrome + gap;
           if (k < rows.length) {
             const room = rows[k].ideal - gap - row.top - row.chrome - need;
-            if (row.full > room) row.cut = Math.max(short(row), Math.floor(room / line) * line);
+            if (row.full > room) row.cut = snap(row, Math.max(short(row), Math.floor(room / line) * line));
           }
         }
         row.h = row.cut + row.chrome;
@@ -548,8 +571,11 @@ function sidenotes(root, wide, opts) {
       put(n, 'top', row.top - row.base + 'px');
       put(n, 'left', row.edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + leftW + 'px');
       put(n, '--fn-reach', leftW + 'px');
-      put(row.text, 'height', row.cut + 'px');
-      flag(n, 'data-long', row.cut < row.full);
+      // A target opens over the notes below; the stack keeps its place.
+      const over = on.has(n) && !open.has(n);
+      put(row.text, 'height', (over ? row.full : row.cut) + 'px');
+      flag(n, 'data-long', !over && row.cut < row.full);
+      if (over) out.floor = Math.max(out.floor, row.top + row.full + row.chrome + num('--space-xs'));
       flag(n, 'data-on', on.has(n));
       flag(n, 'data-dim', on.size > 0 && !on.has(n));
       if (on.has(n) && !row.sub) lit.add(row.fn);
