@@ -18,6 +18,7 @@ import {
   tocBox,
   tocItems,
   footnoteCount,
+  postTitle,
   type NavPost,
   type PTBlock,
 } from "@remilia/renderer";
@@ -315,7 +316,7 @@ await writeFile(join(outDir, "blog", "press", "nav.js"), NAV_JS);
 await writeFile(
   join(outDir, "blog", "press", post.slug, "index.html"),
   htmlPage({
-    title: `${post.title} — ${host.title}`,
+    title: postTitle(post),
     description: post.excerpt,
     canonical,
     jsonld: [blogPosting(post)],

@@ -68,6 +68,12 @@ export function bylineOf(p: {
   return p.authors?.map((a) => a.name).join(", ") || undefined;
 }
 
+/** A post page's document title: the post's title, then its byline. */
+export function postTitle(p: Parameters<typeof bylineOf>[0] & { title: string }): string {
+  const by = bylineOf(p);
+  return by ? `${p.title} — ${by}` : p.title;
+}
+
 /** The UTC calendar month a timestamp falls in, as `YYYY-MM`. */
 export function monthKey(iso: string): string {
   const d = new Date(iso);
