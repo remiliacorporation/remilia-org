@@ -182,6 +182,28 @@ function discoveryHead(p: PageInput): string {
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * The resting halftone: three tones, ink below 5/48 of full brightness, paper
+ * from two thirds up, the mid tone between. Equal thirds turned a dark picture
+ * into a solid block, because the dot screen can at most double a pixel's
+ * brightness and a shadow under one sixth never reached the mid tone.
+ */
+function ditherFilter(id: string, paper: number): string {
+  const table = [
+    ...Array<number>(5).fill(0.1),
+    ...Array<number>(27).fill(0.55),
+    ...Array<number>(16).fill(paper),
+  ].join(" ");
+  return `<filter id="${id}" color-interpolation-filters="sRGB">
+<feColorMatrix type="saturate" values="0"/>
+<feComponentTransfer>
+<feFuncR type="discrete" tableValues="${table}"/>
+<feFuncG type="discrete" tableValues="${table}"/>
+<feFuncB type="discrete" tableValues="${table}"/>
+</feComponentTransfer>
+</filter>`;
+}
+
 export function htmlPage(p: PageInput): string {
   const ld = p.jsonld
     .map(
@@ -260,14 +282,7 @@ ${ld}
 </svg>
 </div>
 <svg class="dither-fx" aria-hidden="true" focusable="false">
-<filter id="dither-3" color-interpolation-filters="sRGB">
-<feColorMatrix type="saturate" values="0"/>
-<feComponentTransfer>
-<feFuncR type="discrete" tableValues="0.1 0.55 1"/>
-<feFuncG type="discrete" tableValues="0.1 0.55 1"/>
-<feFuncB type="discrete" tableValues="0.1 0.55 1"/>
-</feComponentTransfer>
-</filter>
+${ditherFilter("dither-3", 1)}
 <filter id="dither-hover" color-interpolation-filters="sRGB">
 <feComponentTransfer result="q">
 <feFuncR type="discrete" tableValues="0.098 0.2 0.4 0.6 0.8 1"/>
@@ -276,14 +291,7 @@ ${ld}
 </feComponentTransfer>
 <feComposite in="q" in2="SourceGraphic" operator="arithmetic" k1="0" k2="0.7" k3="0.3" k4="0"/>
 </filter>
-<filter id="dither-3-dark" color-interpolation-filters="sRGB">
-<feColorMatrix type="saturate" values="0"/>
-<feComponentTransfer>
-<feFuncR type="discrete" tableValues="0.08 0.52 0.22"/>
-<feFuncG type="discrete" tableValues="0.04 0.41 0.21"/>
-<feFuncB type="discrete" tableValues="0.04 0.41 0.21"/>
-</feComponentTransfer>
-</filter>
+${ditherFilter("dither-3-dark", 0.88)}
 <filter id="dither-hover-dark" color-interpolation-filters="sRGB">
 <feComponentTransfer result="q">
 <feFuncR type="discrete" tableValues="0.08 0.16 0.26 0.36 0.44 0.52"/>

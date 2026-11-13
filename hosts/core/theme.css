@@ -210,6 +210,7 @@ html[data-scheme="dark"] {
   --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
   --ink-contrast: oklch(0.13 0.008 var(--hue));
   --focus: #fff;
+  --dither-filter: url(#dither-3-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-scheme="light"]) {
@@ -220,6 +221,7 @@ html[data-scheme="dark"] {
     --surface: oklch(0.19 calc(0.007 + 0.005 * var(--hue-wash-2)) var(--hue));
     --ink-contrast: oklch(0.13 0.008 var(--hue));
     --focus: #fff;
+    --dither-filter: url(#dither-3-dark);
   }
 }
 
