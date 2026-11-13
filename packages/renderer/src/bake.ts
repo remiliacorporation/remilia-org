@@ -73,6 +73,7 @@ import {
   postPlain,
   readingMinutes,
 } from "./post";
+import { lowerFootnotes } from "./footnotes";
 import { galleryHtml, LIGHTBOX_JS } from "./gallery";
 import { esc } from "./html";
 import {
@@ -217,7 +218,12 @@ const AUTHORS_QUERY = `${PUBLISHED_POSTS} {
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
   "logoRef": logo.asset._ref }`;
 
+/** The blocks a post's page shows, with its notes in the renderer's shape. */
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
+  return lowerFootnotes(shownBlocks(p, channel));
+}
+
+function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
   if (
     channel === "archive" &&
     p.origin === "external" &&

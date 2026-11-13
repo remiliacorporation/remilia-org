@@ -16,6 +16,7 @@
     "import:paragraph": "node --import tsx paragraph-import.ts",
     "import:substack": "node --import tsx substack-import.ts",
     "migrate:channels": "node --import tsx migrate-channels.ts",
+    "migrate:footnotes": "node --import tsx maintenance/migrate-footnotes.ts",
     "archive:firecrawl": "node --import tsx archive-firecrawl.ts",
     "import:miladychan": "node --import tsx miladychan-import.ts",
     "fix:archive": "node --import tsx fix-archive-fields.ts",
@@ -27,7 +28,7 @@
     "unpublish:posts": "node --import tsx unpublish-posts.ts",
     "dev": "node --watch-path=./ --watch-path=../packages --watch --import tsx preview.ts org /tmp/org-bake --serve",
     "preview": "node --import tsx preview.ts org /tmp/org-bake --serve",
-    "test": "node --import tsx --test bake-corp.test.ts host-bake.test.ts"
+    "test": "node --import tsx --test bake-corp.test.ts host-bake.test.ts maintenance/migrate-footnotes.test.ts"
   },
   "dependencies": {
     "@remilia/renderer": "workspace:*",

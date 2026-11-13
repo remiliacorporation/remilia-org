@@ -16,7 +16,8 @@
   font-display: swap;
 }
 
-.blog-post-form {
+.blog-post-form,
+.blog-note-edit {
   --hue: 30;
   --ink-l: 0.54;
   --ink-c: 0.2577;
@@ -344,8 +345,8 @@
 
 .blog-pt [data-testid="text-block__text"],
 .blog-pt [data-text],
-.blog-pt [data-text] span,
-.blog-pt [data-testid="text-block__text"] span {
+.blog-pt [data-text] span:not(.blog-pt-note *),
+.blog-pt [data-testid="text-block__text"] span:not(.blog-pt-note *) {
   font-family: var(--font-body) !important;
   font-size: var(--size-base) !important;
   color: var(--ink) !important;
@@ -557,67 +558,10 @@
 
 .blog-pt-link:hover,
 .blog-pt-outlink:hover,
-.blog-pt-link:hover [data-pt-text],
-.blog-pt-outlink:hover [data-pt-text] {
+.blog-pt :is(.blog-pt-link, .blog-pt-outlink):hover :is(span, [data-pt-text]) {
   background: var(--ink);
   color: var(--ink-contrast) !important;
   text-decoration: none !important;
-}
-
-.blog-pt-fn {
-  font-size: inherit !important;
-  line-height: inherit !important;
-  font-weight: inherit;
-  cursor: pointer;
-}
-
-/* The site's reference (.fn-ref in hosts/core/blog/notes.css): a strong
-   superscript number, one grid step off the text, with tabular figures. */
-.blog-pt-fn sup {
-  font-size: smaller;
-  line-height: 0;
-  font-weight: var(--weight-strong) !important;
-  font-variant-numeric: tabular-nums;
-  padding-left: var(--grid);
-}
-
-.blog-pt-annot-edit {
-  display: block;
-  position: fixed;
-  top: 72px;
-  right: 24px;
-  z-index: 80;
-  width: min(360px, calc(100vw - 32px));
-  max-height: min(70vh, 480px);
-  overflow: auto;
-  padding: 12px;
-  background: #fff;
-  border: 1px solid var(--card-border-color, #c5c7ce);
-  box-shadow: 0 12px 40px rgb(16 17 18 / 0.18);
-  color: #101112;
-  font-family: inherit;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: normal;
-  text-decoration: none;
-  cursor: default;
-}
-
-.blog-pt-annot-edit-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 8px;
-}
-
-.blog-pt-annot-edit-head button {
-  appearance: none;
-  border: 1px solid var(--card-border-color, #c5c7ce);
-  background: #fff;
-  padding: 4px 8px;
-  cursor: pointer;
-  font: inherit;
 }
 
 .blog-link-edit {
@@ -811,30 +755,107 @@
   color: inherit;
 }
 
-/* In the page, a note or a link is edited in the text column, in the box
-   the site draws a note in (.fn-note). The compact editor's panel, fixed to
-   the window's corner in Studio white, would sit over the right rail. */
-.blog-page .blog-pt-annot-edit {
-  position: static;
-  box-sizing: border-box;
-  width: auto;
-  max-width: 100%;
-  max-height: none;
-  margin: var(--space-xs) 0;
-  padding: var(--grid);
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: none;
-  color: var(--ink);
-}
-
-.blog-page .blog-pt-annot-edit-head button {
-  border: var(--border);
-  background: var(--surface);
-  color: var(--ink);
-}
-
 /* The prose card already pads the text, as it does on the site. */
 .blog-page .blog-pt [data-pt-editor] {
   padding: 0;
+}
+
+/* Footnotes. The mark, the note box, its paragraphs, and its quote lines
+   take the site's own rules (hosts/core/blog/notes.css, through
+   studio/noteStyles.ts). These rules only strip Sanity's chip from the mark
+   and say where the note box sits. */
+.blog-pt-note {
+  position: relative;
+}
+
+.blog-pt-note > [data-ui="Card"] {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.blog-pt-note > [data-ui="Card"] > span {
+  max-width: none;
+  overflow: visible;
+}
+
+/* The selected mark inverts, as the site's does under the pointer. */
+.blog-pt-note > [data-ui="Card"]:is([data-selected], [data-focused]) .fn-ref,
+.blog-pt-note > [data-ui="Card"]:is([data-selected], [data-focused]) .fn-ref sup {
+  background: var(--ink);
+  color: var(--ink-contrast);
+}
+
+/* The page's link color stops at the editor; a link in the note box takes
+   the note's ink, as on the site. */
+.blog-pt-note > .fn-note :is(a, a *) {
+  color: inherit;
+}
+
+/* The selected note opens under its mark, where the site opens it. */
+.blog-pt-note > .fn-note {
+  display: flex;
+  gap: var(--grid);
+  align-items: flex-start;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  width: min(calc(var(--measure, 63ch) * 0.75), 80vw);
+  margin: 0;
+  font-size: var(--size-base, 1rem);
+  font-weight: var(--weight-body, normal);
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  cursor: pointer;
+}
+
+/* The note's dialog sits outside the article, so it takes the tokens above
+   but none of the article's box. */
+.blog-note-edit {
+  position: static;
+  padding: var(--grid);
+  min-height: 0;
+  background: var(--surface);
+  border: var(--border);
+}
+
+/* The box a note is written in (Sanity's dialog). The note's type follows
+   the site's note box (.fn-note in blog/notes.css: italic, the tight
+   leading); its paragraphs and quote lines are the site's own classes. */
+.blog-note-edit [data-slate-editor] {
+  font-family: var(--font-body);
+  font-size: var(--size-base);
+  font-style: italic;
+  line-height: var(--leading);
+  color: var(--ink);
+}
+
+.blog-note-edit [data-slate-editor] [data-ui="Text"],
+.blog-note-edit [data-slate-editor] [data-ui="Text"] > span {
+  font: inherit;
+  color: inherit;
+}
+
+.blog-desk-note {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--card-border-color, #c5c7ce);
+  background: var(--card-bg-color, #fff);
+  color: var(--card-fg-color, #101112);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* In the Studio's dark scheme, Sanity paints the cards around the text
+   dark, and the page's ink was set on black. The text sits on the page's
+   own surface in either scheme. */
+.blog-pt [data-testid="pt-editor"] [data-ui="Card"]:has([data-slate-editor]) {
+  background: transparent;
 }

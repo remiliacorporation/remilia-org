@@ -20,6 +20,7 @@ import {
   tocItems,
   type PTBlock,
 } from "../packages/renderer/src/pt";
+import { lowerFootnotes } from "../packages/renderer/src/footnotes";
 import {
   PUBLISHED_POSTS,
   bylineOf,
@@ -114,7 +115,7 @@ interface Listed {
  */
 export function frameBody(value: unknown): PTBlock[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(
+  return lowerFootnotes(value).filter(
     (b): b is PTBlock =>
       Boolean(b) &&
       typeof b === "object" &&

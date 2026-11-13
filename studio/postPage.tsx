@@ -73,7 +73,7 @@ function editorTarget(root: HTMLElement, link: Element): Element | null {
       [...toc.querySelectorAll(links)].indexOf(link)
     ] ?? null;
   return link.matches(".toc-note")
-    ? nth(".toc-note", ".blog-pt .blog-pt-fn")
+    ? nth(".toc-note", ".blog-pt .blog-pt-note")
     : nth("ol a", ".blog-pt :is(.blog-pt-h2, .blog-pt-h3)");
 }
 

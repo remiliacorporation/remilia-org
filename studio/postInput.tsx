@@ -24,6 +24,7 @@ import {
   type FramePost,
   type FrameRow,
 } from "./frameParts";
+import { hasOldFootnotes } from "../packages/renderer/src/footnotes";
 import { frameChannel } from "./pageFrame";
 import { PostPage, TitleRoot } from "./postPage";
 
@@ -235,6 +236,9 @@ export function PostInput(props: ObjectInputProps): ReactNode {
   const shell = useRef<HTMLDivElement>(null);
   const body = useFormValue(["body"]);
   const commentary = useFormValue(["commentary"]);
+  // The schema locks a text that still holds old-format notes
+  // (schemaTypes/objects/blockContent.ts); say why.
+  const locked = hasOldFootnotes(body) || hasOldFootnotes(commentary);
   const bodyLen = Array.isArray(body)
     ? body.length
     : Array.isArray(commentary)
@@ -351,6 +355,14 @@ export function PostInput(props: ObjectInputProps): ReactNode {
             {settingsOpen ? "Hide settings" : "Settings"}
           </button>
         </div>
+        {locked ? (
+          <p className="blog-desk-note" role="status">
+            The text is locked. This post's footnotes are in the old format,
+            and editing a paragraph would delete its notes. Run the footnote
+            migration for this post, then reload. The title and the settings
+            can still be edited.
+          </p>
+        ) : null}
         {article}
         <div
           className={
