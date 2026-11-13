@@ -4,6 +4,7 @@ import {
   useInsertionEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -227,14 +228,91 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
 }
 
 /**
+ * The note being written in its margin box, by its path; one at a time. It
+ * lives outside the notes' components, so a note stays open while the rest
+ * of the post is edited, even if Sanity mounts its mark again.
+ */
+let writing: string | null = null;
+/** True from a click that opens a note until its box takes the caret. */
+let caretPending = false;
+const writers = new Set<() => void>();
+
+function setWriting(id: string | null, caret = false): void {
+  if (writing === id) return;
+  caretPending = caret && id !== null;
+  writing = id;
+  for (const f of writers) f();
+}
+
+function useWriting(): string | null {
+  return useSyncExternalStore(
+    (f) => {
+      writers.add(f);
+      return () => writers.delete(f);
+    },
+    () => writing,
+  );
+}
+
+/**
+ * The note's box in the margin while the note is written there. It holds
+ * Sanity's own form for the note, so its edits are the form's patches, as
+ * in the dialog. It stays open while the rest of the post is edited;
+ * Escape in the note, or opening another note, closes it, and the box then
+ * shows the note as the site draws it again.
+ */
+function NoteInPlace(props: {
+  n: number | undefined;
+  onClose: () => void;
+  children: ReactNode;
+}): ReactNode {
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!box || !caretPending) return;
+    caretPending = false;
+    // The caret goes into the note at once, as the dialog put it there. The
+    // note's editor mounts a frame or two after its box.
+    let tries = 0;
+    let frame = requestAnimationFrame(function focus() {
+      const text = box.querySelector<HTMLElement>('[contenteditable="true"]');
+      if (text) text.focus();
+      else if (++tries < 30) frame = requestAnimationFrame(focus);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [box]);
+  return (
+    <span
+      ref={setBox}
+      className="fn-note fn-edit"
+      role="group"
+      aria-label={`Note ${props.n ?? ""}`.trim()}
+      contentEditable={false}
+      onKeyDown={(e) => {
+        // A dialog the note's editor opens is a React child of this box, so
+        // its keys arrive here too; Escape there closes only that dialog.
+        if (!e.currentTarget.contains(e.target as Node)) return;
+        if (e.key === "Escape" && !e.defaultPrevented) {
+          e.stopPropagation();
+          props.onClose();
+        }
+      }}
+    >
+      <strong>{props.n ?? "*"}:</strong>
+      {/* sn-text: the layout script measures the note's text here. */}
+      <span className="fn-edit-form sn-text">{props.children}</span>
+    </span>
+  );
+}
+
+/**
  * A footnote in the text: the site's own reference mark, numbered by its
  * place in the text (the renderer's `numberFootnotes`, so the editor and the
  * site agree), and the note as the site draws it. In the page frame with
  * both rails showing, every note stands in the margin, as on the site
  * (studio/sidenotes.ts): a click on the mark opens the note there in full,
- * and a click on the note opens Sanity's own dialog, which edits it. In a
- * narrower frame the selected note opens under its mark, and a click on
- * the mark or the note opens the dialog.
+ * and a click on the note opens it for writing in its own box
+ * (NoteInPlace). In a narrower frame the selected note opens under its
+ * mark, and a click on the mark or the note opens Sanity's dialog.
  */
 export function FootnoteInline(props: BlockProps): ReactNode {
   useInsertionEffect(injectNoteCss, []);
@@ -242,10 +320,24 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const root = useFormValue(props.path.slice(0, 1));
   const keys = keysOf(props.path);
   const id = keys.join("/");
+  const me = JSON.stringify(props.path);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
   );
+  // A note in the text itself, written while its box stands in the margin,
+  // is written in that box: Sanity's own form for the note (props.children,
+  // the input its dialog would hold) renders there instead of the dialog.
+  // Sanity closes an item when the caret leaves it; the box stays open
+  // until Escape or another note opens (`writing`).
+  const writingNow = useWriting();
+  const top = margin && keys.length === 2;
+  const inPlace = top && (writingNow === me || props.open);
+  // A note Sanity opens itself (a new note from the toolbar) is written in
+  // place too, and stays open like one opened by a click.
+  useEffect(() => {
+    if (top && props.open) setWriting(me, true);
+  }, [top, props.open, me]);
   const picked = (props.selected || props.focused) && !props.open;
   // Only a note in the text itself has a box on the site; a note inside a
   // note shows as its number here, and as its own box under its parent's
@@ -256,12 +348,12 @@ export function FootnoteInline(props: BlockProps): ReactNode {
       : undefined;
   // The site's own class (fn) sits one element in: the note styles are
   // scoped to this mark, and a scoped rule reaches only below its root.
-  // In the margin, the note being edited in its dialog stays open in full
-  // (fn-pin, read by the layout script).
+  // In the margin, the note being written stays open in full (fn-pin, read
+  // by the layout script).
   const state = [
     "fn",
     note && !margin ? "fn-pop" : "",
-    note && margin && props.open ? "fn-pin" : "",
+    inPlace ? "fn-pin" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -272,12 +364,18 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
-        // In the margin, a click on the mark opens its note in full there
-        // (the layout script's own click), not the dialog.
-        if (note && margin && (e.target as Element).closest?.(".fn-ref"))
-          return;
+        const t = e.target as Element;
+        // A click in the note being written is the writer's own.
+        if (t.closest?.(".fn-edit")) return;
         // A link in the note's markup must not leave the Studio.
-        if ((e.target as Element).closest?.("a")) e.preventDefault();
+        if (t.closest?.("a")) e.preventDefault();
+        if (note && margin) {
+          // In the margin, a click on the mark opens its note in full there
+          // (the layout script's own click); a click on the note opens it
+          // for writing.
+          if (!t.closest?.(".fn-ref")) setWriting(me, true);
+          return;
+        }
         // After the click has moved the editor's focus: inside a note's
         // dialog, opening at once is undone by that focus change.
         window.setTimeout(() => props.onOpen(), 0);
@@ -286,13 +384,25 @@ export function FootnoteInline(props: BlockProps): ReactNode {
       <span className={state}>
         {props.renderDefault({
           ...props,
+          // Written in place, the note needs no dialog.
+          open: inPlace ? false : props.open,
           renderPreview: () => (
             <span className="fn-ref">
               <sup>{n ?? "*"}</sup>
             </span>
           ),
         })}
-        {note ? (
+        {inPlace ? (
+          <NoteInPlace
+            n={n}
+            onClose={() => {
+              setWriting(null);
+              props.onClose();
+            }}
+          >
+            {props.children}
+          </NoteInPlace>
+        ) : note ? (
           <span
             className="fn-note"
             role="note"
@@ -300,7 +410,7 @@ export function FootnoteInline(props: BlockProps): ReactNode {
             dangerouslySetInnerHTML={{ __html: note.html }}
           />
         ) : null}
-        {note?.subs && margin ? (
+        {note?.subs && margin && !inPlace ? (
           <span
             className="blog-pt-subs"
             contentEditable={false}

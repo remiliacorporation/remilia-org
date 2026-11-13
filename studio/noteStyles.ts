@@ -13,8 +13,12 @@ export const NOTE_ROOTS = ".blog-pt-note, .blog-note-edit";
 
 export const NOTES_CSS = scopeBlogCss(`${notesCss}\n${sidenotesCss}`, {
   root: `:is(${NOTE_ROOTS})`,
-  // Sanity's own controls inside the note's dialog keep their look.
-  limit: "[data-ui='Button'], [data-ui='TextInput'], [data-ui='Menu']",
+  // Sanity's own controls inside the note's dialog keep their look, and so
+  // does the form of a note written in its box (NoteInPlace): the box's
+  // own rules, such as the inverted look of a note pointed at, stop at it.
+  // The note's text inside that form is a root of its own (.blog-note-edit).
+  limit:
+    "[data-ui='Button'], [data-ui='TextInput'], [data-ui='Menu'], .fn-edit-form",
   container: "blog-page",
 });
 

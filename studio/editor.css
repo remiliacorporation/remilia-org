@@ -872,6 +872,64 @@
   overflow: visible;
 }
 
+/* A note written in place (NoteInPlace, studio/portableText.tsx) keeps the
+   page's colors: the inverted look is for a note pointed at, and the
+   writer needs the editor's own caret, selection, and controls. Its box
+   stands where the note's box stood, in the note's type. */
+.blog-pt-note .fn > .fn-note.fn-edit {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  z-index: 7;
+  cursor: auto;
+  user-select: text;
+}
+.blog-pt-note .fn > .fn-note.fn-edit :is(strong, .fn-par, .fn-q) {
+  color: var(--ink) !important;
+}
+.blog-pt-note .fn-edit .fn-edit-form {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+/* The layout script measures the form as the note's text (sn-text) and
+   would cut it to a height; the form grows as it is written instead. */
+.blog-pt-note .fn-edit .fn-edit-form.sn-text {
+  height: auto !important;
+  overflow: visible !important;
+}
+.blog-pt-note .fn > .fn-note.fn-edit::after {
+  content: none;
+}
+/* Sanity's field label and the editor's page-sized frame have no place
+   in a note's box. */
+.blog-pt-note .fn-edit [data-testid^="field-"] > [data-ui="Flex"]:first-child {
+  display: none;
+}
+.blog-pt .fn-edit .blog-note-edit {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.blog-pt .fn-edit [data-testid="pt-editor"] {
+  min-height: 0 !important;
+  background: transparent;
+}
+.blog-pt .fn-edit [data-pt-editor] {
+  min-height: 0;
+  padding: 0;
+  font-size: var(--size-base);
+  line-height: var(--leading);
+}
+.blog-pt .fn-edit [data-testid="pt-editor__toolbar-card"] {
+  padding: 0 !important;
+}
+/* The body editor's own rule for its border layer ([data-border], raised
+   over its text) reaches every input inside it, so a text box in the note
+   would be hidden under its own border layer. */
+.blog-pt .fn-edit-form :is([data-ui="TextArea__presentation"], [data-ui="TextInput__presentation"]) {
+  z-index: 0;
+}
+
 /* Without the margin, the selected note opens under its mark, where the
    site opens it. */
 .blog-pt-note > .fn-pop > .fn-note {
