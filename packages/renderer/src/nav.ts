@@ -665,6 +665,10 @@ export const NAV_JS = `(() => {
       const fr = fn.getBoundingClientRect();
       const x = Math.max(cr.left, Math.min(fr.left, cr.right - note.offsetWidth - 2));
       note.style.left = x - fr.left + 'px';
+      // The hit area on the mark's line runs to the column's two edges and
+      // no further, so the pointer can cross to the note at a slant.
+      fn.style.setProperty('--fn-hit-l', Math.max(0, fr.left - cr.left) + 'px');
+      fn.style.setProperty('--fn-hit-r', Math.max(0, cr.right - fr.right) + 'px');
     };
     document.addEventListener('pointerover', (e) => {
       const fn = e.target && e.target.closest && e.target.closest('.fn');

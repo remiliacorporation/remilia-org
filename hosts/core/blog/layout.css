@@ -745,15 +745,18 @@
   .fn {
     position: relative;
   }
-  /* A hit area around the mark, so the pointer can cross to the note. */
+  /* A hit area on the mark's line, so the pointer can cross to the note,
+     which opens right under it. The page script sets how far it runs to
+     each edge of the column; a fixed width past the column made the page
+     scroll sideways on a phone. */
   .fn:hover::before,
   .fn:focus-within::before {
     content: "";
     position: absolute;
     top: calc(-1 * var(--grid));
     bottom: calc(-1 * var(--space-s));
-    left: calc(-1 * var(--measure) * 0.75);
-    right: calc(-1 * var(--measure) * 0.75);
+    left: calc(-1 * var(--fn-hit-l, var(--space-s)));
+    right: calc(-1 * var(--fn-hit-r, var(--space-s)));
   }
   .fn:hover .fn-note,
   .fn:focus-within .fn-note {
@@ -828,6 +831,9 @@
   .fn-note .sn-text {
     max-height: var(--sn-cut, calc(6 * var(--size-ui) * var(--leading)));
     overflow: hidden;
+    /* Cut the height only: an italic letter at the end of a full line
+       leans past the box's edge, and clipping the width shaved it. */
+    overflow: visible clip;
   }
   .fn-note[data-long]::after {
     content: "\2026";

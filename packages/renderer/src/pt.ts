@@ -293,6 +293,14 @@ function fnBodyHtml(def: MarkDef, state: RenderState, trim = true): string {
   return `${body}${fnImgHtml(def, state)}`;
 }
 
+/**
+ * Two marks with nothing between them read as one number ("23"), so a
+ * superscript comma goes between: a note's closing tags, then the next
+ * note's opening tag. A space alone between two marks gives way to it.
+ */
+const ADJACENT_NOTES = /(<\/span><\/span><\/span>)\s*(?=<span class="fn" id=)/g;
+const FN_SEP = '$1<sup class="fn-sep" aria-hidden="true">,</sup>';
+
 /** A nested note's reference carries its id only in the endnotes copy. */
 const withoutIds = (html: string): string =>
   html.replace(/(<a class="fn-xref") id="fn-[^"]*"/g, "$1");
@@ -588,5 +596,5 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   }
   closeH2();
 
-  return out.join("\n");
+  return out.join("\n").replace(ADJACENT_NOTES, FN_SEP);
 }

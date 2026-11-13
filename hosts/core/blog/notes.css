@@ -20,9 +20,15 @@
   text-decoration: none;
 }
 .fn-ref sup,
-.fn-xref sup {
+.fn-xref sup,
+.fn-sep {
   font-size: smaller;
   line-height: 0;
+}
+/* The comma between two marks that stand side by side. */
+.fn-sep {
+  font-weight: var(--weight-strong);
+  user-select: none;
 }
 /* On a phone the number is about 7px wide. An unseen area the size of a
    text line (24px square) around it takes the tap. Each number sits above
@@ -75,11 +81,14 @@
   max-width: 100%;
   height: auto;
 }
+/* A mark inside a note is a link; the link's underline would show as a
+   dash under the raised number, so it has none. */
 .fn-note .fn-xref,
 .fn-end .fn-xref {
   position: relative;
   z-index: 1;
   font-weight: var(--weight-strong);
+  text-decoration: none;
   user-select: none;
 }
 .fn-hit {

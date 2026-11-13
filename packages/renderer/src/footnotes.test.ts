@@ -165,6 +165,23 @@ test("a note holds paragraphs, a block quote, marks, and links, in the box and i
   );
 });
 
+test("two marks side by side have a comma between them, so they do not read as one number", () => {
+  const sep = '<sup class="fn-sep" aria-hidden="true">,</sup>';
+  const html = portableTextToHtml(
+    [
+      block("p1", [span("Two", "a"), note("n1", "One."), note("n2", "Two."), span(" and a space", "b")]),
+      block("p2", [span("then", "c"), note("n3", "Three."), span(" ", "d"), note("n4", "Four.")]),
+      block("p3", [span("apart", "e"), note("n5", "Five."), span(" word", "f"), note("n6", "Six.")]),
+    ],
+    OPTS,
+  );
+  const [p1, p2, p3] = html.split("\n");
+  assert.ok(p1.includes(`</span>${sep}<span class="fn" id="fn-2">`));
+  assert.ok(p2.includes(`</span>${sep}<span class="fn" id="fn-4">`));
+  assert.equal(p3.includes("fn-sep"), false);
+  assert.equal(html.split("fn-sep").length - 1, 2);
+});
+
 test("a note inside a note: one sequence in reading order, linked both ways", () => {
   const inner = note("in", "The inner note.");
   const outer = {
