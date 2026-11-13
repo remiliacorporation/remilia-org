@@ -231,6 +231,10 @@ footer {
   position: relative;
   z-index: 1;
 }
+/* A dropdown can hang past the end of a short page; it stays above the footer. */
+.layout {
+  z-index: 2;
+}
 .wm {
   position: fixed;
   inset: 0;

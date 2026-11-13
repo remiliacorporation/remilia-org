@@ -1,5 +1,5 @@
 import { THEME_JS } from "./theme";
-import { NAV_SEARCH, datedHtml } from "./nav";
+import { NAV_SEARCH, datedHtml, emptyRail } from "./nav";
 import {
   type Channel,
   CHANNEL_BASEPATH,
@@ -649,6 +649,8 @@ ${recent
     noindex: true,
     channel: input.channel,
     chrome,
+    // The frame every other page has, so the head keeps its box on a phone.
+    leftRail: emptyRail(),
     mainHtml: `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">

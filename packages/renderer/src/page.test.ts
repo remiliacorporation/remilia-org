@@ -150,6 +150,8 @@ test("section 404 is noindex and offers a way back into the section", () => {
     ],
   });
   assert.ok(nf.includes('content="noindex"'));
+  // The head sits in the left rail, where it is boxed at every width.
+  assert.ok(nf.includes(`<div class="left-rail">\n${CHROME.header}`));
   assert.ok(nf.includes('<a href="/blog/vaults">Vaults</a>'));
   assert.ok(nf.includes('<time datetime="2026-08-01T00:00:00Z">2026-08-01</time>'));
   assert.ok(nf.includes('<a href="/blog">Devblog index</a>'));
