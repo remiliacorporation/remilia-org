@@ -405,10 +405,13 @@
 .left-rail .toc {
   order: 3;
 }
-.right-rail .post-nav {
+.left-rail .post-nav {
   order: 6;
 }
-.right-rail .post-nav {
+.post-nav:empty {
+  display: none;
+}
+.left-rail .post-nav {
   padding: 0;
   align-items: stretch;
 }

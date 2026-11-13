@@ -31,6 +31,9 @@ export interface PageInput {
 
   citeHtml?: string;
 
+  /** A post's reading time, word count and copy links: the right rail's box. */
+  readHtml?: string;
+
   layoutClass?: string;
 
   bodyEnd?: string;
@@ -296,14 +299,15 @@ ${
     ? `<div class="side-col">
 <div class="left-rail">
 ${header}
+${themeSelHtml(theme)}
+${p.leftRail}
 <div class="left-stack">
 ${p.tocHtml ?? ""}
 ${p.citeHtml ?? ""}
 </div>
 </div>
 <div class="right-rail">
-${themeSelHtml(theme)}
-${p.leftRail}
+${p.readHtml ?? ""}
 </div>
 </div>`
     : header
@@ -317,9 +321,72 @@ ${p.bodyEnd ?? ""}
 `;
 }
 
-/** The section row and its rule, above a masthead's own rows. */
+/**
+ * Advance widths of the masthead title's face (Alte Haas Grotesk Bold), in
+ * thousandths of an em, for the capitals a title is set in. Measured in the
+ * browser from the shipped font; a glyph missing here counts a full em.
+ */
+const TITLE_GLYPHS = new Map<string, number>(
+  (
+    [
+      ["|", 223],
+      ["`", 259],
+      [" !',.:;‘’", 278],
+      ["I", 295],
+      ["()", 296],
+      ["[]{}", 333],
+      ["/\\", 371],
+      ["*-", 407],
+      ["\"“”", 463],
+      ["_–", 500],
+      ["#$0123456789?J", 556],
+      ["FL", 593],
+      ["+<=>^~", 600],
+      ["T", 611],
+      ["V", 630],
+      ["EZÉ", 648],
+      ["S", 649],
+      ["PXY", 667],
+      ["&A", 685],
+      ["B", 704],
+      ["KR", 722],
+      ["CDHNU", 741],
+      ["G", 759],
+      ["OQ", 778],
+      ["@", 800],
+      ["M", 907],
+      ["W", 944],
+      ["%—…", 1000],
+    ] as [string, number][]
+  ).flatMap(([chars, w]) => [...chars].map((c): [string, number] => [c, w])),
+);
+
+/**
+ * A title's width on one line, in ems: its capitals' advances plus the caps
+ * tracking, with a little slack for rounding. The masthead divides its width
+ * by this to find the size at which the title fits one line.
+ */
+export function titleEm(title: string): number {
+  let em = 0;
+  for (const c of title.toUpperCase())
+    em += (TITLE_GLYPHS.get(c) ?? 1000) / 1000 + 0.03;
+  return Math.ceil(em * 1.02 * 100) / 100;
+}
+
+/**
+ * The class that sizes a title to one line: its width rounded up to a whole
+ * em, which the stylesheet turns into a size. A title of 19 ems or less fits
+ * every masthead at display size and takes no class; past 41 ems it is at
+ * the smallest size everywhere and wraps.
+ */
+function titleFit(title: string): string {
+  const em = Math.ceil(titleEm(title));
+  return em <= 19 ? "" : ` class="title-fit-${Math.min(em, 41)}"`;
+}
+
+/** A rule and the section row, under a masthead's own rows. */
 function mastNav(nav?: string): string {
-  return nav ? `${nav}\n<hr class="nav-rule mast-nav-rule">\n` : "";
+  return nav ? `\n<hr class="nav-rule mast-nav-rule">\n${nav}` : "";
 }
 
 function bylineDate(iso: string): string {
@@ -449,13 +516,13 @@ export function articleHtml(input: {
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">
 <div class="sec mast">
-${mastNav(input.sectionNav)}<header>
+<header>
 <div class="byline">${dated}${cat}${author}</div>
 <hr class="nav-rule">
-<h1>${esc(input.title)}</h1>
+<h1${titleFit(input.title)}>${esc(input.title)}</h1>
 <hr class="nav-rule mast-tools-rule">
 <p class="mast-tools">${read}<label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">—</span> Contents</label>${copy}</p>
-</header>
+</header>${mastNav(input.sectionNav)}
 </div>
 <div class="article-rest">
 <div class="sec">

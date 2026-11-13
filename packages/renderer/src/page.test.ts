@@ -11,6 +11,7 @@ import {
   cardHtml,
   termIndexMain,
   type Chrome,
+  titleEm,
 } from "./page";
 import { authorSel, dateSel, filterBox, leftRail, sectionNav } from "./nav";
 import { breadcrumbs } from "@remilia/seo";
@@ -93,6 +94,7 @@ test("page shell emits the fixed semantic structure", () => {
   assert.ok(
     PAGE.includes('<time datetime="2026-08-01T00:00:00.000Z">08.01.26</time>'),
   );
+  // A short title fits at display size and takes no sizing class.
   assert.ok(PAGE.includes("<h1>Vaults</h1>"));
   assert.ok(PAGE.includes('<link rel="stylesheet" href="/blog/blog.css">'));
 });
@@ -167,7 +169,7 @@ test("section 404 without posts still routes somewhere useful", () => {
   assert.ok(nf.includes("/blog/sitemap.xml"));
 });
 
-test("article rails put ToC then cite on the left and post-nav on the right", () => {
+test("article rails put the theme, post list, then ToC on the left and the read info on the right", () => {
   const html = htmlPage({
     title: "Vaults — Devblog",
     description: "How vaults work.",
@@ -176,7 +178,7 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
     chrome: CHROME,
     leftRail: `<div class="post-nav">nav</div>`,
     tocHtml: `<div class="toc">toc</div>`,
-    citeHtml: citeBox({
+    readHtml: citeBox({
       canonical: "https://www.remilia.net/blog/vaults",
       mdHref: "/blog/vaults.md",
       txtHref: "/blog/vaults.txt",
@@ -193,12 +195,13 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
     }),
   });
   const left = html.indexOf('class="left-rail"');
-  const toc = html.indexOf('class="toc"');
-  const cite = html.indexOf('class="cite-box"');
-  const right = html.indexOf('class="right-rail"');
+  const theme = html.indexOf('class="theme-sel"');
   const nav = html.indexOf('class="post-nav"');
+  const toc = html.indexOf('class="toc"');
+  const right = html.indexOf('class="right-rail"');
+  const cite = html.indexOf('class="cite-box"');
   assert.ok(
-    left >= 0 && toc > left && cite > toc && cite < right && nav > right,
+    left >= 0 && theme > left && nav > theme && toc > nav && right > toc && cite > right,
   );
   assert.ok(html.includes("3 min read — 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
@@ -206,6 +209,23 @@ test("article rails put ToC then cite on the left and post-nav on the right", ()
   assert.ok(html.includes("[URL]"));
   assert.ok(html.includes(">[MD]</button>"));
   assert.ok(html.includes(">[TXT]</button>"));
+});
+
+test("a title's one-line width grows with its length and counts unknown glyphs wide", () => {
+  assert.ok(titleEm("Vaults") < titleEm("Vaults and Rails"));
+  // Set in capitals, so case does not change the width.
+  assert.equal(titleEm("vaults"), titleEm("VAULTS"));
+  // I is the narrowest capital and W the widest; a glyph with no entry is a full em.
+  assert.ok(titleEm("I") < titleEm("W") && titleEm("W") < titleEm("\u4e00"));
+});
+
+test("a long title is classed by its width in whole ems, up to the size where it wraps", () => {
+  const h1 = (title: string) =>
+    /<h1[^>]*>/.exec(articleHtml({ title, publishedAt: "2026-08-01T00:00:00Z", bodyHtml: "" }))?.[0];
+  assert.equal(h1("Vaults"), "<h1>");
+  const long = "KALI/ACC Basilisk: A Survival Horror Eschatology";
+  assert.equal(h1(long), `<h1 class="title-fit-${Math.ceil(titleEm(long))}">`);
+  assert.equal(h1(long.repeat(3)), '<h1 class="title-fit-41">');
 });
 
 test("adjacent posts are older left and newer right", () => {
@@ -267,7 +287,7 @@ test("the section row links every section, All first, and marks the one shown", 
   assert.equal(sectionNav({ cats: [{ label: "News", href: "/a/blog/news" }], current: "News" }), "");
 });
 
-test("the section row heads a post's masthead; the byline keeps its section link", () => {
+test("the section row closes a post's masthead; the byline keeps its section link", () => {
   const html = articleHtml({
     title: "Vaults",
     publishedAt: "2026-08-01T00:00:00Z",
@@ -279,7 +299,7 @@ test("the section row heads a post's masthead; the byline keeps its section link
   });
   assert.match(
     html,
-    /<div class="sec mast">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<hr class="nav-rule mast-nav-rule">\n<header>\n<div class="byline">/,
+    /<div class="sec mast">\n<header>\n<div class="byline">[\s\S]*<\/header>\n<hr class="nav-rule mast-nav-rule">\n<nav class="sec-nav"[\s\S]*<\/nav>\n<\/div>/,
   );
   assert.match(html, /<div class="byline">[\s\S]*<a class="byline-cat" href="\/blog\/press">Press<\/a>[\s\S]*class="author"/);
   assert.equal(html.includes("<details"), false);

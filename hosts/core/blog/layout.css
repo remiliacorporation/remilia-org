@@ -27,6 +27,140 @@
     font-size: var(--size-display);
     line-height: calc(var(--size-display) + var(--grid));
   }
+  /* A title is set on one line: the bake classes each long title by its
+     width in whole ems, and the size comes down from display until that
+     width fits the mast. Below the body size the title wraps instead. */
+  .sec.mast > header {
+    container-type: inline-size;
+  }
+  .sec.mast h1[class^="title-fit-"] {
+    font-size: clamp(
+      var(--size-base),
+      calc(100cqi / var(--title-em)),
+      var(--size-display)
+    );
+  }
+  .title-fit-20 {
+    --title-em: 20;
+  }
+  .title-fit-21 {
+    --title-em: 21;
+  }
+  .title-fit-22 {
+    --title-em: 22;
+  }
+  .title-fit-23 {
+    --title-em: 23;
+  }
+  .title-fit-24 {
+    --title-em: 24;
+  }
+  .title-fit-25 {
+    --title-em: 25;
+  }
+  .title-fit-26 {
+    --title-em: 26;
+  }
+  .title-fit-27 {
+    --title-em: 27;
+  }
+  .title-fit-28 {
+    --title-em: 28;
+  }
+  .title-fit-29 {
+    --title-em: 29;
+  }
+  .title-fit-30 {
+    --title-em: 30;
+  }
+  .title-fit-31 {
+    --title-em: 31;
+  }
+  .title-fit-32 {
+    --title-em: 32;
+  }
+  .title-fit-33 {
+    --title-em: 33;
+  }
+  .title-fit-34 {
+    --title-em: 34;
+  }
+  .title-fit-35 {
+    --title-em: 35;
+  }
+  .title-fit-36 {
+    --title-em: 36;
+  }
+  .title-fit-37 {
+    --title-em: 37;
+  }
+  .title-fit-38 {
+    --title-em: 38;
+  }
+  .title-fit-39 {
+    --title-em: 39;
+  }
+  .title-fit-40 {
+    --title-em: 40;
+  }
+  .title-fit-41 {
+    --title-em: 41;
+  }
+  /* The theme swatches are the site head's last row: one box, with a rule
+     between the wordmark and the swatches, and no heading. */
+  .left-rail > .site-head {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .left-rail > .theme-sel {
+    position: relative;
+    margin-top: calc(-1 * var(--rail-gap));
+    padding: var(--space-xs);
+    border: var(--border);
+    border-top: 0;
+    background: var(--surface);
+    display: grid;
+    grid-template-rows: var(--border-w) var(--mast-line);
+    row-gap: var(--space-xs);
+  }
+  .left-rail > .theme-sel .theme-label {
+    display: none;
+  }
+  .left-rail > .theme-sel .nav-rule {
+    display: block;
+    margin: 0;
+    height: 0;
+    align-self: center;
+  }
+  .left-rail > .theme-sel .theme-controls {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: var(--mast-line);
+    padding: 0;
+    border: 0;
+    gap: var(--grid);
+  }
+  .left-rail > .theme-sel .theme-hues,
+  .left-rail > .theme-sel .theme-dots {
+    height: var(--mast-line);
+  }
+  /* A listing's sections box is as tall as the site head beside it, which
+     the swatch row made one row taller; the links take the spare height. */
+  .sec.mast.index-mast {
+    min-height: calc(
+      var(--mast-box) + 2 * var(--space-xs) + var(--border-w) +
+        var(--mast-line)
+    );
+  }
+  .sec.mast.list-mast:has(> .sec-nav) {
+    grid-template-rows: var(--mast-line) var(--border-w) 1fr;
+  }
+  .list-mast > .sec-nav {
+    align-self: center;
+  }
   /* The site head sits beside the mast from here up. Row 1 and the rule
      stay packed to the top, level with the mast's; the brand row takes
      the rest of the box, centred against the title. */
@@ -165,7 +299,7 @@
   .cite-box {
     display: none;
   }
-  .right-rail .theme-sel {
+  .left-rail .theme-sel {
     display: contents;
   }
   .post-nav {
@@ -262,7 +396,7 @@
 }
 @media (min-width: 1280px) {
   :root {
-    --read-pad: calc(2 * var(--space));
+    --read-pad: calc(3 * var(--space));
   }
 }
 /* Beside one column the rails fold into one sticky stack, each box built
@@ -295,21 +429,23 @@
     max-width: var(--rail);
     max-height: calc(100dvh - 2 * var(--rail-gap));
     overflow: auto;
-    scrollbar-gutter: stable;
+    /* No scrollbar gutter: a reserved gutter made the gap between this
+       stack and the column wider than the column's other side. */
+    scrollbar-width: none;
     z-index: 5;
   }
   .left-rail,
   .right-rail {
     display: contents;
   }
-  .right-rail > .theme-sel {
-    order: 1;
-  }
-  .left-rail > .cite-box {
+  .left-rail > .theme-sel {
     order: 2;
   }
-  .right-rail > .post-nav {
+  .right-rail > .cite-box {
     order: 3;
+  }
+  .left-rail > .post-nav {
+    order: 4;
   }
   .article-wrap {
     grid-column: 2;
@@ -355,29 +491,6 @@
     max-width: none;
     margin: 0;
   }
-  .theme-sel .nav-rule {
-    display: block;
-    margin: 0;
-    height: 0;
-    align-self: center;
-  }
-  .theme-label {
-    height: var(--mast-line);
-    padding: 0;
-    border: 0;
-    cursor: default;
-  }
-  .theme-controls {
-    display: flex;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: var(--mast-title);
-    padding: 0;
-    border: 0;
-    gap: var(--grid);
-  }
   .toc {
     border: var(--border);
     padding: var(--space-xs);
@@ -393,16 +506,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);
-    order: 2;
+    order: 5;
   }
   .left-rail .site-head {
     order: 1;
-  }
-  .right-rail .theme-sel {
-    order: 1;
-  }
-  .right-rail .post-nav {
-    order: 2;
   }
 }
 @media (min-width: 1100px) {
@@ -434,7 +541,9 @@
     max-width: var(--rail);
     max-height: calc(100dvh - 2 * var(--rail-gap));
     overflow: auto;
-    scrollbar-gutter: stable;
+    /* No scrollbar gutter: a reserved gutter made the gap between the
+       rail and the column wider than the gap on the column's right. */
+    scrollbar-width: none;
     margin: 0;
     padding: 0;
     pointer-events: auto;
@@ -462,14 +571,17 @@
     flex-direction: column;
     gap: var(--rail-gap);
     min-width: 0;
-    order: 2;
+    order: 4;
+  }
+  .left-rail .post-nav {
+    order: 3;
   }
   .left-rail .site-head,
   .left-rail .toc,
-  .left-rail .cite-box,
+  .right-rail .cite-box,
   .left-rail .left-stack,
-  .right-rail .theme-sel,
-  .right-rail .post-nav {
+  .left-rail .theme-sel,
+  .left-rail .post-nav {
     pointer-events: auto;
     width: 100%;
     max-width: var(--rail);
@@ -479,14 +591,10 @@
     -webkit-hyphens: auto;
     hyphens: auto;
   }
-  .left-rail .site-head,
-  .right-rail .theme-sel {
+  .right-rail .cite-box {
     grid-row: 1;
     height: auto;
     align-self: stretch;
-  }
-  .right-rail .post-nav {
-    grid-row: 2;
   }
   .left-rail .toc {
     max-width: var(--toc-rail);
@@ -524,20 +632,22 @@
   .article-rest > .list-empty {
     margin-bottom: 0;
   }
-  .right-rail .post-nav {
+  .left-rail .post-nav {
     display: flex;
     padding: 0;
     align-items: stretch;
   }
   .cite-box {
-    display: block;
+    display: grid;
     text-align: center;
   }
+  /* The read info is level with the masthead: its first line and rule sit
+     on the mast's, and the copy links take the rest of the height. */
   .cite-box .nav-box {
     display: grid;
     grid-template-rows: var(--mast-line) var(--border-w) minmax(
         var(--mast-line),
-        auto
+        1fr
       );
     row-gap: var(--space-xs);
     padding: var(--space-xs);
@@ -564,6 +674,7 @@
     height: auto;
     min-height: var(--mast-line);
     line-height: var(--mast-line);
+    align-self: center;
   }
   .post-nav > .disclosure-label {
     display: none;
@@ -573,57 +684,11 @@
     max-width: none;
     margin: 0;
   }
-  .theme-sel {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: 100%;
-    max-width: var(--rail);
-    padding: var(--space-xs);
-    border: var(--border);
-    background: var(--surface);
-    display: grid;
-    /* The swatch row fills what a two-line mast title adds to the row. */
-    grid-template-rows: var(--mast-line) var(--border-w) minmax(
-        var(--mast-title),
-        1fr
-      );
-    row-gap: var(--space-xs);
-  }
-  .theme-sel .nav-rule {
-    display: block;
-    margin: 0;
-    height: 0;
-    align-self: center;
-  }
-  .theme-label {
-    height: var(--mast-line);
-    min-height: 0;
-    line-height: var(--mast-line);
-    padding: 0;
-    border: 0;
-    cursor: default;
-  }
-  .theme-controls {
-    display: flex;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: var(--mast-title);
-    align-self: center;
-    padding: 0;
-    border: 0;
-    gap: var(--grid);
-  }
   .left-rail .site-head nav {
     height: auto;
     min-height: var(--mast-line);
     white-space: normal;
     flex-wrap: wrap;
-  }
-  .theme-sel {
-    align-items: stretch;
   }
   .sec.mast > header {
     align-content: start;
@@ -652,32 +717,137 @@
     display: grid;
   }
 }
-.fn {
-  position: relative;
+/* Beside one column or none, a note opens under its mark on hover or
+   focus; the full notes list at the foot of the post. */
+@media (max-width: 1099px) {
+  .fn {
+    position: relative;
+  }
+  /* A hit area around the mark, so the pointer can cross to the note. */
+  .fn:hover::before,
+  .fn:focus-within::before {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--grid));
+    bottom: calc(-1 * var(--space-s));
+    left: calc(-1 * var(--measure) * 0.75);
+    right: calc(-1 * var(--measure) * 0.75);
+  }
+  .fn:hover .fn-note,
+  .fn:focus-within .fn-note {
+    display: flex;
+    gap: var(--grid);
+    align-items: flex-start;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: calc(var(--measure) * 0.75);
+    max-width: min(
+      calc(var(--measure) * 0.75),
+      calc(100vw - 2 * var(--rail-gap))
+    );
+    margin: 0;
+    padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
+    z-index: 30;
+    pointer-events: auto;
+  }
 }
-.fn:hover .fn-note,
-.fn:focus-within .fn-note {
-  display: flex;
-  gap: var(--grid);
-  align-items: flex-start;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: calc(var(--measure) * 0.75);
-  max-width: min(calc(var(--measure) * 0.75), calc(100vw - 2 * var(--rail-gap)));
-  margin: 0;
-  padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
-  z-index: 30;
-  pointer-events: auto;
-}
+/* With both rails, every note stands in the margin beside its mark, in
+   the right rail's column, tied to the column by a short rule. The page
+   script drops a note that would overlap the one above and draws the
+   elbow (--fn-drop) back up to its line. Pointing at a mark or its note
+   inverts both. */
 @media (min-width: 1100px) {
-  .right-rail,
-  .right-rail .post-nav {
+  .fn-note {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: flex-start;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: var(--rail);
+    max-width: var(--rail);
+    margin: 0 0 0 var(--sidenote-gap);
+    padding: var(--space-xs);
+    z-index: 1;
+    pointer-events: auto;
+    user-select: text;
+    cursor: text;
+    --size-base: var(--size-ui);
+  }
+  .fn-note::before {
+    content: "";
+    display: block;
+    position: absolute;
+    right: 100%;
+    top: calc(var(--space-xs) + var(--size-ui) * var(--leading) / 2);
+    width: var(--rail-gap);
+    height: var(--border-w);
+    background: var(--ink);
     pointer-events: none;
   }
-  .right-rail .theme-sel,
-  .right-rail .post-nav .nav-box,
-  .right-rail .post-nav .disclosure-label {
+  .fn-note[data-drop]::before {
+    top: calc(
+      var(--space-xs) + var(--size-ui) * var(--leading) / 2 - var(--fn-drop)
+    );
+    height: var(--fn-drop);
+    background: none;
+    border-top: var(--border-w) solid var(--ink);
+    border-right: var(--border-w) solid var(--ink);
+  }
+  /* A long note shows its first lines, so the notes after it stay near
+     their own marks; pointing at it or its mark, or tabbing to the mark,
+     opens the whole note over the ones below. The page script marks a
+     note long (data-long) when its text is cut. */
+  .fn-note .sn-text {
+    max-height: calc(12 * var(--size-ui) * var(--leading));
+    overflow: hidden;
+  }
+  .fn-note[data-long]::after {
+    content: "\2026";
+    position: absolute;
+    right: var(--space-xs);
+    bottom: 0;
+    padding-left: var(--grid);
+    background: var(--surface);
+    font-weight: var(--weight-strong);
+    line-height: var(--mast-line);
+  }
+  .fn:hover .fn-note,
+  .fn:focus-within .fn-note {
+    z-index: 6;
+  }
+  .fn:hover .fn-note .sn-text,
+  .fn:focus-within .fn-note .sn-text {
+    max-height: none;
+  }
+  .fn:hover .fn-note[data-long]::after,
+  .fn:focus-within .fn-note[data-long]::after {
+    content: none;
+  }
+  .fn:hover .fn-ref,
+  .fn:hover .fn-ref sup,
+  .fn:hover .fn-note,
+  .fn:focus-within .fn-note {
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+  .fn:hover .fn-note *,
+  .fn:focus-within .fn-note * {
+    color: var(--ink-contrast);
+  }
+  .fn:hover .fn-note a:hover,
+  .fn:hover .fn-note a:hover * {
+    background: var(--ink-contrast);
+    color: var(--ink);
+  }
+  .right-rail,
+  .left-rail .post-nav {
+    pointer-events: none;
+  }
+  .left-rail .theme-sel,
+  .left-rail .post-nav .nav-box,
+  .left-rail .post-nav .disclosure-label {
     pointer-events: auto;
   }
 }
@@ -695,6 +865,33 @@
 @media (max-width: 639px) {
   .post-card:has(.card-thumb) .card-row {
     grid-template-columns: calc(24 * var(--grid)) minmax(0, 1fr);
+  }
+}
+/* On a phone the article has no window: no border around the text and no
+   patterned ground behind it, so the text takes the full width inside a
+   16px gutter. The head, the masthead, listing cards and the footer keep
+   their boxes, on the plain surface. */
+@media (max-width: 639px) {
+  .wm {
+    display: none;
+  }
+  body {
+    background: var(--surface);
+  }
+  .layout,
+  footer {
+    width: min(
+      var(--column),
+      calc(
+        100% - 2 * var(--space-s) - env(safe-area-inset-left, 0px) -
+          env(safe-area-inset-right, 0px)
+      )
+    );
+  }
+  .article-rest > .sec:has(> .prose),
+  .article-rest > .post-meta {
+    border: 0;
+    padding: var(--space-s) 0;
   }
 }
 @media (min-width: 640px) {

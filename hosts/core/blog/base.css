@@ -25,6 +25,9 @@
   --read-pad: var(--space-l);
   --read-pad-y: var(--space-l);
   --column: calc(var(--measure) + 2 * (var(--read-pad) - var(--gutter)));
+  /* From the text's right edge to a sidenote: the prose box's padding and
+     border, then the gap the rails keep from the column. */
+  --sidenote-gap: calc(var(--read-pad) + var(--border-w) + var(--rail-gap));
 
   --mast-box: calc(
     3 * var(--border-w) + 4 * var(--space-xs) + var(--mast-line) +

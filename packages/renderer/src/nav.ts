@@ -626,9 +626,11 @@ export const NAV_JS = `(() => {
       };
       requestAnimationFrame(step);
     };
+    const wide = matchMedia('(min-width: 1100px)');
     const fitNote = (fn) => {
       const note = fn && fn.querySelector('.fn-note');
-      if (!note) return;
+      // From 1100px a note stands in the margin, placed by the stacking pass.
+      if (!note || wide.matches) return;
       note.style.left = '';
       const col = fn.closest('.prose, .article-rest, .article-body');
       if (!col) return;
@@ -707,19 +709,86 @@ export const NAV_JS = `(() => {
 })();
 // The site-head sits beside the masthead from 824px, in a sticky rail
 // that can't subgrid like .right-rail without breaking its internal
-// scroll, so it stretches to the masthead's height here.
+// scroll, so it stretches here until it and the swatch row under it,
+// which close one box, are as tall as the masthead.
 (() => {
   try {
     const mast = document.querySelector('.sec.mast');
     const head = document.querySelector('.left-rail .site-head');
     if (!mast || !head || typeof ResizeObserver !== 'function') return;
+    const theme = document.querySelector('.left-rail > .theme-sel');
     const mq = matchMedia('(min-width: 824px)');
     const sync = () => {
-      head.style.minHeight = mq.matches ? mast.offsetHeight + 'px' : '';
+      const row = theme ? theme.offsetHeight : 0;
+      head.style.minHeight = mq.matches ? Math.max(0, mast.offsetHeight - row) + 'px' : '';
     };
     new ResizeObserver(sync).observe(mast);
     if (mq.addEventListener) mq.addEventListener('change', sync);
     sync();
+  } catch (e) {}
+})();
+// With both rails, notes stand in the margin: each anchors to its mark's
+// line, in the right rail's column. A note that would overlap the one
+// above, or the box at the head of the rail, drops below it, and
+// --fn-drop draws the elbow back up to the mark's line.
+(() => {
+  try {
+    const notes = [...document.querySelectorAll('.fn .fn-note')];
+    if (!notes.length) return;
+    const mq = matchMedia('(min-width: 1100px)');
+    const clear = () => {
+      for (const n of notes) {
+        n.style.top = '';
+        n.style.left = '';
+        n.style.removeProperty('--fn-drop');
+        n.removeAttribute('data-drop');
+        n.removeAttribute('data-long');
+      }
+    };
+    const stack = () => {
+      clear();
+      if (!mq.matches) return;
+      const cs = getComputedStyle(document.documentElement);
+      const num = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
+      const gap = num('--grid') || 4;
+      const tick = num('--space-xs') + (num('--size-ui') * (num('--leading') || 1)) / 2;
+      const box = document.querySelector('.right-rail .cite-box');
+      let floor = box ? box.getBoundingClientRect().bottom + scrollY + gap : 0;
+      const placed = [];
+      for (const n of notes) {
+        const text = n.querySelector('.sn-text');
+        if (text && text.scrollHeight > text.clientHeight + 1) n.setAttribute('data-long', '');
+      }
+      for (const n of notes) {
+        const parent = n.offsetParent;
+        const fn = n.closest('.fn');
+        const ref = fn ? fn.querySelector('.fn-ref') : null;
+        const sec = n.closest('.sec');
+        if (!parent || !ref || !sec) continue;
+        const p = parent.getBoundingClientRect();
+        const r = ref.getBoundingClientRect();
+        const natural = Math.max(0, r.top - p.top + r.height / 2 - tick);
+        const naturalAbs = p.top + scrollY + natural;
+        const top = Math.max(naturalAbs, floor);
+        placed.push([n, natural, top - naturalAbs, sec.getBoundingClientRect().right - p.left]);
+        floor = top + n.offsetHeight + gap;
+      }
+      for (const [n, natural, drop, edge] of placed) {
+        n.style.left = edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + num('--rail-gap') + 'px';
+        n.style.top = natural + drop + 'px';
+        if (drop <= 1) continue;
+        n.style.setProperty('--fn-drop', drop + 'px');
+        n.setAttribute('data-drop', '');
+      }
+    };
+    stack();
+    addEventListener('resize', stack, { passive: true });
+    addEventListener('load', stack);
+    if (mq.addEventListener) mq.addEventListener('change', stack);
+    if (typeof ResizeObserver === 'function') {
+      const body = document.querySelector('.article-body');
+      if (body) new ResizeObserver(() => stack()).observe(body);
+    }
   } catch (e) {}
 })();
 `;

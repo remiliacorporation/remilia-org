@@ -842,7 +842,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
         sharedCats,
       ),
       tocHtml: tocBox(tocItems(extractHeadings(body)), footnoteCount(body)),
-      citeHtml: citeBox({
+      readHtml: citeBox({
         canonical: pageUrl,
         mdHref: `${basePath}/${p.slug}.md`,
         txtHref: `${basePath}/${p.slug}.txt`,

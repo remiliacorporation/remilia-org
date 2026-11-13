@@ -327,7 +327,7 @@ await writeFile(
     chrome,
     leftRail: rail,
     tocHtml: tocBox(tocItems(extractHeadings(BODY)), footnoteCount(BODY)),
-    citeHtml: citeBox({
+    readHtml: citeBox({
       canonical,
       mdHref: `/press/${post.slug}.md`,
       txtHref: `/press/${post.slug}.txt`,
