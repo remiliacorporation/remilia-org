@@ -1,4 +1,7 @@
-import { headMenu, type BakeOptions, type Chrome } from "@remilia/renderer";
+import type { BakeOptions, Chrome } from "@remilia/renderer";
+// Not from the package root: the Studio's page editor imports this file, and
+// the root brings in the bake, whose Node imports throw in a browser.
+import { headMenu } from "../../packages/renderer/src/nav";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
