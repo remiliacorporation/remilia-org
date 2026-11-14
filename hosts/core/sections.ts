@@ -1,7 +1,7 @@
 import type { BakeOptions, Chrome } from "@remilia/renderer";
 // Not from the package root: the Studio's page editor imports this file, and
 // the root brings in the bake, whose Node imports throw in a browser.
-import { headMenu } from "../../packages/renderer/src/nav";
+import { HEAD_SEARCH, headMenu } from "../../packages/renderer/src/nav";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
@@ -166,23 +166,17 @@ export function chromeFor(channel: Channel): Chrome {
   // The pooled index: the section row's "All" and the phone menu's
   // "All posts" both lead there, so the head carries no Index link.
   const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
-  // On phones the head is one row: the wordmark and this menu, which holds
-  // the sections and the links the wider head spells out.
-  const menu = headMenu(
-    {
-      cats: HOST_SECTIONS[CHANNEL_HOST[channel]].map((c) => ({
-        label: CHANNEL_LABEL[c],
-        href: indexPath(c),
-      })),
-      current: isAggregate(channel) ? "" : CHANNEL_LABEL[channel],
-      allHref: indexBase,
-    },
-    [
-      { label: brand.root, href: brand.rootUrl },
-      { label: "RSS", href: `${base}/rss.xml` },
-      { label: "Atom", href: `${base}/atom.xml` },
-    ],
-  );
+  // On phones the head is one row: the wordmark, the search button and
+  // this menu, which holds the sections. The links the wider head spells
+  // out move to the foot, under the posts.
+  const menu = headMenu({
+    cats: HOST_SECTIONS[CHANNEL_HOST[channel]].map((c) => ({
+      label: CHANNEL_LABEL[c],
+      href: indexPath(c),
+    })),
+    current: isAggregate(channel) ? "" : CHANNEL_LABEL[channel],
+    allHref: indexBase,
+  });
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
@@ -191,10 +185,12 @@ export function chromeFor(channel: Channel): Chrome {
 </nav>
 <hr class="nav-rule">
 <a class="site-title" href="${indexPath(channel)}">${brand.label}</a>
+${HEAD_SEARCH}
 ${menu}
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">
+<p class="foot-feeds"><a href="${base}/rss.xml">RSS</a> · <a href="${base}/atom.xml">Atom</a><span class="foot-theme"> · <label class="head-theme" for="theme-pop">Theme</label></span></p>
 <p>© Remilia Corporation · <a href="${brand.rootUrl}">${brand.root}</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
 </footer>`,
   };

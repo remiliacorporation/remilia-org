@@ -23,7 +23,7 @@ export interface NavPost {
   monthHref?: string;
 }
 
-const MAGNIFYING_GLASS = `<svg class="nav-search-icon" width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>`;
+export const MAGNIFYING_GLASS = `<svg class="nav-search-icon" width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>`;
 export const NAV_SEARCH = `<form class="nav-search" role="search">
 <span class="nav-field"><input type="text" id="post-filter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Search" aria-label="Search">${MAGNIFYING_GLASS}</span>
 </form>`;
@@ -146,14 +146,11 @@ export function sectionNav(shared: SharedCats): string {
 }
 
 /**
- * The site head's menu on phones, where it is the whole head beside the
- * wordmark: the section row and the head's own links folded behind one
- * control, which names the section being shown.
+ * The site head's menu on phones, beside the wordmark and the search
+ * button: the section row folded behind one control, which names the
+ * section being shown. The head's other links sit under the posts there.
  */
-export function headMenu(
-  shared: SharedCats,
-  links: { label: string; href: string }[],
-): string {
+export function headMenu(shared: SharedCats): string {
   const sections = [
     ...(shared.allHref
       ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
@@ -162,22 +159,23 @@ export function headMenu(
       c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
   ];
-  const items = [
-    ...sections.map(
+  const items = sections
+    .map(
       (i) =>
         `<li><a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a></li>`,
-    ),
-    ...links.map(
-      (l, n) =>
-        `<li${n === 0 ? ' class="head-menu-site"' : ""}><a href="${esc(l.href)}">${esc(l.label)}</a></li>`,
-    ),
-    `<li class="head-dials"><label class="head-theme" for="theme-pop">Theme</label></li>`,
-  ].join("");
+    )
+    .join("");
   return `<details class="sel head-menu">
 <summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
 <ul class="sel-menu">${items}</ul>
 </details>`;
 }
+
+/**
+ * The phone head's search button. It shows the search field under the head
+ * and moves focus into it; the field stays shown while it holds a query.
+ */
+export const HEAD_SEARCH = `<button type="button" class="head-search" aria-label="Search" aria-expanded="false" aria-controls="post-filter">${MAGNIFYING_GLASS}</button>`;
 
 /** A month the listing has an archive page for. */
 export interface DateMonth {
@@ -877,6 +875,13 @@ export const NAV_JS = `(() => {
   const statusEl = document.querySelector('.index-mast h1');
   const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
+  // The phone head's search button shows the field and moves focus into it.
+  const opener = document.querySelector('.head-search');
+  if (opener && q) opener.addEventListener('click', () => {
+    const open = opener.getAttribute('aria-expanded') !== 'true';
+    opener.setAttribute('aria-expanded', String(open));
+    if (open) q.focus();
+  });
   if (!q && !cards.length) return;
   const PAGE = ${RAIL_PAGE};
   let page = 0;

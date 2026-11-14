@@ -23,8 +23,10 @@
 .head-dials {
   display: none;
 }
-/* The phone head's menu; wider heads spell its links out instead. */
-.head-menu {
+/* The phone head's menu and search button; wider heads spell the
+   sections out and keep the search in the rail. */
+.head-menu,
+.head-search {
   display: none;
 }
 .head-menu > summary {
@@ -56,17 +58,6 @@
 }
 .head-menu .sel-menu a[aria-current] {
   font-weight: var(--weight-strong);
-}
-/* The site's own links follow the sections, a rule apart. */
-.head-menu .sel-menu .head-menu-site {
-  border-top: var(--border);
-  margin-top: var(--grid);
-}
-.head-menu .sel-menu .head-dials {
-  display: list-item;
-}
-.layout:not(:has(#theme-pop)) .head-menu .head-dials {
-  display: none;
 }
 .head-dials label {
   cursor: pointer;
@@ -162,6 +153,17 @@ footer {
 }
 footer hr {
   display: none;
+}
+/* The head's feed and theme links, which phones show under the posts. */
+.foot-feeds {
+  display: none;
+}
+.foot-feeds label {
+  cursor: pointer;
+}
+.foot-feeds label:hover {
+  background: var(--ink);
+  color: var(--ink-contrast);
 }
 footer p {
   text-align: center;

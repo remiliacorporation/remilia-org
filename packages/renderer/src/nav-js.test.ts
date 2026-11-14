@@ -1415,3 +1415,51 @@ test("notes hold still: a second run writes nothing, and scrolling moves no note
   for (const scroll of [250, 1700])
     assert.deepEqual(pick(layOut(notes, true, scroll)), pick(still), `scrolled ${scroll}`);
 });
+
+test("the phone head's search button opens the search and moves focus into it", () => {
+  const listeners = new Map<string, () => void>();
+  const attrs: Record<string, string> = { "aria-expanded": "false" };
+  const opener = {
+    getAttribute: (name: string) => attrs[name] ?? null,
+    setAttribute: (name: string, value: string) => {
+      attrs[name] = value;
+    },
+    addEventListener: (type: string, fn: () => void) => listeners.set(type, fn),
+  };
+  let focused = 0;
+  const q = {
+    value: "",
+    dataset: {},
+    focus: () => {
+      focused++;
+    },
+    addEventListener: () => {},
+  };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) => (sel === ".head-search" ? opener : null),
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function(
+    "document",
+    "location",
+    "addEventListener",
+    "matchMedia",
+    NAV_JS,
+  )(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => ({ matches: true }),
+  );
+  const click = listeners.get("click");
+  assert.ok(click);
+  click();
+  assert.equal(attrs["aria-expanded"], "true");
+  assert.equal(focused, 1);
+  click();
+  assert.equal(attrs["aria-expanded"], "false");
+  assert.equal(focused, 1);
+});
