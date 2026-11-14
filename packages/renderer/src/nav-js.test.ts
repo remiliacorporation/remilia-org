@@ -1415,3 +1415,193 @@ test("notes hold still: a second run writes nothing, and scrolling moves no note
   for (const scroll of [250, 1700])
     assert.deepEqual(pick(layOut(notes, true, scroll)), pick(still), `scrolled ${scroll}`);
 });
+
+/** Runs NAV_JS on a phone head: the search button, the field, the foot's Theme button. */
+function runPhoneHead(value = "") {
+  const on = (store: Map<string, (e?: object) => void>) => (type: string, fn: (e?: object) => void) =>
+    store.set(type, fn);
+  const button = (expanded: string) => {
+    const attrs: Record<string, string> = { "aria-expanded": expanded };
+    const hooks = new Map<string, (e?: object) => void>();
+    return {
+      attrs,
+      hooks,
+      focused: 0,
+      offsetParent: {},
+      getAttribute: (name: string) => attrs[name] ?? null,
+      setAttribute: (name: string, v: string) => {
+        attrs[name] = v;
+      },
+      addEventListener: on(hooks),
+      focus() {
+        this.focused++;
+      },
+    };
+  };
+  const opener = button("false");
+  const themeBtn = button("false");
+  const qHooks = new Map<string, (e?: object) => void>();
+  const inputs: string[] = [];
+  const q = {
+    value,
+    dataset: {},
+    focused: 0,
+    focus() {
+      this.focused++;
+    },
+    addEventListener: (type: string, fn: (e?: object) => void) => {
+      const prev = qHooks.get(type);
+      qHooks.set(type, (e) => {
+        prev?.(e);
+        fn(e);
+      });
+    },
+    dispatchEvent: (e: { type: string }) => {
+      inputs.push(q.value);
+      qHooks.get(e.type)?.(e);
+    },
+  };
+  const pop = { checked: false };
+  const hue = { scrolled: true, focus(opts?: { preventScroll?: boolean }) {
+    this.scrolled = !opts?.preventScroll;
+  } };
+  const document = {
+    getElementById: (id: string) => (id === "post-filter" ? q : id === "theme-pop" ? pop : null),
+    querySelector: (sel: string) =>
+      sel === ".head-search" ? opener
+        : sel === ".foot-theme-btn" ? themeBtn
+          : sel === ".theme-hues input:checked" ? hue
+            : null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => ({ matches: true }),
+  );
+  const key = (k: string) => {
+    let prevented = false;
+    qHooks.get("keydown")?.({ key: k, preventDefault: () => (prevented = true) });
+    return prevented;
+  };
+  return { opener, themeBtn, q, pop, hue, inputs, key, type: (v: string) => {
+    q.value = v;
+    qHooks.get("input")?.({});
+  } };
+}
+
+test("the phone head's search button opens the search and moves focus into it", () => {
+  const { opener, q } = runPhoneHead();
+  opener.hooks.get("click")?.();
+  assert.equal(opener.attrs["aria-expanded"], "true");
+  assert.equal(q.focused, 1);
+  opener.hooks.get("click")?.();
+  assert.equal(opener.attrs["aria-expanded"], "false");
+  assert.equal(q.focused, 1);
+});
+
+test("a field holding a query stays open: the button keeps it expanded", () => {
+  const { opener, q, type } = runPhoneHead();
+  opener.hooks.get("click")?.();
+  type("milady");
+  opener.hooks.get("click")?.();
+  assert.equal(opener.attrs["aria-expanded"], "true");
+  assert.equal(q.focused, 2);
+  // A query already in the field when the page loads opens it too.
+  assert.equal(runPhoneHead("kept").opener.attrs["aria-expanded"], "true");
+});
+
+test("Escape clears the query, then closes the field and returns to the button", () => {
+  const { opener, q, inputs, key, type } = runPhoneHead();
+  opener.hooks.get("click")?.();
+  type("milady");
+  assert.equal(key("Escape"), true);
+  assert.equal(q.value, "");
+  assert.deepEqual(inputs, [""]);
+  assert.equal(opener.attrs["aria-expanded"], "true");
+  assert.equal(key("Escape"), true);
+  assert.equal(opener.attrs["aria-expanded"], "false");
+  assert.equal(opener.focused, 1);
+  assert.equal(key("a"), false);
+});
+
+test("the foot's Theme button opens the theme controls in place", () => {
+  const { themeBtn, pop, hue } = runPhoneHead();
+  themeBtn.hooks.get("click")?.();
+  assert.equal(pop.checked, true);
+  assert.equal(themeBtn.attrs["aria-expanded"], "true");
+  assert.equal(hue.scrolled, false);
+  themeBtn.hooks.get("click")?.();
+  assert.equal(pop.checked, false);
+  assert.equal(themeBtn.attrs["aria-expanded"], "false");
+});
+
+test("on a phone the author control and theme box move after the posts, and back when wider", () => {
+  interface Node {
+    name: string;
+    parentNode: Node | null;
+    nextSibling: Node | null;
+    kids: Node[];
+    appendChild(c: Node): void;
+    insertBefore(c: Node, ref: Node | null): void;
+    querySelector?: () => Node;
+  }
+  const detach = (c: Node) => {
+    if (c.parentNode) c.parentNode.kids = c.parentNode.kids.filter((k) => k !== c);
+  };
+  const node = (name: string): Node => ({
+    name,
+    parentNode: null,
+    nextSibling: null,
+    kids: [],
+    appendChild(c) {
+      detach(c);
+      c.parentNode = this;
+      this.kids.push(c);
+    },
+    insertBefore(c, ref) {
+      detach(c);
+      c.parentNode = this;
+      const at = ref ? this.kids.indexOf(ref) : -1;
+      this.kids.splice(at < 0 ? this.kids.length : at, 0, c);
+    },
+  });
+  const navPage = node("nav-page");
+  const rail = node("right-rail");
+  const tail = node("phone-tail");
+  const tailRow = node("tail-row");
+  tail.querySelector = () => tailRow;
+  const author = node("author");
+  const after = node("after-author");
+  const themeSel = node("theme-sel");
+  navPage.appendChild(author);
+  navPage.appendChild(after);
+  author.nextSibling = after;
+  rail.appendChild(themeSel);
+  const changes: (() => void)[] = [];
+  const mq = { matches: true, addEventListener: (_: string, fn: () => void) => changes.push(fn) };
+  const document = {
+    getElementById: (id: string) => (id === "post-author" ? author : null),
+    querySelector: (sel: string) =>
+      sel === ".phone-tail" ? tail : sel === ".right-rail .theme-sel" ? themeSel : null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => mq,
+  );
+  assert.equal(author.parentNode?.name, "tail-row");
+  assert.equal(themeSel.parentNode?.name, "phone-tail");
+  mq.matches = false;
+  for (const fn of changes) fn();
+  assert.deepEqual(navPage.kids.map((k) => k.name), ["author", "after-author"]);
+  assert.deepEqual(rail.kids.map((k) => k.name), ["theme-sel"]);
+  assert.deepEqual(tailRow.kids, []);
+});

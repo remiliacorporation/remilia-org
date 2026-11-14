@@ -145,8 +145,9 @@ test("site-head leads with its links and closes on the brand alone", () => {
   assert.equal(thought.header.includes(">Index<"), false);
   assert.match(thought.header, /rss\.xml">RSS</);
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
-  // The phone head folds the sections and the head's links behind one
-  // menu, named for the section shown, this one marked.
+  // The phone head folds the sections, and only the sections, behind one
+  // menu, named for the section shown, this one marked. A labeled search
+  // button sits before it; the head's feed and theme links move to the foot.
   assert.match(
     thought.header,
     /<details class="sel head-menu">\n<summary><span class="sel-label">Thought<\/span>/,
@@ -159,10 +160,15 @@ test("site-head leads with its links and closes on the brand alone", () => {
       ["Thought", "/blog/thought", true],
       ["Press", "/blog/press", false],
       ["Archive", "/blog/archive", false],
-      ["remilia.org", "https://remilia.org/", false],
-      ["RSS", "/blog/thought/rss.xml", false],
-      ["Atom", "/blog/thought/atom.xml", false],
     ],
+  );
+  assert.match(
+    thought.header,
+    /<button type="button" class="head-search" aria-label="Search" aria-expanded="false" aria-controls="post-filter">[\s\S]*?<\/button>\n<details class="sel head-menu">/,
+  );
+  assert.match(
+    thought.footer,
+    /<p class="foot-feeds"><a href="\/blog\/thought\/rss.xml">RSS<\/a> · <a href="\/blog\/thought\/atom.xml">Atom<\/a><span class="foot-theme"> · <button type="button" class="foot-theme-btn" aria-expanded="false" aria-controls="theme-controls">Theme<\/button><\/span><\/p>/,
   );
   assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
   const news = chromeFor("news");

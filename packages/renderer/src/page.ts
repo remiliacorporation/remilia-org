@@ -97,7 +97,7 @@ function themeSelHtml(theme: HostTheme): string {
 <input type="checkbox" id="theme-pop" class="disclosure">
 <label for="theme-pop" class="theme-label">Theme</label>
 <hr class="nav-rule">
-<div class="theme-controls">
+<div class="theme-controls" id="theme-controls">
 <div class="theme-hues" role="radiogroup" aria-label="Theme color">
 ${radios}
 </div>
@@ -188,6 +188,13 @@ function discoveryHead(p: PageInput): string {
     );
   return `${lines.join("\n")}\n`;
 }
+
+/**
+ * Where a phone puts the rail's author control and theme box: after the
+ * posts, so the tab order follows the screen. nav.js moves them in while the
+ * screen is phone-wide and back when it widens; wider screens never show it.
+ */
+const PHONE_TAIL = `<div class="phone-tail"><div class="nav-page"></div></div>`;
 
 /**
  * The resting halftone: three tones, ink below 5/48 of full brightness, paper
@@ -328,6 +335,7 @@ ${p.leftRail}
     : header
 }
 ${main}
+${p.leftRail ? PHONE_TAIL : ""}
 </div>
 ${p.chrome.footer}
 ${p.bodyEnd ?? ""}

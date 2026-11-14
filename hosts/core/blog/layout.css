@@ -1,5 +1,11 @@
 /* blog/layout — breakpoint composition: how the shell and components arrange at each width */
 
+/* Where a phone puts the author control and theme box, after the posts
+   (page.ts PHONE_TAIL); wider screens keep them in the rails. */
+.phone-tail {
+  display: none;
+}
+
 @media (min-width: 824px) {
   .mast-tools,
   .mast-tools-rule {
@@ -232,6 +238,43 @@
     display: block;
     flex: none;
   }
+  /* The search button sits beside the menu; it shows the search field
+     under the head. */
+  .head-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    align-self: stretch;
+    margin-left: auto;
+    padding: 0 var(--space-xs);
+    border: var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .head-search:hover,
+  .head-search:focus-visible,
+  .head-search[aria-expanded="true"] {
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+  /* The icon and its path take the button's colour, so it inverts with
+     the button (the universal rule would give the path the ink). */
+  .head-search .nav-search-icon,
+  .head-search .nav-search-icon path {
+    color: inherit;
+  }
+  .layout:not(:has(#post-filter)) .head-search {
+    display: none;
+  }
+  /* The head's feed and theme links sit in the foot, under the posts. */
+  .foot-feeds {
+    display: block;
+  }
+  body:not(:has(#theme-pop)) .foot-theme {
+    display: none;
+  }
   .theme-hues label,
   .theme-dots label,
   .theme-mode {
@@ -255,46 +298,86 @@
   .article-wrap {
     order: 3;
   }
+  /* The contents box is an overlay here; its own place is an empty point
+     between the head and the post, where it sits in the page, so its
+     toggle's tab stop is where the post's Contents link is. It takes back
+     the column gap it would add. */
   .left-rail .toc {
-    order: 4;
+    order: 2;
+    margin-bottom: calc(-1 * var(--rail-gap));
   }
   .cite-box {
     display: none;
   }
-  .right-rail .theme-sel {
+  .theme-sel {
     display: contents;
   }
   /* The head menu holds the sections here. */
   .sec-box {
     display: none;
   }
+  /* The theme box's and search box's disclosures belong to the wider
+     rails: here the foot's Theme button and the head's search button stand
+     in for them, so they leave the tab order and the accessibility tree. */
   .theme-label,
-  .post-nav > .disclosure-label {
+  .post-nav > .disclosure-label,
+  .theme-sel > .disclosure,
+  .post-nav > .disclosure {
     display: none;
   }
-  /* The search box is one row under the head on every page: the search
-     takes what the author control leaves. On a listing the cards answer
-     the search. On a post the matching posts list under the row once
-     there is something in the search. */
-  .right-rail .post-nav:not(:empty) {
-    display: block;
-    order: 2;
-    padding: 0;
+  /* The search field shows under the head once the head's search button
+     opens it, and stays while it holds a query. On a listing the cards
+     answer the search. On a post the matching posts list under the field
+     once there is something in it. The author control goes under the
+     posts. The search box's own boxes step aside so its parts take their
+     places in the page's column. */
+  .right-rail .post-nav,
+  .post-nav > .nav-box,
+  .post-nav > .disclosure:checked ~ .nav-box,
+  .post-nav .nav-page {
+    display: contents;
   }
-  .post-nav > .nav-box {
-    display: block;
+  .post-nav .nav-search {
+    display: none;
+    order: 2;
+  }
+  .layout:has(.head-search[aria-expanded="true"]) .post-nav .nav-search,
+  .post-nav .nav-search:has(#post-filter:not(:placeholder-shown)) {
+    display: flex;
+  }
+  .post-nav .nav-field {
+    min-height: var(--space);
+  }
+  .post-nav .nav-all,
+  .post-nav .nav-foot {
+    order: 2;
+  }
+  .post-nav .nav-page details.nav-cat-sel {
+    order: 5;
+    max-width: none;
+  }
+  /* nav.js moves the author control and theme box here, after the posts,
+     so the tab order follows the screen. */
+  .phone-tail {
+    display: contents;
+  }
+  .phone-tail > .nav-page {
+    order: 5;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .phone-tail > .nav-page:empty {
+    display: none;
+  }
+  .phone-tail details.nav-cat-sel {
+    flex: 1 1 auto;
     max-width: none;
   }
   .post-nav .nav-rule,
   .post-nav .nav-all,
   .post-nav .nav-foot {
     display: none;
-  }
-  .post-nav .nav-page {
-    margin: 0;
-    padding: 0;
-    flex-wrap: nowrap;
-    gap: var(--space-xs);
   }
   .layout:not(.is-index)
     .post-nav:has(#post-filter:not(:placeholder-shown))
@@ -312,8 +395,8 @@
   }
   .theme-controls {
     display: none;
-    /* Right under the head, above a listing's search row. */
-    order: 1;
+    /* Under the posts, beside the foot's Theme link that opens it. */
+    order: 6;
     position: static;
     flex-direction: row;
     flex-wrap: wrap;
