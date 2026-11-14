@@ -999,7 +999,8 @@ interface FakeNote {
  * `scroll` moves every box up by that much, as scrolling the page or the
  * editor's pane does. `writes` counts the style and attribute writes of a
  * second run over the same notes, apart from the width a note is measured
- * at (set and set back within the run, before anything paints).
+ * at and the text's max-height while its height is read (each set and set
+ * back within the run, before anything paints).
  */
 function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
   const TOKENS: Record<string, string> = {
@@ -1036,7 +1037,7 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     return new Proxy(style, {
       get: (t, k: string) => (k in api ? api[k as keyof typeof api] : t[k]),
       set: (t, k: string, v: string) => {
-        if (k !== "width") writes++;
+        if (k !== "width" && k !== "maxHeight") writes++;
         t[k] = v;
         return true;
       },
@@ -1049,7 +1050,17 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     const attrs: Record<string, string> = {};
     const sub = note.parent !== undefined;
     // No quote in the fake notes' text.
-    const text = { scrollHeight: note.height, style: counted(), querySelector: () => null };
+    // As a browser reads it: a box set taller than its text reads as the
+    // box, unless nothing of it may show.
+    const text = {
+      style: counted(),
+      querySelector: () => null,
+      get scrollHeight() {
+        return this.style.maxHeight === "0px"
+          ? note.height
+          : Math.max(note.height, parseFloat(this.style.height) || 0);
+      },
+    };
     // A nested note shares its parent's mark element.
     const fn = sub
       ? fns[note.parent as number]
@@ -1174,7 +1185,13 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     listeners.keydown({ key: k });
     return read();
   };
-  return Object.assign(read(), { writes: again, point, click, key });
+  /** Note i's text takes a new height, and the notes are stacked again. */
+  const resize = (i: number, height: number) => {
+    notes[i].height = height;
+    stack();
+    return read();
+  };
+  return Object.assign(read(), { writes: again, point, click, key, resize });
 }
 
 test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
@@ -1196,6 +1213,16 @@ test("a note the next one would block is cut to whole lines, and the next keeps 
   ]);
   assert.deepEqual([a.top, a.shown, a.long], [284, 192, true]);
   assert.deepEqual([b.top, b.drop], [484, 0]);
+});
+
+test("a note's box follows its text down as well as up", () => {
+  const notes = layOut([{ at: 100, height: 64 }, { at: 1000, height: 32 }]);
+  // Fonts load, or a quote's reach changes how it wraps: the text grows,
+  // then settles shorter than it first was.
+  assert.equal(notes.resize(0, 96)[0].shown, 96);
+  const after = notes.resize(0, 48);
+  assert.equal(after[0].shown, 48);
+  assert.equal(after[0].long, false);
 });
 
 test("a cut note keeps eight lines, and the next goes under it", () => {

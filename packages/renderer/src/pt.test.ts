@@ -251,6 +251,31 @@ test("text-less paragraphs (bare embed links) leave no blank gap", () => {
   assert.ok(html.includes('class="fn-end" id="fn-1"'));
 });
 
+test("an orphan note cited from inside a note links back up to that note's mark", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("Text"), span("", ["f1"])],
+      markDefs: [{ _key: "f1", _type: "footnote", text: "See [2] for more." }],
+    },
+    {
+      _type: "block",
+      children: [span("", ["f2"]), span("", ["f3"])],
+      markDefs: [
+        { _key: "f2", _type: "footnote", text: "Cited orphan." },
+        { _key: "f3", _type: "footnote", text: "Lonely orphan." },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  const entry = (id: string) => html.match(new RegExp(`<div class="fn-end" id="${id}">.*?</div>`))?.[0] ?? "";
+  assert.match(entry("fn-2"), /<a class="fn-hit" href="#fn-1" aria-label="Back to note 1"><\/a>/);
+  assert.match(entry("fn-2"), /fn-back/);
+  // Cited from nowhere: no way back.
+  assert.ok(entry("fn-3"));
+  assert.doesNotMatch(entry("fn-3"), /fn-hit|fn-back/);
+});
+
 test("link marks reject executable URL schemes", () => {
   for (const href of [
     "javascript:alert(1)",

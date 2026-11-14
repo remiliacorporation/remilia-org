@@ -368,8 +368,8 @@ function sidenotes(root, wide, opts) {
   const CLOSE_MS = 250;
   const GLIDE_MS = 300;
   // The glide: opening a little slower than closing, easing out.
-  const OPENING_MS = 220;
-  const CLOSING_MS = 180;
+  const OPENING_MS = 240;
+  const CLOSING_MS = 200;
   const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
   // A nested note steps in from the left by this much a level, and the
   // lines on the right keep this far out from the boxes.
@@ -407,6 +407,7 @@ function sidenotes(root, wide, opts) {
   const LOAD_MS = 800;
   const lastH = new Map();
   const loading = new Map();
+  let loadTimer = 0;
   const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const VARS = ['--fn-drop', '--fn-lane', '--fn-reach', '--fn-lead'];
   const FLAGS = ['data-on', 'data-top', 'data-dim', 'data-long'];
@@ -485,6 +486,16 @@ function sidenotes(root, wide, opts) {
     for (let h = hostOf(n); h && d < 12; h = hostOf(h)) d++;
     return n.classList.contains('fn-sub') ? Math.max(1, d) : 0;
   };
+  // The text's own height. The height an earlier pass set, or a glide's,
+  // would read as the text's when it is taller, and a box once too tall
+  // would never shrink: the text is measured with no room to show (set and
+  // set back before anything paints).
+  const fullOf = (text) => {
+    text.style.maxHeight = '0px';
+    const h = text.scrollHeight;
+    text.style.maxHeight = '';
+    return h;
+  };
   // The values the glide moves, read as they stand now (mid-glide too).
   const GLIDES = ['top', '--fn-drop', '--fn-lane'];
   const now0 = (el, k) => {
@@ -533,11 +544,23 @@ function sidenotes(root, wide, opts) {
     for (const fn of root.querySelectorAll('.fn.fn-pin'))
       if (!loading.has(fn) && lastH.has(fn)) {
         loading.set(fn, { h: lastH.get(fn), until: now + LOAD_MS });
-        setTimeout(() => stack(true), LOAD_MS + 20);
+        clearTimeout(loadTimer);
+        loadTimer = setTimeout(() => stack(true), LOAD_MS + 20);
       }
+    // A mark the editor took out keeps nothing.
     for (const [fn, hold] of loading) {
-      if (!fn.classList.contains('fn-pin')) loading.delete(fn);
+      if (!fn.isConnected || !fn.classList.contains('fn-pin')) loading.delete(fn);
       else if (now > hold.until) hold.h = 0;
+    }
+    for (const fn of lastH.keys()) if (!fn.isConnected) lastH.delete(fn);
+    // A quote in the note reaches back under its number. Set before the
+    // text is measured: the reach changes how the quote's lines wrap.
+    for (const n of notes) {
+      const text = n.querySelector('.sn-text');
+      const num0 = text && text.querySelector('.fn-q') && n.querySelector(':scope > strong');
+      if (!num0) continue;
+      const lead = text.getBoundingClientRect().left - num0.getBoundingClientRect().left;
+      if (lead > 0) put(n, '--fn-lead', lead + 'px');
     }
     if (hold && !on.has(hold.n)) hold = null;
     // Every place below is measured from the top of root, the page or the
@@ -576,7 +599,7 @@ function sidenotes(root, wide, opts) {
         const p = parent.getBoundingClientRect();
         const box = getComputedStyle(n);
         const row = { n, text, fn, base: y(p.top), sub: n.classList.contains('fn-sub'),
-          edge: sec.getBoundingClientRect().right - p.left, full: text.scrollHeight, open: open.has(n),
+          edge: sec.getBoundingClientRect().right - p.left, full: fullOf(text), open: open.has(n),
           // An open note's deeper foot does not enter the stack: the
           // padding counted below is the top's, twice.
           chrome: ['paddingTop', open.has(n) ? 'paddingBottom' : 'paddingTop', 'borderTopWidth', 'borderBottomWidth'].reduce((s, k) => s + (parseFloat(box[k]) || 0), 0) };
@@ -709,12 +732,6 @@ function sidenotes(root, wide, opts) {
         const fit = Math.max(1, Math.floor(leftW / leftPitch) - 1);
         put(n, '--fn-lane', Math.max(1, leftW - leftPitch * ((row.lane % fit) + 1)) + 'px');
       }
-      // A quote in the note reaches back under its number.
-      const num0 = row.text.querySelector('.fn-q') && n.querySelector(':scope > strong');
-      if (num0) {
-        const lead = row.text.getBoundingClientRect().left - num0.getBoundingClientRect().left;
-        if (lead > 0) put(n, '--fn-lead', lead + 'px');
-      }
       if (anim) {
         glideFrom(n, was, ms);
         glideFrom(row.text, wasText, ms);
@@ -742,7 +759,7 @@ function sidenotes(root, wide, opts) {
     return sub || t.closest('.fn-note') || mainOf(fn);
   };
   const listen = (type, fn) => root.addEventListener(type, fn, opts && opts.signal ? { signal: opts.signal } : undefined);
-  if (opts && opts.signal) opts.signal.addEventListener('abort', () => clearTimeout(timer));
+  if (opts && opts.signal) opts.signal.addEventListener('abort', () => { clearTimeout(timer); clearTimeout(loadTimer); loading.clear(); lastH.clear(); });
   const viaRef = (t) => !!(t && t.closest && t.closest('.fn-xref'));
   const point = (n, ms, up) => {
     clearTimeout(timer);
@@ -1238,8 +1255,52 @@ export const NAV_JS = `(() => {
     // and the page stays put; a second tap closes it. A tap in the note
     // goes down to it in the notes list, whose entry ends with a way back
     // up. A tap anywhere else, or Escape, closes it.
+    // The mark says whether its note is open and which box is its note, and
+    // opening it takes the focus into the note, so a screen reader reads
+    // it; Enter there goes on to the list, to the entry's way back.
     const floating = () => document.querySelector('.fn[data-float]');
-    const sink = (fn) => { if (fn) fn.removeAttribute('data-float'); };
+    const noteOf = (fn) => fn && fn.querySelector(':scope > .fn-note');
+    const markOf = (fn) => fn && fn.querySelector(':scope > .fn-ref');
+    const tell = (fn) => {
+      const ref = markOf(fn);
+      const note = noteOf(fn);
+      if (!ref || !note) return;
+      if (wide.matches) {
+        ref.removeAttribute('aria-expanded');
+        ref.removeAttribute('aria-controls');
+        return;
+      }
+      if (!note.id && fn.id) note.id = fn.id + '-note';
+      if (note.id) ref.setAttribute('aria-controls', note.id);
+      ref.setAttribute('aria-expanded', fn.hasAttribute('data-float') ? 'true' : 'false');
+    };
+    const tellAll = () => document.querySelectorAll('.fn').forEach(tell);
+    tellAll();
+    if (wide.addEventListener) wide.addEventListener('change', tellAll);
+    const sink = (fn) => {
+      if (!fn) return;
+      fn.removeAttribute('data-float');
+      tell(fn);
+    };
+    // Escape shuts a note the keyboard's focus shows, and the focus stays
+    // where it is, until it leaves the mark.
+    const hush = (fn) => fn.setAttribute('data-hush', '');
+    document.addEventListener('focusout', (e) => {
+      const fn = e.target && e.target.closest && e.target.closest('.fn[data-hush]');
+      if (fn && !(e.relatedTarget && fn.contains(e.relatedTarget))) fn.removeAttribute('data-hush');
+    });
+    const toList = (fn) => {
+      const r = markOf(fn);
+      const href = r && r.getAttribute('href');
+      const el = href && document.getElementById(href.slice(1));
+      if (!el) return false;
+      sink(fn);
+      if (location.hash !== href) history.pushState(null, '', href);
+      go(el);
+      const back = el.querySelector('.fn-hit');
+      if (back && back.focus) back.focus({ preventScroll: true });
+      return true;
+    };
     addEventListener('click', (e) => {
       if (wide.matches || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const t = e.target;
@@ -1250,30 +1311,43 @@ export const NAV_JS = `(() => {
       const ref = t.closest('.fn-ref');
       if (ref) {
         e.preventDefault();
-        if (fn.hasAttribute('data-float')) { sink(fn); return; }
+        // Closed from the keyboard, the focus on the mark does not show it.
+        if (fn.hasAttribute('data-float')) { sink(fn); hush(fn); return; }
+        fn.removeAttribute('data-hush');
         fn.setAttribute('data-float', '');
+        tell(fn);
         fitNote(fn);
+        const note = noteOf(fn);
+        if (note && note.focus) {
+          note.tabIndex = -1;
+          note.focus({ preventScroll: true });
+        }
         return;
       }
       const note = t.closest('.fn-note');
       if (!note || t.closest('a')) return;
-      const r = fn.querySelector('.fn-ref');
-      const href = r && r.getAttribute('href');
-      const el = href && document.getElementById(href.slice(1));
-      if (!el) return;
-      e.preventDefault();
-      sink(fn);
-      if (location.hash !== href) history.pushState(null, '', href);
-      go(el);
+      if (toList(fn)) e.preventDefault();
     });
-    // Escape also takes the focus off the mark, which a key press would
-    // otherwise show as keyboard focus, opening the note again.
     addEventListener('keydown', (e) => {
-      const fn = e.key === 'Escape' && floating();
-      if (!fn) return;
-      sink(fn);
+      if (e.key === 'Enter' && !wide.matches) {
+        const t = e.target;
+        const fn = t && t.classList && t.classList.contains('fn-note') && t.closest('.fn[data-float]');
+        if (fn && toList(fn)) e.preventDefault();
+        return;
+      }
+      if (e.key !== 'Escape') return;
       const a = document.activeElement;
-      if (a && fn.contains(a) && a.blur) a.blur();
+      const at = a && a.closest && a.closest('.fn');
+      const fn = floating();
+      if (fn) {
+        sink(fn);
+        // From inside the note, the focus goes back to its mark.
+        if (fn.contains(a)) {
+          const ref = markOf(fn);
+          if (ref && ref.focus) ref.focus();
+        }
+      }
+      if (at) hush(at);
     });
     addEventListener('resize', () => { const fn = floating(); if (fn) fitNote(fn); }, { passive: true });
     addEventListener('click', (e) => {

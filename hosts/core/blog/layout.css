@@ -747,8 +747,8 @@
    it, and the page does not move; a tap in the note goes down to it in the
    notes list, and a tap anywhere else or Escape closes it (the page
    script sets data-float). A pointer that can hover opens it on hover, and
-   the keyboard on focus. A note nested in another has no box of its own
-   here: its mark links to the list. */
+   the keyboard on focus, until Escape (data-hush). A note nested in
+   another has no box of its own here: its mark links to the list. */
 @media (max-width: 1099px) {
   .fn {
     position: relative;
@@ -772,7 +772,7 @@
     cursor: pointer;
   }
   .fn[data-float] .fn-note:not(.fn-sub),
-  .fn:has(:focus-visible) .fn-note:not(.fn-sub) {
+  .fn:not([data-hush]):has(:focus-visible) .fn-note:not(.fn-sub) {
     display: flex;
   }
 }

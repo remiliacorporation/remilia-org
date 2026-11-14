@@ -190,6 +190,12 @@ interface RenderState {
   subSeen?: Set<number>;
   /** The key of the block being rendered, for `onNote`. */
   blockKey?: string;
+  /** The mark of the note in the text being rendered: its id and number. */
+  mark?: { id: string; n: number };
+  /** Where each note is first cited from inside another: that note's mark. */
+  citedFrom: Map<number, { id: string; n: number }>;
+  /** The orphans' entries in the list, written once every citation is known. */
+  orphanEnds: { slot: number; id: string; n: number; body: string }[];
 }
 
 const FN_GLYPH: Record<string, number> = { "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁰": 0 };
@@ -234,7 +240,10 @@ function fnTextHtml(text: string, state: RenderState): string {
       .replace(FN_XREF_RE, (m, ...a) => {
         const mm = [m, ...a] as RegExpMatchArray;
         const t = xrefTarget(mm);
-        if (state.fnTargets.has(t)) subNote(t, state);
+        if (state.fnTargets.has(t)) {
+          subNote(t, state);
+          if (state.mark && !state.citedFrom.has(t)) state.citedFrom.set(t, state.mark);
+        }
         return state.fnTargets.has(t)
           ? (mm[4] ?? "") +
               keep(`<a class="fn-xref" href="#fn-${t}"><sup>${t}</sup></a>`)
@@ -449,7 +458,10 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   const subs: string[] = [];
   state.subs = subs;
   state.subSeen = new Set();
+  const outer = state.mark;
+  state.mark = { id, n };
   const body = fnBodyHtml(def, state);
+  state.mark = outer;
   state.subs = undefined;
   state.subSeen = undefined;
   // the note also lands in the endnotes pool — its entry id is fndef-N so
@@ -547,7 +559,7 @@ export function figureHtml(input: {
 
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   blocks = lowerFootnotes(blocks);
-  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [], orphans: new Map() };
+  const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [], orphans: new Map(), citedFrom: new Map(), orphanEnds: [] };
   {
     let pos = 0;
     const scan = (list: PTBlock[]): void => {
@@ -632,7 +644,9 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       // — trailing/orphan notes render as a static list, not margin popovers.
       if (notesOnly(block)) {
         // orphan notes have no in-text ref — their endnote entry keeps the
-        // fn-N id so xrefs resolve; no backlink (nothing to jump back to).
+        // fn-N id so xrefs resolve. One cited from inside a note links back
+        // up to that note's mark, where its margin copy stands; one cited
+        // from nowhere has no way back.
         const ordered: MarkDef[] = [];
         for (const s of block.children) {
           for (const m of s.marks ?? []) {
@@ -645,8 +659,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
           const n = d.n ?? state.count;
           const id = fnId(n, state);
           const slot = state.endnotes.push("") - 1;
-          state.endnotes[slot] =
-            `<div class="fn-end" id="${id}"><strong>${n}.</strong><span class="sn-text">${fnBodyHtml(d, state, false)}</span></div>`;
+          state.orphanEnds.push({ slot, id, n, body: fnBodyHtml(d, state, false) });
         }
         continue;
       }
@@ -716,6 +729,12 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
     }
   }
   flushList();
+  for (const o of state.orphanEnds) {
+    const from = state.citedFrom.get(o.n);
+    state.endnotes[o.slot] = from
+      ? `<div class="fn-end" id="${o.id}"><strong>${o.n}.</strong><span class="sn-text">${withBack(o.body)}</span><a class="fn-hit" href="#${from.id}" aria-label="Back to note ${from.n}"></a></div>`
+      : `<div class="fn-end" id="${o.id}"><strong>${o.n}.</strong><span class="sn-text">${o.body}</span></div>`;
+  }
   if (state.endnotes.length) {
     // A rule, then a NOTES heading, over the list. The heading is not an
     // h2 or h3, so the contents box does not list it: the box has its own

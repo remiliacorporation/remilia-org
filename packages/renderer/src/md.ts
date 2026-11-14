@@ -1,5 +1,5 @@
 import { CHANNEL_BASEPATH, type Channel } from "@remilia/seo";
-import { slugify, type PTBlock } from "./pt";
+import { slugify, withoutNotesHeading, type PTBlock } from "./pt";
 import { lowerFootnotes } from "./footnotes";
 
 export interface MdMeta {
@@ -400,7 +400,9 @@ export function portableTextToMarkdown(
   };
   const resolve = (a?: { url?: string; _ref?: string }) =>
     a ? (a.url ?? (a._ref && assetUrl ? (assetUrl(a) ?? a._ref) : a._ref)) : "";
-  for (const b of lowerFootnotes(blocks)) {
+  // The notes go under their own NOTES heading, as on the page: a post's
+  // own heading over them goes.
+  for (const b of withoutNotesHeading(lowerFootnotes(blocks))) {
     if (b._type === "image") {
       flushList();
       const img = b as {
@@ -451,7 +453,7 @@ export function portableTextToMarkdown(
   }
   flushList();
   if (fns.length) {
-    lines.push("");
+    lines.push("", "## Notes", "");
     fns.forEach((t, i) => lines.push(`[^${i + 1}]: ${t}`));
   }
   return (
