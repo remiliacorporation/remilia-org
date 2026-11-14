@@ -384,30 +384,20 @@ function fnContentHtml(blocks: PTBlock[], state: RenderState): string {
   const out = blocks
     .filter(isTextBlock)
     .map((b) => {
-      const inner = b.children
-        .map((s) => spanHtml(s, b.markDefs ?? [], state))
-        .join("");
+      const html = (spans: Span[]): string =>
+        spans.map((s) => spanHtml(s, b.markDefs ?? [], state)).join("");
+      // A quote's attribution, split as the post's own quotes split
+      // theirs (splitAttribution), on a line of its own (.bq-by is a block).
+      const by = b.style === "blockquote" ? splitAttribution(b.children, b.markDefs ?? []) : undefined;
+      const inner = by ? `${html(by.quote)}<span class="bq-by">${html(by.by)}</span>` : html(b.children);
       if (!inner) return "";
       return b.style === "blockquote"
-        ? `<span class="fn-q">${quoteBy(inner)}</span>`
+        ? `<span class="fn-q">${inner}</span>`
         : `<span class="fn-par">${inner}</span>`;
     })
     .join("");
   state.inNote = was;
   return out;
-}
-
-/**
- * A quote's last line, when it starts with a dash, is its attribution
- * (`.bq-by`), set right as in the post's own block quotes.
- */
-function quoteBy(quote: string): string {
-  const br = quote.lastIndexOf("<br>");
-  if (br < 0) return quote;
-  const tail = quote.slice(br + 4);
-  const tailText = tail.replace(/<[^>]+>/g, "");
-  if (!tailText.trim() || !/^\s*[—–-]/.test(tailText)) return quote;
-  return `${quote.slice(0, br)}<span class="bq-by">${tail}</span>`;
 }
 
 /** What a note says: its blocks, or an old note's hand-marked text. */
@@ -434,6 +424,15 @@ const FN_SEP = '$1<sup class="fn-sep" aria-hidden="true">,</sup>';
  */
 const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
 const withBack = (body: string): string => {
+  // A note's picture (fnImgHtml) comes last: the mark goes after the words
+  // above it, or after a picture with no words.
+  const img = body.lastIndexOf('<a class="fn-img"');
+  if (img >= 0 && body.endsWith("</a>")) {
+    const words = body.slice(0, img);
+    return words.replace(/<[^>]+>/g, "").trim()
+      ? `${withBack(words)}${body.slice(img)}`
+      : `${body}${BACK}`;
+  }
   // Inside the innermost last piece of text, so it follows the last word,
   // a quote's citation included, and not on a line of its own.
   const close = body.match(/(?:<\/span>)+$/);

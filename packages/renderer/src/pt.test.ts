@@ -401,3 +401,55 @@ test("a note's picture takes the body's halftone and links to the picture", () =
   const bare = portableTextToHtml(blocks, { imageUrl: () => undefined });
   assert.ok(!bare.includes("<img"), bare);
 });
+
+test("a note's back mark follows its words, not its picture", () => {
+  const note = (text: string) => [
+    {
+      _type: "block" as const,
+      children: [span("text"), span("", ["n1"])],
+      markDefs: [
+        {
+          _key: "n1",
+          _type: "footnote" as const,
+          text,
+          image: { asset: { _ref: "image-abc-800x400-png" }, alt: "A picture" },
+        },
+      ],
+    },
+  ];
+  const entry = (html: string) => html.match(/<div class="fn-end"[\s\S]*?<\/div>/)?.[0] ?? "";
+  const words = entry(portableTextToHtml(note("see"), OPTS));
+  assert.ok(words.includes(`see<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span></span><a class="fn-img"`), words);
+  // A picture with no words: the mark follows the picture.
+  const bare = entry(portableTextToHtml(note(""), OPTS));
+  assert.match(bare, /<\/a><span class="fn-back"/);
+});
+
+test("a quote in a note splits off its attribution whatever mark crosses the break", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("text"), span("", ["n1"])],
+      markDefs: [
+        {
+          _key: "n1",
+          _type: "footnote",
+          content: [
+            {
+              _type: "block",
+              style: "blockquote",
+              markDefs: [],
+              children: [span("Quoted words.\n— A", ["code"]), span(" Name", ["strong"])],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  assert.ok(
+    html.includes('<span class="fn-q"><code>Quoted words.</code><span class="bq-by"><code>— A</code><strong> Name</strong></span></span>'),
+    html,
+  );
+  assert.ok(!html.includes("<br>"), html);
+});

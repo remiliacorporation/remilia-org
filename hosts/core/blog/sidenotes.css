@@ -171,8 +171,9 @@
   .fn-note[data-on] .sn-text::after {
     content: none;
   }
-  .fn-note[data-on] a:hover,
-  .fn-note[data-on] a:hover * {
+  /* Not a note's picture: a fill would show through a transparent one. */
+  .fn-note[data-on] a:not(.fn-img):hover,
+  .fn-note[data-on] a:not(.fn-img):hover * {
     background: var(--ink-contrast);
     color: var(--ink);
   }

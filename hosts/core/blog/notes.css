@@ -199,14 +199,16 @@
   color: var(--ink-contrast);
 }
 /* Links inside the note sit above the back-link, so they open their own
-   target, and invert again against the inverted note. */
+   target, and invert again against the inverted note. A note's picture
+   keeps its own look (media.css): a fill behind it would show through a
+   transparent one. */
 .fn-end .sn-text a {
   position: relative;
   z-index: 1;
 }
-.fn-end .sn-text a:hover,
-.fn-end .sn-text a:focus-visible,
-.fn-end .sn-text a:hover * {
+.fn-end .sn-text a:not(.fn-img):hover,
+.fn-end .sn-text a:not(.fn-img):focus-visible,
+.fn-end .sn-text a:not(.fn-img):hover * {
   background: var(--ink-contrast);
   color: var(--ink);
 }
