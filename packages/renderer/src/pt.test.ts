@@ -295,3 +295,82 @@ test("an image's asset id reads the same from a ref or a CDN URL", () => {
   assert.equal(bodyShowsImage(body, "image-ffff-1x1-png"), false);
   assert.equal(bodyShowsImage(body, undefined), false);
 });
+
+test("a quote's attribution splits at the PT level, so a mark across the break nests", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      style: "blockquote",
+      children: [
+        span("“Ethereum honors its first promise.”\n- The EF Mandate", ["code"]),
+      ],
+    },
+    {
+      _type: "block",
+      style: "blockquote",
+      children: [
+        span("one "),
+        span("two\nthree", ["strong", "l1"]),
+        span("\n— Author", ["em", "l1", "n1"]),
+      ],
+      markDefs: [
+        { _key: "l1", _type: "link", href: "https://example.com/a" },
+        { _key: "n1", _type: "footnote", text: "Said once." },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  assert.ok(
+    html.includes(
+      '<blockquote><p><code>“Ethereum honors its first promise.”</code><br><span class="bq-by"><code>- The EF Mandate</code></span></p></blockquote>',
+    ),
+    html,
+  );
+  // Each side closes what it opens: no tag crosses the attribution's box.
+  for (const bq of html.match(/<blockquote>[\s\S]*?<\/blockquote>/g) ?? []) {
+    const by = bq.match(/<span class="bq-by">([\s\S]*)<\/span><\/p>/)?.[1] ?? "";
+    for (const tag of ["code", "strong", "em", "a"])
+      assert.equal(
+        (by.match(new RegExp(`<${tag}[ >]`, "g")) ?? []).length,
+        (by.match(new RegExp(`</${tag}>`, "g")) ?? []).length,
+        `${tag} in ${by}`,
+      );
+  }
+  // The line break inside the strong link stays in the quote; the note renders once.
+  assert.ok(html.includes("two<br>three"), html);
+  assert.equal((html.match(/class="fn-ref"/g) ?? []).length, 1);
+  assert.ok(/<span class="bq-by">.*— Author.*class="fn-ref"/.test(html), html);
+});
+
+test("a quote whose last line is no attribution keeps its line breaks", () => {
+  const html = portableTextToHtml(
+    [{ _type: "block", style: "blockquote", children: [span("a\nb", ["em"])] }],
+    OPTS,
+  );
+  assert.ok(html.includes("<blockquote><p><em>a<br>b</em></p></blockquote>"), html);
+});
+
+test("a note's picture takes the body's halftone and links to the picture", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("text"), span("", ["n1"])],
+      markDefs: [
+        {
+          _key: "n1",
+          _type: "footnote",
+          text: "see",
+          image: { asset: { _ref: "image-abc-800x400-png" }, alt: "A picture" },
+        },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  const pic =
+    '<a class="fn-img" href="https://cdn.sanity.io/x.jpg?w=1600" aria-label="A picture"><span class="ht"><span class="ht-map"><img src="https://cdn.sanity.io/x.jpg?w=1600" width="800" height="400" alt="A picture" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>';
+  // In the margin and in the list of notes.
+  assert.equal(html.split(pic).length - 1, 2, html);
+  // The editor gives no image URL: no picture, not a broken one.
+  const bare = portableTextToHtml(blocks, { imageUrl: () => undefined });
+  assert.ok(!bare.includes("<img"), bare);
+});

@@ -1,6 +1,8 @@
 /* blog/media — .ht image treatment, galleries, lightbox.
    An image shows as a halftone at rest; pointing at it or tabbing to it
-   shows the picture as it was made. On touch, its link opens the picture. */
+   shows the picture as it was made. On touch, its link opens the picture.
+   A note's picture (.fn-img) is drawn the same way, in the margin, in the
+   list of notes, and in a note open under its mark. */
 
 .article-body > .sec:has(.ht) {
   overflow: visible;
@@ -68,7 +70,9 @@
 .gallery figure > a:hover .ht-map,
 .gallery figure > a:focus-visible .ht-map,
 .post-card:hover .card-thumb .ht-map,
-.post-card:has(:focus-visible) .card-thumb .ht-map {
+.post-card:has(:focus-visible) .card-thumb .ht-map,
+.fn-img:hover .ht-map,
+.fn-img:focus-visible .ht-map {
   filter: var(--ht-map-h, none);
 }
 .prose figure > a:hover .ht::after,
@@ -76,7 +80,9 @@
 .gallery figure > a:hover .ht::after,
 .gallery figure > a:focus-visible .ht::after,
 .post-card:hover .card-thumb .ht::after,
-.post-card:has(:focus-visible) .card-thumb .ht::after {
+.post-card:has(:focus-visible) .card-thumb .ht::after,
+.fn-img:hover .ht::after,
+.fn-img:focus-visible .ht::after {
   opacity: var(--ht-tint-h, 0);
 }
 .prose figure > a:hover .ht img,
@@ -84,7 +90,9 @@
 .gallery figure > a:hover .ht img,
 .gallery figure > a:focus-visible .ht img,
 .post-card:hover .card-thumb .ht img,
-.post-card:has(:focus-visible) .card-thumb .ht img {
+.post-card:has(:focus-visible) .card-thumb .ht img,
+.fn-img:hover .ht img,
+.fn-img:focus-visible .ht img {
   filter: var(--ht-img-h, none);
 }
 .prose figure > a:hover .ht-ink,
@@ -92,7 +100,9 @@
 .gallery figure > a:hover .ht-ink,
 .gallery figure > a:focus-visible .ht-ink,
 .post-card:hover .card-thumb .ht-ink,
-.post-card:has(:focus-visible) .card-thumb .ht-ink {
+.post-card:has(:focus-visible) .card-thumb .ht-ink,
+.fn-img:hover .ht-ink,
+.fn-img:focus-visible .ht-ink {
   opacity: var(--ht-ink-op-h, 0);
 }
 .gallery {
