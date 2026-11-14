@@ -3,6 +3,7 @@ import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./schemaTypes";
 import { DEFAULT_AUTHORS } from "./schemaTypes/documents/post";
+import { CHANNEL_HOST, type Channel } from "./packages/seo/src/urls";
 import { defaultDocumentNode, structure } from "./structure";
 import { SettingsField } from "./studio/postInput";
 import "./studio/editor.css";
@@ -24,7 +25,9 @@ export default defineConfig({
         parameters: [{ name: "channel", title: "Channel", type: "string" }],
         value: (params: { channel: string }) => ({
           channel: params.channel,
-          authors: DEFAULT_AUTHORS,
+          ...(CHANNEL_HOST[params.channel as Channel] === "org" && {
+            authors: DEFAULT_AUTHORS,
+          }),
         }),
       },
     ],

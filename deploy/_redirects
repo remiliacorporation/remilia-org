@@ -204,11 +204,13 @@
 /blog/authors/scearpo/*  /blog/authors/michael-dragovic/:splat  301
 
 # All stopped listing Archive (2026-11-13). Pooled archives whose only posts
-# are in Archive are no longer baked, so they 301 to Archive's own. Unforced,
-# so a pooled page that comes back wins.
+# are in Archive are no longer baked, so they 301 to Archive's own, as does
+# Thought's February 2022, whose posts all moved to Archive. Unforced, so a
+# page that comes back wins.
 /blog/authors/angelicism01  /blog/archive/authors/angelicism01  301
 /blog/authors/angelicism01/*  /blog/archive/authors/angelicism01/:splat  301
 /blog/months/2022-02  /blog/archive/months/2022-02  301
+/blog/thought/months/2022-02  /blog/archive/months/2022-02  301
 
 # The rules above are hand-written and live only here, so this file stays
 # tracked even though the rest of deploy/ is generated and gitignored.
