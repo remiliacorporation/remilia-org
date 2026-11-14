@@ -24,7 +24,10 @@
  * the mark left.
  */
 export class NoteMemory<E> {
-  private readonly kept = new Map<string, { words: unknown[]; editor: E }>();
+  private readonly kept = new Map<
+    string,
+    { words: unknown[]; editor: E; back: boolean }
+  >();
 
   /**
    * @param open - whether an editor is still open (an entry for a closed
@@ -38,14 +41,24 @@ export class NoteMemory<E> {
 
   /**
    * The note's mark left `editor`. `inDocument` is the note as the document
-   * held it then; its words are kept if it had any.
+   * held it then; its words are kept if it had any. A note the document
+   * held empty drops what was kept for it, unless its mark had come back
+   * and its words are on their way back (a restore in flight). Nothing is
+   * kept from an editor that has closed.
    */
   leave(id: string, editor: E, inDocument: unknown): void {
     for (const [k, v] of this.kept) if (!this.open(v.editor)) this.kept.delete(k);
     const words = contentOf(inDocument);
-    if (!hasWords(words)) return;
+    if (!this.open(editor)) {
+      this.kept.delete(id);
+      return;
+    }
+    if (!hasWords(words)) {
+      if (!this.kept.get(id)?.back) this.kept.delete(id);
+      return;
+    }
     this.kept.delete(id);
-    this.kept.set(id, { words, editor });
+    this.kept.set(id, { words, editor, back: false });
     while (this.kept.size > this.cap) {
       const oldest = this.kept.keys().next().value;
       if (oldest === undefined) break;
@@ -65,6 +78,7 @@ export class NoteMemory<E> {
   step(id: string, editor: E, inDocument: unknown, inEditor: unknown): Step {
     const kept = this.kept.get(id);
     if (!kept || kept.editor !== editor) return { kind: "none" };
+    kept.back = true;
     // The document does not hold the note yet: the editor has not sent it.
     if (!inDocument || typeof inDocument !== "object") return { kind: "wait" };
     if (!hasWords(contentOf(inDocument))) return { kind: "write", words: kept.words };
@@ -117,14 +131,51 @@ const keyOf = (seg: unknown): string | undefined =>
   isRec(seg) && "_key" in seg ? String(seg._key) : undefined;
 
 /**
- * A note's memory id: its document's id and the keys on its path. None for a
- * path with fewer than two keys, as a note's path has before the form holds
- * it.
+ * A note's memory id: its document's published id, the release version
+ * being edited if any, and the keys on its path. The form's own id switches
+ * between the published id and the draft's (`drafts.` + id) as the document
+ * is edited and published; both give the same id here. None for a path with
+ * fewer than two keys, as a note's path has before the form holds it.
  */
-export function noteId(docId: unknown, path: readonly unknown[]): string | undefined {
+export function noteId(formId: unknown, path: readonly unknown[]): string | undefined {
   const keys = path.map(keyOf).filter((k): k is string => k !== undefined);
-  if (typeof docId !== "string" || !docId || keys.length < 2) return undefined;
-  return `${docId}|${keys.join("/")}`;
+  if (typeof formId !== "string" || !formId || keys.length < 2) return undefined;
+  const version = /^versions\.([^.]+)\./.exec(formId)?.[1];
+  const published = formId.replace(/^drafts\./, "").replace(/^versions\.[^.]+\./, "");
+  return `${published}${version ? `@${version}` : ""}|${keys.join("/")}`;
+}
+
+/**
+ * One mark's part in the memory, over its life. Words are kept only when
+ * the mark itself leaves its editor (`unmount`). A mark whose id changes
+ * (the document published, or a draft made), or that turns read-only,
+ * forgets what was kept under its old id and keeps nothing.
+ */
+export class MarkLife<E> {
+  private id: string | undefined;
+  private editor: E | undefined;
+
+  constructor(private readonly memory: NoteMemory<E>) {}
+
+  /**
+   * The mark mounted, or its id or editor changed. Returns true when words
+   * are kept for it: a note back in its editor.
+   */
+  set(id: string | undefined, editor: E | undefined): boolean {
+    if (this.id !== undefined && (this.id !== id || this.editor !== editor))
+      this.memory.forget(this.id);
+    this.id = id;
+    this.editor = editor;
+    return id !== undefined && editor !== undefined && this.memory.has(id, editor);
+  }
+
+  /** The mark left its editor; `inDocument` is the note as the document held it. */
+  unmount(inDocument: unknown): void {
+    if (this.id !== undefined && this.editor !== undefined)
+      this.memory.leave(this.id, this.editor, inDocument);
+    this.id = undefined;
+    this.editor = undefined;
+  }
 }
 
 /** A form path as a patch path: `body[_key=="a"].children[_key=="b"]`. */

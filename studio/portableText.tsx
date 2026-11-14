@@ -28,6 +28,7 @@ import { numberFootnotes } from "../packages/renderer/src/footnotes";
 import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
 import {
   jsonPath,
+  MarkLife,
   NoteMemory,
   noteId,
 } from "../packages/renderer/src/note-memory";
@@ -384,17 +385,22 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const [back, setBack] = useState<Element | null>(null);
   const inDocumentNow = useRef(inDocument);
   inDocumentNow.current = inDocument;
+  const life = useRef<MarkLife<Element> | null>(null);
+  life.current ??= new MarkLife(memory);
   useEffect(() => {
     // The editor the mark stands in: its nearest editable ancestor.
-    const editor = markRef.current?.parentElement?.closest(
-      '[contenteditable="true"]',
-    );
-    if (!memoryId || !editor) return;
-    if (memory.has(memoryId, editor)) setBack(editor);
-    // A mark mounted again at once (the editor re-syncing a block) finds
-    // its words kept and forgets them, as the note still has them.
-    return () => memory.leave(memoryId, editor, inDocumentNow.current);
+    const editor =
+      markRef.current?.parentElement?.closest('[contenteditable="true"]') ??
+      undefined;
+    // A new id (a draft made, the document published) or a read-only view
+    // forgets what was kept and keeps nothing; only the mark leaving its
+    // editor keeps words (below). A mark mounted again at once (the editor
+    // re-syncing a block) finds its words kept and forgets them, as the
+    // note still has them.
+    const kept = life.current?.set(memoryId, editor);
+    setBack(kept && editor ? editor : null);
   }, [memoryId]);
+  useEffect(() => () => life.current?.unmount(inDocumentNow.current), []);
   const done = useCallback(() => setBack(null), []);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
