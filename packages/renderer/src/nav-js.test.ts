@@ -1538,3 +1538,70 @@ test("the foot's Theme button opens the theme controls in place", () => {
   assert.equal(pop.checked, false);
   assert.equal(themeBtn.attrs["aria-expanded"], "false");
 });
+
+test("on a phone the author control and theme box move after the posts, and back when wider", () => {
+  interface Node {
+    name: string;
+    parentNode: Node | null;
+    nextSibling: Node | null;
+    kids: Node[];
+    appendChild(c: Node): void;
+    insertBefore(c: Node, ref: Node | null): void;
+    querySelector?: () => Node;
+  }
+  const detach = (c: Node) => {
+    if (c.parentNode) c.parentNode.kids = c.parentNode.kids.filter((k) => k !== c);
+  };
+  const node = (name: string): Node => ({
+    name,
+    parentNode: null,
+    nextSibling: null,
+    kids: [],
+    appendChild(c) {
+      detach(c);
+      c.parentNode = this;
+      this.kids.push(c);
+    },
+    insertBefore(c, ref) {
+      detach(c);
+      c.parentNode = this;
+      const at = ref ? this.kids.indexOf(ref) : -1;
+      this.kids.splice(at < 0 ? this.kids.length : at, 0, c);
+    },
+  });
+  const navPage = node("nav-page");
+  const rail = node("right-rail");
+  const tail = node("phone-tail");
+  const tailRow = node("tail-row");
+  tail.querySelector = () => tailRow;
+  const author = node("author");
+  const after = node("after-author");
+  const themeSel = node("theme-sel");
+  navPage.appendChild(author);
+  navPage.appendChild(after);
+  author.nextSibling = after;
+  rail.appendChild(themeSel);
+  const changes: (() => void)[] = [];
+  const mq = { matches: true, addEventListener: (_: string, fn: () => void) => changes.push(fn) };
+  const document = {
+    getElementById: (id: string) => (id === "post-author" ? author : null),
+    querySelector: (sel: string) =>
+      sel === ".phone-tail" ? tail : sel === ".right-rail .theme-sel" ? themeSel : null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    documentElement: { style: {} },
+  };
+  new Function("document", "location", "addEventListener", "matchMedia", NAV_JS)(
+    document,
+    { pathname: "/blog", search: "", href: "https://remilia.org/blog" },
+    () => {},
+    () => mq,
+  );
+  assert.equal(author.parentNode?.name, "tail-row");
+  assert.equal(themeSel.parentNode?.name, "phone-tail");
+  mq.matches = false;
+  for (const fn of changes) fn();
+  assert.deepEqual(navPage.kids.map((k) => k.name), ["author", "after-author"]);
+  assert.deepEqual(rail.kids.map((k) => k.name), ["theme-sel"]);
+  assert.deepEqual(tailRow.kids, []);
+});

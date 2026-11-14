@@ -1,5 +1,11 @@
 /* blog/layout — breakpoint composition: how the shell and components arrange at each width */
 
+/* Where a phone puts the author control and theme box, after the posts
+   (page.ts PHONE_TAIL); wider screens keep them in the rails. */
+.phone-tail {
+  display: none;
+}
+
 @media (min-width: 824px) {
   .mast-tools,
   .mast-tools-rule {
@@ -292,13 +298,18 @@
   .article-wrap {
     order: 3;
   }
+  /* The contents box is an overlay here; its own place is an empty point
+     between the head and the post, where it sits in the page, so its
+     toggle's tab stop is where the post's Contents link is. It takes back
+     the column gap it would add. */
   .left-rail .toc {
-    order: 4;
+    order: 2;
+    margin-bottom: calc(-1 * var(--rail-gap));
   }
   .cite-box {
     display: none;
   }
-  .right-rail .theme-sel {
+  .theme-sel {
     display: contents;
   }
   /* The head menu holds the sections here. */
@@ -343,6 +354,24 @@
   }
   .post-nav .nav-page details.nav-cat-sel {
     order: 5;
+    max-width: none;
+  }
+  /* nav.js moves the author control and theme box here, after the posts,
+     so the tab order follows the screen. */
+  .phone-tail {
+    display: contents;
+  }
+  .phone-tail > .nav-page {
+    order: 5;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .phone-tail > .nav-page:empty {
+    display: none;
+  }
+  .phone-tail details.nav-cat-sel {
+    flex: 1 1 auto;
     max-width: none;
   }
   .post-nav .nav-rule,

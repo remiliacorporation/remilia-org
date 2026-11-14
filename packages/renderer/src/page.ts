@@ -190,6 +190,13 @@ function discoveryHead(p: PageInput): string {
 }
 
 /**
+ * Where a phone puts the rail's author control and theme box: after the
+ * posts, so the tab order follows the screen. nav.js moves them in while the
+ * screen is phone-wide and back when it widens; wider screens never show it.
+ */
+const PHONE_TAIL = `<div class="phone-tail"><div class="nav-page"></div></div>`;
+
+/**
  * The resting halftone: three tones, ink below 5/48 of full brightness, paper
  * from two thirds up, the mid tone between. Equal thirds turned a dark picture
  * into a solid block, because the dot screen can at most double a pixel's
@@ -328,6 +335,7 @@ ${p.leftRail}
     : header
 }
 ${main}
+${p.leftRail ? PHONE_TAIL : ""}
 </div>
 ${p.chrome.footer}
 ${p.bodyEnd ?? ""}

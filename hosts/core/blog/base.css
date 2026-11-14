@@ -121,7 +121,8 @@ i {
   font-style: italic;
 }
 .left-rail,
-.right-rail {
+.right-rail,
+.phone-tail {
   --size-base: var(--size-ui);
 }
 .layout {

@@ -901,6 +901,26 @@ export const NAV_JS = `(() => {
       }
     });
   }
+  // On a phone the author control and the theme box show under the posts,
+  // so they move there in the page too, and the tab order follows the
+  // screen. They go back when the screen widens.
+  const tail = document.querySelector('.phone-tail');
+  const tailRow = tail && tail.querySelector('.nav-page');
+  const movers = [
+    [document.getElementById('post-author'), tailRow],
+    [document.querySelector('.right-rail .theme-sel'), tail],
+  ].filter(([el, to]) => el && to).map(([el, to]) => ({ el, to, home: el.parentNode, next: el.nextSibling }));
+  if (movers.length && typeof matchMedia === 'function') {
+    const phone = matchMedia('(max-width: 823px)');
+    const place = () => {
+      for (const m of movers) {
+        if (phone.matches) m.to.appendChild(m.el);
+        else m.home.insertBefore(m.el, m.next);
+      }
+    };
+    place();
+    if (phone.addEventListener) phone.addEventListener('change', place);
+  }
   // The foot's Theme button (phones) opens the theme controls where they
   // show, above the foot, and moves focus into them without scrolling.
   const pop = document.getElementById('theme-pop');

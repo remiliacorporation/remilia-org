@@ -210,9 +210,10 @@
 /blog/authors/angelicism01  /blog/archive/authors/angelicism01  301
 /blog/authors/angelicism01/*  /blog/archive/authors/angelicism01/:splat  301
 # Remilia Jackson's Archive posts went to Milady (the guides), so her
-# Archive archive is gone; her pooled one stays.
+# Archive archive is gone; her pooled one stays. The pooled archive has no
+# feed, so her Archive feed goes to her Thought feed.
 /blog/archive/authors/remilia-jackson  /blog/authors/remilia-jackson  301
-/blog/archive/authors/remilia-jackson/*  /blog/authors/remilia-jackson/:splat  301
+/blog/archive/authors/remilia-jackson/rss.xml  /blog/thought/authors/remilia-jackson/rss.xml  301
 /blog/months/2022-02  /blog/archive/months/2022-02  301
 /blog/thought/months/2022-02  /blog/archive/months/2022-02  301
 
