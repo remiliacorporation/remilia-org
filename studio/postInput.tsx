@@ -230,9 +230,13 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
   const sc = document.querySelector("[data-testid='document-panel-scroller']");
   sc?.addEventListener("scroll", pin, { passive: true });
   window.addEventListener("resize", pin);
+  // A pane changes width without a window resize: split, closed, or focused.
+  const sizes = new ResizeObserver(pin);
+  sizes.observe(shell);
   const obs = new MutationObserver(pin);
   obs.observe(shell, { childList: true, subtree: true });
   return () => {
+    sizes.disconnect();
     obs.disconnect();
     sc?.removeEventListener("scroll", pin);
     window.removeEventListener("resize", pin);

@@ -5,6 +5,7 @@ export * from "./nav";
 export * from "./post";
 export * from "./footnotes";
 export * from "./gallery";
+export * from "./section";
 export * from "./bake";
 export * from "./guard";
 export * from "./links";

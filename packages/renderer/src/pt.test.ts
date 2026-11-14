@@ -8,7 +8,7 @@ import {
   tocItems,
   type PTBlock,
 } from "./pt";
-import { cdnUrl } from "./bake";
+import { cdnUrl } from "./section";
 
 const span = (text: string, marks: string[] = []) => ({
   _type: "span" as const,
@@ -263,6 +263,17 @@ test("link marks reject executable URL schemes", () => {
       { imageUrl: () => undefined },
     );
     assert.match(html, /href="#"/);
+  }
+});
+
+test("an image with an executable URL is left out", () => {
+  for (const url of ["javascript:alert(1)", " javascript:alert(1)"]) {
+    const html = portableTextToHtml(
+      [{ _type: "image", asset: { url } }],
+      { imageUrl: (b) => b.asset?.url },
+    );
+    assert.ok(!html.includes("javascript"));
+    assert.ok(!html.includes("<figure"));
   }
 });
 

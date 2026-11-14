@@ -20,13 +20,17 @@ export const FRAME_CLASS = "blog-page";
 /** Where the blog sheet stops: the editor and anything Sanity UI renders. */
 const LIMIT = ".blog-pt, [data-ui]";
 
-export const PAGE_CSS = scopeBlogCss(
-  [
-    sheets["../hosts/core/theme.css"],
-    ...BLOG_SHEETS.map((n) => sheets[`../hosts/core/blog/${n}.css`]),
-  ].join("\n"),
-  { root: `.${FRAME_CLASS}`, limit: LIMIT, container: FRAME_CLASS },
-);
+/** The blog's stylesheet, as the bake writes it to blog.css. */
+export const BLOG_CSS = [
+  sheets["../hosts/core/theme.css"],
+  ...BLOG_SHEETS.map((n) => sheets[`../hosts/core/blog/${n}.css`]),
+].join("\n");
+
+export const PAGE_CSS = scopeBlogCss(BLOG_CSS, {
+  root: `.${FRAME_CLASS}`,
+  limit: LIMIT,
+  container: FRAME_CLASS,
+});
 
 /** The post's section, or Press (the default chrome) while it has none. */
 export function frameChannel(channel: unknown): Channel {
