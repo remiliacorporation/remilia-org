@@ -743,43 +743,56 @@
     display: grid;
   }
 }
-/* Beside one column or none, a note opens under its mark on hover or
-   focus; the full notes list at the foot of the post. A note nested in
-   another has no box of its own here: its mark links to the list. */
+/* Beside one column or none, a tap on a mark floats its note right under
+   it, and the page does not move; a tap in the note goes down to it in the
+   notes list, and a tap anywhere else or Escape closes it (the page
+   script sets data-float). A pointer that can hover opens it on hover, and
+   the keyboard on focus. A note nested in another has no box of its own
+   here: its mark links to the list. */
 @media (max-width: 1099px) {
   .fn {
     position: relative;
   }
-  /* A hit area on the mark's line, so the pointer can cross to the note,
-     which opens right under it. The page script sets how far it runs to
-     each edge of the column; a fixed width past the column made the page
-     scroll sideways on a phone. */
-  .fn:hover::before,
-  .fn:focus-within::before {
-    content: "";
-    position: absolute;
-    top: calc(-1 * var(--grid));
-    bottom: calc(-1 * var(--space-s));
-    left: calc(-1 * var(--fn-hit-l, var(--space-s)));
-    right: calc(-1 * var(--fn-hit-r, var(--space-s)));
-  }
-  .fn:hover .fn-note:not(.fn-sub),
-  .fn:focus-within .fn-note:not(.fn-sub) {
-    display: flex;
+  .fn .fn-note:not(.fn-sub) {
     gap: var(--grid);
     align-items: flex-start;
     position: absolute;
     top: 100%;
     left: 0;
     width: calc(var(--measure) * 0.75);
+    /* On a phone, no wider than the text: the page's gutter on both sides. */
     max-width: min(
       calc(var(--measure) * 0.75),
-      calc(100vw - 2 * var(--rail-gap))
+      calc(100vw - 2 * var(--space-s))
     );
     margin: 0;
     padding: calc(var(--space-xs) + var(--grid)) var(--space-xs) var(--space-xs);
     z-index: 30;
     pointer-events: auto;
+    cursor: pointer;
+  }
+  .fn[data-float] .fn-note:not(.fn-sub),
+  .fn:has(:focus-visible) .fn-note:not(.fn-sub) {
+    display: flex;
+  }
+}
+/* A hit area on the mark's line, so the pointer can cross to the note,
+   which opens right under it. The page script sets how far it runs to
+   each edge of the column; a fixed width past the column made the page
+   scroll sideways on a phone. */
+@media (hover: hover) {
+  @media (max-width: 1099px) {
+    .fn:hover::before {
+      content: "";
+      position: absolute;
+      top: calc(-1 * var(--grid));
+      bottom: calc(-1 * var(--space-s));
+      left: calc(-1 * var(--fn-hit-l, var(--space-s)));
+      right: calc(-1 * var(--fn-hit-r, var(--space-s)));
+    }
+    .fn:hover .fn-note:not(.fn-sub) {
+      display: flex;
+    }
   }
 }
 /* With both rails the notes stand over the right rail (blog/sidenotes.css),

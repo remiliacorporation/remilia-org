@@ -10,6 +10,8 @@ import {
 } from "./pt";
 import { cdnUrl } from "./bake";
 
+const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
+
 const span = (text: string, marks: string[] = []) => ({
   _type: "span" as const,
   text,
@@ -212,7 +214,7 @@ test("footnotes render as one .fn with nested note", () => {
   assert.ok(html.includes('<a class="fn-ref" href="#fndef-1" aria-label="Note 1"><sup>1</sup></a>'));
   assert.ok(
     html.includes(
-      '<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">First source.</span></span><a class="fn-hit" href="#fn-1"',
+      `<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">First source.${BACK}</span></span><a class="fn-hit" href="#fn-1"`,
     ),
   );
   assert.ok(

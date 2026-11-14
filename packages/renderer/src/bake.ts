@@ -39,6 +39,7 @@ import {
   type LinkCard,
   type PTBlock,
   bodyShowsImage,
+  withoutNotesHeading,
 } from "./pt";
 import { markdownToPost, postToMarkdownFile } from "./md";
 import {
@@ -217,7 +218,7 @@ const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, ad
 
 /** The blocks a post's page shows, with its notes in the renderer's shape. */
 function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
-  return lowerFootnotes(shownBlocks(p, channel));
+  return withoutNotesHeading(lowerFootnotes(shownBlocks(p, channel)));
 }
 
 function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {

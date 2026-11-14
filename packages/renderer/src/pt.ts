@@ -238,13 +238,30 @@ function fnTextHtml(text: string, state: RenderState): string {
           : m;
       })
       .replace(/_([^_\n]+)_/g, (_m, i: string) => keep(`<em>${esc(i)}</em>`));
-  const para = (p: string): string => {
+  const para = (p: string, i: number): string => {
     let s = esc(inline(p));
-    s = s.replace(/“[^”]{80,}”|&quot;.{80,}?&quot;/g, (m) =>
-      keep(`<span class="fn-q">${m}</span>`),
+    // A quoted passage is set off; a citation that follows it and ends
+    // the paragraph ("…” Vincent Garton, Title (2017); <url>") goes on
+    // its own line under it, set right.
+    s = s.replace(
+      /(“[^”]{80,}”|&quot;.{80,}?&quot;)(?:\s+([A-Z][^.!?\u0000“”]{1,60}, [^\u0000“”]{1,240}?\(\d{4}[a-z]?\)(?:;\s*\u0000\d+\u0000)?)\s*$)?/g,
+      (_m, quote: string, by: string | undefined, at: number) =>
+        keep(
+          // A quote that opens the note stays clear of its number.
+          `<span class="${i === 0 && at === 0 ? "fn-q fn-q-top" : "fn-q"}">${quote}${by ? `<span class="bq-by">—${by.replace(/;\s*/, "; ")}</span>` : ""}</span>`,
+        ),
     );
     const q = s.match(/^(.{0,100}?): (\S[\s\S]{150,})$/);
-    if (q) s = `${q[1]}: ${keep(`<span class="fn-q">${q[2]}</span>`)}`;
+    if (q) {
+      // A passage that ends in its citation ("… resources. Nick Land,
+      // Machinic Desire (2008)") gives the citation its own line, set
+      // right, as the post's own block quotes set theirs.
+      const by = q[2].match(/^([\s\S]*?[.!?…”"])\s+([A-Z][^.!?\u0000]{1,60}, (?:(?![.!?]\s)[\s\S]){1,240}?\(\d{4}[a-z]?\))\s*$/);
+      const quote = by
+        ? `${by[1]}<span class="bq-by">—${by[2]}</span>`
+        : q[2];
+      s = `${q[1]}: ${keep(`<span class="fn-q">${quote}</span>`)}`;
+    }
     return keep(`<span class="fn-par">${s}</span>`);
   };
   return resolve(text.split(/\n+/).map(para).join(""));
@@ -269,6 +286,26 @@ function subNote(t: number, state: RenderState): void {
  * A block of notes alone: its children are only empty note-marked spans
  * and white space. Its notes have no mark in the text (orphans).
  */
+/**
+ * A post that ends with its own heading over its notes ("Footnotes", as
+ * KALI/ACC's does) would show two headings over the notes list, which opens
+ * with its own: that last heading goes, when nothing after it shows but the
+ * notes.
+ */
+export function withoutNotesHeading(blocks: PTBlock[]): PTBlock[] {
+  if (!footnoteCount(blocks)) return blocks;
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i];
+    if (!isTextBlock(b)) return blocks;
+    const text = b.children.map((c) => c.text ?? "").join("").trim();
+    if (!text || notesOnly(b)) continue;
+    return /^h[1-4]$/.test(b.style ?? "") && /^(?:foot|end)?notes:?$/i.test(text)
+      ? [...blocks.slice(0, i), ...blocks.slice(i + 1)]
+      : blocks;
+  }
+  return blocks;
+}
+
 function notesOnly(block: TextBlock): boolean {
   const fnKeys = new Set(
     (block.markDefs ?? []).filter((d) => d._type === "footnote").map((d) => d._key),
@@ -327,12 +364,25 @@ function fnContentHtml(blocks: PTBlock[], state: RenderState): string {
         .join("");
       if (!inner) return "";
       return b.style === "blockquote"
-        ? `<span class="fn-q">${inner}</span>`
+        ? `<span class="fn-q">${quoteBy(inner)}</span>`
         : `<span class="fn-par">${inner}</span>`;
     })
     .join("");
   state.inNote = was;
   return out;
+}
+
+/**
+ * A quote's last line, when it starts with a dash, is its attribution
+ * (`.bq-by`), set right as in the post's own block quotes.
+ */
+function quoteBy(quote: string): string {
+  const br = quote.lastIndexOf("<br>");
+  if (br < 0) return quote;
+  const tail = quote.slice(br + 4);
+  const tailText = tail.replace(/<[^>]+>/g, "");
+  if (!tailText.trim() || !/^\s*[—–-]/.test(tailText)) return quote;
+  return `${quote.slice(0, br)}<span class="bq-by">${tail}</span>`;
 }
 
 /** What a note says: its blocks, or an old note's hand-marked text. */
@@ -352,6 +402,19 @@ function fnBodyHtml(def: MarkDef, state: RenderState, trim = true): string {
 const ADJACENT_NOTES = /(<\/span><\/span><\/span>)\s*(?=<span class="fn" id=)/g;
 const FN_SEP = '$1<sup class="fn-sep" aria-hidden="true">,</sup>';
 
+/**
+ * The return mark at the end of a note in the list, on its last line: the
+ * whole note links back up to its mark (.fn-hit), and the mark says so.
+ * U+FE0E keeps it a text glyph, not an emoji.
+ */
+const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
+const withBack = (body: string): string => {
+  // Inside the innermost last piece of text, so it follows the last word,
+  // a quote's citation included, and not on a line of its own.
+  const close = body.match(/(?:<\/span>)+$/);
+  return close ? `${body.slice(0, close.index)}${BACK}${close[0]}` : `${body}${BACK}`;
+};
+
 /** A nested note's reference carries its id only in the endnotes copy. */
 const withoutIds = (html: string): string =>
   html.replace(/(<a class="fn-xref") id="fn-[^"]*"/g, "$1");
@@ -370,7 +433,7 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
     const at = state.subs ? state.subs.push("") - 1 : -1;
     const body = fnBodyHtml(def, state);
     state.endnotes[slot] =
-      `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
+      `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${withBack(body)}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
     if (state.subs && at >= 0)
       state.subs[at] =
         `<span class="fn-note fn-sub" role="note" data-n="${n}" data-ref="fndef-${id.slice(3)}"><strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span></span>`;
@@ -385,7 +448,7 @@ function fnHtml(def: MarkDef, inner: string, state: RenderState): string {
   // the note also lands in the endnotes pool — its entry id is fndef-N so
   // in-note xrefs to #fn-N still resolve to the in-text anchor.
   state.endnotes[slot] =
-    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${body}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
+    `<div class="fn-end" id="fndef-${id.slice(3)}"><strong>${n}.</strong><span class="sn-text">${withBack(body)}</span><a class="fn-hit" href="#${id}" aria-label="Back to reference ${n}"></a></div>`;
   const note = `<strong>${n}:</strong><span class="sn-text">${withoutIds(body)}</span>`;
   state.opts.onNote?.(state.blockKey ?? "", def._key, note, subs.join(""));
   return `${inner}<span class="fn" id="${id}"><a class="fn-ref" href="#fndef-${id.slice(3)}" aria-label="Note ${n}"><sup>${n}</sup></a><span class="fn-note" role="note" data-n="${n}">${note}</span>${subs.join("")}</span>`;
@@ -644,8 +707,11 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   }
   flushList();
   if (state.endnotes.length) {
+    // A rule, then a NOTES heading, over the list. The heading is not an
+    // h2 or h3, so the contents box does not list it: the box has its own
+    // row of note links.
     out.push(
-      `<div class="fn-endnotes" role="doc-endnotes">${state.endnotes.join("")}</div>`,
+      `<div class="fn-endnotes" role="doc-endnotes" aria-labelledby="fn-endnotes-head"><hr><p class="fn-endnotes-head" id="fn-endnotes-head" role="heading" aria-level="2">Notes</p>${state.endnotes.join("")}</div>`,
     );
   }
   closeH2();

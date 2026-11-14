@@ -328,11 +328,14 @@ export const SIDENOTES_JS = `// With both rails, notes stand in the margin, in r
 // line when that place is free; otherwise it goes under the note above.
 // A note shows in full while the next note leaves it room; one the next
 // note would block is cut to whole lines, never under eight, and the next
-// note goes under it. Pointing at a note or its mark, tabbing to the mark,
-// or a click on the mark opens that note alone in full, over the notes
-// below it, which stay where they are; so the note under the pointer never
-// moves. A note being written in the editor (fn-pin) opens in place, and
-// the notes below move down. Notes run past the rail's width toward the
+// note goes under it. Pointing at a note or its mark (after a short rest),
+// tabbing to the mark, or a click on the mark opens that note in full where
+// it stands, and the notes below glide down to make room and back when it
+// closes; the notes above never move. A note the pointer moves onto from
+// an open note above it holds its place while that note closes, so nothing
+// moves under the pointer. A note being written in the editor (fn-pin)
+// opens the same way. Nested notes step in from the left, a step a level.
+// Notes run past the rail's width toward the
 // window's edge, keeping a gutter, up to a cap. A line ties each note to its place, drawn
 // like a flowchart: out from the column at the mark's line, down a lane
 // in the gap, into the note's left side. A note inside a note stands
@@ -359,9 +362,19 @@ function sidenotes(root, wide, opts) {
   const layout = root.querySelector('.layout');
   const PITCH = 3;
   const LINES = 8;
-  const OPEN_MS = 80;
+  // Hover intent: a note opens after the pointer rests this long, and
+  // stays open this long after it leaves.
+  const OPEN_MS = 120;
   const CLOSE_MS = 250;
   const GLIDE_MS = 300;
+  // The glide: opening a little slower than closing, easing out.
+  const OPENING_MS = 220;
+  const CLOSING_MS = 180;
+  const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
+  // A nested note steps in from the left by this much a level, and the
+  // lines on the right keep this far out from the boxes.
+  const INDENT = 12;
+  const OUT = 4;
   // Notes widen past the rail, up to this many rails, and stop this far
   // short of the window's (or the frame's) right edge.
   const WIDEST = 1.5;
@@ -369,12 +382,34 @@ function sidenotes(root, wide, opts) {
   let placed = [];
   let hover = null;
   let pinned = null;
+  // Whether the note under the pointer, or the one held open, was reached
+  // through its reference inside the note it is nested in: that note then
+  // stays open too, so the reference stays under the pointer. A nested
+  // note pointed at directly opens alone, so the notes above it stay as
+  // they are and it does not move.
+  let hoverUp = false;
+  let pinUp = false;
   // The note opened last, which stands over any other open note.
   let last = null;
   let timer = 0;
   let glideUntil = 0;
-  const VARS = ['--fn-drop', '--fn-lane', '--fn-reach'];
-  const FLAGS = ['data-on', 'data-top', 'data-dim', 'data-long', 'data-anim'];
+  // A note that holds its place while an open note above it closes (the
+  // pointer moved onto it), and the top it holds.
+  let hold = null;
+  // The notes open at the last layout, and each note's top then.
+  let wasOn = new Set();
+  const lastTop = new Map();
+  // In the editor a note opened for writing gets a new box, whose form
+  // takes a moment to load, and the boxes of the notes nested in it give
+  // way to that form: until it has loaded, the notes below keep the room
+  // the mark's notes took before (each mark's last height, from its note's
+  // top to the foot of its last nested note, and the hold's end).
+  const LOAD_MS = 800;
+  const lastH = new Map();
+  const loading = new Map();
+  const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const VARS = ['--fn-drop', '--fn-lane', '--fn-reach', '--fn-lead'];
+  const FLAGS = ['data-on', 'data-top', 'data-dim', 'data-long'];
   // Writes only what differs, so a layout that has not changed leaves the
   // page alone.
   const put = (el, k, v) => {
@@ -415,27 +450,63 @@ function sidenotes(root, wide, opts) {
   };
   const mainOf = (fn) => fn && fn.querySelector('.fn-note:not(.fn-sub)');
   const subOf = (fn, key) => (key && [...fn.querySelectorAll('.fn-note.fn-sub')].find((n) => n.getAttribute('data-ref') === key)) || null;
-  // The notes that stand out: under the pointer or the keyboard focus,
-  // opened by a click, or marked open by the page around them.
+  // The note a nested note is nested in, among the notes of its mark.
+  const hostOf = (n) => {
+    if (!n.classList.contains('fn-sub')) return null;
+    const key = n.getAttribute('data-ref');
+    const fn = n.closest('.fn');
+    return (fn && [...fn.querySelectorAll('.fn-note')].find((o) => o !== n && o.querySelector('.fn-xref[href="#' + key + '"]'))) || null;
+  };
+  // A note and the notes it is nested in.
+  const chain = (n, set) => {
+    for (let k = 0; n && k < 12 && !set.has(n); k++, n = hostOf(n)) set.add(n);
+    return set;
+  };
+  // The notes that stand out: one mark's notes at a time. The note opened
+  // by a click, or else the one under the pointer or the keyboard focus,
+  // with the notes it is nested in; while a note is held open, the pointer
+  // opens only that mark's other notes. And the notes the page around them
+  // marks open (the editor's).
   const targets = () => {
     const set = new Set();
-    if (hover && hover.isConnected) set.add(hover);
-    if (pinned && pinned.isConnected) set.add(pinned);
+    const add = (n, up) => { if (up) chain(n, set); else set.add(n); };
+    if (pinned && pinned.isConnected) add(pinned, pinUp);
+    if (hover && hover.isConnected && (!set.size || hover.closest('.fn') === pinned.closest('.fn'))) add(hover, hoverUp);
     for (const fn of root.querySelectorAll('.fn.fn-pin')) {
       const n = mainOf(fn);
       if (n) set.add(n);
     }
     return set;
   };
-  // The notes being written: shown in full in the stack, the notes below
-  // moved down.
-  const written = () => {
-    const set = new Set();
-    for (const fn of root.querySelectorAll('.fn.fn-pin')) {
-      const n = mainOf(fn);
-      if (n) set.add(n);
+  // How deep a nested note stands: 1 under a note in the text, 2 under
+  // that, and so on.
+  const depthOf = (n) => {
+    let d = 0;
+    for (let h = hostOf(n); h && d < 12; h = hostOf(h)) d++;
+    return n.classList.contains('fn-sub') ? Math.max(1, d) : 0;
+  };
+  // The values the glide moves, read as they stand now (mid-glide too).
+  const GLIDES = ['top', '--fn-drop', '--fn-lane'];
+  const now0 = (el, k) => {
+    if (!el.getAnimations || !el.getAnimations().length) return k.startsWith('--') ? el.style.getPropertyValue(k) : el.style[k];
+    return getComputedStyle(el).getPropertyValue(k).trim();
+  };
+  // Glides an element from the values it showed to the ones just written.
+  const glideFrom = (el, was, ms) => {
+    if (!el.animate) return;
+    const from = {};
+    const to = {};
+    for (const k in was) {
+      const a = parseFloat(was[k]);
+      const v = k.startsWith('--') ? el.style.getPropertyValue(k) : el.style[k];
+      const b = parseFloat(v);
+      if (!(Math.abs(a - b) > 0.5)) continue;
+      from[k] = was[k];
+      to[k] = v;
     }
-    return set;
+    if (el.getAnimations) for (const a of el.getAnimations()) a.cancel();
+    if (!Object.keys(to).length) return;
+    el.animate([from, to], { duration: ms, easing: EASE });
   };
   const stack = (glide) => {
     const notes = [...root.querySelectorAll('.fn .fn-note')];
@@ -444,7 +515,7 @@ function sidenotes(root, wide, opts) {
     placed = notes;
     const now = Date.now();
     if (glide === true) glideUntil = now + GLIDE_MS;
-    const anim = now < glideUntil;
+    const anim = now < glideUntil && !still();
     const cs = getComputedStyle(root.documentElement || root);
     const num = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
     const gap = num('--grid') || 4;
@@ -453,7 +524,22 @@ function sidenotes(root, wide, opts) {
     const line = num('--size-ui') * (num('--leading') || 1) || 16;
     const tick = num('--space-xs') + line / 2;
     const on = targets();
-    const open = written();
+    // Every note that stands out is open: in full, the notes below it
+    // moved down. Flagged first, so its open padding is what is measured.
+    const open = on;
+    for (const n of notes) flag(n, 'data-on', on.has(n));
+    const ms = [...on].some((n) => !wasOn.has(n)) ? OPENING_MS : CLOSING_MS;
+    wasOn = new Set(on);
+    for (const fn of root.querySelectorAll('.fn.fn-pin'))
+      if (!loading.has(fn) && lastH.has(fn)) {
+        loading.set(fn, { h: lastH.get(fn), until: now + LOAD_MS });
+        setTimeout(() => stack(true), LOAD_MS + 20);
+      }
+    for (const [fn, hold] of loading) {
+      if (!fn.classList.contains('fn-pin')) loading.delete(fn);
+      else if (now > hold.until) hold.h = 0;
+    }
+    if (hold && !on.has(hold.n)) hold = null;
     // Every place below is measured from the top of root, the page or the
     // frame, so where the window or the editor's pane is scrolled to does
     // not enter it.
@@ -477,7 +563,8 @@ function sidenotes(root, wide, opts) {
     // One pass places every note at a given width and returns the runs.
     // It reads nothing a glide in progress changes: the marks, the text's
     // own height, and a reference's place inside its note.
-    const place = (leftExtra, rightExtra) => {
+    const depth = new Map(notes.map((n) => [n, depthOf(n)]));
+    const place = (leftExtra, rightExtra, open) => {
       const rows = [];
       for (const n of notes) {
         const parent = n.offsetParent;
@@ -485,7 +572,7 @@ function sidenotes(root, wide, opts) {
         const sec = n.closest('.sec');
         const text = n.querySelector('.sn-text');
         if (!parent || !fn || !sec || !text) continue;
-        put(n, 'width', span - leftExtra - rightExtra + 'px');
+        put(n, 'width', span - leftExtra - rightExtra - INDENT * (depth.get(n) || 0) + 'px');
         const p = parent.getBoundingClientRect();
         const box = getComputedStyle(n);
         const row = { n, text, fn, base: y(p.top), sub: n.classList.contains('fn-sub'),
@@ -545,6 +632,8 @@ function sidenotes(root, wide, opts) {
       let floor = top0;
       rows.forEach((row, i) => {
         row.top = row.sub ? floor : Math.max(row.ideal, floor);
+        // The note the pointer moved onto holds its place.
+        if (hold && hold.n === row.n) row.top = Math.max(row.top, hold.top);
         row.cut = row.full;
         if (!row.open) {
           // The room down to where the next note in the text wants to
@@ -558,6 +647,14 @@ function sidenotes(root, wide, opts) {
           }
         }
         row.h = row.cut + row.chrome;
+        if (!row.sub) {
+          // The hold ends once the box's form has drawn (its height first
+          // changes), so the notes below move once, to where they belong.
+          const hold = loading.get(row.fn);
+          if (hold && hold.full === undefined) hold.full = row.full;
+          else if (hold && Math.abs(row.full - hold.full) > 1) hold.h = 0;
+          if (hold && hold.h > row.h) row.h = hold.h;
+        }
         floor = row.top + row.h + gap;
       });
       for (const row of rows) {
@@ -574,42 +671,61 @@ function sidenotes(root, wide, opts) {
       const right = rows.filter((o) => o.sub);
       return { rows, left, right, L: lanesFor(left), R: lanesFor(right), floor };
     };
-    let out = place(0, 0);
+    // The lanes the lines need are counted with every note closed, so a
+    // note that opens never changes the notes' width: nothing reflows, and
+    // the notes above it stay where they are. Lines an open note pushes
+    // past those lanes share them.
+    let out = place(0, 0, new Set());
     const room = (lanes) => PITCH * (lanes + 1);
     const leftExtra = Math.min(36, Math.max(0, room(out.L) - between));
-    const rightExtra = out.R ? Math.min(24, room(out.R)) : 0;
-    if (leftExtra || rightExtra) out = place(leftExtra, rightExtra);
+    const rightExtra = out.R ? Math.min(24, room(out.R)) + OUT : 0;
+    const lanes = { L: out.L, R: out.R };
+    if (leftExtra || rightExtra || open.size) out = place(leftExtra, rightExtra, open);
     const leftW = between + leftExtra;
-    const leftPitch = Math.max(2, Math.min(PITCH, Math.floor(leftW / (out.L + 1))));
-    const rightPitch = out.R ? Math.max(2, Math.min(PITCH, Math.floor(rightExtra / (out.R + 1)))) : PITCH;
+    const leftPitch = Math.max(2, Math.min(PITCH, Math.floor(leftW / (lanes.L + 1))));
+    const rightPitch = lanes.R ? Math.max(2, Math.min(PITCH, Math.floor((rightExtra - OUT) / (lanes.R + 1)))) : PITCH;
     const lit = new Set();
     for (const row of out.rows) {
       const n = row.n;
-      flag(n, 'data-anim', anim);
+      const was = {};
+      const wasText = anim ? { height: now0(row.text, 'height') } : null;
+      if (anim) for (const k of GLIDES) was[k] = now0(n, k);
+      lastTop.set(n, row.top);
       put(n, 'top', row.top - row.base + 'px');
-      put(n, 'left', row.edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + leftW + 'px');
-      put(n, '--fn-reach', leftW + 'px');
-      // A target opens over the notes below; the stack keeps its place.
-      const over = on.has(n) && !open.has(n);
-      put(row.text, 'height', (over ? row.full : row.cut) + 'px');
-      flag(n, 'data-long', !over && row.cut < row.full);
-      if (over) out.floor = Math.max(out.floor, row.top + row.full + row.chrome + num('--space-xs'));
-      flag(n, 'data-on', on.has(n));
+      put(n, 'left', row.edge - (parseFloat(getComputedStyle(n).marginLeft) || 0) + leftW + INDENT * (depth.get(n) || 0) + 'px');
+      put(n, '--fn-reach', leftW + INDENT * (depth.get(n) || 0) + 'px');
+      put(row.text, 'height', row.cut + 'px');
+      flag(n, 'data-long', row.cut < row.full);
       flag(n, 'data-top', on.has(n) && n === last);
       flag(n, 'data-dim', on.size > 0 && !on.has(n));
       if (on.has(n) && !row.sub) lit.add(row.fn);
       put(n, '--fn-drop', Math.max(0, row.to - row.from) + 'px');
       if (row.sub) {
-        // Lane 0 is nearest the notes.
-        put(n, '--fn-lane', Math.min(rightExtra - 1, rightPitch * ((row.lane % Math.max(1, Math.floor(rightExtra / rightPitch) - 1)) + 1)) + 'px');
+        // Lane 0 is nearest the notes, OUT clear of their edge.
+        put(n, '--fn-lane', Math.min(rightExtra - 1, OUT + rightPitch * ((row.lane % Math.max(1, Math.floor((rightExtra - OUT) / rightPitch) - 1)) + 1)) + 'px');
       } else if (row.lane !== undefined) {
         // Lane 0 is nearest the notes. A later line turns nearer the
         // column, so its way out never meets an earlier line's way down.
         const fit = Math.max(1, Math.floor(leftW / leftPitch) - 1);
         put(n, '--fn-lane', Math.max(1, leftW - leftPitch * ((row.lane % fit) + 1)) + 'px');
       }
+      // A quote in the note reaches back under its number.
+      const num0 = row.text.querySelector('.fn-q') && n.querySelector(':scope > strong');
+      if (num0) {
+        const lead = row.text.getBoundingClientRect().left - num0.getBoundingClientRect().left;
+        if (lead > 0) put(n, '--fn-lead', lead + 'px');
+      }
+      if (anim) {
+        glideFrom(n, was, ms);
+        glideFrom(row.text, wasText, ms);
+      }
     }
     for (const fn of new Set(out.rows.map((o) => o.fn))) flag(fn, 'data-on', lit.has(fn));
+    for (const row of out.rows) {
+      if (row.sub || loading.has(row.fn)) continue;
+      const foot = out.rows.filter((o) => o.fn === row.fn).reduce((v, o) => Math.max(v, o.top + o.h), 0);
+      lastH.set(row.fn, foot - row.top);
+    }
     // A stack that ends below the page's content makes the page longer.
     if (layout) {
       const end = y(layout.getBoundingClientRect().bottom) - (parseFloat(layout.style.paddingBottom) || 0);
@@ -627,15 +743,30 @@ function sidenotes(root, wide, opts) {
   };
   const listen = (type, fn) => root.addEventListener(type, fn, opts && opts.signal ? { signal: opts.signal } : undefined);
   if (opts && opts.signal) opts.signal.addEventListener('abort', () => clearTimeout(timer));
-  const point = (n, ms) => {
+  const viaRef = (t) => !!(t && t.closest && t.closest('.fn-xref'));
+  const point = (n, ms, up) => {
     clearTimeout(timer);
     if (n === hover) return;
-    timer = setTimeout(() => { hover = n; if (n) last = n; stack(true); }, ms);
+    timer = setTimeout(() => {
+      // Moving from an open note onto a note below it: that note keeps
+      // the place it was pushed to while the one above closes.
+      const from = hover;
+      if (n && from && from !== n && from !== pinned && lastTop.has(n) && lastTop.has(from) && lastTop.get(n) > lastTop.get(from))
+        hold = { n, top: lastTop.get(n) };
+      hover = n;
+      hoverUp = !!up;
+      if (n) last = n;
+      stack(true);
+    }, ms);
   };
+  // While a note is held open by a click, pointing at another mark's
+  // note leaves it be; its own nested notes still open.
+  const mine = (n) => !pinned || !n || n.closest('.fn') === pinned.closest('.fn');
   listen('pointerover', (e) => {
     if (e.pointerType === 'touch') return;
-    const n = noteAt(e.target);
-    if (n) point(n, OPEN_MS);
+    let n = noteAt(e.target);
+    if (!mine(n)) n = null;
+    if (n) point(n, OPEN_MS, viaRef(e.target));
     else if (hover) point(null, CLOSE_MS);
   });
   listen('pointerout', (e) => {
@@ -644,18 +775,30 @@ function sidenotes(root, wide, opts) {
   listen('focusin', (e) => {
     const t = e.target;
     const n = t && t.matches && t.matches(':focus-visible') ? noteAt(t) : null;
-    if (n) point(n, 0);
+    if (n && !mine(n)) pinned = null;
+    if (n) point(n, 0, viaRef(t));
   });
   listen('focusout', (e) => {
     if (hover && !noteAt(e.relatedTarget)) point(null, CLOSE_MS);
   });
-  const pin = (n) => {
-    if (n === pinned) return;
+  // A note that opens does not move the page.
+  const pin = (n, up) => {
+    if (n && n !== last) last = n;
+    if (n === pinned && !!up === pinUp) { stack(true); return; }
     pinned = n;
-    if (n) last = n;
+    pinUp = !!up;
     stack(true);
-    // Into view once it has opened, and only if it is off screen.
-    if (n) setTimeout(() => { if (pinned === n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest' }); }, GLIDE_MS);
+  };
+  // Up to the mark a note was cited from, on the site: the line it stands
+  // on comes into view, unless it is already in view.
+  const toMark = (n) => {
+    const fn = n.closest('.fn');
+    const ref = fn && fn.querySelector('.fn-ref');
+    if (!ref || !ref.scrollIntoView) return;
+    const r = ref.getBoundingClientRect();
+    const h = root.documentElement ? root.documentElement.clientHeight : innerHeight;
+    if (r.top >= 0 && r.bottom <= h) return;
+    ref.scrollIntoView({ block: 'center', behavior: still() ? 'auto' : 'smooth' });
   };
   // A click on a mark opens its note, and a second click closes it; a
   // click on a note keeps it open; a click anywhere else closes it.
@@ -678,18 +821,25 @@ function sidenotes(root, wide, opts) {
       // the nested note under this one, or the note of another mark.
       const key = (x.getAttribute('href') || '').slice(1);
       const other = root.querySelector('.fn[id="' + key + '"]');
-      const n = subOf(fn, key) || mainOf(other);
+      const sub = subOf(fn, key);
+      const n = sub || mainOf(other);
       if (!n) return;
       e.preventDefault();
-      pin(n);
+      pin(n, !!sub);
     } else if (!t.closest('a')) {
+      // A click on a note keeps it open and, on the site, goes up to its
+      // mark. A nested note's reference is in the note above it, at hand.
       const n = t.closest('.fn-note');
-      if (n) pin(n);
+      if (n) {
+        pin(n);
+        if (opts && opts.links && !n.classList.contains('fn-sub')) toMark(n);
+      }
     }
   });
   listen('keydown', (e) => {
-    if (e.key !== 'Escape' || !(hover || pinned)) return;
+    if (e.key !== 'Escape') return;
     clearTimeout(timer);
+    if (!(hover || pinned)) return;
     hover = null;
     pinned = null;
     stack(true);
@@ -1046,10 +1196,24 @@ export const NAV_JS = `(() => {
       requestAnimationFrame(step);
     };
     const wide = matchMedia('(min-width: 1100px)');
+    // A quote in a note reaches back under the note's number: how far the
+    // text stands from the number.
+    const lead = (box) => {
+      const num = box && box.querySelector(':scope > strong');
+      const text = box && box.querySelector(':scope > .sn-text');
+      if (!num || !text || !text.querySelector('.fn-q')) return;
+      const d = text.getBoundingClientRect().left - num.getBoundingClientRect().left;
+      if (d > 0) box.style.setProperty('--fn-lead', d + 'px');
+    };
+    const leadAll = () => document.querySelectorAll('.fn-end').forEach(lead);
+    leadAll();
+    addEventListener('resize', leadAll, { passive: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(leadAll);
     const fitNote = (fn) => {
       const note = fn && fn.querySelector('.fn-note');
       // From 1100px a note stands in the margin, placed by the stacking pass.
       if (!note || wide.matches) return;
+      lead(note);
       note.style.left = '';
       const col = fn.closest('.prose, .article-rest, .article-body');
       if (!col) return;
@@ -1070,6 +1234,48 @@ export const NAV_JS = `(() => {
       const fn = e.target && e.target.closest && e.target.closest('.fn');
       if (fn) requestAnimationFrame(() => fitNote(fn));
     });
+    // Beside one column or none, a tap on a mark floats its note under it
+    // and the page stays put; a second tap closes it. A tap in the note
+    // goes down to it in the notes list, whose entry ends with a way back
+    // up. A tap anywhere else, or Escape, closes it.
+    const floating = () => document.querySelector('.fn[data-float]');
+    const sink = (fn) => { if (fn) fn.removeAttribute('data-float'); };
+    addEventListener('click', (e) => {
+      if (wide.matches || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const t = e.target;
+      const fn = t && t.closest && t.closest('.fn');
+      const open = floating();
+      if (open && open !== fn) sink(open);
+      if (!fn) return;
+      const ref = t.closest('.fn-ref');
+      if (ref) {
+        e.preventDefault();
+        if (fn.hasAttribute('data-float')) { sink(fn); return; }
+        fn.setAttribute('data-float', '');
+        fitNote(fn);
+        return;
+      }
+      const note = t.closest('.fn-note');
+      if (!note || t.closest('a')) return;
+      const r = fn.querySelector('.fn-ref');
+      const href = r && r.getAttribute('href');
+      const el = href && document.getElementById(href.slice(1));
+      if (!el) return;
+      e.preventDefault();
+      sink(fn);
+      if (location.hash !== href) history.pushState(null, '', href);
+      go(el);
+    });
+    // Escape also takes the focus off the mark, which a key press would
+    // otherwise show as keyboard focus, opening the note again.
+    addEventListener('keydown', (e) => {
+      const fn = e.key === 'Escape' && floating();
+      if (!fn) return;
+      sink(fn);
+      const a = document.activeElement;
+      if (a && fn.contains(a) && a.blur) a.blur();
+    });
+    addEventListener('resize', () => { const fn = floating(); if (fn) fitNote(fn); }, { passive: true });
     addEventListener('click', (e) => {
       if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target.closest('a[href^="#"]');

@@ -115,16 +115,52 @@
 .fn-par + .fn-par {
   margin-top: var(--space-xs);
 }
-/* The quote's rule takes the text's color, so it inverts with the note. */
-/* A thin rule, the text close beside it. */
+/* The quote's rule takes the text's color, so it inverts with the note.
+   A thin rule under the note's number, the text close beside it: the
+   page script measures how far the note's text stands from its number
+   (--fn-lead), and the quote reaches back that far. */
 .fn-q {
   display: block;
-  margin: var(--space-xs) 0;
+  margin: var(--space-xs) 0 var(--space-xs) calc(-1 * var(--fn-lead, 0px));
   padding-left: var(--grid);
   border-left: var(--border-w) solid currentColor;
 }
+/* A quote's attribution stands on its own line, set right and upright,
+   as in the post's own block quotes; a long one wraps short of the
+   rule. */
+.fn-q .bq-by {
+  display: block;
+  padding-left: var(--space);
+  text-align: right;
+  font-style: normal;
+}
+/* The return mark at the end of a note in the list: the note links back
+   up to its mark. */
+.fn-back {
+  margin-left: var(--grid);
+  font-style: normal;
+  white-space: nowrap;
+}
+/* A rule, then the NOTES heading, over the list of notes. */
+.fn-endnotes > hr {
+  margin: 0 0 var(--space-xs);
+  border: 0;
+  border-top: var(--border);
+}
+.prose .fn-endnotes-head {
+  margin: 0 0 var(--space-xs);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  text-align: center;
+}
 .fn-q:first-child {
   margin-top: 0;
+}
+/* A quote that opens the note stands beside its number, not under it. */
+.sn-text > .fn-q:first-child,
+.fn-q-top {
+  margin-left: 0;
 }
 .fn-q:last-child {
   margin-bottom: 0;
