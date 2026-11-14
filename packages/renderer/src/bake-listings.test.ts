@@ -795,7 +795,7 @@ test("a post shows its cover once and names its bylines in the head and feeds", 
   }
 });
 
-test("Press lists only under Press: the pooled index, its feeds and archives leave it out", async () => {
+test("Press and Archive list only under themselves: the pooled index, its feeds and archives leave them out", async () => {
   const at = (day: number) => `2024-12-${String(day).padStart(2, "0")}T12:00:00.000Z`;
   const post = (slug: string, day: number, extra: object = {}) => ({
     ...posts[0],
@@ -820,22 +820,31 @@ test("Press lists only under Press: the pooled index, its feeds and archives lea
       }),
     ],
     thought: [post("essay", 2, { authors: [{ name: "Charlotte Fang" }] })],
-    archive: [post("guide", 1, { authors: [{ name: "Charlotte Fang" }], origin: "first-party" })],
+    archive: [post("guide", 1, { authors: [{ name: "Milady" }], origin: "first-party" })],
   };
   const outDir = await mkdtemp(join(tmpdir(), "bake-press-apart-"));
   const server = await bakeOrg(outDir, bySection, HOST_POOLED.org);
   try {
     const read = (path: string) => readFile(join(outDir, path), "utf8");
-    // All lists the other sections and none of Press, in its cards, feeds,
-    // search, text maps and month archives.
+    // All lists Updates and Thought and none of Press or Archive, in its
+    // cards, feeds, search, text maps and month archives.
     const index = await read("blog/index.html");
-    for (const slug of ["memo", "essay", "guide"])
+    for (const slug of ["memo", "essay"])
       assert.ok(index.includes(`data-title="${slug}"`), slug);
     for (const file of ["blog/index.html", "blog/rss.xml", "blog/atom.xml", "blog/index.md", "blog/llms.txt", "blog/months/2024-12/index.html"]) {
       const text = await read(file);
       assert.ok(!text.includes("/blog/press/statement"), file);
       assert.ok(!text.includes("forbes-feature"), file);
+      assert.ok(!text.includes("/blog/archive/guide"), file);
     }
+    // The section row reads Updates, Thought, Press, Archive.
+    const row = [...index.matchAll(/href="\/blog\/(updates|thought|press|archive)"/g)].map((m) => m[1]);
+    assert.deepEqual([...new Set(row)], ["updates", "thought", "press", "archive"]);
+    // Archive still bakes its post, listing, feed and sitemap.
+    const archive = await read("blog/archive/index.html");
+    assert.ok(archive.includes('data-title="guide"'));
+    assert.ok((await read("blog/archive/rss.xml")).includes("/blog/archive/guide"));
+    assert.ok((await read("blog/archive/sitemap.xml")).includes("/blog/archive/guide"));
     // Press still bakes its posts, listing and feed, and All stays one click
     // away in the section row.
     const press = await read("blog/press/index.html");

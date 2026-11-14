@@ -13,6 +13,15 @@ import { isCoverageChannel } from "../../packages/seo/src/urls";
 const coverage = (channel: unknown): boolean =>
   isCoverageChannel(channel as Parameters<typeof isCoverageChannel>[0]);
 
+/**
+ * A new remilia.org blog post's byline until someone picks one: Milady
+ * (Charlie, 2026-11-13). The `post-by-channel` template applies it to org
+ * sections only; remilia.com and blog.remilia.net posts start with none.
+ */
+export const DEFAULT_AUTHORS = [
+  { _key: "milady", _type: "reference", _ref: "author-milady_sonoro" },
+];
+
 export const post = defineType({
   name: "post",
   title: "Post",
@@ -206,7 +215,8 @@ export const post = defineType({
       title: "Authors",
       type: "array",
       of: [defineArrayMember({ type: "reference", to: [{ type: "author" }] })],
-      description: "Bylines feed Article JSON-LD author entities.",
+      description:
+        "Bylines feed Article JSON-LD author entities. A new remilia.org blog post starts with Milady, the default author.",
     }),
     defineField({
       name: "tags",

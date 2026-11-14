@@ -156,8 +156,8 @@ test("site-head leads with its links and closes on the brand alone", () => {
     [
       ["All posts", "/blog", false],
       ["Updates", "/blog/updates", false],
-      ["Press", "/blog/press", false],
       ["Thought", "/blog/thought", true],
+      ["Press", "/blog/press", false],
       ["Archive", "/blog/archive", false],
       ["remilia.org", "https://remilia.org/", false],
       ["RSS", "/blog/thought/rss.xml", false],

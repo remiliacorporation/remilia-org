@@ -76,8 +76,8 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
 
 export const ORG_SECTIONS: Channel[] = [
   "updates",
-  "press",
   "thought",
+  "press",
   "archive",
 ];
 
@@ -99,12 +99,13 @@ export const isAggregate = (c: Channel): boolean =>
   HOST_AGGREGATE[CHANNEL_HOST[c]] === c;
 
 /**
- * The sections each host's pooled index ("All") lists. Press is left out of
- * the org pool: press releases and coverage list only under Press, so All
- * reads as the corporation's own writing.
+ * The sections each host's pooled index ("All") lists. Press and Archive are
+ * left out of the org pool: press releases, coverage and the guides kept for
+ * the record list only under their own sections, so All reads as the
+ * corporation's own current writing.
  */
 export const HOST_POOLED: Record<HostId, Channel[]> = {
-  org: ["updates", "thought", "archive"],
+  org: ["updates", "thought"],
   com: ["news", "events"],
   net: ["dev-updates", "dev-blog"],
 };
