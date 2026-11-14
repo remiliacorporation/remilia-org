@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useContext,
   useEffect,
   useInsertionEffect,
@@ -10,6 +11,7 @@ import {
 } from "react";
 import {
   getPublishedId,
+  getVersionFromId,
   set,
   useClient,
   useDocumentOperation,
@@ -24,7 +26,11 @@ import {
 import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
 import { numberFootnotes } from "../packages/renderer/src/footnotes";
 import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
-import { NoteMemory } from "./noteMemory";
+import {
+  jsonPath,
+  NoteMemory,
+  noteId,
+} from "../packages/renderer/src/note-memory";
 import { injectNoteCss } from "./noteStyles";
 import { SidenotesShown } from "./sidenotes";
 
@@ -199,18 +205,6 @@ export function NoteContentInput(props: ArrayOfObjectsInputProps): ReactNode {
   return <div className="blog-note-edit">{props.renderDefault(props)}</div>;
 }
 
-/** A form path as a patch path: `body[_key=="a"].children[_key=="b"]`. */
-const jsonPath = (path: readonly unknown[]): string =>
-  path
-    .map((seg, i) =>
-      seg && typeof seg === "object" && "_key" in seg
-        ? `[_key==${JSON.stringify(String(seg._key))}]`
-        : typeof seg === "number"
-          ? `[${seg}]`
-          : `${i ? "." : ""}${String(seg)}`,
-    )
-    .join("");
-
 const keysOf = (path: readonly unknown[]): string[] =>
   path.flatMap((seg) =>
     seg && typeof seg === "object" && "_key" in seg ? [String(seg._key)] : [],
@@ -243,8 +237,47 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
   return out;
 }
 
-/** Each note's words while its mark is out of the editor (noteMemory.ts). */
-const memory = new NoteMemory();
+/**
+ * Each note's words while its mark is out of its parent's editor, by the
+ * editor's element (packages/renderer/src/note-memory.ts).
+ */
+const memory = new NoteMemory<Element>((editor) => editor.isConnected);
+
+/**
+ * A note back in its parent's editor that left with words: once the
+ * document holds the empty copy the editor put back, the kept words are
+ * written to the document (not through the editor, so the editor's undo
+ * does not take them out again). Mounted only for such a note, so a mark
+ * does not watch the document's operations for nothing.
+ */
+function NoteReturn(props: {
+  id: string;
+  editor: Element;
+  path: BlockProps["path"];
+  inDocument: unknown;
+  inEditor: unknown;
+  onDone: () => void;
+}): null {
+  const docId = useFormValue(["_id"]);
+  const docType = useFormValue(["_type"]);
+  const full = typeof docId === "string" ? docId : "";
+  // The version being edited: a release's, or the draft.
+  const { patch } = useDocumentOperation(
+    getPublishedId(full),
+    typeof docType === "string" ? docType : "post",
+    getVersionFromId(full),
+  );
+  const sent = useRef<unknown>(null);
+  const { id, editor, path, inDocument, inEditor, onDone } = props;
+  useEffect(() => {
+    const step = memory.step(id, editor, inDocument, inEditor);
+    if (step.kind === "none") onDone();
+    if (step.kind !== "write" || sent.current === inDocument) return;
+    sent.current = inDocument;
+    patch.execute([{ set: { [`${jsonPath(path)}.content`]: step.words } }]);
+  }, [id, editor, path, inDocument, inEditor, onDone, patch]);
+  return null;
+}
 
 /**
  * The note being written in its margin box, by its path; one at a time. It
@@ -340,28 +373,29 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const keys = keysOf(props.path);
   const id = keys.join("/");
   const me = JSON.stringify(props.path);
-  // A note that comes back into the editor with no words, as undo then redo
-  // brings it back, gets back the words it had when its mark left
-  // (noteMemory.ts).
-  const docId = useFormValue(["_id"]);
-  const docType = useFormValue(["_type"]);
-  const { patch } = useDocumentOperation(
-    getPublishedId(typeof docId === "string" ? docId : ""),
-    typeof docType === "string" ? docType : "post",
-  );
-  const latest = useRef({ value: props.value as unknown, path: props.path, patch });
-  latest.current = { value: props.value, path: props.path, patch };
-  const key = keys[keys.length - 1] ?? "";
+  // A note that comes back into its parent's editor with no words, as undo
+  // then redo brings it back, gets back the words the document held when
+  // its mark left (note-memory.ts). Not in a view that cannot be edited,
+  // such as an older revision.
+  const formId = useFormValue(["_id"]);
+  const memoryId = props.readOnly ? undefined : noteId(formId, props.path);
+  const inDocument = useFormValue(props.path);
+  const markRef = useRef<HTMLSpanElement>(null);
+  const [back, setBack] = useState<Element | null>(null);
+  const inDocumentNow = useRef(inDocument);
+  inDocumentNow.current = inDocument;
   useEffect(() => {
-    const content = (v: unknown) =>
-      v && typeof v === "object" ? (v as { content?: unknown }).content : undefined;
-    const words = memory.back(key, content(latest.current.value));
-    if (words)
-      latest.current.patch.execute([
-        { set: { [`${jsonPath(latest.current.path)}.content`]: words } },
-      ]);
-    return () => memory.leave(key, content(latest.current.value));
-  }, [key]);
+    // The editor the mark stands in: its nearest editable ancestor.
+    const editor = markRef.current?.parentElement?.closest(
+      '[contenteditable="true"]',
+    );
+    if (!memoryId || !editor) return;
+    if (memory.has(memoryId, editor)) setBack(editor);
+    // A mark mounted again at once (the editor re-syncing a block) finds
+    // its words kept and forgets them, as the note still has them.
+    return () => memory.leave(memoryId, editor, inDocumentNow.current);
+  }, [memoryId]);
+  const done = useCallback(() => setBack(null), []);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
@@ -400,6 +434,7 @@ export function FootnoteInline(props: BlockProps): ReactNode {
     .join(" ");
   return (
     <span
+      ref={markRef}
       className="blog-pt-note"
       onClick={(e) => {
         // The note's dialog is a React child of this mark, so a click in the
@@ -425,6 +460,16 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         window.setTimeout(() => props.onOpen(), 0);
       }}
     >
+      {back && memoryId ? (
+        <NoteReturn
+          id={memoryId}
+          editor={back}
+          path={props.path}
+          inDocument={inDocument}
+          inEditor={props.value}
+          onDone={done}
+        />
+      ) : null}
       <span className={state}>
         {props.renderDefault({
           ...props,
