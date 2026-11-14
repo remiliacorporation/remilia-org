@@ -2,6 +2,7 @@ import { createClient } from "@sanity/client";
 import { pathToFileURL } from "node:url";
 import { plainFromBlocks, polishBody, smartExcerpt } from "@remilia/renderer";
 import type { PTBlock } from "@remilia/renderer";
+import { isCoverageChannel, type Channel } from "@remilia/seo";
 import { suggestTags, TAG_TAXONOMY } from "./tag-taxonomy";
 
 const write = process.argv.includes("--write");
@@ -103,7 +104,7 @@ async function main() {
   let n = 0;
   for (const row of rows) {
     const title = row.title?.trim() || "Untitled";
-    const isExternal = row.channel === "archive" && row.origin === "external";
+    const isExternal = isCoverageChannel(row.channel as Channel) && row.origin === "external";
     const sourceBlocks = (isExternal ? row.commentary : row.body) ?? [];
     const polished = polishBody(sourceBlocks, title);
     const fromBody = plainFromBlocks(polished);

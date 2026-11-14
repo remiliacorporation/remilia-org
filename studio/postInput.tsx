@@ -17,6 +17,7 @@ import {
   type StringInputProps,
 } from "sanity";
 import { usePresentationParams } from "sanity/presentation";
+import { isCoverageChannel } from "../packages/seo/src/urls";
 import { CHANNELS, type Channel } from "../lib/access";
 import {
   FRAME_POSTS_QUERY,
@@ -230,9 +231,13 @@ function pinEditorToolbar(shell: HTMLElement): () => void {
   const sc = document.querySelector("[data-testid='document-panel-scroller']");
   sc?.addEventListener("scroll", pin, { passive: true });
   window.addEventListener("resize", pin);
+  // A pane changes width without a window resize: split, closed, or focused.
+  const sizes = new ResizeObserver(pin);
+  sizes.observe(shell);
   const obs = new MutationObserver(pin);
   obs.observe(shell, { childList: true, subtree: true });
   return () => {
+    sizes.disconnect();
     obs.disconnect();
     sc?.removeEventListener("scroll", pin);
     window.removeEventListener("resize", pin);
@@ -298,7 +303,7 @@ export function PostInput(props: ObjectInputProps): ReactNode {
   const noIndex = useFormValue(["seo", "noIndex"]) === true;
   const post = useMemo((): FramePost => {
     // The page shows the commentary on outside coverage, as the bake does.
-    const coverage = channel === "archive" && origin === "external";
+    const coverage = isCoverageChannel(channel) && origin === "external";
     const written = frameBody(commentary);
     return {
       id: id.replace(/^(?:drafts|versions\.[^.]+)\./, ""),

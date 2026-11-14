@@ -8,7 +8,7 @@ import {
   tocItems,
   type PTBlock,
 } from "./pt";
-import { cdnUrl } from "./bake";
+import { cdnUrl } from "./section";
 
 const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
 
@@ -179,6 +179,8 @@ test("external links get outlink metadata; Remilia links stay internal", () => {
             title: "Launch",
             description: "We launched.",
             imageUrl: "https://cdn/x.jpg",
+            imageWidth: 1200,
+            imageHeight: 630,
           }
         : undefined,
   });
@@ -195,7 +197,8 @@ test("external links get outlink metadata; Remilia links stay internal", () => {
   assert.ok(
     html.includes('<span class="link-card" role="tooltip"><span class="ht">'),
   );
-  assert.ok(html.includes('src="https://cdn/x.jpg"'));
+  // The card's image holds its box before it loads.
+  assert.ok(html.includes('src="https://cdn/x.jpg" width="1200" height="630"'));
   assert.ok(html.includes("<strong>Launch</strong><span>We launched.</span>"));
 });
 test("footnotes render as one .fn with nested note", () => {
@@ -265,6 +268,17 @@ test("link marks reject executable URL schemes", () => {
       { imageUrl: () => undefined },
     );
     assert.match(html, /href="#"/);
+  }
+});
+
+test("an image with an executable URL is left out", () => {
+  for (const url of ["javascript:alert(1)", " javascript:alert(1)"]) {
+    const html = portableTextToHtml(
+      [{ _type: "image", asset: { url } }],
+      { imageUrl: (b) => b.asset?.url },
+    );
+    assert.ok(!html.includes("javascript"));
+    assert.ok(!html.includes("<figure"));
   }
 });
 

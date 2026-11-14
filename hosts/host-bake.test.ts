@@ -177,14 +177,14 @@ test("site-head leads with its links and closes on the brand alone", () => {
   assert.match(chromeFor("net-blog").header, /<li><a href="\/" aria-current="true">All posts<\/a><\/li>/);
 });
 
-test("org still wears its own brand and pinned light theme", async () => {
+test("org still wears its own brand and pinned dark theme", async () => {
   const { outDir, close } = await bakeSections([ORG_SECTIONS[0]]);
   try {
     const updates = await readFile(
       join(outDir, "blog/updates/index.html"),
       "utf8",
     );
-    assert.match(updates, /data-scheme="light"/);
+    assert.match(updates, /data-scheme="dark"/);
     assert.match(updates, /data-hue="30"/);
     assert.match(updates, /data-dots="small"/);
     assert.ok(

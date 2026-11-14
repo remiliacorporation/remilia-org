@@ -7,6 +7,11 @@ import {
   type Channel,
 } from "../../lib/access";
 import { PostInput, TitleField, TitleInput } from "../../studio/postInput";
+import { isCoverageChannel } from "../../packages/seo/src/urls";
+
+/** Press and Archive can file coverage written elsewhere. */
+const coverage = (channel: unknown): boolean =>
+  isCoverageChannel(channel as Parameters<typeof isCoverageChannel>[0]);
 
 export const post = defineType({
   name: "post",
@@ -110,11 +115,12 @@ export const post = defineType({
         ],
         layout: "radio",
       },
-      hidden: ({ document }) => document?.channel !== "archive",
+      hidden: ({ document }) => !coverage(document?.channel),
       description:
-        "Archive only. External entries cite someone else's piece; our /archive/<slug> is the citing record.",
+        "Press and Archive. External entries cite someone else's piece; our /<section>/<slug> is the citing record.",
       validation: (r) =>
         r.custom((origin, ctx) => {
+          // Press posts without an origin are our own statements.
           if (ctx.document?.channel !== "archive") return true;
           return origin ? true : "Archive posts need an origin";
         }),
@@ -124,17 +130,17 @@ export const post = defineType({
       title: "External URL",
       type: "url",
       hidden: ({ document }) =>
-        document?.channel !== "archive" || document?.origin !== "external",
+        !coverage(document?.channel) || document?.origin !== "external",
       description:
         "Original article URL. Becomes the HTML canonical when we are not the publisher.",
       validation: (r) =>
         r.uri({ scheme: ["http", "https"] }).custom((url, ctx) => {
           if (
-            ctx.document?.channel !== "archive" ||
+            !coverage(ctx.document?.channel) ||
             ctx.document?.origin !== "external"
           )
             return true;
-          return url ? true : "External archive entries need the original URL";
+          return url ? true : "External entries need the original URL";
         }),
     }),
     defineField({
@@ -142,12 +148,12 @@ export const post = defineType({
       title: "Outlet",
       type: "string",
       hidden: ({ document }) =>
-        document?.channel !== "archive" || document?.origin !== "external",
+        !coverage(document?.channel) || document?.origin !== "external",
       description: "Publication name (e.g. The New York Times, Mirror).",
       validation: (r) =>
         r.custom((outlet, ctx) => {
           if (
-            ctx.document?.channel !== "archive" ||
+            !coverage(ctx.document?.channel) ||
             ctx.document?.origin !== "external"
           )
             return true;
@@ -159,7 +165,7 @@ export const post = defineType({
       title: "Commentary",
       type: "blockContent",
       hidden: ({ document }) =>
-        document?.channel !== "archive" || document?.origin !== "external",
+        !coverage(document?.channel) || document?.origin !== "external",
       description:
         "Our citing writeup (the original press/blog post). The external article itself lives in Archived page below.",
     }),
@@ -169,7 +175,7 @@ export const post = defineType({
       type: "text",
       rows: 12,
       hidden: ({ document }) =>
-        document?.channel !== "archive" || document?.origin !== "external",
+        !coverage(document?.channel) || document?.origin !== "external",
       description:
         "Firecrawl markdown of externalUrl — the third-party article we archived. Not our commentary.",
       readOnly: true,
@@ -181,12 +187,12 @@ export const post = defineType({
       description:
         "Write here. Bake compiles this to HTML plus `.md` / `.txt` siblings from the same blocks.",
       hidden: ({ document }) =>
-        document?.channel === "archive" && document?.origin === "external",
+        coverage(document?.channel) && document?.origin === "external",
       validation: (r) =>
         r.custom((body, ctx) => {
           const channel = ctx.document?.channel;
           const origin = ctx.document?.origin;
-          if (channel === "archive" && origin === "external") {
+          if (coverage(channel) && origin === "external") {
             return true;
           }
           if (Array.isArray(body) && body.length > 0) return true;

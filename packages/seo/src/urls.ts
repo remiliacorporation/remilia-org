@@ -98,6 +98,27 @@ export const HOST_AGGREGATE: Record<HostId, Channel> = {
 export const isAggregate = (c: Channel): boolean =>
   HOST_AGGREGATE[CHANNEL_HOST[c]] === c;
 
+/**
+ * The sections each host's pooled index ("All") lists. Press is left out of
+ * the org pool: press releases and coverage list only under Press, so All
+ * reads as the corporation's own writing.
+ */
+export const HOST_POOLED: Record<HostId, Channel[]> = {
+  org: ["updates", "thought", "archive"],
+  com: ["news", "events"],
+  net: ["dev-updates", "dev-blog"],
+};
+
+/**
+ * Sections that carry coverage written elsewhere: a post with origin
+ * `external` names its outlet, takes the original URL as its canonical and
+ * shows our commentary.
+ */
+export const COVERAGE_CHANNELS: Channel[] = ["press", "archive"];
+
+export const isCoverageChannel = (c: Channel | undefined): boolean =>
+  !!c && COVERAGE_CHANNELS.includes(c);
+
 /** The post sections each host serves — the blog's categories. */
 export const HOST_SECTIONS: Record<HostId, Channel[]> = {
   org: ORG_SECTIONS,

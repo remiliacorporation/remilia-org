@@ -118,7 +118,7 @@ async function main() {
   });
 
   const rows = await client.fetch<Row[]>(
-    `*[_type == "post" && channel == "archive" && origin == "external" && defined(externalUrl)]{
+    `*[_type == "post" && channel in ["archive", "press"] && origin == "external" && defined(externalUrl)]{
       _id, title, externalUrl, outlet, archiveSnapshot
     } | order(title)`,
   );
@@ -128,7 +128,7 @@ async function main() {
     return force || !r.archiveSnapshot?.trim();
   });
   console.log(
-    `${rows.length} external archive posts; ${targets.length} to scrape` +
+    `${rows.length} external coverage posts (Archive and Press); ${targets.length} to scrape` +
       `${force ? " (--force)" : ""}${badOnly ? " (--bad-only)" : ""}`,
   );
 

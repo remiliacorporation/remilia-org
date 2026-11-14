@@ -1,15 +1,20 @@
 import {
+  useCallback,
   useContext,
   useEffect,
   useInsertionEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
+  getPublishedId,
+  getVersionFromId,
   set,
   useClient,
+  useDocumentOperation,
   useFormValue,
   type BlockAnnotationProps,
   type BlockDecoratorProps,
@@ -21,6 +26,12 @@ import {
 import { CHANNEL_PATH_LABEL, type Channel } from "../lib/access";
 import { numberFootnotes } from "../packages/renderer/src/footnotes";
 import { portableTextToHtml, type PTBlock } from "../packages/renderer/src/pt";
+import {
+  jsonPath,
+  MarkLife,
+  NoteMemory,
+  noteId,
+} from "../packages/renderer/src/note-memory";
 import { injectNoteCss } from "./noteStyles";
 import { SidenotesShown } from "./sidenotes";
 
@@ -228,6 +239,48 @@ function notePreviews(body: unknown): Map<string, NotePreview> {
 }
 
 /**
+ * Each note's words while its mark is out of its parent's editor, by the
+ * editor's element (packages/renderer/src/note-memory.ts).
+ */
+const memory = new NoteMemory<Element>((editor) => editor.isConnected);
+
+/**
+ * A note back in its parent's editor that left with words: once the
+ * document holds the empty copy the editor put back, the kept words are
+ * written to the document (not through the editor, so the editor's undo
+ * does not take them out again). Mounted only for such a note, so a mark
+ * does not watch the document's operations for nothing.
+ */
+function NoteReturn(props: {
+  id: string;
+  editor: Element;
+  path: BlockProps["path"];
+  inDocument: unknown;
+  inEditor: unknown;
+  onDone: () => void;
+}): null {
+  const docId = useFormValue(["_id"]);
+  const docType = useFormValue(["_type"]);
+  const full = typeof docId === "string" ? docId : "";
+  // The version being edited: a release's, or the draft.
+  const { patch } = useDocumentOperation(
+    getPublishedId(full),
+    typeof docType === "string" ? docType : "post",
+    getVersionFromId(full),
+  );
+  const sent = useRef<unknown>(null);
+  const { id, editor, path, inDocument, inEditor, onDone } = props;
+  useEffect(() => {
+    const step = memory.step(id, editor, inDocument, inEditor);
+    if (step.kind === "none") onDone();
+    if (step.kind !== "write" || sent.current === inDocument) return;
+    sent.current = inDocument;
+    patch.execute([{ set: { [`${jsonPath(path)}.content`]: step.words } }]);
+  }, [id, editor, path, inDocument, inEditor, onDone, patch]);
+  return null;
+}
+
+/**
  * The note being written in its margin box, by its path; one at a time. It
  * lives outside the notes' components, so a note stays open while the rest
  * of the post is edited, even if Sanity mounts its mark again.
@@ -321,6 +374,34 @@ export function FootnoteInline(props: BlockProps): ReactNode {
   const keys = keysOf(props.path);
   const id = keys.join("/");
   const me = JSON.stringify(props.path);
+  // A note that comes back into its parent's editor with no words, as undo
+  // then redo brings it back, gets back the words the document held when
+  // its mark left (note-memory.ts). Not in a view that cannot be edited,
+  // such as an older revision.
+  const formId = useFormValue(["_id"]);
+  const memoryId = props.readOnly ? undefined : noteId(formId, props.path);
+  const inDocument = useFormValue(props.path);
+  const markRef = useRef<HTMLSpanElement>(null);
+  const [back, setBack] = useState<Element | null>(null);
+  const inDocumentNow = useRef(inDocument);
+  inDocumentNow.current = inDocument;
+  const life = useRef<MarkLife<Element> | null>(null);
+  life.current ??= new MarkLife(memory);
+  useEffect(() => {
+    // The editor the mark stands in: its nearest editable ancestor.
+    const editor =
+      markRef.current?.parentElement?.closest('[contenteditable="true"]') ??
+      undefined;
+    // A new id (a draft made, the document published) or a read-only view
+    // forgets what was kept and keeps nothing; only the mark leaving its
+    // editor keeps words (below). A mark mounted again at once (the editor
+    // re-syncing a block) finds its words kept and forgets them, as the
+    // note still has them.
+    const kept = life.current?.set(memoryId, editor);
+    setBack(kept && editor ? editor : null);
+  }, [memoryId]);
+  useEffect(() => () => life.current?.unmount(inDocumentNow.current), []);
+  const done = useCallback(() => setBack(null), []);
   const n = useMemo(
     () => numberFootnotes(root).find((x) => x.keys.join("/") === id)?.n,
     [root, id],
@@ -359,14 +440,18 @@ export function FootnoteInline(props: BlockProps): ReactNode {
     .join(" ");
   return (
     <span
+      ref={markRef}
       className="blog-pt-note"
       onClick={(e) => {
         // The note's dialog is a React child of this mark, so a click in the
         // dialog arrives here too; only a click on the mark itself opens.
         if (!e.currentTarget.contains(e.target as Node)) return;
         const t = e.target as Element;
-        // A click in the note being written is the writer's own.
-        if (t.closest?.(".fn-edit")) return;
+        // A click in the note being written is the writer's own. A note
+        // nested in that note stands in its box, and a click on its mark
+        // opens it.
+        const box = t.closest?.(".fn-edit");
+        if (box && !box.contains(e.currentTarget)) return;
         // A link in the note's markup must not leave the Studio.
         if (t.closest?.("a")) e.preventDefault();
         if (note && margin) {
@@ -381,6 +466,16 @@ export function FootnoteInline(props: BlockProps): ReactNode {
         window.setTimeout(() => props.onOpen(), 0);
       }}
     >
+      {back && memoryId ? (
+        <NoteReturn
+          id={memoryId}
+          editor={back}
+          path={props.path}
+          inDocument={inDocument}
+          inEditor={props.value}
+          onDone={done}
+        />
+      ) : null}
       <span className={state}>
         {props.renderDefault({
           ...props,
