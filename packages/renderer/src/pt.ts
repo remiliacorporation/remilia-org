@@ -350,10 +350,19 @@ function linkHtml(def: MarkDef, inner: string, state: RenderState): string {
   return `<a class="interlink" href="${esc(href)}">${inner}<span class="link-card" role="tooltip">${img}<strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span></a>`;
 }
 
+/**
+ * A note's picture takes the body's image treatment (blog/media.css): a
+ * halftone at rest, the picture as it was made when pointed at, and a link
+ * to the picture, which a tap on a touch screen opens. With no URL (the
+ * editor has none) the note shows no picture rather than a broken one.
+ */
 function fnImgHtml(def: MarkDef, state: RenderState): string {
   if (!def.image?.asset) return "";
+  const src = state.opts.imageUrl({ _type: "image", asset: def.image.asset });
+  if (!src || safeHref(src) !== src) return "";
   const dims = imageDims(def.image.asset._ref);
-  return `<img class="fn-img" src="${esc(state.opts.imageUrl({ _type: "image", asset: def.image.asset }) ?? "")}"${dims ? ` width="${dims.w}" height="${dims.h}"` : ""} alt="${esc(def.image.alt ?? def.image.caption ?? "")}" loading="lazy">`;
+  const alt = def.image.alt ?? def.image.caption ?? "";
+  return `<a class="fn-img" href="${esc(src)}" aria-label="${esc(alt || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(src)}"${dims ? ` width="${dims.w}" height="${dims.h}"` : ""} alt="${esc(alt)}" loading="lazy"><span class="ht-ink" aria-hidden="true"></span></span></span></a>`;
 }
 
 /** Takes the next free `fn-N` id for a note numbered `n`. */
@@ -557,6 +566,50 @@ export function figureHtml(input: {
   return `<figure><a href="${esc(input.src)}" aria-label="${esc(input.alt || input.caption || "View full-size image")}"><span class="ht"><span class="ht-map"><img src="${esc(input.src)}"${responsive}${dims} alt="${esc(input.alt ?? "")}"${input.lead ? ' fetchpriority="high"' : ' loading="lazy"'}><span class="ht-ink" aria-hidden="true"></span></span></span></a>${caption}</figure>`;
 }
 
+/**
+ * A block quote's last line, when it starts with a dash, is its
+ * attribution (`.bq-by`). The quote's spans split at the last line break,
+ * so each side renders with its own marks and the attribution's box holds
+ * whole elements, whatever mark crosses the break. A span cut in two keeps
+ * its marks on both sides, except a note's, which stays on the second side
+ * only, so the note renders once, after the words it marks.
+ */
+function splitAttribution(
+  children: Span[],
+  markDefs: MarkDef[],
+): { quote: Span[]; by: Span[] } | undefined {
+  let at = -1;
+  for (let i = children.length - 1; i >= 0; i--)
+    if ((children[i].text ?? "").includes("\n")) {
+      at = i;
+      break;
+    }
+  if (at < 0) return undefined;
+  const cut = children[at];
+  const brk = cut.text.lastIndexOf("\n");
+  const head = cut.text.slice(0, brk);
+  const tail = cut.text.slice(brk + 1);
+  const by = [
+    ...(tail ? [{ ...cut, text: tail }] : []),
+    ...children.slice(at + 1),
+  ];
+  const byText = by.map((s) => s.text ?? "").join("");
+  if (!byText.trim() || !/^\s*[—–-]/.test(byText)) return undefined;
+  const notes = new Set(
+    markDefs.filter((d) => d._type === "footnote").map((d) => d._key),
+  );
+  const headMarks = tail
+    ? (cut.marks ?? []).filter((m) => !notes.has(m))
+    : cut.marks;
+  return {
+    quote: [
+      ...children.slice(0, at),
+      ...(head || !tail ? [{ ...cut, text: head, marks: headMarks }] : []),
+    ],
+    by,
+  };
+}
+
 export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
   blocks = lowerFootnotes(blocks);
   const state: RenderState = { count: 0, opts, emitted: new Set(), fnTargets: new Set(), fnTexts: new Map(), endnotes: [], orphans: new Map(), citedFrom: new Map(), orphanEnds: [] };
@@ -663,9 +716,15 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
         }
         continue;
       }
-      const inner = block.children
-        .map((s) => spanHtml(s, block.markDefs ?? [], state))
-        .join("");
+      const spansHtml = (spans: Span[]): string =>
+        spans.map((s) => spanHtml(s, block.markDefs ?? [], state)).join("");
+      const by =
+        block.style === "blockquote"
+          ? splitAttribution(block.children, block.markDefs ?? [])
+          : undefined;
+      const inner = by
+        ? `${spansHtml(by.quote)}<br><span class="bq-by">${spansHtml(by.by)}</span>`
+        : spansHtml(block.children);
       const id = headingIds.get(block);
       if (id && block.style === "h2") {
         closeH2();
@@ -684,15 +743,7 @@ export function portableTextToHtml(blocks: PTBlock[], opts: PTOptions): string {
       } else if (id && block.style === "h4") {
         out.push(`<h4 id="${id}">${inner}</h4>`);
       } else if (block.style === "blockquote") {
-        let quote = inner;
-        const br = quote.lastIndexOf("<br>");
-        if (br >= 0) {
-          const tail = quote.slice(br + 4);
-          const tailText = tail.replace(/<[^>]+>/g, "");
-          if (tailText.trim() && /^\s*[—–-]/.test(tailText))
-            quote = `${quote.slice(0, br)}<br><span class="bq-by">${tail}</span>`;
-        }
-        out.push(`<blockquote><p>${quote}</p></blockquote>`);
+        out.push(`<blockquote><p>${inner}</p></blockquote>`);
       } else if (
         plainText(block).trim() ||
         block.markDefs?.some((d) => d._type === "footnote")

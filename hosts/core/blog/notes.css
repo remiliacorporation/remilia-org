@@ -82,11 +82,13 @@
   -webkit-hyphens: auto;
   hyphens: auto;
 }
+/* A note's picture is a link to it, drawn as the body's are (blog/media.css). */
 .fn-note .fn-img,
 .fn-end .fn-img {
   display: block;
   max-width: 100%;
-  height: auto;
+  cursor: pointer;
+  text-decoration: none;
 }
 /* A mark inside a note is a link; the link's underline would show as a
    dash under the raised number, so it has none. */
