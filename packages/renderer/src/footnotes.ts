@@ -27,6 +27,29 @@ const defsOf = (b: Rec): Rec[] =>
 const marksOf = (c: Rec): string[] =>
   Array.isArray(c.marks) ? c.marks.map(String) : [];
 
+/**
+ * True when a stored note says nothing: no words in its blocks, no old
+ * text, no image. Its mark would open an empty box, so the site draws
+ * neither, and the note takes no number (`numberFootnotes`, and the
+ * renderer through `lowerFootnotes`). A note being written in the editor
+ * gets its number with its first word.
+ */
+export function noteSaysNothing(note: Rec): boolean {
+  if (typeof note.text === "string" && note.text.trim()) return false;
+  if (isRec(note.image)) return false;
+  const content = Array.isArray(note.content) ? note.content : [];
+  return !content.some((b) => {
+    if (!isRec(b)) return false;
+    if (b._type !== "block") return true;
+    const children = Array.isArray(b.children) ? b.children : [];
+    return children.some((c) =>
+      isNote(c)
+        ? !noteSaysNothing(c)
+        : isRec(c) && (c._type !== "span" || (typeof c.text === "string" && c.text.trim() !== "")),
+    );
+  });
+}
+
 /** The fields a note carries in either shape, without its key and type. */
 function noteFields(note: Rec, content: (blocks: unknown[]) => unknown[]): Rec {
   const { _key: _k, _type: _t, content: inner, ...rest } = note;
@@ -134,7 +157,9 @@ export function lowerFootnotes<T>(blocks: T[]): T[] {
     }
     const taken = new Set(lowered.map((d) => String(d._key)));
     const added: Rec[] = [];
-    const children = b.children.map((c, i) => {
+    // A note that says nothing is left out: no mark, no box, no number.
+    const kept = b.children.filter((c) => !isNote(c) || !noteSaysNothing(c));
+    const children = kept.map((c, i) => {
       if (!isNote(c)) return c;
       let key = String(c._key ?? `fn${i}`);
       while (taken.has(key)) key = `${key}_`;
@@ -174,6 +199,7 @@ export function numberFootnotes(blocks: unknown): NoteNumber[] {
       for (const c of b.children) {
         if (!isRec(c)) continue;
         if (c._type === "footnote") {
+          if (noteSaysNothing(c)) continue;
           count += 1;
           const keys = [...here, String(c._key)];
           out.push({ keys, n: typeof c.n === "number" ? c.n : count });

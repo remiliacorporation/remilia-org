@@ -10,6 +10,8 @@ import {
 } from "./pt";
 import { cdnUrl } from "./section";
 
+const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
+
 const span = (text: string, marks: string[] = []) => ({
   _type: "span" as const,
   text,
@@ -215,7 +217,7 @@ test("footnotes render as one .fn with nested note", () => {
   assert.ok(html.includes('<a class="fn-ref" href="#fndef-1" aria-label="Note 1"><sup>1</sup></a>'));
   assert.ok(
     html.includes(
-      '<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">First source.</span></span><a class="fn-hit" href="#fn-1"',
+      `<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">First source.${BACK}</span></span><a class="fn-hit" href="#fn-1"`,
     ),
   );
   assert.ok(
@@ -247,6 +249,31 @@ test("text-less paragraphs (bare embed links) leave no blank gap", () => {
   assert.ok(html.includes("<p>after</p>"));
   // a block holding only a bare footnote ref is a notes-list entry, not a popover
   assert.ok(html.includes('class="fn-end" id="fn-1"'));
+});
+
+test("an orphan note cited from inside a note links back up to that note's mark", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("Text"), span("", ["f1"])],
+      markDefs: [{ _key: "f1", _type: "footnote", text: "See [2] for more." }],
+    },
+    {
+      _type: "block",
+      children: [span("", ["f2"]), span("", ["f3"])],
+      markDefs: [
+        { _key: "f2", _type: "footnote", text: "Cited orphan." },
+        { _key: "f3", _type: "footnote", text: "Lonely orphan." },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  const entry = (id: string) => html.match(new RegExp(`<div class="fn-end" id="${id}">.*?</div>`))?.[0] ?? "";
+  assert.match(entry("fn-2"), /<a class="fn-hit" href="#fn-1" aria-label="Back to note 1"><\/a>/);
+  assert.match(entry("fn-2"), /fn-back/);
+  // Cited from nowhere: no way back.
+  assert.ok(entry("fn-3"));
+  assert.doesNotMatch(entry("fn-3"), /fn-hit|fn-back/);
 });
 
 test("link marks reject executable URL schemes", () => {
@@ -373,4 +400,56 @@ test("a note's picture takes the body's halftone and links to the picture", () =
   // The editor gives no image URL: no picture, not a broken one.
   const bare = portableTextToHtml(blocks, { imageUrl: () => undefined });
   assert.ok(!bare.includes("<img"), bare);
+});
+
+test("a note's back mark follows its words, not its picture", () => {
+  const note = (text: string) => [
+    {
+      _type: "block" as const,
+      children: [span("text"), span("", ["n1"])],
+      markDefs: [
+        {
+          _key: "n1",
+          _type: "footnote" as const,
+          text,
+          image: { asset: { _ref: "image-abc-800x400-png" }, alt: "A picture" },
+        },
+      ],
+    },
+  ];
+  const entry = (html: string) => html.match(/<div class="fn-end"[\s\S]*?<\/div>/)?.[0] ?? "";
+  const words = entry(portableTextToHtml(note("see"), OPTS));
+  assert.ok(words.includes(`see<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span></span><a class="fn-img"`), words);
+  // A picture with no words: the mark follows the picture.
+  const bare = entry(portableTextToHtml(note(""), OPTS));
+  assert.match(bare, /<\/a><span class="fn-back"/);
+});
+
+test("a quote in a note splits off its attribution whatever mark crosses the break", () => {
+  const blocks: PTBlock[] = [
+    {
+      _type: "block",
+      children: [span("text"), span("", ["n1"])],
+      markDefs: [
+        {
+          _key: "n1",
+          _type: "footnote",
+          content: [
+            {
+              _type: "block",
+              style: "blockquote",
+              markDefs: [],
+              children: [span("Quoted words.\n— A", ["code"]), span(" Name", ["strong"])],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+  const html = portableTextToHtml(blocks, OPTS);
+  assert.ok(
+    html.includes('<span class="fn-q"><code>Quoted words.</code><span class="bq-by"><code>— A</code><strong> Name</strong></span></span>'),
+    html,
+  );
+  assert.ok(!html.includes("<br>"), html);
 });

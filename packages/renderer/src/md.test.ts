@@ -62,6 +62,11 @@ test("markdown export keeps headings, wikilinks, and footnotes", () => {
   assert.ok(md.includes("## Public API"));
   assert.ok(md.includes("[[credentials|the portal]]"));
   assert.ok(md.includes("[^1]:"));
+  // The notes stand under a NOTES heading, as on the page, and a round
+  // trip keeps one.
+  assert.ok(md.includes("## Notes\n\n[^1]:"));
+  const again = portableTextToMarkdown(markdownToPost(md).body);
+  assert.equal(again.match(/## Notes/g)?.length, 1);
   const file = postToMarkdownFile({
     title: "RemiliaNET Alpha",
     slug: "remilianet-alpha-v0-8-1",

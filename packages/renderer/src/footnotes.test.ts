@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { footnoteCount, portableTextToHtml, type PTBlock } from "./pt";
+import { footnoteCount, portableTextToHtml, withoutNotesHeading, type PTBlock } from "./pt";
 import { portableTextToMarkdown } from "./md";
 import {
   hasOldFootnotes,
@@ -10,6 +10,8 @@ import {
   migrateFootnotes,
   numberFootnotes,
 } from "./footnotes";
+
+const BACK = '<span class="fn-back" aria-hidden="true">\u21A9\uFE0E</span>';
 
 const OPTS = { imageUrl: (i: { asset?: { _ref?: string } }) => i.asset?._ref };
 
@@ -151,7 +153,8 @@ test("a note holds paragraphs, a block quote, marks, and links, in the box and i
   );
   assert.ok(
     html.includes(
-      `<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text">${inner}</span><a class="fn-hit" href="#fn-1"`,
+      // The entry ends with a way back up to its mark.
+      `<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text">${inner.replace(/<\/span>$/, `${BACK}</span>`)}</span><a class="fn-hit" href="#fn-1"`,
     ),
   );
   // A note sits inside a paragraph: nothing in it may be a block element.
@@ -208,13 +211,13 @@ test("a note inside a note: one sequence in reading order, linked both ways", ()
   // which links to the inner note's entry.
   assert.ok(
     html.includes(
-      '<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">Outer text<a class="fn-xref" id="fn-2" href="#fndef-2" aria-label="Note 2"><sup>2</sup></a> goes on.</span></span>',
+      `<div class="fn-end" id="fndef-1"><strong>1.</strong><span class="sn-text"><span class="fn-par">Outer text<a class="fn-xref" id="fn-2" href="#fndef-2" aria-label="Note 2"><sup>2</sup></a> goes on.${BACK}</span></span>`,
     ),
   );
   // The inner note's entry links back to that mark.
   assert.ok(
     html.includes(
-      '<div class="fn-end" id="fndef-2"><strong>2.</strong><span class="sn-text"><span class="fn-par">The inner note.</span></span><a class="fn-hit" href="#fn-2" aria-label="Back to reference 2"></a></div>',
+      `<div class="fn-end" id="fndef-2"><strong>2.</strong><span class="sn-text"><span class="fn-par">The inner note.${BACK}</span></span><a class="fn-hit" href="#fn-2" aria-label="Back to reference 2"></a></div>`,
     ),
   );
   // The hover box repeats the mark without the id, so every id is unique
@@ -290,4 +293,94 @@ test("the renderer tells the editor each note's markup", () => {
   assert.deepEqual(seen, [
     'p1/a: <strong>1:</strong><span class="sn-text"><span class="fn-par">A &lt;b&gt;</span></span>',
   ]);
+});
+
+test("a note that says nothing has no mark, no box and no number, at any depth", () => {
+  // AI 2084's notes 6, 23 and 24: a note inside a note inside a note, with
+  // no content at all; and one left with an empty paragraph.
+  const empty = { _type: "footnote", _key: "e3" };
+  const blank = { _type: "footnote", _key: "e1", content: [block("e1b", [span(" ", "e1s")])] };
+  const body = [
+    block("p1", [
+      span("One", "s1"),
+      note("n1", "First.", {
+        content: [block("n1b", [span("First", "n1s"), note("n2", "Second.", {
+          content: [block("n2b", [span("Second", "n2s"), empty])],
+        })])],
+      }),
+      span(" two", "s2"),
+      blank,
+      span(" three", "s3"),
+      note("n4", "Third."),
+    ]),
+  ];
+  assert.deepEqual(
+    numberFootnotes(body).map((x) => [x.keys.at(-1), x.n]),
+    [["n1", 1], ["n2", 2], ["n4", 3]],
+  );
+  const html = portableTextToHtml(body, OPTS);
+  assert.deepEqual(shown(html), [1, 2, 3]);
+  assert.equal(footnoteCount(body), 3);
+  // No empty box anywhere: every note's text has words.
+  for (const m of html.matchAll(/<span class="sn-text">(.*?)<\/span><\/span>/g))
+    assert.notEqual(m[1].replace(/<[^>]+>/g, "").trim(), "");
+  assert.equal((html.match(/class="fn-ref"/g) ?? []).length, 2);
+  assert.doesNotMatch(portableTextToMarkdown(body), /\[\^\d+\]:\s*$/m);
+});
+
+test("a quoted passage in a note sets its citation on its own line, set right", () => {
+  const passage =
+    "Machinic desire can seem a little inhuman, as it rips up political cultures, deletes traditions, and dissolves subjectivities. This is because what appears to humanity as the history of capitalism is an invasion from the future.";
+  const quote =
+    "“The unconditional accelerationist points to the basic unimportance of unidirectional human agency, and to the stars.”";
+  const body = [
+    block("p1", [
+      span("One", "s1"),
+      { _type: "footnote", _key: "a", text: `The full passage: ${passage} Nick Land, Machinic Desire (2008)` },
+      span(" two", "s2"),
+      {
+        _type: "footnote",
+        _key: "b",
+        text: `One exception: ${quote} Vincent Garton, Unconditional Accelerationism as Antipraxis (2017);<cyclonotrope.wordpress.com/u-acc>`,
+      },
+    ]),
+  ];
+  const html = portableTextToHtml(body, OPTS);
+  // A passage that ends in its citation (AI 2084's note 11).
+  assert.ok(
+    html.includes(
+      `<span class="fn-q">${passage}<span class="bq-by">—Nick Land, Machinic Desire (2008)</span></span>`,
+    ),
+  );
+  // A citation after a quoted passage (KALI/ACC's note 4).
+  assert.ok(
+    html.includes(
+      `${quote}<span class="bq-by">—Vincent Garton, Unconditional Accelerationism as Antipraxis (2017); <a href="https://cyclonotrope.wordpress.com/u-acc">cyclonotrope.wordpress.com</a></span></span>`,
+    ),
+  );
+});
+
+test("the notes list opens with a rule and a NOTES heading the contents leave out", () => {
+  const html = portableTextToHtml([block("p1", [span("One", "s1"), note("n1", "First.")])], OPTS);
+  assert.ok(
+    html.includes(
+      '<div class="fn-endnotes" role="doc-endnotes" aria-labelledby="fn-endnotes-head"><hr><p class="fn-endnotes-head" id="fn-endnotes-head" role="heading" aria-level="2">Notes</p>',
+    ),
+  );
+  // Not an h2 or h3, so the table of contents has no entry for it.
+  assert.doesNotMatch(html, /<h[23]/);
+});
+
+test("a post's own heading over its notes gives way to the list's", () => {
+  const body = [
+    block("p1", [span("One", "s1"), note("n1", "First.")]),
+    block("h", [span("Footnotes", "hs")], { style: "h2" }),
+    block("e", [span("", "es")]),
+  ];
+  assert.deepEqual(withoutNotesHeading(body).map((b) => (b as { _key?: string })._key), ["p1", "e"]);
+  // Not when text follows it, and not in a post without notes.
+  const more = [...body, block("p2", [span("After.", "a")])];
+  assert.equal(withoutNotesHeading(more), more);
+  const plain = [block("p1", [span("One", "s1")]), block("h", [span("Notes", "hs")], { style: "h2" })];
+  assert.equal(withoutNotesHeading(plain), plain);
 });

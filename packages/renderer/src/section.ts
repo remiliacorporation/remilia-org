@@ -29,6 +29,7 @@ import {
   type LinkCard,
   type PTBlock,
   bodyShowsImage,
+  withoutNotesHeading,
 } from "./pt";
 import { markdownToPost } from "./md";
 import {
@@ -154,7 +155,7 @@ export const AUTHORS_QUERY = `${PUBLISHED_POSTS} {
 
 /** The blocks a post's page shows, with its notes in the renderer's shape. */
 export function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
-  return lowerFootnotes(shownBlocks(p, channel));
+  return withoutNotesHeading(lowerFootnotes(shownBlocks(p, channel)));
 }
 
 function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {

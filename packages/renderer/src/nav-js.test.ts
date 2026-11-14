@@ -999,7 +999,8 @@ interface FakeNote {
  * `scroll` moves every box up by that much, as scrolling the page or the
  * editor's pane does. `writes` counts the style and attribute writes of a
  * second run over the same notes, apart from the width a note is measured
- * at (set and set back within the run, before anything paints).
+ * at and the text's max-height while its height is read (each set and set
+ * back within the run, before anything paints).
  */
 function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
   const TOKENS: Record<string, string> = {
@@ -1036,7 +1037,7 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     return new Proxy(style, {
       get: (t, k: string) => (k in api ? api[k as keyof typeof api] : t[k]),
       set: (t, k: string, v: string) => {
-        if (k !== "width") writes++;
+        if (k !== "width" && k !== "maxHeight") writes++;
         t[k] = v;
         return true;
       },
@@ -1048,12 +1049,25 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     const style = counted();
     const attrs: Record<string, string> = {};
     const sub = note.parent !== undefined;
-    const text = { scrollHeight: note.height, style: counted() };
+    // No quote in the fake notes' text.
+    // As a browser reads it: a box set taller than its text reads as the
+    // box, unless nothing of it may show.
+    const text = {
+      style: counted(),
+      querySelector: () => null,
+      get scrollHeight() {
+        return this.style.maxHeight === "0px"
+          ? note.height
+          : Math.max(note.height, parseFloat(this.style.height) || 0);
+      },
+    };
     // A nested note shares its parent's mark element.
     const fn = sub
       ? fns[note.parent as number]
       : {
           pin: Boolean(note.pin),
+          // The notes of this mark: its own and the ones nested in it.
+          querySelectorAll: () => els.filter((_, j) => fns[j] === fns[i]),
           querySelector: () => ({
             getBoundingClientRect: () => rect(note.at - 4, 8),
           }),
@@ -1148,6 +1162,8 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
       on: "data-on" in el.attrs,
       /** Stands over any other open note. */
       top_: "data-top" in el.attrs,
+      left: parseFloat(el.style.left),
+      width: parseFloat(el.style.width),
       drop: parseFloat(el.style["--fn-drop"] ?? "0"),
       lane: el.style["--fn-lane"],
       placed: el.style.top !== undefined && el.style.top !== "",
@@ -1169,7 +1185,13 @@ function layOut(notes: FakeNote[], wide = true, scroll = 0, hiddenBox = false) {
     listeners.keydown({ key: k });
     return read();
   };
-  return Object.assign(read(), { writes: again, point, click, key });
+  /** Note i's text takes a new height, and the notes are stacked again. */
+  const resize = (i: number, height: number) => {
+    notes[i].height = height;
+    stack();
+    return read();
+  };
+  return Object.assign(read(), { writes: again, point, click, key, resize });
 }
 
 test("a sidenote stands at its mark's line, in full, when nothing blocks it", () => {
@@ -1193,6 +1215,16 @@ test("a note the next one would block is cut to whole lines, and the next keeps 
   assert.deepEqual([b.top, b.drop], [484, 0]);
 });
 
+test("a note's box follows its text down as well as up", () => {
+  const notes = layOut([{ at: 100, height: 64 }, { at: 1000, height: 32 }]);
+  // Fonts load, or a quote's reach changes how it wraps: the text grows,
+  // then settles shorter than it first was.
+  assert.equal(notes.resize(0, 96)[0].shown, 96);
+  const after = notes.resize(0, 48);
+  assert.equal(after[0].shown, 48);
+  assert.equal(after[0].long, false);
+});
+
 test("a cut note keeps eight lines, and the next goes under it", () => {
   const [a, b] = layOut([
     { at: 300, height: 200 },
@@ -1204,7 +1236,7 @@ test("a cut note keeps eight lines, and the next goes under it", () => {
   assert.equal(b.drop, b.top + 16 - 320);
 });
 
-test("a pointed-at note opens alone, over the notes below, and nothing moves", async () => {
+test("a pointed-at note opens where it stands and the notes below move down", async () => {
   const notes = [
     { at: 300, height: 200 },
     { at: 320, height: 40, parent: 0 },
@@ -1212,38 +1244,87 @@ test("a pointed-at note opens alone, over the notes below, and nothing moves", a
     { at: 900, height: 40 },
   ];
   const rest = layOut(notes);
-  // Point at the nested note: it opens; its parent stays cut.
+  // Point at the nested note: it opens alone where it stands, so its
+  // parent, above it, stays cut and nothing moves under the pointer.
   const on = await rest.point(1);
-  assert.deepEqual(
-    on.map((r) => r.top),
-    rest.map((r) => r.top),
-  );
   assert.deepEqual([on[0].on, on[0].long, on[0].shown], [false, true, rest[0].shown]);
   assert.deepEqual([on[1].on, on[1].shown], [true, 40]);
-  // Point at a cut note: it shows in full, over the next, which stays.
+  assert.deepEqual([on[0].top, on[1].top], [rest[0].top, rest[1].top]);
+  assert.equal(on[2].top, Math.max(rest[2].top, on[1].bottom + 4));
+  // Point at the parent: it opens in full, and the nested note goes under it.
+  const parent = await rest.point(0);
+  assert.deepEqual([parent[0].on, parent[0].shown, parent[1].on], [true, 200, false]);
+  assert.equal(parent[1].top, parent[0].bottom + 4);
+  // Point at the cut note they pushed down: it shows in full and holds the
+  // place it was pushed to while the parent closes, and the next goes under it.
   const third = await rest.point(2);
   assert.deepEqual([third[2].on, third[2].long, third[2].shown], [true, false, 300]);
-  assert.equal(third[3].top, rest[3].top);
+  assert.deepEqual([third[0].on, third[1].on], [false, false]);
+  assert.deepEqual([third[0].top, third[1].top], [rest[0].top, rest[1].top]);
+  assert.equal(third[2].top, parent[2].top);
+  assert.equal(third[3].top, Math.max(rest[3].top, third[2].bottom + 4));
+  // Closed, it goes back to its own place.
+  assert.equal(rest.key("Escape")[2].top, rest[2].top);
 });
 
-test("the note opened last stands over another open note", async () => {
+test("a note the pointer moves onto from an open note above holds still while that one closes", async () => {
+  const rest = layOut([
+    { at: 300, height: 300 },
+    { at: 340, height: 300 },
+    { at: 900, height: 40 },
+  ]);
+  const first = await rest.point(0);
+  // The first note opened and pushed the second down under the pointer.
+  assert.ok(first[1].top > rest[1].top);
+  const second = await rest.point(1);
+  assert.deepEqual(second.map((r) => r.on), [false, true, false]);
+  assert.equal(second[1].top, first[1].top);
+  assert.equal(second[0].top, rest[0].top);
+  // Once it closes it goes back to its own place.
+  assert.equal(rest.key("Escape")[1].top, rest[1].top);
+});
+
+test("one note is open at a time: a note clicked open stays while the pointer visits another mark's note", async () => {
   const rest = layOut([
     { at: 300, height: 200 },
     { at: 340, height: 300 },
     { at: 900, height: 40 },
   ]);
   const pinned = rest.click(1);
-  assert.deepEqual([pinned[1].on, pinned[1].top_], [true, true]);
-  // Pointing at the earlier note opens it over the one clicked open.
-  const both = await rest.point(0);
-  assert.deepEqual(
-    both.map((r) => [r.on, r.top_]),
-    [
-      [true, true],
-      [true, false],
-      [false, false],
-    ],
-  );
+  assert.deepEqual(pinned.map((r) => r.on), [false, true, false]);
+  const after = await rest.point(0);
+  assert.deepEqual(after.map((r) => r.on), [false, true, false]);
+  // A click on the other note moves the hold to it.
+  assert.deepEqual(rest.click(0).map((r) => r.on), [true, false, false]);
+});
+
+test("a note held open by a click stays open while the pointer visits its mark's other notes", async () => {
+  const rest = layOut([
+    { at: 300, height: 100 },
+    { at: 30, height: 40, parent: 0 },
+    { at: 900, height: 40 },
+  ]);
+  assert.deepEqual(rest.click(1).map((r) => r.on), [false, true, false]);
+  const after = await rest.point(0);
+  assert.deepEqual(after.map((r) => r.on), [true, true, false]);
+  // Another mark's note leaves it be, and the pointer's leaving closes the
+  // note it opened.
+  await rest.point(2);
+  await new Promise((r) => setTimeout(r, 200));
+  assert.deepEqual(rest.key("x").map((r) => r.on), [false, true, false]);
+});
+
+test("a nested note steps in from the left, and its line keeps clear of the boxes", () => {
+  const rows = layOut([
+    { at: 300, height: 100 },
+    { at: 30, height: 40, parent: 0 },
+    { at: 10, height: 40, parent: 1 },
+  ]);
+  assert.equal(rows[1].left - rows[0].left, 12);
+  assert.equal(rows[2].left - rows[0].left, 24);
+  assert.equal(rows[0].width - rows[1].width, 12);
+  assert.equal(rows[0].width - rows[2].width, 24);
+  for (const r of rows.slice(1)) assert.ok(parseFloat(r.lane) >= 4 + 3, `lane ${r.lane}`);
 });
 
 test("Escape closes a note the pointer or a click opened", async () => {

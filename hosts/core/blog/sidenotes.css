@@ -49,7 +49,6 @@
     /* The line's weight; the open note's line is heavier. */
     --fn-w: var(--border-w);
     /* How long a note takes to open or close. */
-    --fn-glide: 200ms;
   }
   /* The box: border and ground, over every line and under the note's own
      text. Lines sit at 1, boxes at 2, text at 3; the open note's box and
@@ -172,27 +171,13 @@
   .fn-note[data-on] .sn-text::after {
     content: none;
   }
-  .fn-note[data-on] a:hover,
-  .fn-note[data-on] a:hover * {
+  /* Not a note's picture: a fill would show through a transparent one. */
+  .fn-note[data-on] a:not(.fn-img):hover,
+  .fn-note[data-on] a:not(.fn-img):hover * {
     background: var(--ink-contrast);
     color: var(--ink);
   }
 }
-/* Opening and closing a note glides: its height, over the notes below.
-   A note being written in the editor moves the notes below it, and they
-   glide with their lines. The script marks the notes while it moves them
-   (data-anim), so a resize or the first layout does not glide. */
-@media (prefers-reduced-motion: no-preference) {
-  .fn-note[data-anim] {
-    transition:
-      top var(--fn-glide) ease,
-      --fn-drop var(--fn-glide) ease,
-      --fn-lane var(--fn-glide) ease;
-  }
-  .fn-note[data-anim] .sn-text {
-    transition: height var(--fn-glide) ease;
-  }
-  .fn-note::before {
-    transition: opacity var(--fn-glide) ease;
-  }
-}
+/* Opening and closing a note glides: the script moves the notes and
+   their lines with the Web Animations API, never CSS transitions, and
+   not at all under reduced motion. */
