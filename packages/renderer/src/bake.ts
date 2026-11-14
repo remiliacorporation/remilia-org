@@ -8,7 +8,6 @@ import {
   CHANNEL_HOST,
   CHANNEL_LABEL,
   CHANNEL_ORIGIN,
-  HOST_SECTIONS,
   atom,
   breadcrumbs,
   canonicalFor,
@@ -44,7 +43,7 @@ import {
   type FetchedPost,
   cdnUrl,
   fileUrl,
-  isExternalArchive,
+  isExternalCoverage,
   postBody,
   postCanonical,
   sectionPages,
@@ -90,12 +89,12 @@ export interface BakeOptions {
   /** Pool posts across these channels — the listing-only aggregate surface. */
   aggregateOf?: Channel[];
   /**
-   * The host also bakes its pooled index, with an author archive for every
-   * author on the host. A section's Author control then offers every one of
-   * them, opening the pooled archive for an author the section has no
-   * posts by.
+   * The host also bakes its pooled index over these sections, with an author
+   * archive for every author in them. A section's Author control then offers
+   * its own authors and the pooled ones, opening the pooled archive for an
+   * author the section has no posts by.
    */
-  hostPooled?: boolean;
+  hostPooled?: Channel[];
 }
 
 const ORG_QUERY = `*[_id == "org"][0]{ name, legalName, sameAs, contactEmail, address,
@@ -193,14 +192,12 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
   } catch (err) {
     throw new BakeRefused(`${readFailureMessage(err)} — refusing to bake`);
   }
-  // Every post on the host, for the Author control: the pooled bake already
-  // holds them; a section of a pooled host reads its siblings' bylines.
+  // The posts the Author control draws on: the pooled bake already holds
+  // them; a section of a pooled host adds its pooled siblings' bylines.
   let hostPosts = posts;
   if (opts.hostPooled && !aggregated) {
     try {
-      const siblings = HOST_SECTIONS[CHANNEL_HOST[channel]].filter(
-        (c) => c !== channel,
-      );
+      const siblings = opts.hostPooled.filter((c) => c !== channel);
       hostPosts = [
         ...posts,
         ...(
@@ -238,7 +235,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     };
   };
   const feedPosts = posts
-    .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+    .filter((p) => !p.noIndex && !isExternalCoverage(p, postChannel(p)))
     .map(feedPost);
   const sitemapEntries: SitemapEntry[] = [
     { loc: indexUrl(channel) },
@@ -246,7 +243,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
     ...(aggregated
       ? []
       : posts
-          .filter((p) => !p.noIndex && !isExternalArchive(p, postChannel(p)))
+          .filter((p) => !p.noIndex && !isExternalCoverage(p, postChannel(p)))
           .map((p) => ({
             loc: canonicalFor(postChannel(p), p.slug),
             lastmod: p.updatedAt ?? p.publishedAt,

@@ -244,7 +244,7 @@ async function main() {
       archiveSnapshot?: string;
     }>
   >(
-    `*[_type=="post" && channel=="archive" && origin=="external"]{_id, title, externalUrl, archiveSnapshot} | order(title)`,
+    `*[_type=="post" && channel in ["archive", "press"] && origin=="external"]{_id, title, externalUrl, archiveSnapshot} | order(title)`,
   );
 
   const targets = all

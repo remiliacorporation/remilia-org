@@ -1,13 +1,14 @@
-import { ORG_SECTIONS } from "@remilia/seo";
+import { HOST_POOLED, ORG_SECTIONS } from "@remilia/seo";
 import { runHostBake } from "../core/bake-host";
 
 runHostBake({
   name: "org",
   sections: ORG_SECTIONS,
   outDir: "deploy",
-  // The four sections are one shared blog surface — it gets an aggregate
-  // index at /blog and the old top-level section paths 301 to it.
-  aggregate: ORG_SECTIONS,
+  // The sections share one pooled index at /blog ("All"). Press is not in
+  // it: press releases and coverage list only under /blog/press. The old
+  // top-level section paths 301 to /blog/<section>.
+  aggregate: HOST_POOLED.org,
   movedFrom: {
     updates: "/updates",
     press: "/press",

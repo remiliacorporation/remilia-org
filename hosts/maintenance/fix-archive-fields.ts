@@ -26,7 +26,7 @@ type Row = {
 
 async function main() {
   const rows = await client.fetch<Row[]>(
-    `*[_type=="post" && channel=="archive" && origin=="external"]{
+    `*[_type=="post" && channel in ["archive", "press"] && origin=="external"]{
       _id, title, body, commentary, archiveSnapshot
     } | order(title)`,
   );

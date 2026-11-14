@@ -23,7 +23,7 @@ import { LIGHTBOX_JS } from "../packages/renderer/src/gallery";
 import {
   CHANNEL_HOST,
   CHANNEL_ORIGIN,
-  HOST_SECTIONS,
+  HOST_POOLED,
   type Channel,
 } from "../packages/seo/src/index";
 import { chromeFor, hostFor } from "../hosts/core/sections";
@@ -78,7 +78,8 @@ function useSection(channel: Channel, onError: (e: string | null) => void) {
   useEffect(() => {
     let cancelled = false;
     const read = client.withConfig({ perspective: "published" });
-    const others = HOST_SECTIONS[CHANNEL_HOST[channel]].filter(
+    // As the bake: a section's Author control draws on the pooled sections.
+    const others = HOST_POOLED[CHANNEL_HOST[channel]].filter(
       (c) => c !== channel,
     );
     const params = (c: Channel) => ({ channel: c, includeFuture: false });
@@ -299,8 +300,8 @@ function pageHtml(
       dataset: config.dataset ?? "production",
       posts,
       hostPosts: [...posts, ...section.siblings],
-      // Every host bakes its pooled index (hosts/*/bake.ts).
-      hostPooled: true,
+      // Every host bakes its pooled index over these (hosts/*/bake.ts).
+      hostPooled: HOST_POOLED[CHANNEL_HOST[channel]],
       chrome: { ...chromeFor(channel), stylesheet: css },
       // nav.js lays the notes out from the text as set in the site's font. A
       // page from the site has its fonts by then; a frame starts loading them

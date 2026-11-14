@@ -8,6 +8,7 @@ import {
   CHANNEL_LABEL,
   HOST_AGGREGATE,
   blogPosting,
+  isCoverageChannel,
   breadcrumbs,
   canonicalFor,
   event as eventJsonLd,
@@ -158,7 +159,7 @@ export function postBody(p: FetchedPost, channel: Channel): PTBlock[] {
 
 function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
   if (
-    channel === "archive" &&
+    isCoverageChannel(channel) &&
     p.origin === "external" &&
     p.commentary?.length
   ) {
@@ -166,7 +167,7 @@ function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
   }
   if (p.body?.length) return p.body;
   if (p.markdown?.trim()) return markdownToPost(p.markdown, channel).body;
-  if (channel === "archive" && p.origin === "external") {
+  if (isCoverageChannel(channel) && p.origin === "external") {
     const outlet = p.outlet ? ` (${p.outlet})` : "";
     const href = p.externalUrl ?? "#";
     return [
@@ -187,14 +188,14 @@ function shownBlocks(p: FetchedPost, channel: Channel): PTBlock[] {
 }
 
 export function postCanonical(p: FetchedPost, channel: Channel): string {
-  if (channel === "archive" && p.origin === "external" && p.externalUrl) {
+  if (isCoverageChannel(channel) && p.origin === "external" && p.externalUrl) {
     return p.externalUrl;
   }
   return canonicalFor(channel, p.slug);
 }
 
-export function isExternalArchive(p: FetchedPost, channel: Channel): boolean {
-  return channel === "archive" && p.origin === "external" && Boolean(p.externalUrl);
+export function isExternalCoverage(p: FetchedPost, channel: Channel): boolean {
+  return isCoverageChannel(channel) && p.origin === "external" && Boolean(p.externalUrl);
 }
 
 /** `2024-12` → `December 2024`. */
@@ -287,7 +288,8 @@ export interface SectionInput {
   /** Every post on the host, for the Author control (see `BakeOptions`). */
   hostPosts: FetchedPost[];
   aggregateOf?: Channel[];
-  hostPooled?: boolean;
+  /** The sections the host's pooled index lists (see `BakeOptions`). */
+  hostPooled?: Channel[];
   chrome: Chrome;
   /** The tag that loads nav.js at the end of every page. */
   navScript: string;
@@ -312,10 +314,13 @@ export function sectionPages(o: SectionInput) {
 
   const cards = new Map<string, LinkCard>();
   for (const p of posts) {
+    const coverDims = imageDims(p.coverRef);
     const card: LinkCard = {
       title: p.title,
       description: p.excerpt,
       imageUrl: img(p.coverRef, "w=640&auto=format"),
+      imageWidth: coverDims?.w,
+      imageHeight: coverDims?.h,
     };
     cards.set(canonicalFor(postChannel(p), p.slug), card);
     cards.set(`${postBase(p)}/${p.slug}`, card);
@@ -332,6 +337,14 @@ export function sectionPages(o: SectionInput) {
   const pooledBase =
     CHANNEL_BASEPATH[HOST_AGGREGATE[CHANNEL_HOST[channel]]];
   const hostAuthors = termArchives(o.hostPosts).authors;
+  // Authors the pooled index bakes an archive for: those with a post in a
+  // pooled section. A section left out of the pool (org Press) links only
+  // its own author archives.
+  const pooledAuthors = o.hostPooled
+    ? termArchives(
+        o.hostPosts.filter((p) => o.hostPooled?.includes(postChannel(p))),
+      ).authors
+    : [];
   const bakedArchives = new Set([
     ...archivePaths(basePath, archives, ownKinds),
     ...(o.aggregateOf ?? []).flatMap((c) =>
@@ -342,7 +355,7 @@ export function sectionPages(o: SectionInput) {
       ),
     ),
     ...(o.hostPooled && !aggregated
-      ? hostAuthors.map((t) => `${pooledBase}/authors/${t.slug}`)
+      ? pooledAuthors.map((t) => `${pooledBase}/authors/${t.slug}`)
       : []),
   ]);
   // Dates and authors link to the post's section archive when that archive

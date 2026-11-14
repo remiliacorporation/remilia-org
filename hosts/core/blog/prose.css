@@ -212,6 +212,19 @@ h3,
 .prose > figure img {
   width: auto;
 }
+/* An image from a Sanity asset reserves its box before it loads. Its
+   srcset's sizes ("(min-width: 1100px) 560px, 100vw", figureHtml in
+   pt.ts) set the width it shows at once loaded, capped by max-width, and its
+   width and height attributes give the aspect ratio, so text below it never
+   moves when it arrives. Keep these in step with that sizes string. */
+.prose > figure img[srcset][width][height] {
+  width: 100vw;
+}
+@media (min-width: 1100px) {
+  .prose > figure img[srcset][width][height] {
+    width: 560px;
+  }
+}
 .prose video {
   display: block;
   max-width: 100%;

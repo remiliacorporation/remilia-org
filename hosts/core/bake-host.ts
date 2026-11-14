@@ -37,7 +37,8 @@ export interface HostBake {
   linkOrigin?: string;
   /**
    * Bake the host's pooled index (`HOST_AGGREGATE`) — a listing-only surface
-   * over these channels. Posts, archives and feeds stay on their sections.
+   * over these channels (`HOST_POOLED`). Posts, archives and feeds stay on
+   * their sections; a section left out still bakes, it is only not listed.
    */
   aggregate?: Channel[];
   /** Old top-level paths the sections used to live at — emits 301s. */
@@ -94,7 +95,7 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       token,
       perspective,
       stylesheets,
-      hostPooled: Boolean(spec.aggregate),
+      hostPooled: spec.aggregate,
     });
     total += result.pages;
     console.log(`baked ${result.pages} pages for ${channel} into ${outDir}`);

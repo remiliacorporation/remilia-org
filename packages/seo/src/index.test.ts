@@ -17,6 +17,9 @@ import {
   llmsTxt,
   CHANNEL_BASEPATH,
   ORG_SECTIONS,
+  HOST_POOLED,
+  HOST_SECTIONS,
+  isCoverageChannel,
   COM_SECTIONS,
   COM_POST_SECTIONS,
   EVENTS_PATH_LABEL,
@@ -48,6 +51,12 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(indexPath("net-blog"), "/");
   assert.equal(indexPath("events"), "/a/blog/events");
   assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
+  // All on remilia.org leaves Press out; Press lists only under Press.
+  assert.deepEqual(HOST_POOLED.org, ["updates", "thought", "archive"]);
+  for (const host of ["org", "com", "net"] as const)
+    for (const c of HOST_POOLED[host]) assert.ok(HOST_SECTIONS[host].includes(c));
+  assert.ok(isCoverageChannel("press") && isCoverageChannel("archive"));
+  assert.ok(!isCoverageChannel("thought") && !isCoverageChannel(undefined));
   assert.deepEqual(COM_SECTIONS, ["news", "events"]);
   assert.deepEqual(COM_POST_SECTIONS, ["news", "events"]);
   assert.equal(EVENTS_PATH_LABEL, "remilia.com/a/blog/events");

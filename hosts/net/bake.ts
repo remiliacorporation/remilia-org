@@ -1,4 +1,4 @@
-import { NET_SECTIONS } from "@remilia/seo";
+import { HOST_POOLED, NET_SECTIONS } from "@remilia/seo";
 import { runHostBake } from "../core/bake-host";
 
 // blog.remilia.net is all blog: the pooled index at the root, Updates at
@@ -8,7 +8,7 @@ runHostBake({
   name: "net",
   sections: NET_SECTIONS,
   outDir: "deploy-net",
-  aggregate: NET_SECTIONS,
+  aggregate: HOST_POOLED.net,
   // blog.miladychan.org (Ghost) is a domain alias of this site.
   legacyHost: { origin: "https://blog.miladychan.org", channels: NET_SECTIONS },
 });
