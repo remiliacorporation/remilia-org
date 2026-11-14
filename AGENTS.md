@@ -12,8 +12,9 @@ This repo holds the Studio schema, bake pipeline, and hand-authored corporate HT
 
 Posts use schema field `channel` = section id. Events are posts with gallery albums.
 Press and Archive entries can store an external outlet URL plus a Firecrawl snapshot and commentary.
-The pooled index at `/blog` (All) lists Updates, Thought and Archive; Press lists only under
-`/blog/press` (`HOST_POOLED` in `packages/seo/src/urls.ts`).
+The section row reads Updates, Thought, Press, Archive (`ORG_SECTIONS`). The pooled index at
+`/blog` (All) lists Updates and Thought; Press and Archive list only under `/blog/press` and
+`/blog/archive` (`HOST_POOLED` in `packages/seo/src/urls.ts`).
 
 ## Build
 

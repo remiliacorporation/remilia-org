@@ -17,8 +17,8 @@ test("hostCats is the section set every masthead and rail is built from", () => 
   assert.deepEqual(hostCats("press"), {
     cats: [
       { label: "Updates", href: "/blog/updates" },
-      { label: "Press", href: "/blog/press" },
       { label: "Thought", href: "/blog/thought" },
+      { label: "Press", href: "/blog/press" },
       { label: "Archive", href: "/blog/archive" },
     ],
     current: "Press",

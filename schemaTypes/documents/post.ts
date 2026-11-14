@@ -13,6 +13,11 @@ import { isCoverageChannel } from "../../packages/seo/src/urls";
 const coverage = (channel: unknown): boolean =>
   isCoverageChannel(channel as Parameters<typeof isCoverageChannel>[0]);
 
+/** A new post's byline until someone picks one: Milady (Charlie, 2026-11-13). */
+export const DEFAULT_AUTHORS = [
+  { _key: "milady", _type: "reference", _ref: "author-milady_sonoro" },
+];
+
 export const post = defineType({
   name: "post",
   title: "Post",
@@ -206,7 +211,9 @@ export const post = defineType({
       title: "Authors",
       type: "array",
       of: [defineArrayMember({ type: "reference", to: [{ type: "author" }] })],
-      description: "Bylines feed Article JSON-LD author entities.",
+      description:
+        "Bylines feed Article JSON-LD author entities. A new post starts with Milady, the default author.",
+      initialValue: DEFAULT_AUTHORS,
     }),
     defineField({
       name: "tags",

@@ -8,7 +8,7 @@ The HTML print/FX layer is decorative (aria-hidden, inert, data-nosnippet). Igno
 
 Remilia org map, jobs, literature. Encyclopedia: https://wiki.remilia.org/Remilia_Corporation. Storefront: https://remilia.com/. Network: https://remilia.net
 
-Literature sections (`/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
+Literature sections (`/blog/updates`, `/blog/thought`, `/blog/press`, `/blog/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
 
 ## On this host
 
@@ -18,9 +18,9 @@ Literature sections (`/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/arc
 - [Careers at Remilia: Irvine, CA](https://remilia.org/careers): Irvine job openings, benefits, and the referral program; apply on Ashby (https://jobs.ashbyhq.com/remilia).
 - [Careers at Remilia: Hongdae, Seoul](https://remilia.org/careers/seoul): Seoul job openings; apply on Ashby (https://jobs.ashbyhq.com/remilia).
 - [Updates](https://remilia.org/blog/updates): Routine notes. Map: https://remilia.org/blog/updates/llms.txt
-- [Press](https://remilia.org/blog/press): Corporate statements and coverage of Remilia elsewhere; not listed under All. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/blog/press/llms.txt
 - [Thought](https://remilia.org/blog/thought): Essays / longform. Map: https://remilia.org/blog/thought/llms.txt
-- [Archive](https://remilia.org/blog/archive): Guides and reference pieces kept for the record. Map: https://remilia.org/blog/archive/llms.txt
+- [Press](https://remilia.org/blog/press): Corporate statements and coverage of Remilia elsewhere; not listed under All. Per-post HTML + `.md` / `.txt`. Map: https://remilia.org/blog/press/llms.txt
+- [Archive](https://remilia.org/blog/archive): Guides and reference pieces kept for the record; not listed under All. Map: https://remilia.org/blog/archive/llms.txt
 - [robots.txt](https://remilia.org/robots.txt): Crawl policy; search and answer engines allowed.
 - [llms.txt](https://remilia.org/llms.txt): Curated map of the site.
 - [sitemap.xml](https://remilia.org/sitemap.xml): Search-engine sitemap.

@@ -171,6 +171,45 @@
 /blog/archive/substack-party.md  /blog/updates/substack-party.md  301
 /blog/archive/substack-party.txt  /blog/updates/substack-party.txt  301
 
+# Thought posts that moved to Archive (2026-11-13, Charlie's call). Unforced,
+# so each applies only once the Thought page is gone. Hand-written because a
+# post's Previous paths would land in the Archive block, after the Thought
+# 404 block, where they would never match.
+/blog/thought/pfpnfts-we-havent-seen-profile-first-design-yet  /blog/archive/pfpnfts-we-havent-seen-profile-first-design-yet  301
+/blog/thought/pfpnfts-we-havent-seen-profile-first-design-yet.md  /blog/archive/pfpnfts-we-havent-seen-profile-first-design-yet.md  301
+/blog/thought/pfpnfts-we-havent-seen-profile-first-design-yet.txt  /blog/archive/pfpnfts-we-havent-seen-profile-first-design-yet.txt  301
+/blog/thought/nouns-wtf  /blog/archive/nouns-wtf  301
+/blog/thought/nouns-wtf.md  /blog/archive/nouns-wtf.md  301
+/blog/thought/nouns-wtf.txt  /blog/archive/nouns-wtf.txt  301
+/blog/thought/on-secondary  /blog/archive/on-secondary  301
+/blog/thought/on-secondary.md  /blog/archive/on-secondary.md  301
+/blog/thought/on-secondary.txt  /blog/archive/on-secondary.txt  301
+/blog/thought/how-to-vtube  /blog/archive/how-to-vtube  301
+/blog/thought/how-to-vtube.md  /blog/archive/how-to-vtube.md  301
+/blog/thought/how-to-vtube.txt  /blog/archive/how-to-vtube.txt  301
+
+# Renamed authors (2026-11-13). An author archive's URL is the slugified name,
+# so each old name's section and pooled archive, and its feed, 301 to the new one.
+/blog/thought/authors/milady-sonoro  /blog/thought/authors/milady  301
+/blog/thought/authors/milady-sonoro/*  /blog/thought/authors/milady/:splat  301
+/blog/authors/milady-sonoro  /blog/authors/milady  301
+/blog/authors/milady-sonoro/*  /blog/authors/milady/:splat  301
+/blog/thought/authors/lb-dobis  /blog/thought/authors/leopold-b-dobis  301
+/blog/thought/authors/lb-dobis/*  /blog/thought/authors/leopold-b-dobis/:splat  301
+/blog/authors/lb-dobis  /blog/authors/leopold-b-dobis  301
+/blog/authors/lb-dobis/*  /blog/authors/leopold-b-dobis/:splat  301
+/blog/thought/authors/scearpo  /blog/thought/authors/michael-dragovic  301
+/blog/thought/authors/scearpo/*  /blog/thought/authors/michael-dragovic/:splat  301
+/blog/authors/scearpo  /blog/authors/michael-dragovic  301
+/blog/authors/scearpo/*  /blog/authors/michael-dragovic/:splat  301
+
+# All stopped listing Archive (2026-11-13). Pooled archives whose only posts
+# are in Archive are no longer baked, so they 301 to Archive's own. Unforced,
+# so a pooled page that comes back wins.
+/blog/authors/angelicism01  /blog/archive/authors/angelicism01  301
+/blog/authors/angelicism01/*  /blog/archive/authors/angelicism01/:splat  301
+/blog/months/2022-02  /blog/archive/months/2022-02  301
+
 # The rules above are hand-written and live only here, so this file stays
 # tracked even though the rest of deploy/ is generated and gitignored.
 #

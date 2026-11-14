@@ -5,8 +5,9 @@ runHostBake({
   name: "org",
   sections: ORG_SECTIONS,
   outDir: "deploy",
-  // The sections share one pooled index at /blog ("All"). Press is not in
-  // it: press releases and coverage list only under /blog/press. The old
+  // Updates and Thought share one pooled index at /blog ("All"). Press and
+  // Archive are not in it: they list only under /blog/press and
+  // /blog/archive. The old
   // top-level section paths 301 to /blog/<section>.
   aggregate: HOST_POOLED.org,
   movedFrom: {

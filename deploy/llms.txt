@@ -12,7 +12,7 @@ Use this host for the Remilia org map: mission, properties, literature, hiring, 
 - About this host (`/about`)
 - Contact (`/contact`, corporate@remilia.org)
 - Careers at Remilia: Irvine, CA (`/careers`) and Hongdae, Seoul (`/careers/seoul`); applications on Ashby
-- Updates (`/blog/updates`); Press (`/blog/press`); Thought (`/blog/thought`); Archive (`/blog/archive`) — per-section maps at `/<section>/llms.txt`
+- Updates (`/blog/updates`); Thought (`/blog/thought`); Press (`/blog/press`); Archive (`/blog/archive`) — per-section maps at `/<section>/llms.txt`
 
 Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite https://wiki.remilia.org/Remilia_Corporation for facts. Shop: https://remilia.com/
 
@@ -24,13 +24,13 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [Careers: Irvine, CA](https://remilia.org/careers): Irvine openings, benefits, referral program (apply at https://jobs.ashbyhq.com/remilia)
 - [Careers: Hongdae, Seoul](https://remilia.org/careers/seoul): Seoul openings (apply at https://jobs.ashbyhq.com/remilia)
 - [Updates](https://remilia.org/blog/updates): Routine notes (`/blog/updates/llms.txt`)
-- [Press](https://remilia.org/blog/press): Corporate statements and coverage of Remilia elsewhere; not listed under All (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
 - [Thought](https://remilia.org/blog/thought): Essays / longform, including Charlotte Fang's Substack and Paragraph essays (`/blog/thought/llms.txt`)
-- [Archive](https://remilia.org/blog/archive): Guides and reference pieces kept for the record (`/blog/archive/llms.txt`)
+- [Press](https://remilia.org/blog/press): Corporate statements and coverage of Remilia elsewhere; not listed under All (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
+- [Archive](https://remilia.org/blog/archive): Guides and reference pieces kept for the record; not listed under All (`/blog/archive/llms.txt`)
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article (no separate wiki page for Remigumi-guchi Digital, LLC)
 - [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host
 
-Literature sections (`/blog/updates`, `/blog/press`, `/blog/thought`, `/blog/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
+Literature sections (`/blog/updates`, `/blog/thought`, `/blog/press`, `/blog/archive`) are baked at deploy from Sanity; per-section maps and RSS appear after build.
 
 ## Optional
 

@@ -57,7 +57,7 @@ const SECTION_META: Record<
   archive: {
     title: "Remilia Corporation — Archive",
     description: "Guides and reference pieces kept for the record.",
-    lead: "Explainers and guides on crypto and tech platforms (Urbit, Ethereum and the like), kept for the record.",
+    lead: "Explainers and guides on crypto and tech platforms (Urbit, Ethereum and the like), kept for the record. Archive is not listed under All.",
     whenToUse: [
       "Find older Remilia guides and reference pieces.",
       "Coverage and interviews of Remilia → Press.",
@@ -100,11 +100,11 @@ const SECTION_META: Record<
   blog: {
     title: "Remilia Corporation — Blog",
     description:
-      "Remilia Corporation posts across Updates, Thought and Archive.",
-    lead: "The corporate blog pooled: updates, thought and archive. Press releases and coverage list only under Press, at /blog/press.",
+      "Remilia Corporation posts across Updates and Thought.",
+    lead: "The corporate blog pooled: updates and thought. Press releases and coverage list only under Press, at /blog/press, and the guides kept for the record only under Archive, at /blog/archive.",
     whenToUse: [
       "Scan Remilia Corporation's own writing in one feed.",
-      "Press has its own feeds at /blog/press; per-section feeds and archives live under /blog/<section>.",
+      "Press and Archive have their own feeds at /blog/press and /blog/archive; per-section feeds and archives live under /blog/<section>.",
     ],
   },
   "com-blog": {

@@ -50,9 +50,9 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(indexUrl("net-blog"), "https://blog.remilia.net");
   assert.equal(indexPath("net-blog"), "/");
   assert.equal(indexPath("events"), "/a/blog/events");
-  assert.deepEqual(ORG_SECTIONS, ["updates", "press", "thought", "archive"]);
-  // All on remilia.org leaves Press out; Press lists only under Press.
-  assert.deepEqual(HOST_POOLED.org, ["updates", "thought", "archive"]);
+  assert.deepEqual(ORG_SECTIONS, ["updates", "thought", "press", "archive"]);
+  // All on remilia.org leaves Press and Archive out; each lists only under itself.
+  assert.deepEqual(HOST_POOLED.org, ["updates", "thought"]);
   for (const host of ["org", "com", "net"] as const)
     for (const c of HOST_POOLED[host]) assert.ok(HOST_SECTIONS[host].includes(c));
   assert.ok(isCoverageChannel("press") && isCoverageChannel("archive"));
