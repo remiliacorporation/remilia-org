@@ -158,10 +158,21 @@ footer hr {
 .foot-feeds {
   display: none;
 }
-.foot-feeds label {
+.foot-theme-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: var(--mast-line);
   cursor: pointer;
 }
-.foot-feeds label:hover {
+.foot-theme-btn:hover,
+.foot-theme-btn:focus-visible,
+.foot-theme-btn[aria-expanded="true"] {
   background: var(--ink);
   color: var(--ink-contrast);
 }

@@ -97,7 +97,7 @@ function themeSelHtml(theme: HostTheme): string {
 <input type="checkbox" id="theme-pop" class="disclosure">
 <label for="theme-pop" class="theme-label">Theme</label>
 <hr class="nav-rule">
-<div class="theme-controls">
+<div class="theme-controls" id="theme-controls">
 <div class="theme-hues" role="radiogroup" aria-label="Theme color">
 ${radios}
 </div>

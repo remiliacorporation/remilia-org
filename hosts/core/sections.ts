@@ -190,7 +190,7 @@ ${menu}
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">
-<p class="foot-feeds"><a href="${base}/rss.xml">RSS</a> · <a href="${base}/atom.xml">Atom</a><span class="foot-theme"> · <label class="head-theme" for="theme-pop">Theme</label></span></p>
+<p class="foot-feeds"><a href="${base}/rss.xml">RSS</a> · <a href="${base}/atom.xml">Atom</a><span class="foot-theme"> · <button type="button" class="foot-theme-btn" aria-expanded="false" aria-controls="theme-controls">Theme</button></span></p>
 <p>© Remilia Corporation · <a href="${brand.rootUrl}">${brand.root}</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
 </footer>`,
   };

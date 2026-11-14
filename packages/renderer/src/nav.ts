@@ -876,11 +876,41 @@ export const NAV_JS = `(() => {
   const emptyEl = document.querySelector('.list-empty');
   const cards = [...document.querySelectorAll('.post-card')];
   // The phone head's search button shows the field and moves focus into it.
+  // A field holding a query stays shown, so the button stays expanded then.
+  // Escape clears the query, then closes the field and returns to the button.
   const opener = document.querySelector('.head-search');
-  if (opener && q) opener.addEventListener('click', () => {
-    const open = opener.getAttribute('aria-expanded') !== 'true';
-    opener.setAttribute('aria-expanded', String(open));
-    if (open) q.focus();
+  if (opener && q) {
+    const setOpen = (v) => opener.setAttribute('aria-expanded', String(v));
+    const shown = () => opener.offsetParent !== null;
+    if (q.value) setOpen(true);
+    opener.addEventListener('click', () => {
+      const open = q.value !== '' || opener.getAttribute('aria-expanded') !== 'true';
+      setOpen(open);
+      if (open) q.focus();
+    });
+    q.addEventListener('input', () => { if (q.value && shown()) setOpen(true); });
+    q.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || !shown()) return;
+      e.preventDefault();
+      if (q.value) {
+        q.value = '';
+        q.dispatchEvent(new Event('input'));
+      } else {
+        setOpen(false);
+        opener.focus();
+      }
+    });
+  }
+  // The foot's Theme button (phones) opens the theme controls where they
+  // show, above the foot, and moves focus into them without scrolling.
+  const pop = document.getElementById('theme-pop');
+  const themeBtn = document.querySelector('.foot-theme-btn');
+  if (pop && themeBtn) themeBtn.addEventListener('click', () => {
+    pop.checked = !pop.checked;
+    themeBtn.setAttribute('aria-expanded', String(pop.checked));
+    const first = pop.checked
+      && (document.querySelector('.theme-hues input:checked') || document.querySelector('.theme-hues input'));
+    if (first) first.focus({ preventScroll: true });
   });
   if (!q && !cards.length) return;
   const PAGE = ${RAIL_PAGE};

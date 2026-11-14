@@ -168,7 +168,7 @@ test("site-head leads with its links and closes on the brand alone", () => {
   );
   assert.match(
     thought.footer,
-    /<p class="foot-feeds"><a href="\/blog\/thought\/rss.xml">RSS<\/a> · <a href="\/blog\/thought\/atom.xml">Atom<\/a><span class="foot-theme"> · <label class="head-theme" for="theme-pop">Theme<\/label><\/span><\/p>/,
+    /<p class="foot-feeds"><a href="\/blog\/thought\/rss.xml">RSS<\/a> · <a href="\/blog\/thought\/atom.xml">Atom<\/a><span class="foot-theme"> · <button type="button" class="foot-theme-btn" aria-expanded="false" aria-controls="theme-controls">Theme<\/button><\/span><\/p>/,
   );
   assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
   const news = chromeFor("news");

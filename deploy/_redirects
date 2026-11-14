@@ -209,6 +209,10 @@
 # page that comes back wins.
 /blog/authors/angelicism01  /blog/archive/authors/angelicism01  301
 /blog/authors/angelicism01/*  /blog/archive/authors/angelicism01/:splat  301
+# Remilia Jackson's Archive posts went to Milady (the guides), so her
+# Archive archive is gone; her pooled one stays.
+/blog/archive/authors/remilia-jackson  /blog/authors/remilia-jackson  301
+/blog/archive/authors/remilia-jackson/*  /blog/authors/remilia-jackson/:splat  301
 /blog/months/2022-02  /blog/archive/months/2022-02  301
 /blog/thought/months/2022-02  /blog/archive/months/2022-02  301
 

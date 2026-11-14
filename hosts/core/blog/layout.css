@@ -305,8 +305,13 @@
   .sec-box {
     display: none;
   }
+  /* The theme box's and search box's disclosures belong to the wider
+     rails: here the foot's Theme button and the head's search button stand
+     in for them, so they leave the tab order and the accessibility tree. */
   .theme-label,
-  .post-nav > .disclosure-label {
+  .post-nav > .disclosure-label,
+  .theme-sel > .disclosure,
+  .post-nav > .disclosure {
     display: none;
   }
   /* The search field shows under the head once the head's search button
@@ -317,6 +322,7 @@
      places in the page's column. */
   .right-rail .post-nav,
   .post-nav > .nav-box,
+  .post-nav > .disclosure:checked ~ .nav-box,
   .post-nav .nav-page {
     display: contents;
   }
