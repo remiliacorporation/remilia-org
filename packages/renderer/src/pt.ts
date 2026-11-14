@@ -466,6 +466,9 @@ export function figureHtml(input: {
   /** The page's lead image loads at once; body images wait for the viewport. */
   lead?: boolean;
 }): string {
+  // The image is also its own link, so a script URL (an imported
+  // `![x](javascript:...)`) would run on click.
+  if (safeHref(input.src) !== input.src) return "";
   const caption = input.caption
     ? `<figcaption><a href="${esc(input.src)}">${esc(input.caption)}</a></figcaption>`
     : "";

@@ -43,7 +43,7 @@ Corporate pages are hand-authored in `deploy/src/`. Edit `.layer-base` and run `
 | remilia.com | news, events | `/a/blog` (all), `/a/blog/news`, `/a/blog/events` (Shopify app proxy) |
 | blog.remilia.net | dev-updates, dev-blog | `/` (all), `/updates`, `/dev-blog` |
 
-Sanity uses project `8x9419lh`, dataset `production`. The `.org` build reads published content only. Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` to a read token when authenticated access is needed. Keep credentials in the deployment environment, never in source control.
+Sanity uses project `8x9419lh`, dataset `production`. The `.org` build reads published content only. To see a draft before it is published, open the post's Preview tab in Studio: it draws the draft with the bake's own page code (`packages/renderer/src/section.ts`), stylesheet, and scripts, and follows the form as you type. Set `SANITY_TOKEN` or `SANITY_AUTH_TOKEN` to a read token when authenticated access is needed. Keep credentials in the deployment environment, never in source control.
 
 ```
 deploy/          Netlify publish root (assets, llms, sitemap; corporate HTML baked)

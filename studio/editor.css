@@ -1049,3 +1049,35 @@
 .blog-pt [data-testid="pt-editor"] [data-ui="Card"]:has([data-slate-editor]) {
   background: transparent;
 }
+
+/* The post's Preview tab (studio/postPreview.tsx): the page fills the pane. */
+.blog-preview {
+  position: relative;
+  height: 100%;
+}
+
+.blog-preview-frames {
+  position: absolute;
+  inset: 0;
+}
+
+.blog-preview-error {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--card-bg-color, #fff);
+  color: var(--card-fg-color, #000);
+  border-bottom: 1px solid var(--card-border-color, currentColor);
+  font: inherit;
+  font-size: 13px;
+}
+
+.blog-preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

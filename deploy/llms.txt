@@ -24,9 +24,9 @@ Do not use this host as the encyclopedia, the Shopify store, or RemiliaNET. Cite
 - [Careers: Irvine, CA](https://remilia.org/careers): Irvine openings, benefits, referral program (apply at https://jobs.ashbyhq.com/remilia)
 - [Careers: Hongdae, Seoul](https://remilia.org/careers/seoul): Seoul openings (apply at https://jobs.ashbyhq.com/remilia)
 - [Updates](https://remilia.org/blog/updates): Routine notes (`/blog/updates/llms.txt`)
-- [Press](https://remilia.org/blog/press): Formal releases (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
-- [Thought](https://remilia.org/blog/thought): Essays / longform (`/blog/thought/llms.txt`)
-- [Archive](https://remilia.org/blog/archive): Notable writing + coverage (`/blog/archive/llms.txt`)
+- [Press](https://remilia.org/blog/press): Corporate statements and coverage of Remilia elsewhere; not listed under All (`/blog/press/llms.txt`, `/blog/press/rss.xml`)
+- [Thought](https://remilia.org/blog/thought): Essays / longform, including Charlotte Fang's Substack and Paragraph essays (`/blog/thought/llms.txt`)
+- [Archive](https://remilia.org/blog/archive): Guides and reference pieces kept for the record (`/blog/archive/llms.txt`)
 - [Remilia Wiki: Remilia Corporation](https://wiki.remilia.org/Remilia_Corporation): Citable encyclopedia article (no separate wiki page for Remigumi-guchi Digital, LLC)
 - [llms-full.txt](https://remilia.org/llms-full.txt): Public URL inventory for this host
 

@@ -2,7 +2,7 @@ import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./schemaTypes";
-import { structure } from "./structure";
+import { defaultDocumentNode, structure } from "./structure";
 import { SettingsField } from "./studio/postInput";
 import "./studio/editor.css";
 
@@ -11,7 +11,7 @@ export default defineConfig({
   title: "Remilia",
   projectId: "8x9419lh",
   dataset: "production",
-  plugins: [structureTool({ structure }), visionTool()],
+  plugins: [structureTool({ structure, defaultDocumentNode }), visionTool()],
   schema: {
     types: schemaTypes,
     templates: (prev) => [
