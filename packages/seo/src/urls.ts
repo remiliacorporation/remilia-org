@@ -3,6 +3,7 @@ export type Channel =
   | "press"
   | "thought"
   | "archive"
+  | "devblog"
   | "news"
   | "events"
   | "dev-updates"
@@ -18,6 +19,7 @@ export const CHANNELS: Channel[] = [
   "press",
   "thought",
   "archive",
+  "devblog",
   "news",
   "events",
   "dev-updates",
@@ -36,6 +38,7 @@ export const CHANNEL_ORIGIN: Record<Channel, string> = {
   press: "https://remilia.org",
   thought: "https://remilia.org",
   archive: "https://remilia.org",
+  devblog: "https://remilia.org",
   news: "https://remilia.com",
   events: "https://remilia.com",
   "dev-updates": "https://blog.remilia.net",
@@ -50,6 +53,7 @@ export const CHANNEL_BASEPATH: Record<Channel, string> = {
   press: "/blog/press",
   thought: "/blog/thought",
   archive: "/blog/archive",
+  devblog: "/blog/devblog",
   news: "/a/blog/news",
   events: "/a/blog/events",
   "dev-updates": "/updates",
@@ -65,6 +69,7 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
   press: "org",
   thought: "org",
   archive: "org",
+  devblog: "org",
   news: "com",
   events: "com",
   "dev-updates": "net",
@@ -77,6 +82,7 @@ export const CHANNEL_HOST: Record<Channel, HostId> = {
 export const ORG_SECTIONS: Channel[] = [
   "updates",
   "thought",
+  "devblog",
   "press",
   "archive",
 ];
@@ -86,7 +92,15 @@ export const COM_POST_SECTIONS: Channel[] = ["news", "events"];
 export const COM_SECTIONS = ["news", "events"] as const;
 export type ComSection = (typeof COM_SECTIONS)[number];
 
+/**
+ * blog.remilia.net's two sections, retired: their posts moved to Devblog on
+ * remilia.org, and the net site only 301s their old URLs there
+ * (`NET_MOVED_TO`).
+ */
 export const NET_SECTIONS: Channel[] = ["dev-updates", "dev-blog"];
+
+/** The section every blog.remilia.net URL now lives under. */
+export const NET_MOVED_TO: Channel = "devblog";
 
 /** Each host's pooled index: one listing over all of its sections. */
 export const HOST_AGGREGATE: Record<HostId, Channel> = {
@@ -102,10 +116,10 @@ export const isAggregate = (c: Channel): boolean =>
  * The sections each host's pooled index ("All") lists. Press and Archive are
  * left out of the org pool: press releases, coverage and the guides kept for
  * the record list only under their own sections, so All reads as the
- * corporation's own current writing.
+ * corporation's own current writing, Devblog's engineering posts included.
  */
 export const HOST_POOLED: Record<HostId, Channel[]> = {
-  org: ["updates", "thought"],
+  org: ["updates", "thought", "devblog"],
   com: ["news", "events"],
   net: ["dev-updates", "dev-blog"],
 };
@@ -132,6 +146,7 @@ export const CHANNEL_PATH_LABEL: Record<Channel, string> = {
   press: "remilia.org/blog/press",
   thought: "remilia.org/blog/thought",
   archive: "remilia.org/blog/archive",
+  devblog: "remilia.org/blog/devblog",
   news: "remilia.com/a/blog/news",
   events: "remilia.com/a/blog/events",
   "dev-updates": "blog.remilia.net/updates",
@@ -147,6 +162,7 @@ export const CHANNEL_LABEL: Record<Channel, string> = {
   press: "Press",
   thought: "Thought",
   archive: "Archive",
+  devblog: "Devblog",
   news: "News",
   events: "Events",
   "dev-updates": "Updates",

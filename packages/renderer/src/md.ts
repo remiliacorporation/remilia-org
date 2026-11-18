@@ -33,6 +33,7 @@ const CHANNELS = new Set<string>([
   "press",
   "thought",
   "archive",
+  "devblog",
   "news",
   "events",
   "dev-updates",

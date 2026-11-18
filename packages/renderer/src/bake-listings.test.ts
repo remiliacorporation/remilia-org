@@ -67,7 +67,7 @@ async function fixtureServer(
  * shared index and sibling sections the category nav points at. */
 async function hostStubs(outDir: string): Promise<void> {
   await mkdir(join(outDir, "assets"), { recursive: true });
-  for (const dir of ["blog", "blog/press", "blog/thought", "blog/archive"])
+  for (const dir of ["blog", "blog/press", "blog/thought", "blog/archive", "blog/devblog"])
     await mkdir(join(outDir, dir), { recursive: true });
   for (const file of [
     "assets/emblem.svg",
@@ -83,6 +83,7 @@ async function hostStubs(outDir: string): Promise<void> {
     "blog/press/index.html",
     "blog/thought/index.html",
     "blog/archive/index.html",
+    "blog/devblog/index.html",
   ])
     await writeFile(join(outDir, file), "stub");
 }
@@ -101,7 +102,7 @@ async function bakeUpdates(outDir: string, apiHost: string): Promise<void> {
   });
 }
 
-const SECTIONS = ["updates", "press", "thought", "archive"] as const;
+const SECTIONS = ["updates", "press", "thought", "archive", "devblog"] as const;
 
 /** A directory's entries, less each page's slashless `<name>.html` twin. */
 async function dirs(path: string): Promise<string[]> {
@@ -821,15 +822,16 @@ test("Press and Archive list only under themselves: the pooled index, its feeds 
     ],
     thought: [post("essay", 2, { authors: [{ name: "Charlotte Fang" }] })],
     archive: [post("guide", 1, { authors: [{ name: "Milady" }], origin: "first-party" })],
+    devblog: [post("v04", 6, { authors: [{ name: "Charlotte Fang" }] })],
   };
   const outDir = await mkdtemp(join(tmpdir(), "bake-press-apart-"));
   const server = await bakeOrg(outDir, bySection, HOST_POOLED.org);
   try {
     const read = (path: string) => readFile(join(outDir, path), "utf8");
-    // All lists Updates and Thought and none of Press or Archive, in its
-    // cards, feeds, search, text maps and month archives.
+    // All lists Updates, Thought and Devblog and none of Press or Archive, in
+    // its cards, feeds, search, text maps and month archives.
     const index = await read("blog/index.html");
-    for (const slug of ["memo", "essay"])
+    for (const slug of ["memo", "essay", "v04"])
       assert.ok(index.includes(`data-title="${slug}"`), slug);
     for (const file of ["blog/index.html", "blog/rss.xml", "blog/atom.xml", "blog/index.md", "blog/llms.txt", "blog/months/2024-12/index.html"]) {
       const text = await read(file);
@@ -837,9 +839,10 @@ test("Press and Archive list only under themselves: the pooled index, its feeds 
       assert.ok(!text.includes("forbes-feature"), file);
       assert.ok(!text.includes("/blog/archive/guide"), file);
     }
-    // The section row reads Updates, Thought, Press, Archive.
-    const row = [...index.matchAll(/href="\/blog\/(updates|thought|press|archive)"/g)].map((m) => m[1]);
-    assert.deepEqual([...new Set(row)], ["updates", "thought", "press", "archive"]);
+    assert.ok((await read("blog/rss.xml")).includes("https://remilia.org/blog/devblog/v04"));
+    // The section row reads Updates, Thought, Devblog, Press, Archive.
+    const row = [...index.matchAll(/href="\/blog\/(updates|thought|devblog|press|archive)"/g)].map((m) => m[1]);
+    assert.deepEqual([...new Set(row)], ["updates", "thought", "devblog", "press", "archive"]);
     // Archive still bakes its post, listing, feed and sitemap.
     const archive = await read("blog/archive/index.html");
     assert.ok(archive.includes('data-title="guide"'));

@@ -18,6 +18,7 @@ test("hostCats is the section set every masthead and rail is built from", () => 
     cats: [
       { label: "Updates", href: "/blog/updates" },
       { label: "Thought", href: "/blog/thought" },
+      { label: "Devblog", href: "/blog/devblog" },
       { label: "Press", href: "/blog/press" },
       { label: "Archive", href: "/blog/archive" },
     ],

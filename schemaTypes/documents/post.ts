@@ -1,7 +1,7 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { DocumentTextIcon } from "@sanity/icons/DocumentText";
 import {
-  CHANNELS,
+  SECTION_OPTIONS,
   CHANNEL_PATH_LABEL,
   canEditChannel,
   type Channel,
@@ -16,7 +16,7 @@ const coverage = (channel: unknown): boolean =>
 /**
  * A new remilia.org blog post's byline until someone picks one: Milady
  * (Charlie, 2026-11-13). The `post-by-channel` template applies it to org
- * sections only; remilia.com and blog.remilia.net posts start with none.
+ * sections only; remilia.com posts start with none.
  */
 export const DEFAULT_AUTHORS = [
   { _key: "milady", _type: "reference", _ref: "author-milady_sonoro" },
@@ -38,7 +38,7 @@ export const post = defineType({
       name: "channel",
       title: "Section",
       type: "string",
-      options: { list: CHANNELS, layout: "radio" },
+      options: { list: SECTION_OPTIONS, layout: "radio" },
       description:
         "Which section publishes this post. Sets host + path — see the Section cheatsheet in the desk.",
       validation: (r) => r.required(),

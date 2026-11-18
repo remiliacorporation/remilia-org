@@ -5,10 +5,11 @@ runHostBake({
   name: "org",
   sections: ORG_SECTIONS,
   outDir: "deploy",
-  // Updates and Thought share one pooled index at /blog ("All"). Press and
-  // Archive are not in it: they list only under /blog/press and
-  // /blog/archive. The old
-  // top-level section paths 301 to /blog/<section>.
+  // Updates, Thought and Devblog share one pooled index at /blog ("All").
+  // Press and Archive are not in it: they list only under /blog/press and
+  // /blog/archive. The old top-level section paths 301 to /blog/<section>.
+  // Devblog never had one on this host: its old URLs are on blog.remilia.net,
+  // whose bake (hosts/net/bake.ts) 301s them here.
   aggregate: HOST_POOLED.org,
   movedFrom: {
     updates: "/updates",
@@ -18,8 +19,8 @@ runHostBake({
   },
   // blog.remilia.org (Ghost) is a domain alias of this site. A post that
   // moved to remilia.org/blog 301s to it; every other path on that host,
-  // including Ghost posts now filed under remilia.com or blog.remilia.net
-  // sections (not served from this site), lands on remilia.org/blog.
+  // including Ghost posts now filed under remilia.com sections (not served
+  // from this site), lands on remilia.org/blog.
   legacyHost: { origin: "https://blog.remilia.org", channels: ORG_SECTIONS },
   // The corporate pages ship from this repo too, so every internal link
   // should resolve inside the published tree.

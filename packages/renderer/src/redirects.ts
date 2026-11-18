@@ -87,6 +87,28 @@ export function legacyHostRules(
   return rules;
 }
 
+/**
+ * Rules for a site whose sections all moved to another host: each old path
+ * prefix (`""` for the site root) 301s to its new listing, and everything
+ * under it to the same path under the new one, so posts, archives, feeds and
+ * maps all land on their twins. Forced, so nothing left in the publish
+ * directory can answer instead. Longer prefixes come first: the root's
+ * catch-all would otherwise claim every path.
+ */
+export function movedHostRules(
+  moves: { from: string; to: string }[],
+): RedirectRule[] {
+  const sorted = [...moves].sort((a, b) => b.from.length - a.from.length);
+  return sorted.flatMap(({ from, to }) => {
+    const base = from.replace(/\/+$/, "");
+    return [
+      { from: base || "/", to, force: true },
+      ...(base ? [{ from: `${base}/`, to, force: true }] : []),
+      { from: `${base}/*`, to: `${to}/:splat`, force: true },
+    ];
+  });
+}
+
 export function netlifyRedirectLine(rule: RedirectRule): string {
   const status = rule.status ?? 301;
   return `${rule.from}  ${rule.to}  ${status}${rule.force ? "!" : ""}`;

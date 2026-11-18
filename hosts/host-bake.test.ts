@@ -6,7 +6,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { bake } from "@remilia/renderer";
 import {
+  CHANNEL_BASEPATH,
   COM_POST_SECTIONS,
+  HOST_AGGREGATE,
+  NET_MOVED_TO,
   NET_SECTIONS,
   ORG_SECTIONS,
   type Channel,
@@ -101,32 +104,39 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
   }
 });
 
-test("net bakes only its blog sections, light blue with a sparse lattice", async () => {
-  const { outDir, close } = await bakeSections(NET_SECTIONS);
+test("Devblog bakes on remilia.org, under /blog/devblog, in the org theme", async () => {
+  const { outDir, close } = await bakeSections([NET_MOVED_TO]);
   try {
-    const devblog = await readFile(join(outDir, "dev-blog/index.html"), "utf8");
-    assert.match(devblog, /data-scheme="light"/);
-    assert.match(devblog, /data-hue="255"/);
-    assert.match(devblog, /data-dots="large"/);
+    const index = await readFile(join(outDir, "blog/devblog/index.html"), "utf8");
+    assert.match(index, /data-scheme="dark"/);
+    assert.match(index, /data-hue="30"/);
     assert.ok(
-      devblog.includes('<a class="site-title" href="/dev-blog">REMILIANET</a>'),
+      index.includes('<a class="site-title" href="/blog/devblog">REMILIA CORPORATION</a>'),
     );
-    assert.ok(devblog.includes('href="https://www.remilia.net/"'));
     assert.ok(
-      devblog.includes(
-        '<link rel="canonical" href="https://blog.remilia.net/dev-blog">',
-      ),
+      index.includes('<link rel="canonical" href="https://remilia.org/blog/devblog">'),
     );
-    await readFile(join(outDir, "updates/index.html"), "utf8");
-    await assert.rejects(() =>
-      readFile(join(outDir, "a/blog/news/index.html"))
+    const post = await readFile(join(outDir, "blog/devblog/post-1.html"), "utf8");
+    assert.ok(
+      post.includes('<link rel="canonical" href="https://remilia.org/blog/devblog/post-1">'),
     );
-    // Sections answer at /updates and /dev-blog without a slash.
-    assert.equal(await readFile(join(outDir, "dev-blog.html"), "utf8"), devblog);
-    await readFile(join(outDir, "updates/post-1.html"), "utf8");
+    assert.equal(post.includes("blog.remilia.net"), false);
+    // Nothing lands where blog.remilia.net's sections used to bake.
+    await assert.rejects(() => readFile(join(outDir, "dev-blog/index.html")));
+    await assert.rejects(() => readFile(join(outDir, "updates/index.html")));
   } finally {
     close();
   }
+});
+
+test("blog.remilia.net's sections and pooled index all move to Devblog", () => {
+  assert.equal(NET_MOVED_TO, "devblog");
+  assert.ok(ORG_SECTIONS.includes(NET_MOVED_TO));
+  assert.deepEqual(NET_SECTIONS, ["dev-updates", "dev-blog"]);
+  assert.deepEqual(
+    [...NET_SECTIONS, HOST_AGGREGATE.net].map((c) => CHANNEL_BASEPATH[c]),
+    ["/updates", "/dev-blog", ""],
+  );
 });
 
 test("site-head leads with its links and closes on the brand alone", () => {
@@ -158,6 +168,7 @@ test("site-head leads with its links and closes on the brand alone", () => {
       ["All posts", "/blog", false],
       ["Updates", "/blog/updates", false],
       ["Thought", "/blog/thought", true],
+      ["Devblog", "/blog/devblog", false],
       ["Press", "/blog/press", false],
       ["Archive", "/blog/archive", false],
     ],

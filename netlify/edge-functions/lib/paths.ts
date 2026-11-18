@@ -16,6 +16,7 @@ export const SECTION_PREFIXES = [
   "/blog/press",
   "/blog/thought",
   "/blog/archive",
+  "/blog/devblog",
   "/a/blog/news",
   "/a/blog/events",
   "/a/blog",
