@@ -22,4 +22,5 @@ Sitemap: https://remilia.org/blog/sitemap.xml
 Sitemap: https://remilia.org/blog/press/sitemap.xml
 Sitemap: https://remilia.org/blog/updates/sitemap.xml
 Sitemap: https://remilia.org/blog/thought/sitemap.xml
+Sitemap: https://remilia.org/blog/devblog/sitemap.xml
 Sitemap: https://remilia.org/blog/archive/sitemap.xml

@@ -63,6 +63,16 @@ const SECTION_META: Record<
       "Coverage and interviews of Remilia → Press.",
     ],
   },
+  devblog: {
+    title: "Remilia Corporation — Devblog",
+    description:
+      "Engineering posts: RemiliaNET Alpha, the wiki, miladychan and the vault.",
+    lead: "Release notes and engineering writeups for RemiliaNET Alpha, Remilia Wiki, miladychan and the vault. These posts used to live on blog.remilia.net, and their old URLs 301 here.",
+    whenToUse: [
+      "Cite RemiliaNET Alpha, wiki, miladychan or vault engineering posts.",
+      "Company memos → Updates; theory and NFT essays → Thought.",
+    ],
+  },
   news: {
     title: "Remilia — News",
     description:
@@ -100,8 +110,8 @@ const SECTION_META: Record<
   blog: {
     title: "Remilia Corporation — Blog",
     description:
-      "Remilia Corporation posts across Updates and Thought.",
-    lead: "The corporate blog pooled: updates and thought. Press releases and coverage list only under Press, at /blog/press, and the guides kept for the record only under Archive, at /blog/archive.",
+      "Remilia Corporation posts across Updates, Thought and Devblog.",
+    lead: "The corporate blog pooled: updates, thought and the devblog. Press releases and coverage list only under Press, at /blog/press, and the guides kept for the record only under Archive, at /blog/archive.",
     whenToUse: [
       "Scan Remilia Corporation's own writing in one feed.",
       "Press and Archive have their own feeds at /blog/press and /blog/archive; per-section feeds and archives live under /blog/<section>.",
@@ -208,7 +218,7 @@ export function hostFor(channel: Channel): BakeOptions["host"] {
         label: "Remilia Corporation (wiki)",
         url: "https://wiki.remilia.org/Remilia_Corporation",
       },
-      { label: "RemiliaNET blog", url: indexUrl("net-blog") },
+      { label: CHANNEL_PATH_LABEL.devblog, url: indexUrl("devblog") },
       { label: "Remilia blog", url: indexUrl("com-blog") },
       { label: CHANNEL_PATH_LABEL.press, url: indexUrl("press") },
     ],

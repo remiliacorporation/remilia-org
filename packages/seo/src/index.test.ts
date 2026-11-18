@@ -16,6 +16,8 @@ import {
   sitemap,
   llmsTxt,
   CHANNEL_BASEPATH,
+  CHANNEL_LABEL,
+  NET_MOVED_TO,
   ORG_SECTIONS,
   HOST_POOLED,
   HOST_SECTIONS,
@@ -50,9 +52,21 @@ test("canonical URLs follow the ratified section map", () => {
   assert.equal(indexUrl("net-blog"), "https://blog.remilia.net");
   assert.equal(indexPath("net-blog"), "/");
   assert.equal(indexPath("events"), "/a/blog/events");
-  assert.deepEqual(ORG_SECTIONS, ["updates", "thought", "press", "archive"]);
+  assert.deepEqual(ORG_SECTIONS, [
+    "updates",
+    "thought",
+    "devblog",
+    "press",
+    "archive",
+  ]);
   // All on remilia.org leaves Press and Archive out; each lists only under itself.
-  assert.deepEqual(HOST_POOLED.org, ["updates", "thought"]);
+  assert.deepEqual(HOST_POOLED.org, ["updates", "thought", "devblog"]);
+  // blog.remilia.net's posts moved to Devblog on remilia.org.
+  assert.equal(
+    canonicalFor(NET_MOVED_TO, "v04"),
+    "https://remilia.org/blog/devblog/v04",
+  );
+  assert.equal(CHANNEL_LABEL.devblog, "Devblog");
   for (const host of ["org", "com", "net"] as const)
     for (const c of HOST_POOLED[host]) assert.ok(HOST_SECTIONS[host].includes(c));
   assert.ok(isCoverageChannel("press") && isCoverageChannel("archive"));

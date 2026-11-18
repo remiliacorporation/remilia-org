@@ -455,6 +455,7 @@ export function auditLlmsTxt(txt: string, channel: Channel): string[] {
     "press",
     "thought",
     "archive",
+    "devblog",
     "news",
     "events",
     "dev-updates",

@@ -32,7 +32,7 @@ const base = baseFlag >= 0 ? args[baseFlag + 1]?.replace(/\/$/, "") : undefined;
 
 if (!isChannel(channelArg)) {
   console.error(
-    "usage: seo-conformance <updates|press|thought|archive|news|events|dev-updates|dev-blog> [--base <origin>]",
+    "usage: seo-conformance <updates|press|thought|archive|devblog|news|events|dev-updates|dev-blog> [--base <origin>]",
   );
   process.exit(2);
 }

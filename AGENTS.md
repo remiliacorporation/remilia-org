@@ -12,9 +12,13 @@ This repo holds the Studio schema, bake pipeline, and hand-authored corporate HT
 
 Posts use schema field `channel` = section id. Events are posts with gallery albums.
 Press and Archive entries can store an external outlet URL plus a Firecrawl snapshot and commentary.
-The section row reads Updates, Thought, Press, Archive (`ORG_SECTIONS`). The pooled index at
-`/blog` (All) lists Updates and Thought; Press and Archive list only under `/blog/press` and
-`/blog/archive` (`HOST_POOLED` in `packages/seo/src/urls.ts`).
+The section row reads Updates, Thought, Devblog, Press, Archive (`ORG_SECTIONS`). The pooled
+index at `/blog` (All) lists Updates, Thought and Devblog; Press and Archive list only under
+`/blog/press` and `/blog/archive` (`HOST_POOLED` in `packages/seo/src/urls.ts`).
+
+Devblog (`devblog`, `/blog/devblog`) holds the posts that used to live on blog.remilia.net
+under `dev-updates` and `dev-blog`. Those two ids stay in the code for old URLs only: the
+Studio no longer offers them, and the net bake serves no pages.
 
 ## Build
 
@@ -26,7 +30,7 @@ pnpm typecheck
 pnpm test
 pnpm bake             # remilia.org: bake:corp then bake:org
 pnpm bake:com         # remilia.com blog → deploy-com/a/blog/{news,events}
-pnpm bake:net         # blog.remilia.net → deploy-net/{updates,dev-blog}
+pnpm bake:net         # blog.remilia.net → deploy-net/_redirects only (301s to /blog/devblog)
 ```
 
 Sanity: project `8x9419lh`, dataset `production`.
@@ -51,10 +55,14 @@ Two surfaces, kept separate:
 - **Corporate** (hand-authored, fixed palette): `deploy/src/**` pages +
   `deploy/assets/css/site.css` — its own system; it does not consume theme.css.
 
-com and net bake **blog sections only** — their storefront and product pages are not built
-here — so their output is a fragment of a larger site and the internal-link check is off
-for them (nothing under `deploy-com/` can satisfy `/favicon.ico`). Each needs its own
-Netlify site with `publish = deploy-com` / `deploy-net` and the matching bake command.
+com bakes **blog sections only** — its storefront is not built here — so its output is a
+fragment of a larger site and the internal-link check is off for it (nothing under
+`deploy-com/` can satisfy `/favicon.ico`). net bakes no pages at all: `bakeMovedHost` writes
+only `deploy-net/_redirects`, forced 301s that send every blog.remilia.net path (`/updates/*`,
+`/dev-blog/*`, the root and everything under it) to the same path under
+`remilia.org/blog/devblog`, plus `blog.miladychan.org`'s legacy-host rules ahead of them.
+Each needs its own Netlify site with `publish = deploy-com` / `deploy-net` and the matching
+bake command.
 
 Each host pins a default theme on `<html>` (`data-hue`/`data-dots`/`data-scheme`) from
 `SITE_META` in `packages/seo/src/site.ts`: org red, dark, dense lattice; com red, dark,
@@ -62,7 +70,7 @@ no lattice; net blue, light, sparse lattice. A stored reader preference still wi
 
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials
 and drops any stale `.layer-fx` twin. Baked pages land in `deploy/` (gitignored). Generated
-literature under `deploy/{updates,press,thought,archive}/` is gitignored — do not hand-edit.
+literature under `deploy/blog/` is gitignored — do not hand-edit.
 
 Bake emits per post: HTML, `.md`, `.txt`. Per section: `index.html`, `index.md`,
 `index.txt`, `rss.xml`, `atom.xml`, `sitemap.xml`, `llms.txt`. Production bakes

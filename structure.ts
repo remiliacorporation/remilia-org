@@ -71,7 +71,7 @@ export const structure: StructureResolver = (S) =>
                             .title("Blog — all sections")
                             .schemaType("post")
                             .filter(
-                              '_type == "post" && channel in ["updates", "press", "thought", "archive"]',
+                              '_type == "post" && channel in ["updates", "press", "thought", "archive", "devblog"]',
                             )
                             .defaultOrdering([
                               { field: "publishedAt", direction: "desc" },
@@ -80,6 +80,7 @@ export const structure: StructureResolver = (S) =>
                       sectionList(S, "Updates", "updates", "Org"),
                       sectionList(S, "Press", "press", "Org"),
                       sectionList(S, "Thought", "thought", "Org"),
+                      sectionList(S, "Devblog", "devblog", "Org"),
                       sectionList(S, "Archive", "archive", "Org"),
                     ]),
                 ),
@@ -97,15 +98,17 @@ export const structure: StructureResolver = (S) =>
               S.documentTypeListItem("album").title("Albums").icon(ImagesIcon),
             ]),
         ),
+      // blog.remilia.net's sections are retired (their posts are in Devblog);
+      // the lists stay so a post left behind can still be found and refiled.
       S.listItem()
-        .title("Net — remilia.net")
+        .title("Net — retired, now Devblog")
         .icon(BoltIcon)
         .child(
           S.list()
-            .title("Net — remilia.net")
+            .title("Net — retired, now Devblog")
             .items([
-              sectionList(S, "Dev updates", "dev-updates", "Net"),
-              sectionList(S, "Dev blog", "dev-blog", "Net"),
+              sectionList(S, "Dev updates (retired)", "dev-updates", "Net"),
+              sectionList(S, "Dev blog (retired)", "dev-blog", "Net"),
             ]),
         ),
       S.divider(),

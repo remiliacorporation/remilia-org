@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createClient } from "@sanity/client";
 import {
   CHANNEL_BASEPATH,
@@ -16,6 +16,8 @@ import {
   checkInternalLinks,
   legacyHostRules,
   mergeRedirectBlock,
+  movedHostRules,
+  type ContentPerspective,
   type RedirectRule,
 } from "@remilia/renderer";
 import { BLOG_SHEETS, chromeFor, hostFor } from "./sections";
@@ -48,7 +50,12 @@ export interface HostBake {
    * imported from it 301s to its canonical, on any host; other paths land on
    * this host's pooled index.
    */
-  legacyHost?: { origin: string; channels: Channel[] };
+  legacyHost?: LegacyHost;
+}
+
+export interface LegacyHost {
+  origin: string;
+  channels: Channel[];
 }
 
 const projectId = "8x9419lh";
@@ -122,33 +129,16 @@ export async function bakeHost(spec: HostBake): Promise<void> {
   console.log(`baked ${total} ${spec.name} pages total`);
 
   if (spec.legacyHost) {
-    const { origin, channels } = spec.legacyHost;
-    const client = createClient({
-      projectId,
-      dataset,
-      apiVersion: "2026-02-01",
-      useCdn: false,
+    const rules = await fetchLegacyRules(
+      spec.legacyHost,
+      indexUrl(aggregate),
       token,
       perspective,
-    });
-    const posts = await client.fetch<
-      { channel: Channel; slug: string; legacyUrl?: string }[]
-    >(
-      `*[_type == "post" && channel in $channels && defined(slug.current)]{
-        channel, "slug": slug.current, "legacyUrl": migration.legacyUrl
-      }`,
-      { channels },
-    );
-    const rules = legacyHostRules(
-      origin,
-      posts.map((p) => ({
-        legacyUrl: p.legacyUrl,
-        canonical: canonicalFor(p.channel, p.slug),
-      })),
-      indexUrl(aggregate),
     );
     await mergeInto(outDir, "redirects:legacy-host", rules);
-    console.log(`redirects: ${(rules.length - 3) / 2} posts from ${origin}`);
+    console.log(
+      `redirects: ${(rules.length - 3) / 2} posts from ${spec.legacyHost.origin}`,
+    );
   }
 
   if (spec.movedFrom) {
@@ -184,6 +174,120 @@ export async function bakeHost(spec: HostBake): Promise<void> {
       );
   }
   console.log(`internal links resolve across ${spec.sections.length} sections`);
+}
+
+/**
+ * Forced rules for a retired blog host aliased to this site: each post
+ * imported from it 301s to its canonical, every other path to `fallback`.
+ */
+async function fetchLegacyRules(
+  legacy: LegacyHost,
+  fallback: string,
+  token: string | undefined,
+  perspective: ContentPerspective,
+  /** The section a post's canonical uses, when not its own (a moved host). */
+  channelFor: (c: Channel) => Channel = (c) => c,
+): Promise<RedirectRule[]> {
+  const client = createClient({
+    projectId,
+    dataset,
+    apiVersion: "2026-02-01",
+    useCdn: false,
+    token,
+    perspective,
+  });
+  const posts = await client.fetch<
+    { channel: Channel; slug: string; legacyUrl?: string }[]
+  >(
+    `*[_type == "post" && channel in $channels && defined(slug.current)]{
+      channel, "slug": slug.current, "legacyUrl": migration.legacyUrl
+    }`,
+    { channels: legacy.channels },
+  );
+  return legacyHostRules(
+    legacy.origin,
+    posts.map((p) => ({
+      legacyUrl: p.legacyUrl,
+      canonical: canonicalFor(channelFor(p.channel), p.slug),
+    })),
+    fallback,
+  );
+}
+
+export interface MovedHost {
+  /** Label used in build output. */
+  name: string;
+  /** Default output directory, relative to the repo root. */
+  outDir: string;
+  /**
+   * Each old section's base path on this host (`""` for the pooled index at
+   * the site root) and the section that now holds its posts.
+   */
+  moves: { from: string; to: Channel }[];
+  /** A retired blog host still aliased to this site; see `HostBake`. */
+  legacyHost?: LegacyHost;
+}
+
+/**
+ * A host whose sections all moved elsewhere bakes no pages: its output is a
+ * `_redirects` that 301s every old URL to the same path under the section's
+ * new home. Slugs, tag, author and month archives, feeds and maps keep their
+ * names across the move, so a path-for-path splat lands each one on its
+ * twin, and a stale path lands on that section's 404 there.
+ */
+export async function bakeMovedHost(spec: MovedHost): Promise<void> {
+  const outDir = process.argv[2] ?? join(here, "../..", spec.outDir);
+  await mkdir(outDir, { recursive: true });
+  const token = process.env.SANITY_TOKEN ?? process.env.SANITY_AUTH_TOKEN;
+  const perspective =
+    process.env.SANITY_PERSPECTIVE === "drafts" ? "drafts" : "published";
+
+  let text = `# ${spec.name} moved: every path 301s to its new home. Written by the bake.\n`;
+  if (spec.legacyHost) {
+    // Same guard as a full bake: the legacy map is read from Sanity, and a
+    // tokenless or empty read would publish a map that sends every post to
+    // the fallback.
+    await assertDatasetReadable({
+      projectId,
+      dataset,
+      token,
+      allowEmpty: process.env.ALLOW_EMPTY_BAKE === "1",
+      perspective,
+    });
+    const fallback = indexUrl(spec.moves[0]!.to);
+    // A post still filed under a moved section links straight to its new
+    // home, not through this host's own redirect.
+    const movedTo = new Map(spec.moves.map((m) => [m.from, m.to]));
+    const rules = await fetchLegacyRules(
+      spec.legacyHost,
+      fallback,
+      token,
+      perspective,
+      (c) => movedTo.get(CHANNEL_BASEPATH[c]) ?? c,
+    );
+    // Host rules first: the path splats below match every host.
+    text = mergeRedirectBlock(text, "redirects:legacy-host", rules);
+    console.log(
+      `redirects: ${(rules.length - 3) / 2} posts from ${spec.legacyHost.origin}`,
+    );
+  }
+  const rules = movedHostRules(
+    spec.moves.map((m) => ({ from: m.from, to: indexUrl(m.to) })),
+  );
+  text = mergeRedirectBlock(text, "redirects:moved-host", rules);
+  await writeFile(join(outDir, "_redirects"), text);
+  console.log(
+    `redirects: ${spec.moves.length} ${spec.name} sections 301 to ${[
+      ...new Set(spec.moves.map((m) => indexUrl(m.to))),
+    ].join(", ")}`,
+  );
+}
+
+export function runMovedHostBake(spec: MovedHost): void {
+  bakeMovedHost(spec).catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
 }
 
 async function mergeInto(

@@ -6,6 +6,7 @@ import {
   aliasRules,
   legacyHostRules,
   mergeRedirectBlock,
+  movedHostRules,
   netlifyRedirectLine,
 } from "./redirects";
 
@@ -198,5 +199,24 @@ test("Ghost's admin, feed, tag and author pages fall back to the blog", () => {
     "https://blog.remilia.org/  https://remilia.org/blog  301!",
     "https://blog.remilia.org  https://remilia.org/blog  301!",
     "https://blog.remilia.org/*  https://remilia.org/blog  301!",
+  ]);
+});
+
+test("a moved host sends each section, and the root last, path for path", () => {
+  const to = "https://remilia.org/blog/devblog";
+  const rules = movedHostRules([
+    { from: "", to },
+    { from: "/updates", to },
+    { from: "/dev-blog", to },
+  ]);
+  assert.deepEqual(rules.map(netlifyRedirectLine), [
+    `/dev-blog  ${to}  301!`,
+    `/dev-blog/  ${to}  301!`,
+    `/dev-blog/*  ${to}/:splat  301!`,
+    `/updates  ${to}  301!`,
+    `/updates/  ${to}  301!`,
+    `/updates/*  ${to}/:splat  301!`,
+    `/  ${to}  301!`,
+    `/*  ${to}/:splat  301!`,
   ]);
 });
