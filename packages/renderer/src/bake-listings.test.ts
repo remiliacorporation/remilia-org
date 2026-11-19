@@ -240,7 +240,7 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       "before the section's catch-all 404",
     );
     // Every page, term directories too, opens on the section row.
-    assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
+    assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true" data-hue="255">Updates</a>'));
 
     // Author archives split the same posts by byline.
     const author = await readFile(
@@ -267,7 +267,7 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     assert.ok(post.includes('<a class="byline-cat" href="/blog/updates">Updates</a>'));
     // The section row heads the post and the listings, this section marked.
     for (const page of [post, page1, theory])
-      assert.ok(page.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
+      assert.ok(page.includes('<a href="/blog/updates" aria-current="true" data-hue="255">Updates</a>'));
     assert.ok(post.includes('href="/blog/updates/authors/remilia-jackson"'));
 
     // Every listing is in the sitemap.
@@ -361,14 +361,14 @@ test("a section bakes a paginated archive and a directory for each month", async
     );
     assert.ok(
       dec1.includes(
-        '<h1 data-month="December 2024" data-section="Updates" data-index="/blog/updates/months/2024-12/search.json">Showing all Updates posts from December 2024</h1>',
+        '<h1 data-month="December 2024" data-section="Updates" data-index="/blog/updates/months/2024-12/search.json" data-count="22">Updates [22 posts] from December 2024</h1>',
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Updates</title>"));
 
     const nov = await read("blog/updates/months/2024-11/index.html");
     assert.equal(cards(nov), 3, "months are UTC calendar months");
-    assert.ok(nov.includes("Showing all Updates posts from November 2024"));
+    assert.ok(nov.includes("Updates [3 posts] from November 2024"));
     assert.equal(cards(await read("blog/updates/months/2024-09/index.html")), 2);
     // No October posts, no October page; a closed month carries no feed.
     const months = await dirs(join(outDir, "blog/updates/months"));
@@ -453,7 +453,7 @@ test("the pooled index bakes month archives across every section", async () => {
     assert.equal(cards(dec2), 2);
     assert.ok(
       dec1.includes(
-        '<h1 data-month="December 2024" data-index="/blog/months/2024-12/search.json">Showing all posts from December 2024</h1>',
+        '<h1 data-month="December 2024" data-index="/blog/months/2024-12/search.json" data-count="22">All [22 posts] from December 2024</h1>',
       ),
     );
     assert.ok(dec1.includes("<title>December 2024 — Remilia Corporation — Blog</title>"));
@@ -626,7 +626,7 @@ test("the pooled index bakes author archives and every listing offers every auth
     const rj = await read("blog/authors/remilia-jackson/index.html");
     assert.equal(cards(rj), 20);
     assert.equal(cards(await read("blog/authors/remilia-jackson/page/2/index.html")), 3);
-    assert.ok(rj.includes('<h1 data-author="Remilia Jackson" data-index="/blog/authors/remilia-jackson/search.json">Showing all posts by Remilia Jackson</h1>'));
+    assert.ok(rj.includes('<h1 data-author="Remilia Jackson" data-index="/blog/authors/remilia-jackson/search.json" data-count="23">All [23 posts] by Remilia Jackson</h1>'));
     const cf = await read("blog/authors/charlotte-fang/index.html");
     assert.equal(cards(cf), 1);
     assert.ok(cf.includes('href="/blog/press/press-1"'));

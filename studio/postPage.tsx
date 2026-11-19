@@ -115,7 +115,7 @@ function PageFrame(props: {
     const prose = root?.querySelector<HTMLElement>(".article-rest .prose");
     if (!root || !byline || !title || !prose) return onSlots(null);
     prose.replaceChildren();
-    const stack = root.querySelector<HTMLElement>(".left-rail .left-stack");
+    const stack = root.querySelector<HTMLElement>(".left-stack");
     const mastTools = root.querySelector<HTMLElement>(".sec.mast .mast-tools");
     const adjacent = root.querySelector<HTMLElement>(
       ".article-rest > .sec.post-meta",
@@ -185,10 +185,9 @@ export function PostPage(props: {
     if (slots?.stack) slots.stack.innerHTML = parts.toc;
   }, [slots, parts.toc]);
 
-  // The read info box stands in the left rail, under the sections, as on
-  // the site.
+  // The read info box stands above the search, as on a wide page.
   useEffect(() => {
-    const cite = slots?.root.querySelector(".left-rail > .cite-box");
+    const cite = slots?.root.querySelector(".right-rail > .cite-box");
     if (cite) cite.outerHTML = parts.cite;
   }, [slots, parts.cite]);
 
@@ -197,7 +196,7 @@ export function PostPage(props: {
   }, [slots, parts.mastTools]);
 
   useEffect(() => {
-    const rail = slots?.root.querySelector(".right-rail > .post-nav");
+    const rail = slots?.root.querySelector(".post-nav");
     if (!slots || !rail) return;
     rail.outerHTML = parts.rail;
     railPage.current = showRailPage(slots.root, railPage.current);

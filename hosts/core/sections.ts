@@ -1,17 +1,15 @@
 import type { BakeOptions, Chrome } from "@remilia/renderer";
 // Not from the package root: the Studio's page editor imports this file, and
 // the root brings in the bake, whose Node imports throw in a browser.
-import { HEAD_SEARCH, headMenu } from "../../packages/renderer/src/nav";
+import { HEAD_SEARCH, headMenu, hostCats } from "../../packages/renderer/src/nav";
 import {
   CHANNEL_BASEPATH,
   CHANNEL_HOST,
-  CHANNEL_LABEL,
   CHANNEL_PATH_LABEL,
-  HOST_AGGREGATE,
-  HOST_SECTIONS,
   indexPath,
   indexUrl,
   isAggregate,
+  themeFor,
   type Channel,
   type HostId,
 } from "@remilia/seo";
@@ -173,25 +171,20 @@ export const BLOG_SHEETS = [
 export function chromeFor(channel: Channel): Chrome {
   const base = CHANNEL_BASEPATH[channel];
   const brand = BRAND[CHANNEL_HOST[channel]];
-  // The pooled index: the section row's "All" and the phone menu's
-  // "All posts" both lead there, so the head carries no Index link.
-  const indexBase = indexPath(HOST_AGGREGATE[CHANNEL_HOST[channel]]);
   // On phones the head is one row: the wordmark, the search button and
   // this menu, which holds the sections. The links the wider head spells
   // out move to the foot, under the posts.
-  const menu = headMenu({
-    cats: HOST_SECTIONS[CHANNEL_HOST[channel]].map((c) => ({
-      label: CHANNEL_LABEL[c],
-      href: indexPath(c),
-    })),
-    current: isAggregate(channel) ? "" : CHANNEL_LABEL[channel],
-    allHref: indexBase,
-  });
+  const menu = headMenu(hostCats(channel, isAggregate(channel)));
+  // com and net pin a scheme, so they have no toggle. org follows the reader.
+  const dark =
+    themeFor(channel).scheme === "system"
+      ? `<button type="button" class="scheme" aria-pressed="false">Dark</button>`
+      : "";
   return {
     stylesheet: `${base}/blog.css`,
     header: `<header class="site-head">
 <nav aria-label="Site">
-<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a><span class="head-dials"> — <label class="head-theme" for="theme-pop">Theme</label></span>
+<a href="${brand.rootUrl}">${brand.root}</a> — <a href="${base}/rss.xml">RSS</a> — <a href="${base}/atom.xml">Atom</a>${dark ? ` — ${dark}` : ""}
 </nav>
 <hr class="nav-rule">
 <a class="site-title" href="${indexPath(channel)}">${brand.label}</a>
@@ -200,7 +193,7 @@ ${menu}
 </header>`,
     footer: `<footer>
 <hr class="nav-rule">
-<p class="foot-feeds"><a href="${base}/rss.xml">RSS</a> · <a href="${base}/atom.xml">Atom</a><span class="foot-theme"> · <button type="button" class="foot-theme-btn" aria-expanded="false" aria-controls="theme-controls">Theme</button></span></p>
+<p class="foot-feeds"><a href="${base}/rss.xml">RSS</a> · <a href="${base}/atom.xml">Atom</a>${dark ? ` · ${dark}` : ""}</p>
 <p>© Remilia Corporation · <a href="${brand.rootUrl}">${brand.root}</a> · <a href="https://wiki.remilia.org/Remilia_Corporation">wiki</a></p>
 </footer>`,
   };

@@ -28,9 +28,12 @@
   --read-pad-y: var(--space-l);
   --column: calc(var(--measure) + 2 * (var(--read-pad) - var(--gutter)));
 
+  /* Site head and mast, one height on every wide page: padding, the
+     byline, the rule, and two title lines. A shorter title stays inside
+     it, so the top bar does not jump between pages. */
   --mast-box: calc(
     3 * var(--border-w) + 4 * var(--space-xs) + var(--mast-line) +
-      var(--mast-title)
+      2 * (var(--size-title-wrap) + var(--grid))
   );
 }
 @property --hue {
@@ -229,7 +232,7 @@ i {
 .left-stack {
   display: contents;
 }
-.left-rail .left-stack:not(:has(> *)) {
+.left-stack:not(:has(> *)) {
   display: none;
 }
 .article-wrap {

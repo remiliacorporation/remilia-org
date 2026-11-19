@@ -20,9 +20,6 @@
   background: var(--ink);
   color: var(--ink-contrast);
 }
-.head-dials {
-  display: none;
-}
 /* The phone head's menu and search button; wider heads spell the
    sections out and keep the search in the rail. */
 .head-menu,
@@ -58,9 +55,6 @@
 }
 .head-menu .sel-menu a[aria-current] {
   font-weight: var(--weight-strong);
-}
-.head-dials label {
-  cursor: pointer;
 }
 .left-rail .site-head {
   max-width: var(--rail);
@@ -110,9 +104,6 @@
 .left-rail .site-head {
   order: 1;
 }
-.left-rail .cite-box {
-  order: 4;
-}
 .cite-box {
   display: block;
 }
@@ -154,27 +145,9 @@ footer {
 footer hr {
   display: none;
 }
-/* The head's feed and theme links, which phones show under the posts. */
+/* The head's feed links, which phones show under the posts. */
 .foot-feeds {
   display: none;
-}
-.foot-theme-btn {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: var(--mast-line);
-  cursor: pointer;
-}
-.foot-theme-btn:hover,
-.foot-theme-btn:focus-visible,
-.foot-theme-btn[aria-expanded="true"] {
-  background: var(--ink);
-  color: var(--ink-contrast);
 }
 footer p {
   text-align: center;

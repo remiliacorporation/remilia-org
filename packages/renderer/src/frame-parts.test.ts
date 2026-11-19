@@ -16,20 +16,21 @@ import {
 test("hostCats is the section set every masthead and rail is built from", () => {
   assert.deepEqual(hostCats("press"), {
     cats: [
-      { label: "Updates", href: "/blog/updates" },
-      { label: "Thought", href: "/blog/thought" },
-      { label: "Devblog", href: "/blog/devblog" },
-      { label: "Press", href: "/blog/press" },
-      { label: "Archive", href: "/blog/archive" },
+      { label: "Updates", href: "/blog/updates", hue: 255 },
+      { label: "Thought", href: "/blog/thought", hue: 30 },
+      { label: "Devblog", href: "/blog/devblog", hue: 145 },
+      { label: "Press", href: "/blog/press", hue: 95 },
+      { label: "Archive", href: "/blog/archive", hue: 330 },
     ],
     current: "Press",
     allHref: "/blog",
+    allHue: 30,
   });
   // A pooled listing has no section of its own.
   assert.equal(hostCats("blog", true).current, "");
   assert.match(
     sectionNav(hostCats("press")),
-    /<a href="\/blog\/press" aria-current="true">Press<\/a>/,
+    /<a href="\/blog\/press" aria-current="true" data-hue="95">Press<\/a>/,
   );
 });
 

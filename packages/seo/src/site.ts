@@ -30,7 +30,8 @@ export interface SiteMeta {
   textMaps?: { title: string; href: string }[];
   /**
    * Theme the host serves before a reader picks one. Baked onto `<html>`, so
-   * it holds without JavaScript and without a stored preference.
+   * it holds without JavaScript and without a stored preference. Org sections
+   * override `hue` via `themeFor`.
    */
   theme: HostTheme;
 }
@@ -71,8 +72,9 @@ export const SITE_META: Record<HostId, SiteMeta> = {
       { title: "llms.txt", href: "https://remilia.org/llms.txt" },
       { title: "llms-full.txt", href: "https://remilia.org/llms-full.txt" },
     ],
-    // Corporate red, pinned dark, dense lattice.
-    theme: { hue: 30, scheme: "dark", dots: "small" },
+    // Fallback hue. Each org section sets its own in CHANNEL_HUE. Scheme
+    // follows the reader; the lattice follows the scheme.
+    theme: { hue: 30, scheme: "system", dots: "large" },
   },
   com: {
     name: "Remilia Corporation",
@@ -102,3 +104,23 @@ export const SITE_META: Record<HostId, SiteMeta> = {
 
 export const siteMetaFor = (channel: Channel): SiteMeta =>
   SITE_META[CHANNEL_HOST[channel]];
+
+/**
+ * Org sections, in the section-row order, then All. The five dial hues:
+ * blue, red, green, yellow, purple.
+ */
+export const CHANNEL_HUE: Partial<Record<Channel, HostTheme["hue"]>> = {
+  updates: 255,
+  thought: 30,
+  devblog: 145,
+  press: 95,
+  archive: 330,
+  blog: 30,
+};
+
+/** Host theme, with an org section's own hue where it has one. */
+export const themeFor = (channel: Channel): HostTheme => {
+  const theme = siteMetaFor(channel).theme;
+  const hue = CHANNEL_HUE[channel];
+  return hue === undefined ? theme : { ...theme, hue };
+};

@@ -6,6 +6,7 @@ import {
   jsonLdScript,
   siteMetaFor,
   sitemapUrl,
+  themeFor,
   type HostTheme,
 } from "@remilia/seo";
 import { esc } from "./html";
@@ -27,18 +28,26 @@ export interface PageInput {
 
   /**
    * The search box (`leftRail` in nav.ts): the search with the author
-   * control on its line, then the posts. It closes the right rail, under
-   * the theme box and a post's read info. A page without it has no rails.
+   * control on its line, then the posts. On a wide post it sits in the
+   * left rail, under the sections. On a listing it closes the right rail.
+   * A page without it has no rails.
    */
   leftRail?: string;
 
   /** The host's section links (`sectionNav`): the left rail's box under the site head. */
   sectionNav?: string;
 
-  /** A post's contents, in the left rail under the section links. */
+  /**
+   * A post's contents. On a wide page it is the right rail, under the read
+   * info. On the middle width it sits under the sections. Passed as "" on
+   * a post with nothing to list, which still uses the post's rail arrangement.
+   */
   tocHtml?: string;
 
-  /** A post's reading time, word count and copy links: the right rail's box. */
+  /**
+   * A post's reading time, word count and copy links. It leads the right
+   * rail. On the middle width it sits under the contents.
+   */
   readHtml?: string;
 
   layoutClass?: string;
@@ -66,51 +75,6 @@ export interface PageInput {
 }
 
 const DEFAULT_THEME: HostTheme = { hue: 30, scheme: "system", dots: "large" };
-
-function themeSelHtml(theme: HostTheme): string {
-  const hues: [number, string][] = [
-    [30, "Red"],
-    [95, "Yellow"],
-    [145, "Green"],
-    [255, "Blue"],
-    [330, "Magenta"],
-  ];
-  const radios = hues
-    .map(([h, name]) => {
-      const checked = h === theme.hue ? " checked" : "";
-      return `<input type="radio" name="theme-hue" id="theme-hue-${h}" value="${h}" aria-label="${name}"${checked}><label for="theme-hue-${h}" data-tip="${name}"></label>`;
-    })
-    .join("");
-  const dots = [
-    ["none", "No lattice"],
-    ["small", "Dense lattice"],
-    ["large", "Sparse lattice"],
-  ]
-    .map(([id, name]) => {
-      const checked = id === theme.dots ? " checked" : "";
-      return `<input type="radio" name="theme-dots" id="theme-dots-${id}" value="${id}" aria-label="${name}"${checked}><label for="theme-dots-${id}" class="theme-dot theme-dot-${id}" data-tip="${name}"></label>`;
-    })
-    .join("");
-  // Checked drives the CSS-only path; the JS toggle keeps it in sync after.
-  const dark = theme.scheme === "dark" ? " checked" : "";
-  return `<aside class="theme-sel">
-<input type="checkbox" id="theme-pop" class="disclosure">
-<label for="theme-pop" class="theme-label">Theme</label>
-<hr class="nav-rule">
-<div class="theme-controls" id="theme-controls">
-<div class="theme-hues" role="radiogroup" aria-label="Theme color">
-${radios}
-</div>
-<span class="theme-div" aria-hidden="true"></span>
-<input type="checkbox" id="theme-dark" class="theme-dark"${dark}>
-<label for="theme-dark" class="theme-mode" data-tip="Dark mode" aria-label="Dark mode"></label>
-<span class="theme-div" aria-hidden="true"></span>
-<div class="theme-dots" role="radiogroup" aria-label="Wallpaper lattice">
-${dots}
-</div>
-</div>
-</aside>`;
-}
 
 /**
  * Host identity, icons, social profiles and alternate renditions — the same
@@ -224,20 +188,23 @@ export function htmlPage(p: PageInput): string {
       (d) => `<script type="application/ld+json">${jsonLdScript(d)}</script>`,
     )
     .join("\n");
-  const header = p.leftRail
-    ? p.chrome.header
-    : p.chrome.header.replace(/<span class="head-dials">[\s\S]*?<\/span>/, "");
+  const header = p.chrome.header;
+  // A post (contents, or the read info the editor fills) puts the search in
+  // the left rail and the contents in the right. A listing has neither, so
+  // the search stays on the right. The middle width reorders both by `order`.
+  const postRails = p.tocHtml !== undefined || p.readHtml !== undefined;
   const main = p.tocHtml
     ? p.mainHtml
     : p.mainHtml.replace(/<label class="mast-toc"[^>]*>[\s\S]*?<\/label>/, "");
   const ogImage =
     p.ogImage ?? (p.channel ? siteMetaFor(p.channel).ogImage : undefined);
-  const theme = p.channel ? siteMetaFor(p.channel).theme : DEFAULT_THEME;
-  // `system` leaves data-scheme off, which is what the prefers-color-scheme
-  // rules key on; a pinned scheme overrides the reader's OS.
+  const theme = p.channel ? themeFor(p.channel) : DEFAULT_THEME;
+  // `system` leaves data-scheme off, so the first paint follows the reader's
+  // setting. A stored choice is applied by the head script before paint.
+  // Lattice density follows that scheme, except a host with no lattice.
   const themeAttrs = [
     ` data-hue="${theme.hue}"`,
-    ` data-dots="${theme.dots}"`,
+    theme.dots === "none" ? ` data-dots="none"` : "",
     theme.scheme === "system" ? "" : ` data-scheme="${theme.scheme}"`,
   ].join("");
   return `<!DOCTYPE html>
@@ -322,14 +289,11 @@ ${
 <div class="left-rail">
 ${header}
 ${p.sectionNav ? `<div class="sec-box">\n${p.sectionNav}\n</div>` : ""}
-${p.readHtml ?? ""}
-<div class="left-stack">
-${p.tocHtml ?? ""}
-</div>
+${postRails ? p.leftRail : ""}
 </div>
 <div class="right-rail">
-${themeSelHtml(theme)}
-${p.leftRail}
+${p.readHtml ?? ""}
+${postRails ? `<div class="left-stack">\n${p.tocHtml ?? ""}\n</div>\n` : p.leftRail}
 </div>
 </div>`
     : header
@@ -661,15 +625,20 @@ export function indexMain(
     section?: string;
     /** The listing's search index, so search covers every page of it. */
     index?: string;
+    /** Posts in the whole listing, not just this page. */
+    count?: number;
   },
 ): string {
   const tag = filter?.tag ?? "";
   const authorF = filter?.author ?? "";
   const month = filter?.month ?? "";
   const section = filter?.section ?? "";
-  const surface = section ? `${section} posts` : "posts";
-  const heading = `Showing all ${surface}${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
-  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}${filter?.index ? ` data-index="${esc(filter.index)}"` : ""}`;
+  const count = filter?.count ?? posts.length;
+  const name = section || "All";
+  const postsWord = count === 1 ? "post" : "posts";
+  // The page script rebuilds this same line as the search narrows it.
+  const heading = `${name} [${count} ${postsWord}]${tag ? ` tagged ${tag}` : ""}${authorF ? ` by ${authorF}` : ""}${month ? ` from ${month}` : ""}`;
+  const filterAttrs = `${tag ? ` data-tag="${esc(tag)}"` : ""}${authorF ? ` data-author="${esc(authorF)}"` : ""}${month ? ` data-month="${esc(month)}"` : ""}${section ? ` data-section="${esc(section)}"` : ""}${filter?.index ? ` data-index="${esc(filter.index)}"` : ""} data-count="${count}"`;
   const cards = posts.map(cardHtml).join("\n");
   return `<main id="content" tabindex="-1" class="article-wrap">
 <article class="article-body">

@@ -161,54 +161,40 @@
 html {
   color-scheme: light;
 }
-html:has(#theme-hue-30:checked),
+/* Light keeps the sparse lattice from :root. Dark tightens it. A host
+   with no lattice (data-dots="none") stays clear in either scheme. */
 html[data-hue="30"] {
   --hue: 30;
 }
-html:has(#theme-hue-95:checked),
 html[data-hue="95"] {
   --hue: 95;
 }
-html:has(#theme-hue-145:checked),
 html[data-hue="145"] {
   --hue: 145;
 }
-html:has(#theme-hue-255:checked),
 html[data-hue="255"] {
   --hue: 255;
 }
-html:has(#theme-hue-330:checked),
 html[data-hue="330"] {
   --hue: 330;
 }
-html:has(#theme-dots-none:checked),
 html[data-dots="none"] {
   --dot-size: 0px;
   --dot-gap: 8px;
   --dot-ox: 0px;
   --dot-oy: 0px;
 }
-html:has(#theme-dots-small:checked),
-html[data-dots="small"] {
+html[data-scheme="dark"]:not([data-dots="none"]) {
   --dot-size: 1px;
   --dot-gap: 4px;
   --dot-ox: 0px;
   --dot-oy: 0px;
 }
-html:has(#theme-dots-large:checked),
-html[data-dots="large"] {
-  --dot-size: 2px;
-  --dot-gap: 8px;
-  --dot-ox: 3px;
-  --dot-oy: 2px;
-}
-html:has(#theme-dots-none:checked) .wm::before,
 html[data-dots="none"] .wm::before {
   content: none;
   display: none;
 }
 
-html:has(#theme-dark:checked),
 html[data-scheme="dark"] {
   color-scheme: dark;
   --ink-l: calc(0.68 + 0.06 * var(--hue-wash-4));
@@ -229,6 +215,12 @@ html[data-scheme="dark"] {
     --ink-contrast: oklch(0.13 0.008 var(--hue));
     --focus: #fff;
     --dither-filter: url(#dither-3-dark);
+  }
+  html:not([data-scheme="light"]):not([data-dots="none"]) {
+    --dot-size: 1px;
+    --dot-gap: 4px;
+    --dot-ox: 0px;
+    --dot-oy: 0px;
   }
 }
 
@@ -298,7 +290,6 @@ footer {
   width: var(--rose-size);
   height: var(--rose-size);
 }
-html:has(#theme-dark:checked) .wm,
 html[data-scheme="dark"] .wm {
   background: color-mix(in oklch, var(--paper) 88%, var(--ink));
 }
@@ -319,7 +310,6 @@ html[data-scheme="dark"] .wm {
   .wm-field {
     opacity: 1;
   }
-  html:has(#theme-dark:checked),
   html[data-scheme="dark"] {
     --paper: #000;
     --surface: #111;

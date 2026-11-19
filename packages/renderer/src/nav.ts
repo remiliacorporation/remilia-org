@@ -1,5 +1,6 @@
 import {
   CHANNEL_HOST,
+  CHANNEL_HUE,
   CHANNEL_LABEL,
   HOST_AGGREGATE,
   HOST_SECTIONS,
@@ -99,11 +100,13 @@ function catSel(posts: NavPost[]): { css: string; html: string } {
 /** One shared category control across every listing of the host. */
 export interface SharedCats {
   /** Every sibling category in nav order. `href` navigates; omit to filter. */
-  cats: { label: string; href?: string }[];
+  cats: { label: string; href?: string; hue?: number }[];
   /** This listing's own category — shown as the control's label. */
   current: string;
   /** Target for the "All posts" item; omit to filter in place. */
   allHref?: string;
+  /** All's hue, when the section row shows one mark per category. */
+  allHue?: number;
 }
 
 /**
@@ -116,9 +119,13 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
     cats: HOST_SECTIONS[host].map((c) => ({
       label: CHANNEL_LABEL[c],
       href: indexPath(c),
+      ...(CHANNEL_HUE[c] ? { hue: CHANNEL_HUE[c] } : {}),
     })),
     current: aggregated ? "" : CHANNEL_LABEL[channel],
     allHref: indexPath(HOST_AGGREGATE[host]),
+    ...(CHANNEL_HUE[HOST_AGGREGATE[host]]
+      ? { allHue: CHANNEL_HUE[HOST_AGGREGATE[host]] }
+      : {}),
   };
 }
 
@@ -127,21 +134,30 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
  * index, with the section being shown marked. It is the left rail's box
  * under the site head, on every page.
  */
+const catLink = (i: {
+  href: string;
+  label: string;
+  on: boolean;
+  hue?: number;
+}): string =>
+  `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}${
+    i.hue ? ` data-hue="${i.hue}"` : ""
+  }>${esc(i.label)}</a>`;
+
 export function sectionNav(shared: SharedCats): string {
   const items = [
     ...(shared.allHref
-      ? [{ label: "All", href: shared.allHref, on: !shared.current }]
+      ? [{ label: "All", href: shared.allHref, on: !shared.current, hue: shared.allHue }]
       : []),
     ...shared.cats.flatMap((c) =>
-      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
+      c.href
+        ? [{ label: c.label, href: c.href, on: c.label === shared.current, hue: c.hue }]
+        : [],
     ),
   ];
   if (items.length < 2) return "";
   return `<nav class="sec-nav" aria-label="Sections">${items
-    .map(
-      (i) =>
-        `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`,
-    )
+    .map((i) => catLink(i))
     .join('<span class="nav-sep" aria-hidden="true">—</span>')}</nav>`;
 }
 
@@ -153,17 +169,16 @@ export function sectionNav(shared: SharedCats): string {
 export function headMenu(shared: SharedCats): string {
   const sections = [
     ...(shared.allHref
-      ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
+      ? [{ label: "All posts", href: shared.allHref, on: !shared.current, hue: shared.allHue }]
       : []),
     ...shared.cats.flatMap((c) =>
-      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
+      c.href
+        ? [{ label: c.label, href: c.href, on: c.label === shared.current, hue: c.hue }]
+        : [],
     ),
   ];
   const items = sections
-    .map(
-      (i) =>
-        `<li><a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a></li>`,
-    )
+    .map((i) => `<li>${catLink(i)}</li>`)
     .join("");
   return `<details class="sel head-menu">
 <summary><span class="sel-label">${esc(shared.current || "All posts")}</span><span class="sel-mark"></span></summary>
@@ -263,7 +278,8 @@ export function authorSel(
 /**
  * The search box, the same on a post, a listing, and a 404: the search
  * with the author control (`author`, from `authorSel`) on its line, then
- * the posts a few at a time. It closes the right rail.
+ * the posts a few at a time. On a wide post it sits in the left rail;
+ * on a listing it closes the right rail.
  */
 export function leftRail(
   posts: NavPost[],
@@ -567,7 +583,7 @@ function sidenotes(root, wide, opts) {
     const frame = root.documentElement || root;
     const y0 = frame.getBoundingClientRect ? frame.getBoundingClientRect().top : -scrollY;
     const y = (r) => r - y0;
-    // Notes start under the right rail's boxes: the theme, the search box.
+    // Notes start under the right rail's boxes: the read info, the contents.
     // The post list's own element may run the rail's whole height; its
     // boxes are what the notes must clear.
     // A box that is not drawn has no place; its rect would read as the
@@ -901,14 +917,13 @@ export const NAV_JS = `(() => {
       }
     });
   }
-  // On a phone the author control and the theme box show under the posts,
-  // so they move there in the page too, and the tab order follows the
-  // screen. They go back when the screen widens.
+  // On a phone the author control shows under the posts, so it moves there
+  // in the page too, and the tab order follows the screen. It goes back
+  // when the screen widens.
   const tail = document.querySelector('.phone-tail');
   const tailRow = tail && tail.querySelector('.nav-page');
   const movers = [
     [document.getElementById('post-author'), tailRow],
-    [document.querySelector('.right-rail .theme-sel'), tail],
   ].filter(([el, to]) => el && to).map(([el, to]) => ({ el, to, home: el.parentNode, next: el.nextSibling }));
   if (movers.length && typeof matchMedia === 'function') {
     const phone = matchMedia('(max-width: 823px)');
@@ -921,17 +936,6 @@ export const NAV_JS = `(() => {
     place();
     if (phone.addEventListener) phone.addEventListener('change', place);
   }
-  // The foot's Theme button (phones) opens the theme controls where they
-  // show, above the foot, and moves focus into them without scrolling.
-  const pop = document.getElementById('theme-pop');
-  const themeBtn = document.querySelector('.foot-theme-btn');
-  if (pop && themeBtn) themeBtn.addEventListener('click', () => {
-    pop.checked = !pop.checked;
-    themeBtn.setAttribute('aria-expanded', String(pop.checked));
-    const first = pop.checked
-      && (document.querySelector('.theme-hues input:checked') || document.querySelector('.theme-hues input'));
-    if (first) first.focus({ preventScroll: true });
-  });
   if (!q && !cards.length) return;
   const PAGE = ${RAIL_PAGE};
   let page = 0;
@@ -1048,7 +1052,12 @@ export const NAV_JS = `(() => {
       const catv = cat ? (cat.dataset.value || '') : '';
       const author = statusEl.dataset.author || '';
       const section = statusEl.dataset.section || '';
-      let t = catv ? 'Showing all ' + catv + ' posts' : section ? 'Showing all ' + section + ' posts' : 'Showing all posts';
+      const narrowed = !!query || !!catv;
+      const n = narrowed
+        ? (hits ? hits.length : cards.filter(function (c) { return !c.hidden; }).length)
+        : Number(statusEl.dataset.count || cards.length);
+      const name = catv || section || 'All';
+      let t = name + ' [' + n + ' ' + (n === 1 ? 'post' : 'posts') + ']';
       if (tagv) t += ' tagged ' + tagv;
       if (author) t += ' by ' + author;
       if (monthv) t += ' from ' + monthv;
@@ -1465,23 +1474,6 @@ export const NAV_JS = `(() => {
     fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t).then(() => flash(b)));
   });
 })();
-// The site-head sits beside the masthead from 824px, in a sticky rail
-// that can't subgrid without breaking its internal scroll, so it
-// stretches here until it is as tall as the masthead.
-(() => {
-  try {
-    const mast = document.querySelector('.sec.mast');
-    const head = document.querySelector('.left-rail .site-head');
-    if (!mast || !head || typeof ResizeObserver !== 'function') return;
-    const mq = matchMedia('(min-width: 824px)');
-    const sync = () => {
-      head.style.minHeight = mq.matches ? mast.offsetHeight + 'px' : '';
-    };
-    new ResizeObserver(sync).observe(mast);
-    if (mq.addEventListener) mq.addEventListener('change', sync);
-    sync();
-  } catch (e) {}
-})();
 ${SIDENOTES_JS}(() => {
   try {
     if (!document.querySelector('.fn .fn-note')) return;
@@ -1495,7 +1487,7 @@ ${SIDENOTES_JS}(() => {
     if (mq.addEventListener) mq.addEventListener('change', restack);
     if (typeof ResizeObserver === 'function') {
       const ro = new ResizeObserver(restack);
-      for (const el of [document.querySelector('.article-body'), document.querySelector('.right-rail > .post-nav')])
+      for (const el of [document.querySelector('.article-body'), document.querySelector('.right-rail')])
         if (el) ro.observe(el);
     }
   } catch (e) {}
