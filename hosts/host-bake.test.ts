@@ -80,6 +80,7 @@ test("com bakes only its blog sections, dark red with no lattice", async () => {
     assert.match(news, /data-scheme="dark"/);
     assert.match(news, /data-hue="30"/);
     assert.match(news, /data-dots="none"/);
+    assert.doesNotMatch(news, /class="scheme"/);
     assert.ok(
       news.includes('<a class="site-title" href="/a/blog/news">REMILIA</a>'),
       "wears the com wordmark",
@@ -108,8 +109,8 @@ test("Devblog bakes on remilia.org, under /blog/devblog, in the org theme", asyn
   const { outDir, close } = await bakeSections([NET_MOVED_TO]);
   try {
     const index = await readFile(join(outDir, "blog/devblog/index.html"), "utf8");
-    assert.match(index, /data-scheme="dark"/);
-    assert.match(index, /data-hue="30"/);
+    assert.doesNotMatch(index, /data-scheme=/);
+    assert.match(index, /data-hue="145"/);
     assert.ok(
       index.includes('<a class="site-title" href="/blog/devblog">REMILIA CORPORATION</a>'),
     );
@@ -157,13 +158,13 @@ test("site-head leads with its links and closes on the brand alone", () => {
   assert.equal(thought.header.includes("id=\"site-sec\""), false);
   // The phone head folds the sections, and only the sections, behind one
   // menu, named for the section shown, this one marked. A labeled search
-  // button sits before it; the head's feed and theme links move to the foot.
+  // button sits before it; the head's feed links, and Dark, move to the foot.
   assert.match(
     thought.header,
     /<details class="sel head-menu">\n<summary><span class="sel-label">Thought<\/span>/,
   );
   assert.deepEqual(
-    [...thought.header.matchAll(/<li[^>]*><a href="([^"]+)"( aria-current="true")?>([^<]+)<\/a><\/li>/g)].map((m) => [m[3], m[1], Boolean(m[2])]),
+    [...thought.header.matchAll(/<li><a href="([^"]+)"([^>]*)>([^<]+)<\/a><\/li>/g)].map((m) => [m[3], m[1], m[2].includes('aria-current="true"')]),
     [
       ["All posts", "/blog", false],
       ["Updates", "/blog/updates", false],
@@ -173,13 +174,17 @@ test("site-head leads with its links and closes on the brand alone", () => {
       ["Archive", "/blog/archive", false],
     ],
   );
+  assert.deepEqual(
+    [...thought.header.matchAll(/data-hue="(\d+)"/g)].map((m) => m[1]),
+    ["30", "255", "30", "145", "95", "330"],
+  );
   assert.match(
     thought.header,
     /<button type="button" class="head-search" aria-label="Search" aria-expanded="false" aria-controls="post-filter">[\s\S]*?<\/button>\n<details class="sel head-menu">/,
   );
   assert.match(
     thought.footer,
-    /<p class="foot-feeds"><a href="\/blog\/thought\/rss.xml">RSS<\/a> · <a href="\/blog\/thought\/atom.xml">Atom<\/a><span class="foot-theme"> · <button type="button" class="foot-theme-btn" aria-expanded="false" aria-controls="theme-controls">Theme<\/button><\/span><\/p>/,
+    /<p class="foot-feeds"><a href="\/blog\/thought\/rss.xml">RSS<\/a> · <a href="\/blog\/thought\/atom.xml">Atom<\/a> · <button type="button" class="scheme" aria-pressed="false">Dark<\/button><\/p>/,
   );
   assert.match(chromeFor("blog").header, /<span class="sel-label">All posts<\/span>/);
   const news = chromeFor("news");
@@ -194,16 +199,16 @@ test("site-head leads with its links and closes on the brand alone", () => {
   assert.match(chromeFor("net-blog").header, /<li><a href="\/" aria-current="true">All posts<\/a><\/li>/);
 });
 
-test("org still wears its own brand and pinned dark theme", async () => {
+test("org Updates is blue and follows the reader's scheme", async () => {
   const { outDir, close } = await bakeSections([ORG_SECTIONS[0]]);
   try {
     const updates = await readFile(
       join(outDir, "blog/updates/index.html"),
       "utf8",
     );
-    assert.match(updates, /data-scheme="dark"/);
-    assert.match(updates, /data-hue="30"/);
-    assert.match(updates, /data-dots="small"/);
+    assert.doesNotMatch(updates, /data-scheme=/);
+    assert.match(updates, /data-hue="255"/);
+    assert.doesNotMatch(updates, /data-dots=/);
     assert.ok(
       updates.includes(
         '<a class="site-title" href="/blog/updates">REMILIA CORPORATION</a>',
@@ -238,7 +243,7 @@ test("an intentionally empty section still publishes its index", async () => {
       index,
       /<a class="site-title" href="\/blog\/archive">REMILIA CORPORATION<\/a>/,
     );
-    assert.match(index, /<a href="\/blog\/archive" aria-current="true">Archive<\/a>/);
+    assert.match(index, /<a href="\/blog\/archive" aria-current="true" data-hue="330">Archive<\/a>/);
     assert.ok(!index.includes("Post 1"));
   } finally {
     f.close();

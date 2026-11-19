@@ -90,9 +90,22 @@ test("a month archive keeps its month in the status line", () => {
   const { replaced, text } = runListing("/blog/updates/months/2024-12", "", {
     section: "Updates",
     month: "December 2024",
+    count: "4",
   });
   assert.equal(replaced, undefined);
-  assert.equal(text, "Showing all Updates posts from December 2024");
+  assert.equal(text, "Updates [4 posts] from December 2024");
+});
+
+test("the status line names the section and the whole listing's count", () => {
+  assert.equal(
+    runListing("/blog/thought", "", { section: "Thought", count: "12" }).text,
+    "Thought [12 posts]",
+  );
+  assert.equal(runListing("/blog", "", { count: "40" }).text, "All [40 posts]");
+  assert.equal(
+    runListing("/blog/thought", "", { section: "Thought", count: "1" }).text,
+    "Thought [1 post]",
+  );
 });
 
 /** Runs NAV_JS on a page holding one dropdown; returns its event hooks. */
@@ -508,88 +521,6 @@ test("a dropdown opened over a mouse that stays on it still closes on leave", ()
   } finally {
     mock.timers.reset();
   }
-});
-
-/**
- * Runs NAV_JS on an article page at `width`, with the masthead and site
- * head reduced to what the head-sizing script touches. `resize` changes
- * the width and fires the media query's change listeners.
- */
-function runHeadSizing(width: number): {
-  head: { style: { minHeight: string } };
-  mast: { offsetHeight: number };
-  resize: (to: number) => void;
-  observe: () => void;
-} {
-  const mast = { offsetHeight: 116 };
-  const head = { style: { minHeight: "" } };
-  const changes: (() => void)[] = [];
-  const observers: (() => void)[] = [];
-  const document = {
-    getElementById: () => null,
-    querySelector: (sel: string) =>
-      sel === ".sec.mast" ? mast : sel === ".left-rail .site-head" ? head : null,
-    querySelectorAll: () => [],
-    addEventListener: () => {},
-    documentElement: { style: {} },
-  };
-  const matchMedia = (q: string) => {
-    const min = /\(min-width: (\d+)px\)/.exec(q);
-    return {
-      get matches() {
-        return min ? width >= Number(min[1]) : false;
-      },
-      addEventListener: (_: string, fn: () => void) => changes.push(fn),
-    };
-  };
-  class ResizeObserver {
-    constructor(private fn: () => void) {}
-    observe() {
-      observers.push(this.fn);
-    }
-  }
-  new Function(
-    "document",
-    "location",
-    "addEventListener",
-    "matchMedia",
-    "ResizeObserver",
-    NAV_JS,
-  )(document, { pathname: "/", search: "" }, () => {}, matchMedia, ResizeObserver);
-  return {
-    head,
-    mast,
-    resize: (to) => {
-      width = to;
-      changes.forEach((fn) => fn());
-    },
-    observe: () => observers.forEach((fn) => fn()),
-  };
-}
-
-test("the site head takes the masthead's height wherever it sits beside it", () => {
-  for (const width of [824, 900, 1099, 1100, 1280]) {
-    const { head } = runHeadSizing(width);
-    assert.equal(head.style.minHeight, "116px", `at ${width}px`);
-  }
-});
-
-test("the site head keeps its own height once it stacks above the masthead", () => {
-  for (const width of [320, 700, 823]) {
-    const { head } = runHeadSizing(width);
-    assert.equal(head.style.minHeight, "", `at ${width}px`);
-  }
-});
-
-test("the site head follows the masthead across resizes and breakpoints", () => {
-  const ui = runHeadSizing(900);
-  ui.mast.offsetHeight = 84;
-  ui.observe();
-  assert.equal(ui.head.style.minHeight, "84px", "a shorter title");
-  ui.resize(823);
-  assert.equal(ui.head.style.minHeight, "", "narrowing below 824px");
-  ui.resize(1000);
-  assert.equal(ui.head.style.minHeight, "84px", "widening back past 824px");
 });
 
 test("a search that hides every card says so and offers to clear it", () => {
@@ -1416,7 +1347,7 @@ test("notes hold still: a second run writes nothing, and scrolling moves no note
     assert.deepEqual(pick(layOut(notes, true, scroll)), pick(still), `scrolled ${scroll}`);
 });
 
-/** Runs NAV_JS on a phone head: the search button, the field, the foot's Theme button. */
+/** Runs NAV_JS on a phone head: the search button and the field. */
 function runPhoneHead(value = "") {
   const on = (store: Map<string, (e?: object) => void>) => (type: string, fn: (e?: object) => void) =>
     store.set(type, fn);
@@ -1439,7 +1370,6 @@ function runPhoneHead(value = "") {
     };
   };
   const opener = button("false");
-  const themeBtn = button("false");
   const qHooks = new Map<string, (e?: object) => void>();
   const inputs: string[] = [];
   const q = {
@@ -1461,17 +1391,9 @@ function runPhoneHead(value = "") {
       qHooks.get(e.type)?.(e);
     },
   };
-  const pop = { checked: false };
-  const hue = { scrolled: true, focus(opts?: { preventScroll?: boolean }) {
-    this.scrolled = !opts?.preventScroll;
-  } };
   const document = {
-    getElementById: (id: string) => (id === "post-filter" ? q : id === "theme-pop" ? pop : null),
-    querySelector: (sel: string) =>
-      sel === ".head-search" ? opener
-        : sel === ".foot-theme-btn" ? themeBtn
-          : sel === ".theme-hues input:checked" ? hue
-            : null,
+    getElementById: (id: string) => (id === "post-filter" ? q : null),
+    querySelector: (sel: string) => (sel === ".head-search" ? opener : null),
     querySelectorAll: () => [],
     addEventListener: () => {},
     documentElement: { style: {} },
@@ -1487,7 +1409,7 @@ function runPhoneHead(value = "") {
     qHooks.get("keydown")?.({ key: k, preventDefault: () => (prevented = true) });
     return prevented;
   };
-  return { opener, themeBtn, q, pop, hue, inputs, key, type: (v: string) => {
+  return { opener, q, inputs, key, type: (v: string) => {
     q.value = v;
     qHooks.get("input")?.({});
   } };
@@ -1528,18 +1450,7 @@ test("Escape clears the query, then closes the field and returns to the button",
   assert.equal(key("a"), false);
 });
 
-test("the foot's Theme button opens the theme controls in place", () => {
-  const { themeBtn, pop, hue } = runPhoneHead();
-  themeBtn.hooks.get("click")?.();
-  assert.equal(pop.checked, true);
-  assert.equal(themeBtn.attrs["aria-expanded"], "true");
-  assert.equal(hue.scrolled, false);
-  themeBtn.hooks.get("click")?.();
-  assert.equal(pop.checked, false);
-  assert.equal(themeBtn.attrs["aria-expanded"], "false");
-});
-
-test("on a phone the author control and theme box move after the posts, and back when wider", () => {
+test("on a phone the author control moves after the posts, and back when wider", () => {
   interface Node {
     name: string;
     parentNode: Node | null;
@@ -1570,23 +1481,19 @@ test("on a phone the author control and theme box move after the posts, and back
     },
   });
   const navPage = node("nav-page");
-  const rail = node("right-rail");
   const tail = node("phone-tail");
   const tailRow = node("tail-row");
   tail.querySelector = () => tailRow;
   const author = node("author");
   const after = node("after-author");
-  const themeSel = node("theme-sel");
   navPage.appendChild(author);
   navPage.appendChild(after);
   author.nextSibling = after;
-  rail.appendChild(themeSel);
   const changes: (() => void)[] = [];
   const mq = { matches: true, addEventListener: (_: string, fn: () => void) => changes.push(fn) };
   const document = {
     getElementById: (id: string) => (id === "post-author" ? author : null),
-    querySelector: (sel: string) =>
-      sel === ".phone-tail" ? tail : sel === ".right-rail .theme-sel" ? themeSel : null,
+    querySelector: (sel: string) => (sel === ".phone-tail" ? tail : null),
     querySelectorAll: () => [],
     addEventListener: () => {},
     documentElement: { style: {} },
@@ -1598,10 +1505,8 @@ test("on a phone the author control and theme box move after the posts, and back
     () => mq,
   );
   assert.equal(author.parentNode?.name, "tail-row");
-  assert.equal(themeSel.parentNode?.name, "phone-tail");
   mq.matches = false;
   for (const fn of changes) fn();
   assert.deepEqual(navPage.kids.map((k) => k.name), ["author", "after-author"]);
-  assert.deepEqual(rail.kids.map((k) => k.name), ["theme-sel"]);
   assert.deepEqual(tailRow.kids, []);
 });

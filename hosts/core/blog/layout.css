@@ -16,8 +16,8 @@
   }
   /* The article title leads at display size once the mast has the
      measure to itself; the listing's status line keeps its own size.
-     One grid step of leading keeps each line a whole pixel, so the
-     site-head, sized from the mast's offsetHeight, stays level with it. */
+     One grid step of leading keeps each line a whole pixel inside the
+     fixed mast box. */
   .sec.mast h1 {
     font-size: var(--size-display);
     line-height: calc(var(--size-display) + var(--grid));
@@ -29,7 +29,7 @@
      comfortable one: two readable lines beat two lines at the smallest size.
      The second max() term is the wrap size when the one-line size falls
      below the floor, and nothing otherwise. Leading follows the size, to a
-     whole pixel, so the site-head stays level with the mast. */
+     whole pixel, and two such lines are what the mast box fits. */
   .sec.mast > header {
     container-type: inline-size;
   }
@@ -117,37 +117,14 @@
   .title-fit-41 {
     --title-em: 41;
   }
-  /* The theme box heads the right rail: one row of swatches, no heading. */
-  .right-rail > .theme-sel {
-    position: relative;
-    padding: var(--space-xs);
-    border: var(--border);
-    background: var(--surface);
-    display: block;
-  }
-  .right-rail > .theme-sel .theme-label,
-  .right-rail > .theme-sel > .disclosure,
-  .right-rail > .theme-sel .nav-rule {
-    display: none;
-  }
-  .right-rail > .theme-sel .theme-controls {
-    display: flex;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    height: var(--mast-line);
-    padding: 0;
-    border: 0;
-    gap: var(--grid);
-  }
-  .right-rail > .theme-sel .theme-hues,
-  .right-rail > .theme-sel .theme-dots {
-    height: var(--mast-line);
-  }
-  /* Every masthead is at least as tall as the site head beside it. */
-  .sec.mast {
+  /* The mast and the site head are one fixed box, so a longer title
+     does not push the bar or the boxes under it. */
+  .sec.mast,
+  .left-rail .site-head {
+    height: var(--mast-box);
     min-height: var(--mast-box);
+    max-height: var(--mast-box);
+    overflow: hidden;
   }
   /* A mast with one line and nothing else (a listing, the 404 page)
      centers it. */
@@ -238,6 +215,12 @@
     display: block;
     flex: none;
   }
+  /* One line, one width, for every section, so the menu and the search
+     beside it stay where they are. "All posts" is the longest label. */
+  .head-menu > summary {
+    width: 10em;
+    white-space: nowrap;
+  }
   /* The search button sits beside the menu; it shows the search field
      under the head. */
   .head-search {
@@ -268,24 +251,9 @@
   .layout:not(:has(#post-filter)) .head-search {
     display: none;
   }
-  /* The head's feed and theme links sit in the foot, under the posts. */
+  /* The head's feed links sit in the foot, under the posts. */
   .foot-feeds {
     display: block;
-  }
-  body:not(:has(#theme-pop)) .foot-theme {
-    display: none;
-  }
-  .theme-hues label,
-  .theme-dots label,
-  .theme-mode {
-    width: var(--space);
-    height: var(--space);
-  }
-  .head-dials {
-    display: inline;
-  }
-  .layout:not(:has(#theme-pop)) .head-theme {
-    display: none;
   }
   .layout:not(:has(#toc-toggle)) .mast-toc {
     display: none;
@@ -302,26 +270,20 @@
      between the head and the post, where it sits in the page, so its
      toggle's tab stop is where the post's Contents link is. It takes back
      the column gap it would add. */
-  .left-rail .toc {
+  .toc {
     order: 2;
     margin-bottom: calc(-1 * var(--rail-gap));
   }
   .cite-box {
     display: none;
   }
-  .theme-sel {
-    display: contents;
-  }
   /* The head menu holds the sections here. */
   .sec-box {
     display: none;
   }
-  /* The theme box's and search box's disclosures belong to the wider
-     rails: here the foot's Theme button and the head's search button stand
-     in for them, so they leave the tab order and the accessibility tree. */
-  .theme-label,
+  /* The search box's disclosure belongs to the wider rails: here the
+     head's search button stands in for it, so it leaves the tab order. */
   .post-nav > .disclosure-label,
-  .theme-sel > .disclosure,
   .post-nav > .disclosure {
     display: none;
   }
@@ -331,7 +293,7 @@
      once there is something in it. The author control goes under the
      posts. The search box's own boxes step aside so its parts take their
      places in the page's column. */
-  .right-rail .post-nav,
+  .post-nav,
   .post-nav > .nav-box,
   .post-nav > .disclosure:checked ~ .nav-box,
   .post-nav .nav-page {
@@ -356,8 +318,8 @@
     order: 5;
     max-width: none;
   }
-  /* nav.js moves the author control and theme box here, after the posts,
-     so the tab order follows the screen. */
+  /* nav.js moves the author control here, after the posts, so the tab
+     order follows the screen. */
   .phone-tail {
     display: contents;
   }
@@ -388,32 +350,6 @@
   .layout:not(.is-index)
     .post-nav:has(#post-filter:not(:placeholder-shown))
     .nav-foot {
-    display: flex;
-  }
-  .theme-sel .nav-rule {
-    display: none;
-  }
-  .theme-controls {
-    display: none;
-    /* Under the posts, beside the foot's Theme link that opens it. */
-    order: 6;
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    height: auto;
-    width: 100%;
-    padding: var(--space-xs);
-    border: var(--border);
-    background: var(--surface);
-    gap: var(--grid);
-  }
-  .theme-hues,
-  .theme-dots {
-    height: auto;
-  }
-  #theme-pop:checked ~ .theme-controls {
     display: flex;
   }
   .toc {
@@ -534,19 +470,17 @@
     display: contents;
   }
   /* One stack, the left rail's boxes then the right's: the head, the
-     sections, the read info, the contents, the theme, then the search box
-     (search and author, then the posts). */
+     sections, the contents, the read info under them, then the search
+     box (search and author, then the posts). */
   .left-rail > .sec-box {
     order: 2;
   }
-  .left-rail > .cite-box {
-    order: 3;
+  .right-rail > .cite-box {
+    order: 4;
   }
-  .right-rail > .theme-sel {
-    order: 5;
-  }
+  .left-rail > .post-nav,
   .right-rail > .post-nav {
-    order: 6;
+    order: 5;
   }
   .article-wrap {
     grid-column: 2;
@@ -607,7 +541,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--rail-gap);
-    order: 4;
+    order: 3;
   }
   .left-rail .site-head {
     order: 1;
@@ -651,8 +585,7 @@
     text-align: center;
     z-index: 5;
   }
-  /* The right rail's boxes stack from the top: the theme, then the search
-     box. Margin notes start under them. */
+  /* The right rail is the search box. Margin notes start under it. */
   .right-rail {
     display: flex;
     flex-direction: column;
@@ -677,25 +610,26 @@
     min-width: 0;
     order: 4;
   }
-  /* Left: the head, the sections, a post's read info, its contents.
-     Right: the theme, then the search box. */
+  /* Left: the head, the sections, then the search on a post.
+     Right: the read info, then the contents. A listing has no contents,
+     so its search stays in the right rail. */
   .left-rail > .sec-box {
     order: 2;
   }
-  .left-rail > .cite-box {
+  .left-rail > .post-nav {
     order: 3;
   }
-  .right-rail > .theme-sel {
-    order: 1;
+  .right-rail > .cite-box {
+    order: 0;
   }
   .right-rail > .post-nav {
-    order: 2;
+    order: 1;
   }
   .left-rail .site-head,
-  .left-rail .toc,
-  .left-rail .cite-box,
-  .left-rail .left-stack,
-  .right-rail .theme-sel,
+  .left-rail > .post-nav,
+  .right-rail > .cite-box,
+  .right-rail .left-stack,
+  .right-rail .toc,
   .right-rail .post-nav {
     pointer-events: auto;
     width: 100%;
@@ -706,9 +640,8 @@
     -webkit-hyphens: auto;
     hyphens: auto;
   }
-  .left-rail .toc {
+  .right-rail .toc {
     max-width: var(--toc-rail);
-    margin-left: auto;
   }
   .article-wrap {
     display: grid;
@@ -728,8 +661,7 @@
   }
   .sec.mast {
     grid-row: 1;
-    align-self: stretch;
-    height: auto;
+    align-self: start;
     display: grid;
   }
   .article-rest {
@@ -742,6 +674,7 @@
   .article-rest > .list-empty {
     margin-bottom: 0;
   }
+  .left-rail > .post-nav,
   .right-rail .post-nav {
     display: flex;
     padding: 0;
@@ -885,7 +818,9 @@
   .right-rail .post-nav {
     pointer-events: none;
   }
-  .right-rail .theme-sel,
+  .right-rail > .cite-box,
+  .right-rail .toc,
+  .right-rail .left-stack,
   .right-rail .post-nav .nav-box,
   .right-rail .post-nav .disclosure-label {
     pointer-events: auto;

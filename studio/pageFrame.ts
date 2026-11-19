@@ -3,7 +3,7 @@
 import { articleHtml, htmlPage } from "../packages/renderer/src/page";
 import { emptyRail, hostCats, sectionNav } from "../packages/renderer/src/nav";
 import { scopeBlogCss } from "../packages/renderer/src/embed";
-import { siteMetaFor } from "../packages/seo/src/index";
+import { themeFor } from "../packages/seo/src/index";
 import { BLOG_SHEETS, chromeFor } from "../hosts/core/sections";
 import { CHANNELS, type Channel } from "../lib/access";
 import emblemUrl from "../deploy/assets/emblem.svg?url";
@@ -38,12 +38,12 @@ export function frameChannel(channel: unknown): Channel {
   return hit ? hit.value : "press";
 }
 
-/** The `<html>` theme attributes the bake pins for this host. */
+/** The `<html>` theme attributes the bake pins for this section. */
 export function frameTheme(channel: Channel): Record<string, string> {
-  const { hue, dots, scheme } = siteMetaFor(channel).theme;
+  const { hue, dots, scheme } = themeFor(channel);
   return {
     "data-hue": String(hue),
-    "data-dots": dots,
+    ...(dots === "none" ? { "data-dots": "none" } : {}),
     ...(scheme === "system" ? {} : { "data-scheme": scheme }),
   };
 }
@@ -63,7 +63,9 @@ export function frameHtml(channel: Channel): string {
     channel,
     leftRail: emptyRail(),
     sectionNav: sectionNav(hostCats(channel)),
-    // An empty read info box under the sections, for `frameParts` to fill.
+    // An empty read info box, for `frameParts` to fill. With the read info
+    // set, the empty search sits in the left rail and the contents slot in
+    // the right, as on a wide post.
     readHtml: '<aside class="cite-box"></aside>',
     mainHtml: articleHtml({
       title: "",

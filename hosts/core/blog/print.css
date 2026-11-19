@@ -8,10 +8,15 @@
   .post-nav,
   .toc,
   .wm,
-  .theme-sel,
+  .scheme,
   .left-rail,
   .right-rail {
     display: none;
+  }
+  .sec.mast {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
   a[href^="http"]::after {
     content: " (" attr(href) ")";

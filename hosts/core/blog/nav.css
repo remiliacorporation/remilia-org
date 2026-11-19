@@ -429,6 +429,38 @@
   background: var(--ink);
   color: var(--ink-contrast);
 }
+/* One mark per section, in the row's order: Updates blue, Thought red,
+   Devblog green, Press yellow, Archive purple. All is red. */
+.sec-nav a[data-hue]::before,
+.head-menu .sel-menu a[data-hue]::before {
+  content: "";
+  display: inline-block;
+  width: var(--space-xs);
+  height: var(--space-xs);
+  margin-right: var(--grid);
+  vertical-align: middle;
+  background: var(--swatch-30);
+}
+.sec-nav a[data-hue="255"]::before,
+.head-menu .sel-menu a[data-hue="255"]::before {
+  background: var(--swatch-255);
+}
+.sec-nav a[data-hue="30"]::before,
+.head-menu .sel-menu a[data-hue="30"]::before {
+  background: var(--swatch-30);
+}
+.sec-nav a[data-hue="145"]::before,
+.head-menu .sel-menu a[data-hue="145"]::before {
+  background: var(--swatch-145);
+}
+.sec-nav a[data-hue="95"]::before,
+.head-menu .sel-menu a[data-hue="95"]::before {
+  background: var(--swatch-95);
+}
+.sec-nav a[data-hue="330"]::before,
+.head-menu .sel-menu a[data-hue="330"]::before {
+  background: var(--swatch-330);
+}
 .sec-nav .nav-sep {
   display: none;
 }

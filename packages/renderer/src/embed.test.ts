@@ -40,7 +40,7 @@ test("root selectors move onto the frame; class names that end in body stay", ()
   const scoped = OUT.slice(OUT.indexOf("@scope"));
   assert.doesNotMatch(scoped, /(^|[\s,(>+~}])(html|body|:root)[\s,.:[{>+~)#]/);
   assert.ok(scoped.includes(':scope[data-scheme="dark"]'));
-  assert.ok(scoped.includes(':scope:has(#theme-hue-30:checked)'));
+  assert.ok(scoped.includes(':scope[data-hue="30"]'));
   assert.ok(scoped.includes(".article-body"));
   assert.ok(scoped.includes("var(--size-root)"));
 });

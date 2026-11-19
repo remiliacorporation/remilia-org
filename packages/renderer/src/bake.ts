@@ -419,6 +419,7 @@ export async function bake(opts: BakeOptions): Promise<{ pages: number }> {
               ...listing.filter,
               section: aggregated ? undefined : CHANNEL_LABEL[channel],
               index: pages > 1 ? `${root}/search.json` : undefined,
+              count: listing.posts.length,
             },
           ),
         }),

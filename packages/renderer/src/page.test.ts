@@ -84,7 +84,7 @@ test("page shell emits the fixed semantic structure", () => {
   // The fixture is a dev-blog page, so it carries the net host's theme.
   assert.ok(
     PAGE.includes(
-      '<html lang="en" dir="ltr" data-hue="255" data-dots="large" data-scheme="light">',
+      '<html lang="en" dir="ltr" data-hue="255" data-scheme="light">',
     ),
   );
   assert.ok(
@@ -169,7 +169,7 @@ test("section 404 without posts still routes somewhere useful", () => {
   assert.ok(nf.includes("/blog/sitemap.xml"));
 });
 
-test("article rails put the sections, read info and ToC on the left; the theme and search on the right", () => {
+test("article rails put the sections and the search on the left, and the read info then the contents on the right", () => {
   const html = htmlPage({
     title: "Vaults — Devblog",
     description: "How vaults work.",
@@ -195,17 +195,18 @@ test("article rails put the sections, read info and ToC on the left; the theme a
       txtHref: "/blog/vaults.txt",
     }),
   });
-  // The left rail holds the section links, the read info, then the
-  // contents; the right rail holds the theme box, then the search box.
+  // Wide: the left rail holds the sections, then the search; the right
+  // rail holds the read info, then the contents. The middle width puts
+  // the contents back under the sections, and the search under the read
+  // info, by order.
   const left = html.indexOf('class="left-rail"');
   const secs = html.indexOf('class="sec-box"');
   const toc = html.indexOf('class="toc"');
   const right = html.indexOf('class="right-rail"');
-  const theme = html.indexOf('class="theme-sel"');
   const cite = html.indexOf('class="cite-box"');
   const nav = html.indexOf('class="post-nav"');
   assert.ok(
-    left >= 0 && secs > left && cite > secs && toc > cite && right > toc && theme > right && nav > theme,
+    left >= 0 && secs > left && nav > secs && right > nav && cite > right && toc > cite,
   );
   assert.ok(html.includes("3 min read — 612 words"));
   assert.ok(html.includes('class="nav-rule"'));
@@ -370,12 +371,12 @@ test("index listings carry the status line and cards", () => {
   const rail = leftRail([POST], "Press", "/press");
   assert.match(index, /Read more: Vaults/);
   assert.match(index, /08\.01\.26/);
-  assert.match(index, />Showing all posts</);
+  assert.match(index, />All \[1 post\]</);
   const thought = indexMain([POST], undefined, {
     section: "Thought",
     tag: "Essay",
   });
-  assert.match(thought, />Showing all Thought posts tagged Essay</);
+  assert.match(thought, />Thought \[1 post\] tagged Essay</);
   assert.match(thought, /data-section="Thought"/);
   assert.match(index, /data-excerpt="How vaults work."/);
   assert.match(rail, /placeholder="Search"/);
@@ -432,7 +433,7 @@ test("a listing's mast is its status line; the empty-search note waits above the
   const html = indexMain([POST]);
   assert.match(
     html,
-    /<div class="sec mast index-mast list-mast">\n<header>\n<h1[^>]*>Showing all posts<\/h1>\n<\/header>\n<\/div>/,
+    /<div class="sec mast index-mast list-mast">\n<header>\n<h1[^>]*>All \[1 post\]<\/h1>\n<\/header>\n<\/div>/,
   );
   assert.match(
     html,
@@ -494,7 +495,7 @@ test("JSON-LD cannot close its script element", () => {
 
 test("a listing names its search index, and a card renders the same alone", () => {
   const html = indexMain([POST], undefined, { index: "/blog/updates/search.json" });
-  assert.ok(html.includes(' data-index="/blog/updates/search.json">Showing all posts</h1>'));
+  assert.ok(html.includes(' data-index="/blog/updates/search.json" data-count="1">All [1 post]</h1>'));
   assert.ok(!indexMain([POST]).includes("data-index"));
   assert.ok(html.includes(cardHtml(POST)));
   assert.ok(cardHtml(POST).startsWith('<article class="sec post-card"'));
@@ -505,7 +506,10 @@ test("a term directory wears the listing mast, with its own line", () => {
   const mast = (s: string) => s.slice(s.indexOf('<div class="sec mast'), s.indexOf('<div class="article-rest">'));
   assert.equal(
     mast(html),
-    mast(indexMain([POST])).replace("Showing all posts", "Showing all tags"),
+    mast(indexMain([POST])).replace(
+      '<h1 data-count="1">All [1 post]</h1>',
+      "<h1>Showing all tags</h1>",
+    ),
   );
   assert.equal(html.includes("mast-tools"), false);
 });

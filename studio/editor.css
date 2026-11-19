@@ -797,13 +797,9 @@
     position: static !important;
   }
 
-  /* Notes stand under the right rail's boxes. The rail's post list runs
-     about 300px down the margin, past the text's first lines, so the
-     first notes stood far below their marks. While the notes show in the
-     margin, the editor leaves the post list out; the theme box stays. */
-  .blog-page .right-rail > .post-nav {
-    display: none;
-  }
+  /* Notes stand under the right rail's boxes. On a wide post the post
+     list is in the left rail, which this band hides, and the contents
+     stay in the margin with the read info. */
 }
 
 .blog-pt-note > .fn > [data-ui="Card"] {
@@ -866,9 +862,8 @@
   }
 }
 /* Range syntax, so a fractional pane width (1099.5px) still falls in one
-   layout or the other. The right rail keeps its boxes (the theme box; the
-   post list is out while notes show) at the top of the margin, and the
-   notes start under them, as at 1100px. */
+   layout or the other. The right rail keeps the read info and the contents
+   at the top of the margin, and the notes start under them, as at 1100px. */
 @container blog-page (884px <= width < 1100px) {
   .blog-page .layout {
     display: grid;

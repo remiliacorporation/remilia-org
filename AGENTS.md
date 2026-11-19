@@ -64,9 +64,13 @@ only `deploy-net/_redirects`, forced 301s that send every blog.remilia.net path 
 Each needs its own Netlify site with `publish = deploy-com` / `deploy-net` and the matching
 bake command.
 
-Each host pins a default theme on `<html>` (`data-hue`/`data-dots`/`data-scheme`) from
-`SITE_META` in `packages/seo/src/site.ts`: org red, dark, dense lattice; com red, dark,
-no lattice; net blue, light, sparse lattice. A stored reader preference still wins.
+Section color is baked on `<html data-hue>` by `themeFor` in `packages/seo/src/site.ts`,
+in section-row order: Updates blue, Thought red, Devblog green, Press yellow, Archive
+purple, and All red. com stays red and dark; net stays blue and light. On org, light or
+dark follows the reader's system setting until they use Dark, next to Atom, which is
+remembered (`remilia-scheme`, applied in the head before paint). That choice does not
+override com or net, and those hosts do not show Dark. Dark uses the dense lattice and
+light the sparse one; com has no lattice. There is no color or lattice picker.
 
 Corporate HTML: edit `deploy/src/` (`.layer-base` only). `bake:corp` expands head partials
 and drops any stale `.layer-fx` twin. Baked pages land in `deploy/` (gitignored). Generated

@@ -1,67 +1,45 @@
 export const THEME_JS = `(() => {
+  var root = document.documentElement;
+  // Before the first paint. A stored choice wins over the system setting;
+  // with none stored, the stylesheet follows prefers-color-scheme. Hue is
+  // the section's, baked on <html>, so a stored color cannot flash over it.
   try {
-    var d = document.documentElement;
-    var h = localStorage.getItem("remilia-hue");
     var s = localStorage.getItem("remilia-scheme");
-    var t = localStorage.getItem("remilia-dots");
-    if (h) {
-      d.style.setProperty("--hue", h);
-      d.setAttribute("data-hue", h);
-    }
-    if (s === "light" || s === "dark") d.setAttribute("data-scheme", s);
-    if (t === "none" || t === "small" || t === "large")
-      d.setAttribute("data-dots", t);
+    // A baked data-scheme is that host's pin. A stored choice applies only
+    // where the page left the scheme off, so the first paint follows the
+    // reader until they use Dark.
+    if (!root.hasAttribute("data-scheme") && (s === "light" || s === "dark"))
+      root.setAttribute("data-scheme", s);
   } catch (e) {}
   document.addEventListener("DOMContentLoaded", function () {
-    try {
-      var d = document.documentElement;
-      var dark = document.getElementById("theme-dark");
-      var s = localStorage.getItem("remilia-scheme");
-      var h = localStorage.getItem("remilia-hue");
-      var t = localStorage.getItem("remilia-dots");
-      if (dark) {
-        var baked = d.getAttribute("data-scheme");
-        dark.checked = s
-          ? s === "dark"
-          : baked
-            ? baked === "dark"
-            : matchMedia("(prefers-color-scheme: dark)").matches;
-        dark.addEventListener("change", function () {
-          var v = dark.checked ? "dark" : "light";
-          d.setAttribute("data-scheme", v);
-          localStorage.setItem("remilia-scheme", v);
-        });
-      }
-      if (h) {
-        var r = document.getElementById("theme-hue-" + h);
-        if (r) r.checked = true;
-      }
-      document
-        .querySelectorAll('input[name="theme-hue"]')
-        .forEach(function (el) {
-          el.addEventListener("change", function () {
-            if (el.checked) {
-              d.style.setProperty("--hue", el.value);
-              d.setAttribute("data-hue", el.value);
-              localStorage.setItem("remilia-hue", el.value);
-            }
-          });
-        });
-      if (t) {
-        var r = document.getElementById("theme-dots-" + t);
-        if (r) r.checked = true;
-      }
-      document
-        .querySelectorAll('input[name="theme-dots"]')
-        .forEach(function (el) {
-          el.addEventListener("change", function () {
-            if (el.checked) {
-              d.setAttribute("data-dots", el.value);
-              localStorage.setItem("remilia-dots", el.value);
-            }
-          });
-        });
-    } catch (e) {}
+    var buttons = document.querySelectorAll(".scheme");
+    if (!buttons.length) return;
+    var stored = null;
+    try { stored = localStorage.getItem("remilia-scheme"); } catch (e) {}
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    var dark = function () {
+      return stored === "dark" || (stored !== "light" && mq.matches);
+    };
+    var paint = function () {
+      var on = dark() ? "true" : "false";
+      for (var i = 0; i < buttons.length; i++)
+        buttons[i].setAttribute("aria-pressed", on);
+    };
+    paint();
+    var choose = function (v) {
+      stored = v;
+      try { localStorage.setItem("remilia-scheme", v); } catch (e) {}
+      root.setAttribute("data-scheme", v);
+      paint();
+    };
+    for (var i = 0; i < buttons.length; i++)
+      buttons[i].addEventListener("click", function () {
+        choose(dark() ? "light" : "dark");
+      });
+    if (mq.addEventListener)
+      mq.addEventListener("change", function () {
+        if (stored !== "light" && stored !== "dark") paint();
+      });
   });
 })();
 `;
