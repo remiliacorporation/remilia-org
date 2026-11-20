@@ -240,7 +240,7 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
       "before the section's catch-all 404",
     );
     // Every page, term directories too, opens on the section row.
-    assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true" data-hue="255">Updates</a>'));
+    assert.ok(tagDir.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
 
     // Author archives split the same posts by byline.
     const author = await readFile(
@@ -267,7 +267,7 @@ test("a section bakes paginated listings, taxonomy archives and resolvable links
     assert.ok(post.includes('<a class="byline-cat" href="/blog/updates">Updates</a>'));
     // The section row heads the post and the listings, this section marked.
     for (const page of [post, page1, theory])
-      assert.ok(page.includes('<a href="/blog/updates" aria-current="true" data-hue="255">Updates</a>'));
+      assert.ok(page.includes('<a href="/blog/updates" aria-current="true">Updates</a>'));
     assert.ok(post.includes('href="/blog/updates/authors/remilia-jackson"'));
 
     // Every listing is in the sitemap.

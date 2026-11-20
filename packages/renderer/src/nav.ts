@@ -1,6 +1,5 @@
 import {
   CHANNEL_HOST,
-  CHANNEL_HUE,
   CHANNEL_LABEL,
   HOST_AGGREGATE,
   HOST_SECTIONS,
@@ -100,13 +99,11 @@ function catSel(posts: NavPost[]): { css: string; html: string } {
 /** One shared category control across every listing of the host. */
 export interface SharedCats {
   /** Every sibling category in nav order. `href` navigates; omit to filter. */
-  cats: { label: string; href?: string; hue?: number }[];
+  cats: { label: string; href?: string }[];
   /** This listing's own category — shown as the control's label. */
   current: string;
   /** Target for the "All posts" item; omit to filter in place. */
   allHref?: string;
-  /** All's hue, when the section row shows one mark per category. */
-  allHue?: number;
 }
 
 /**
@@ -119,13 +116,9 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
     cats: HOST_SECTIONS[host].map((c) => ({
       label: CHANNEL_LABEL[c],
       href: indexPath(c),
-      ...(CHANNEL_HUE[c] ? { hue: CHANNEL_HUE[c] } : {}),
     })),
     current: aggregated ? "" : CHANNEL_LABEL[channel],
     allHref: indexPath(HOST_AGGREGATE[host]),
-    ...(CHANNEL_HUE[HOST_AGGREGATE[host]]
-      ? { allHue: CHANNEL_HUE[HOST_AGGREGATE[host]] }
-      : {}),
   };
 }
 
@@ -134,25 +127,16 @@ export function hostCats(channel: Channel, aggregated = false): SharedCats {
  * index, with the section being shown marked. It is the left rail's box
  * under the site head, on every page.
  */
-const catLink = (i: {
-  href: string;
-  label: string;
-  on: boolean;
-  hue?: number;
-}): string =>
-  `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}${
-    i.hue ? ` data-hue="${i.hue}"` : ""
-  }>${esc(i.label)}</a>`;
+const catLink = (i: { href: string; label: string; on: boolean }): string =>
+  `<a href="${esc(i.href)}"${i.on ? ' aria-current="true"' : ""}>${esc(i.label)}</a>`;
 
 export function sectionNav(shared: SharedCats): string {
   const items = [
     ...(shared.allHref
-      ? [{ label: "All", href: shared.allHref, on: !shared.current, hue: shared.allHue }]
+      ? [{ label: "All", href: shared.allHref, on: !shared.current }]
       : []),
     ...shared.cats.flatMap((c) =>
-      c.href
-        ? [{ label: c.label, href: c.href, on: c.label === shared.current, hue: c.hue }]
-        : [],
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
   ];
   if (items.length < 2) return "";
@@ -169,12 +153,10 @@ export function sectionNav(shared: SharedCats): string {
 export function headMenu(shared: SharedCats): string {
   const sections = [
     ...(shared.allHref
-      ? [{ label: "All posts", href: shared.allHref, on: !shared.current, hue: shared.allHue }]
+      ? [{ label: "All posts", href: shared.allHref, on: !shared.current }]
       : []),
     ...shared.cats.flatMap((c) =>
-      c.href
-        ? [{ label: c.label, href: c.href, on: c.label === shared.current, hue: c.hue }]
-        : [],
+      c.href ? [{ label: c.label, href: c.href, on: c.label === shared.current }] : [],
     ),
   ];
   const items = sections
