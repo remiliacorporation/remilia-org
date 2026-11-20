@@ -219,9 +219,6 @@
 .sec.mast > header .nav-rule {
   margin: 0;
 }
-.sec.mast.index-mast {
-  min-height: var(--mast-box);
-}
 .sec.mast.index-mast > header {
   grid-template-rows: var(--mast-line) var(--border-w) var(--mast-title);
   align-content: start;

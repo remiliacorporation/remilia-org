@@ -174,10 +174,6 @@ test("site-head leads with its links and closes on the brand alone", () => {
       ["Archive", "/blog/archive", false],
     ],
   );
-  assert.deepEqual(
-    [...thought.header.matchAll(/data-hue="(\d+)"/g)].map((m) => m[1]),
-    ["30", "255", "30", "145", "95", "330"],
-  );
   assert.match(
     thought.header,
     /<button type="button" class="head-search" aria-label="Search" aria-expanded="false" aria-controls="post-filter">[\s\S]*?<\/button>\n<details class="sel head-menu">/,
@@ -243,7 +239,7 @@ test("an intentionally empty section still publishes its index", async () => {
       index,
       /<a class="site-title" href="\/blog\/archive">REMILIA CORPORATION<\/a>/,
     );
-    assert.match(index, /<a href="\/blog\/archive" aria-current="true" data-hue="330">Archive<\/a>/);
+    assert.match(index, /<a href="\/blog\/archive" aria-current="true">Archive<\/a>/);
     assert.ok(!index.includes("Post 1"));
   } finally {
     f.close();
