@@ -212,8 +212,10 @@ test("article rails put the sections and the search on the left, and the read in
   assert.ok(html.includes('class="nav-rule"'));
   assert.ok(html.includes("Copy:"));
   assert.ok(html.includes("[URL]"));
-  assert.ok(html.includes(">[MD]</button>"));
-  assert.ok(html.includes(">[TXT]</button>"));
+  assert.ok(html.includes('href="/blog/vaults.md">[MD]</a>'));
+  assert.ok(html.includes('href="/blog/vaults.txt">[TXT]</a>'));
+  assert.ok(!html.includes("copy-md"));
+  assert.ok(!html.includes("copy-txt"));
 });
 
 test("a title's one-line width grows with its length and counts unknown glyphs wide", () => {

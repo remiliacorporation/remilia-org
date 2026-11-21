@@ -186,7 +186,7 @@ test("the frame's tools row is the masthead's own", () => {
   const parts = frameParts("press", ROWS, POST);
   assert.equal(
     parts.mastTools,
-    '<span class="mast-read">2 min read</span><label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">—</span> Contents</label><span class="mast-copy"><span class="nav-sep" aria-hidden="true">—</span> Copy: <button type="button" class="copy-md" data-src="/blog/press/middle.md">[MD]</button> — <button type="button" class="copy-txt" data-src="/blog/press/middle.txt">[TXT]</button></span>',
+    '<span class="mast-read">2 min read</span><label class="mast-toc" for="toc-toggle"><span class="nav-sep" aria-hidden="true">—</span> Contents</label><span class="mast-copy"><span class="nav-sep" aria-hidden="true">—</span> <a href="/blog/press/middle.md">[MD]</a> — <a href="/blog/press/middle.txt">[TXT]</a></span>',
   );
   assert.ok(
     articleHtml({
