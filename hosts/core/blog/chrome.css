@@ -107,7 +107,8 @@
 .cite-box {
   display: block;
 }
-.cite-box button {
+.cite-box button,
+.cite-box a {
   appearance: none;
   border: 0;
   background: none;
@@ -115,9 +116,12 @@
   color: inherit;
   cursor: pointer;
   padding: 0;
+  text-decoration: none;
 }
 .cite-box button:hover,
-.cite-box button:focus-visible {
+.cite-box button:focus-visible,
+.cite-box a:hover,
+.cite-box a:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }

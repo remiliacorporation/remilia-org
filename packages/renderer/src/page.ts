@@ -422,7 +422,7 @@ export function citeBox(input: {
 <div class="nav-box">
 <p class="cite-url">${stats}</p>
 <hr class="nav-rule">
-<p class="cite-copy">Copy: <button type="button" class="copy-url" data-url="${esc(input.canonical)}">[URL]</button> — <button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button> — <button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button></p>
+<p class="cite-copy">Copy: <button type="button" class="copy-url" data-url="${esc(input.canonical)}">[URL]</button> — <a href="${esc(input.mdHref)}">[MD]</a> — <a href="${esc(input.txtHref)}">[TXT]</a></p>
 </div>
 </aside>`;
 }
@@ -496,15 +496,11 @@ export function articleHtml(
   const meta = input.metaHtml
     ? `\n<div class="sec post-meta">${input.metaHtml}</div>`
     : "";
-  const md = input.mdHref
-    ? `<button type="button" class="copy-md" data-src="${esc(input.mdHref)}">[MD]</button>`
-    : "";
-  const txt = input.txtHref
-    ? `<button type="button" class="copy-txt" data-src="${esc(input.txtHref)}">[TXT]</button>`
-    : "";
+  const md = input.mdHref ? `<a href="${esc(input.mdHref)}">[MD]</a>` : "";
+  const txt = input.txtHref ? `<a href="${esc(input.txtHref)}">[TXT]</a>` : "";
   const copy =
     md && txt
-      ? `<span class="mast-copy"><span class="nav-sep" aria-hidden="true">—</span> Copy: ${md} — ${txt}</span>`
+      ? `<span class="mast-copy"><span class="nav-sep" aria-hidden="true">—</span> ${md} — ${txt}</span>`
       : "";
   const read = input.readingMinutes
     ? `<span class="mast-read">${input.readingMinutes} min read</span>`

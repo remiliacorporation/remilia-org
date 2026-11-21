@@ -60,7 +60,8 @@
   white-space: nowrap;
 }
 .mast-tools .mast-toc,
-.mast-tools button {
+.mast-tools button,
+.mast-tools a {
   appearance: none;
   border: 0;
   background: none;
@@ -126,7 +127,9 @@
 }
 .mast-tools .mast-toc:hover,
 .mast-tools button:hover,
-.mast-tools button:focus-visible {
+.mast-tools button:focus-visible,
+.mast-tools a:hover,
+.mast-tools a:focus-visible {
   background: var(--ink);
   color: var(--ink-contrast);
 }

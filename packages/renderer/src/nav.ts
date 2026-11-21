@@ -1447,14 +1447,6 @@ export const NAV_JS = `(() => {
     e.preventDefault();
     navigator.clipboard.writeText(u).then(() => flash(a));
   });
-  addEventListener('click', (e) => {
-    const b = e.target.closest('.copy-md, .copy-txt');
-    if (!b || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const src = b.getAttribute('data-src');
-    if (!src || !navigator.clipboard || !navigator.clipboard.writeText) return;
-    e.preventDefault();
-    fetch(src).then((r) => { if (!r.ok) throw r; return r.text(); }).then((t) => navigator.clipboard.writeText(t).then(() => flash(b)));
-  });
 })();
 ${SIDENOTES_JS}(() => {
   try {
